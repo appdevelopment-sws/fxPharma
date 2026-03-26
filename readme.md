@@ -28,6 +28,10 @@ cd dawadukaan
 
 2. Add .env to the project (check .env.sample for reference).
 
+```bash
+cp .env.sample .env
+```
+
 3. Run the docker commands to start the bakcend server and frontend.
 
 ```bash
