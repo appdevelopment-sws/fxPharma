@@ -17,6 +17,7 @@ type ThemeProviderState = {
 
 const COLOR_SCHEME_QUERY = "(prefers-color-scheme: dark)"
 const THEME_VALUES: Theme[] = ["dark", "light", "blue", "green", "system"]
+const THEMES = ["light", "dark", "blue", "green"] as const
 const ThemeProviderContext = React.createContext<
   ThemeProviderState | undefined
 >(undefined)
@@ -108,9 +109,10 @@ export function ThemeProvider({
         ? disableTransitionsTemporarily()
         : null
 
-      root.classList.remove("light", "dark")
-      root.classList.add(resolvedTheme)
+      const ALL_THEMES = ["light", "dark", "blue", "green"]
 
+      root.classList.remove(...ALL_THEMES)
+      root.classList.add(resolvedTheme)
       if (restoreTransitions) {
         restoreTransitions()
       }
@@ -156,14 +158,11 @@ export function ThemeProvider({
       }
 
       setThemeState((currentTheme) => {
-        const nextTheme =
-          currentTheme === "dark"
-            ? "light"
-            : currentTheme === "light"
-              ? "dark"
-              : getSystemTheme() === "dark"
-                ? "light"
-                : "dark"
+        const currentIndex = THEMES.indexOf(
+          currentTheme === "system" ? getSystemTheme() : currentTheme
+        )
+
+        const nextTheme = THEMES[(currentIndex + 1) % THEMES.length]
 
         localStorage.setItem(storageKey, nextTheme)
         return nextTheme
