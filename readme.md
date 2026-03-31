@@ -59,3 +59,10 @@ The endpoints.
 | `Frontend` | (http://localhost:5173) |
 | `Backennd` | (http://localhost:5000) |
 | `Adminer ` | (http://localhost:8080) |
+
+To seed the database run:
+
+```bash
+cd backend
+npx prisma db seed
+```

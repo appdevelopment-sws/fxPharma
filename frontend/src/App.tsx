@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button"
+import AppRoutes from "./routes/AppRoutes"
 
 export function App() {
-  return <div className="flex min-h-svh p-6">Hi hello how are you</div>
+  return <AppRoutes />
 }
 
 export default App

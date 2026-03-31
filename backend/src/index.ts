@@ -4,6 +4,7 @@ import cookieParser from "cookie-parser";
 import morgan from "morgan";
 import cors from "cors";
 import path from "path";
+import authRoutes from "./v1/modules/auth/auth.routes.js";
 
 dotenv.config();
 
@@ -24,6 +25,7 @@ app.use(
 );
 
 const port = process.env.PORT || 5000; // ✅ safe default
+app.use("/api/v1/auth", authRoutes);
 
 app.get("/", (req: Request, res: Response) => {
   res.json("hello from backend");
