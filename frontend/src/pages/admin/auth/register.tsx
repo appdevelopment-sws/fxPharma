@@ -17,6 +17,8 @@ import {
   registerSchema,
   type RegisterSchema,
 } from "@/validations/admin/registerValidation"
+import AuthApi from "@/services/authApi"
+import { useRegister } from "@/hooks/authHook"
 
 export default function Register() {
   const {
@@ -27,13 +29,9 @@ export default function Register() {
     resolver: zodResolver(registerSchema),
     mode: "onChange",
   })
-
-  const onSubmit = async (data: RegisterSchema) => {
-    try {
-      console.log("Form Data:", data)
-    } catch (error) {
-      console.error("Register failed", error)
-    }
+  const registerMutation = useRegister()
+  const onSubmit = (data: RegisterSchema) => {
+    registerMutation.mutate(data)
   }
 
   return (
