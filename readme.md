@@ -64,5 +64,9 @@ To seed the database run:
 
 ```bash
 cd backend
-npx prisma db seed
+
+docker exec -it pharmacy-software-backend-1 npx prisma db push
+
+docker exec -it pharmacy-software-backend-1 npx prisma db seed
+
 ```
