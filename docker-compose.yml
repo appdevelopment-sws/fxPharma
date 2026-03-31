@@ -32,6 +32,8 @@ services:
       - "5432:5432"
     env_file:
       - ./backend/.env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
 
   redis:
     image: redis:7
@@ -45,3 +47,5 @@ services:
       - "8080:8080"
     depends_on:
       - db
+volumes:
+  postgres_data:

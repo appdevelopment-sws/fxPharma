@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { loginSchema } from "@/validations/admin/loginValidation"
+import { useLogin } from "@/hooks/authHook"
 
 export default function LoginPage() {
   const {
@@ -24,10 +25,10 @@ export default function LoginPage() {
     resolver: zodResolver(loginSchema),
     mode: "onChange",
   })
+  const loginMutation = useLogin()
 
   const onSubmit = (data: loginSchema) => {
-    console.log("Login Data:", data)
-    // Add your login API call here
+    loginMutation.mutate(data)
   }
 
   return (

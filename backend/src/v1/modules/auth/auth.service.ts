@@ -35,10 +35,14 @@ export const register = async (data: { email: string; password: string }) => {
 
 export const loginUser = async (email: string, password: string) => {
   const user = await authRepository.findUserByEmail(email);
-  if (!user) throw new Error("Invalid credentials");
-
+  if (!user) throw new Error("No user Found");
+  console.log("User found:", user);
   const valid = await bcrypt.compare(password, user.passwordHash);
   if (!valid) throw new Error("Invalid credentials");
 
-  return user; // Here you can generate a JWT token if needed
+  return {
+    id: user.id,
+    email: user.email,
+    createdAt: user.createdAt,
+  };
 };

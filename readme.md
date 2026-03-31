@@ -48,6 +48,17 @@ To stop the running containers, run
 docker compose down
 ```
 
+To seed the database run:
+
+```bash
+cd backend
+
+docker exec -it pharmacy-software-backend-1 npx prisma db push
+
+docker exec -it pharmacy-software-backend-1 npx prisma db seed
+
+```
+
 Now after this your project will be ready to run.
 
 The endpoints.
@@ -59,14 +70,3 @@ The endpoints.
 | `Frontend` | (http://localhost:5173) |
 | `Backennd` | (http://localhost:5000) |
 | `Adminer ` | (http://localhost:8080) |
-
-To seed the database run:
-
-```bash
-cd backend
-
-docker exec -it pharmacy-software-backend-1 npx prisma db push
-
-docker exec -it pharmacy-software-backend-1 npx prisma db seed
-
-```
