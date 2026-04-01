@@ -25,3 +25,10 @@ export const createUser = async (data: {
     include: { role: true },
   });
 };
+
+export const findUserById = async (id: string) => {
+  return prisma.user.findUnique({
+    where: { id },
+    include: { role: true },
+  });
+};

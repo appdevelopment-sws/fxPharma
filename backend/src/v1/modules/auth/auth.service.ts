@@ -2,6 +2,7 @@
 import { prisma } from "@/lib/prisma.js";
 import * as authRepository from "./auth.repository.js";
 import bcrypt from "bcryptjs";
+import { sendToken } from "@/helpers/jwtToken.js";
 const DEFAULT_ROLE = "User";
 
 export const register = async (data: { email: string; password: string }) => {
@@ -29,6 +30,7 @@ export const register = async (data: { email: string; password: string }) => {
   return {
     id: user.id,
     email: user.email,
+    role: userRole.name,
     createdAt: user.createdAt,
   };
 };
@@ -43,6 +45,18 @@ export const loginUser = async (email: string, password: string) => {
   return {
     id: user.id,
     email: user.email,
+    role: user.role.name,
+    createdAt: user.createdAt,
+  };
+};
+
+export const getUserById = async (id: string) => {
+  const user = await authRepository.findUserById(id);
+  if (!user) throw new Error("User not found");
+  return {
+    id: user.id,
+    email: user.email,
+    role: user.role.name,
     createdAt: user.createdAt,
   };
 };
