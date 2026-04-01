@@ -37,7 +37,9 @@ export default function LoginPage() {
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Login</CardTitle>
-          <CardDescription>Enter your email and password to sign in</CardDescription>
+          <CardDescription>
+            Enter your email and password to sign in
+          </CardDescription>
         </CardHeader>
 
         <CardContent>

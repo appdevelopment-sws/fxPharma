@@ -6,6 +6,11 @@ const formatUserPayload = (user: {
   tenantId: string;
   name: string;
   email: string;
+  tenant?: {
+    id: string;
+    name: string;
+    status: string;
+  };
   createdAt: Date;
   role: {
     name: string;
@@ -22,6 +27,13 @@ const formatUserPayload = (user: {
   email: user.email,
   role: user.role.name,
   permissions: user.role.permissions.map(({ permission }) => permission.name),
+  tenant: user.tenant
+    ? {
+        id: user.tenant.id,
+        name: user.tenant.name,
+        status: user.tenant.status,
+      }
+    : undefined,
   createdAt: user.createdAt,
 });
 
@@ -45,11 +57,6 @@ export const register = async (data: {
   });
 
   return {
-    tenant: {
-      id: tenant.id,
-      name: tenant.name,
-      status: tenant.status,
-    },
     user: formatUserPayload(user),
   };
 };
@@ -85,11 +92,6 @@ export const loginUser = async (email: string, password: string) => {
 
   return {
     ...formatUserPayload(user),
-    tenant: {
-      id: user.tenant.id,
-      name: user.tenant.name,
-      status: user.tenant.status,
-    },
   };
 };
 

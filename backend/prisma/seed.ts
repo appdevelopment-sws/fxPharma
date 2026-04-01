@@ -15,7 +15,7 @@ const adapter = new PrismaPg({
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  const passwordHash = await bcrypt.hash("supersecurepassword", 12);
+  const passwordHash = await bcrypt.hash("Supersecurepassword@1", 12);
 
   const permissions = [
     { name: "USER_CREATE", description: "Create tenant users" },
@@ -131,7 +131,9 @@ async function main() {
     });
   }
 
-  console.log("Seed completed with super admin email: superadmin@platform.local");
+  console.log(
+    "Seed completed with super admin email: superadmin@platform.local",
+  );
 }
 
 main()

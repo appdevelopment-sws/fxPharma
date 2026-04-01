@@ -13,7 +13,6 @@ export function useRegister() {
     mutationFn: AuthApi.register,
 
     onSuccess: () => {
-      // example: refresh auth-related data
       queryClient.invalidateQueries({
         queryKey: queryKeys.auth.all,
       })
@@ -27,13 +26,13 @@ export function useLogin() {
   return useMutation({
     mutationFn: AuthApi.login,
 
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.auth.all,
+    onSuccess: async (response) => {
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.auth.user(),
       })
 
-      // redirect after login
-      navigate("/admin/dashboard") // or wherever
+      const role = response?.data?.role
+      navigate(role === "Super Admin" ? "/super-admin" : "/admin/dashboard")
     },
   })
 }
