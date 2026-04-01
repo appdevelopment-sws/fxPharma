@@ -1,5 +1,6 @@
-import { Request, Response, NextFunction } from "express";
+import { Response, NextFunction } from "express";
 import { AuthRequest } from "./isAuthenticated.js";
+import { runWithTenantContext } from "@/lib/tenantContext.js";
 
 export const attachTenant = (
   req: AuthRequest,
@@ -11,5 +12,11 @@ export const attachTenant = (
   }
 
   req.tenantId = req.user.tenantId;
-  next();
+
+  runWithTenantContext(
+    {
+      tenantId: req.user.tenantId,
+    },
+    () => next(),
+  );
 };

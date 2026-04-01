@@ -1,62 +1,130 @@
-// v1/modules/auth/auth.service.ts
-import { prisma } from "@/lib/prisma.js";
-import * as authRepository from "./auth.repository.js";
 import bcrypt from "bcryptjs";
-import { sendToken } from "@/helpers/jwtToken.js";
-const DEFAULT_ROLE = "User";
+import * as authRepository from "./auth.repository.js";
 
-export const register = async (data: { email: string; password: string }) => {
-  // 🔒 check existing user
-  const existingUser = await authRepository.findUserByEmail(data.email);
-  if (existingUser) {
-    throw new Error("User already exists");
+const formatUserPayload = (user: {
+  id: string;
+  tenantId: string;
+  name: string;
+  email: string;
+  createdAt: Date;
+  role: {
+    name: string;
+    permissions: Array<{
+      permission: {
+        name: string;
+      };
+    }>;
+  };
+}) => ({
+  id: user.id,
+  tenantId: user.tenantId,
+  name: user.name,
+  email: user.email,
+  role: user.role.name,
+  permissions: user.role.permissions.map(({ permission }) => permission.name),
+  createdAt: user.createdAt,
+});
+
+const slugify = (value: string) =>
+  value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .replace(/-{2,}/g, "-");
+
+export const register = async (data: {
+  companyName: string;
+  companySlug?: string;
+  name: string;
+  email: string;
+  password: string;
+}) => {
+  const passwordHash = await bcrypt.hash(data.password, 12);
+  const tenantSlug = slugify(data.companySlug || data.companyName);
+
+  if (!tenantSlug) {
+    throw new Error("Unable to generate a valid company slug");
   }
 
-  // 🔑 hash password
-  const passwordHash = await bcrypt.hash(data.password, 10);
-
-  // 🎯 get default role
-  const userRole = await authRepository.findRoleByName(DEFAULT_ROLE);
-  if (!userRole) {
-    throw new Error("Default role not found");
-  }
-
-  // 👤 create user
-  const user = await authRepository.createUser({
-    email: data.email,
-    passwordHash,
-    roleId: userRole.id,
+  const { tenant, user } = await authRepository.createTenantWithAdmin({
+    tenant: {
+      name: data.companyName.trim(),
+      slug: tenantSlug,
+    },
+    adminUser: {
+      name: data.name.trim(),
+      email: data.email.trim().toLowerCase(),
+      passwordHash,
+    },
   });
+
   return {
-    id: user.id,
-    email: user.email,
-    role: userRole.name,
-    createdAt: user.createdAt,
+    tenant: {
+      id: tenant.id,
+      name: tenant.name,
+      slug: tenant.slug,
+      status: tenant.status,
+    },
+    user: formatUserPayload(user),
   };
 };
 
-export const loginUser = async (email: string, password: string) => {
-  const user = await authRepository.findUserByEmail(email);
-  if (!user) throw new Error("No user Found");
-  console.log("User found:", user);
+export const loginUser = async (
+  tenantSlug: string,
+  email: string,
+  password: string,
+) => {
+  const tenant = await authRepository.findTenantBySlug(tenantSlug.trim().toLowerCase());
+
+  if (!tenant || tenant.deletedAt) {
+    throw new Error("Tenant not found");
+  }
+
+  if (tenant.status !== "ACTIVE") {
+    throw new Error("Tenant access is currently disabled");
+  }
+
+  const user = await authRepository.findUserForLogin(
+    tenant.id,
+    email.trim().toLowerCase(),
+  );
+
+  if (!user || user.deletedAt) {
+    throw new Error("Invalid credentials");
+  }
+
+  if (user.status !== "ACTIVE") {
+    throw new Error("User access is currently disabled");
+  }
+
   const valid = await bcrypt.compare(password, user.passwordHash);
-  if (!valid) throw new Error("Invalid credentials");
+
+  if (!valid) {
+    throw new Error("Invalid credentials");
+  }
 
   return {
-    id: user.id,
-    email: user.email,
-    role: user.role.name,
-    createdAt: user.createdAt,
+    ...formatUserPayload(user),
+    tenant: {
+      id: tenant.id,
+      name: tenant.name,
+      slug: tenant.slug,
+      status: tenant.status,
+    },
   };
 };
 
 export const getUserById = async (id: string) => {
   const user = await authRepository.findUserById(id);
-  if (!user) throw new Error("User not found");
-  return {
-    id: user.id,
-    email: user.email,
-    role: user.role.name,
-    createdAt: user.createdAt,
-  };
+
+  if (!user || user.deletedAt) {
+    throw new Error("User not found");
+  }
+
+  if (user.status !== "ACTIVE") {
+    throw new Error("User access is currently disabled");
+  }
+
+  return formatUserPayload(user);
 };

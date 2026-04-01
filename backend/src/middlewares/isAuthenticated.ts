@@ -1,4 +1,3 @@
-// middleware/auth.middleware.ts
 import jwt from "jsonwebtoken";
 import { Request, Response, NextFunction } from "express";
 
@@ -7,9 +6,16 @@ export interface AuthRequest extends Request {
     id: string;
     role: string;
     tenantId: string;
+    email: string;
     permissions?: string[];
   };
-  tenantId?: string; // ✅ ADD THIS
+  tenantId?: string;
+}
+
+const accessTokenSecret = process.env.JWT_SECRET;
+
+if (!accessTokenSecret) {
+  throw new Error("JWT_SECRET is not configured");
 }
 
 export const isAuthenticated = (
@@ -25,12 +31,17 @@ export const isAuthenticated = (
       return res.status(401).json({ message: "Not authorized" });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!);
+    const decoded = jwt.verify(token, accessTokenSecret) as AuthRequest["user"];
 
-    req.user = decoded as any;
+    if (!decoded?.id || !decoded.tenantId || !decoded.role) {
+      return res.status(401).json({ message: "Invalid token payload" });
+    }
+
+    req.user = decoded;
+    req.tenantId = decoded.tenantId;
 
     next();
-  } catch (err) {
+  } catch {
     return res.status(401).json({ message: "Invalid token" });
   }
 };

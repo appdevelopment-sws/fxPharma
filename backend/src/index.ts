@@ -3,31 +3,42 @@ import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import morgan from "morgan";
 import cors from "cors";
-import path from "path";
+import helmet from "helmet";
+import compression from "compression";
+import rateLimit from "express-rate-limit";
 import authRoutes from "./v1/modules/auth/auth.routes.js";
 
 dotenv.config();
 
 const app = express();
 
-// import { connectRedis } from "./config/redis_config.js";
-const allowedOrigins = [process.env.CLIENT_URL || ""];
+const allowedOrigins = [process.env.CLIENT_URL || ""].filter(Boolean);
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
-app.use(express.json());
+app.set("trust proxy", 1);
+app.use(helmet());
+app.use(compression());
+app.use(express.json({ limit: "1mb" }));
 app.use(cookieParser());
-app.use(morgan("dev"));
+app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 
 app.use(
   cors({
-    origin: allowedOrigins,
+    origin: allowedOrigins.length > 0 ? allowedOrigins : true,
     credentials: true,
   }),
 );
 
-const port = process.env.PORT || 5000; // ✅ safe default
-app.use("/api/v1/auth", authRoutes);
+const port = process.env.PORT || 5000;
 
-app.get("/", (req: Request, res: Response) => {
+app.use("/api/v1/auth", authLimiter, authRoutes);
+
+app.get("/", (_req: Request, res: Response) => {
   res.json("hello from backend");
 });
 

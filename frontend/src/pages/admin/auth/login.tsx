@@ -25,6 +25,7 @@ export default function LoginPage() {
     resolver: zodResolver(loginSchema),
     mode: "onChange",
   })
+
   const loginMutation = useLogin()
 
   const onSubmit = (data: loginSchema) => {
@@ -36,12 +37,27 @@ export default function LoginPage() {
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Login</CardTitle>
-          <CardDescription>Enter your credentials to sign in</CardDescription>
+          <CardDescription>
+            Enter your workspace and credentials to sign in
+          </CardDescription>
         </CardHeader>
 
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
-            {/* Email */}
+            <div className="grid gap-2">
+              <Label htmlFor="tenantSlug">Workspace</Label>
+              <Input
+                id="tenantSlug"
+                placeholder="acme-pharmacy"
+                {...register("tenantSlug")}
+              />
+              {errors.tenantSlug && (
+                <p className="text-sm text-destructive">
+                  {errors.tenantSlug.message}
+                </p>
+              )}
+            </div>
+
             <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>
               <Input id="email" type="email" {...register("email")} />
@@ -52,7 +68,6 @@ export default function LoginPage() {
               )}
             </div>
 
-            {/* Password */}
             <div className="grid gap-2">
               <Label htmlFor="password">Password</Label>
               <Input id="password" type="password" {...register("password")} />
@@ -63,7 +78,6 @@ export default function LoginPage() {
               )}
             </div>
 
-            {/* Submit */}
             <Button type="submit" disabled={isSubmitting} className="w-full">
               {isSubmitting ? "Logging in..." : "Login"}
             </Button>

@@ -27,7 +27,7 @@ export function useLogin() {
   return useMutation({
     mutationFn: AuthApi.login,
 
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.auth.all,
       })

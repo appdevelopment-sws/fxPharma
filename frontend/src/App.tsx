@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button"
 import AppRoutes from "./routes/AppRoutes"
 
 export function App() {

@@ -1,5 +1,3 @@
-// src/pages/Register.tsx
-
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 
@@ -17,7 +15,6 @@ import {
   registerSchema,
   type RegisterSchema,
 } from "@/validations/admin/registerValidation"
-import AuthApi from "@/services/authApi"
 import { useRegister } from "@/hooks/authHook"
 
 export default function Register() {
@@ -29,7 +26,9 @@ export default function Register() {
     resolver: zodResolver(registerSchema),
     mode: "onChange",
   })
+
   const registerMutation = useRegister()
+
   const onSubmit = (data: RegisterSchema) => {
     registerMutation.mutate(data)
   }
@@ -38,13 +37,38 @@ export default function Register() {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Create an account</CardTitle>
-          <CardDescription>Enter your details to get started</CardDescription>
+          <CardTitle>Create your workspace</CardTitle>
+          <CardDescription>
+            Set up your pharmacy tenant and admin account
+          </CardDescription>
         </CardHeader>
 
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
-            {/* Name */}
+            <div className="grid gap-2">
+              <Label htmlFor="companyName">Company Name</Label>
+              <Input id="companyName" {...register("companyName")} />
+              {errors.companyName && (
+                <p className="text-sm text-destructive">
+                  {errors.companyName.message}
+                </p>
+              )}
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="companySlug">Workspace Slug</Label>
+              <Input
+                id="companySlug"
+                placeholder="acme-pharmacy"
+                {...register("companySlug")}
+              />
+              {errors.companySlug && (
+                <p className="text-sm text-destructive">
+                  {errors.companySlug.message}
+                </p>
+              )}
+            </div>
+
             <div className="grid gap-2">
               <Label htmlFor="name">Full Name</Label>
               <Input id="name" {...register("name")} />
@@ -55,7 +79,6 @@ export default function Register() {
               )}
             </div>
 
-            {/* Email */}
             <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>
               <Input id="email" type="email" {...register("email")} />
@@ -66,7 +89,6 @@ export default function Register() {
               )}
             </div>
 
-            {/* Password */}
             <div className="grid gap-2">
               <Label htmlFor="password">Password</Label>
               <Input id="password" type="password" {...register("password")} />
@@ -77,7 +99,6 @@ export default function Register() {
               )}
             </div>
 
-            {/* Confirm Password */}
             <div className="grid gap-2">
               <Label htmlFor="confirmPassword">Confirm Password</Label>
               <Input
@@ -92,13 +113,11 @@ export default function Register() {
               )}
             </div>
 
-            {/* Submit */}
             <Button type="submit" disabled={isSubmitting} className="w-full">
-              {isSubmitting ? "Creating account..." : "Create Account"}
+              {isSubmitting ? "Creating workspace..." : "Create Workspace"}
             </Button>
           </form>
 
-          {/* Footer */}
           <p className="mt-4 text-center text-sm text-muted-foreground">
             Already have an account?{" "}
             <a
