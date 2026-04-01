@@ -29,6 +29,7 @@ cd dawadukaan
 2. Add .env to the project (check .env.sample for reference).
 
 ```bash
+cd backend
 cp .env.sample .env
 ```
 
