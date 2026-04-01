@@ -2,14 +2,6 @@ import { z } from "zod";
 
 export const registerSchema = z.object({
   companyName: z.string().trim().min(2).max(120),
-  companySlug: z
-    .string()
-    .trim()
-    .toLowerCase()
-    .regex(/^[a-z0-9-]+$/, "Company slug can only contain lowercase letters, numbers, and hyphens")
-    .min(3)
-    .max(50)
-    .optional(),
   name: z.string().trim().min(2).max(80),
   email: z.string().trim().email(),
   password: z
@@ -21,13 +13,6 @@ export const registerSchema = z.object({
 });
 
 export const loginSchema = z.object({
-  tenantSlug: z
-    .string()
-    .trim()
-    .toLowerCase()
-    .regex(/^[a-z0-9-]+$/, "Tenant slug can only contain lowercase letters, numbers, and hyphens")
-    .min(3)
-    .max(50),
   email: z.string().trim().email(),
   password: z.string().min(8),
 });

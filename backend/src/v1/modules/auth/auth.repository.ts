@@ -5,6 +5,7 @@ type DbClient = PrismaClient | Prisma.TransactionClient;
 
 const userWithRoleAndPermissions = {
   include: {
+    tenant: true,
     role: {
       include: {
         permissions: {
@@ -17,19 +18,11 @@ const userWithRoleAndPermissions = {
   },
 } as const;
 
-export const findTenantBySlug = async (slug: string) => {
-  return rootPrisma.tenant.findUnique({
-    where: { slug },
-  });
-};
-
-export const findUserForLogin = async (tenantId: string, email: string) => {
-  return rootPrisma.user.findUnique({
+export const findUserForLogin = async (email: string) => {
+  return rootPrisma.user.findFirst({
     where: {
-      tenantId_email: {
-        tenantId,
-        email,
-      },
+      email,
+      deletedAt: null,
     },
     include: userWithRoleAndPermissions.include,
   });
@@ -59,7 +52,6 @@ export const createTenantWithAdmin = async (
   data: {
     tenant: {
       name: string;
-      slug: string;
     };
     adminUser: {
       name: string;
@@ -69,16 +61,21 @@ export const createTenantWithAdmin = async (
   },
 ) => {
   return rootPrisma.$transaction(async (tx) => {
-    const existingTenant = await tx.tenant.findUnique({
-      where: { slug: data.tenant.slug },
+    const existingEmail = await tx.user.findFirst({
+      where: {
+        email: data.adminUser.email,
+        deletedAt: null,
+      },
     });
 
-    if (existingTenant) {
-      throw new Error("Company slug is already in use");
+    if (existingEmail) {
+      throw new Error("Email is already in use");
     }
 
     const tenant = await tx.tenant.create({
-      data: data.tenant,
+      data: {
+        name: data.tenant.name,
+      },
     });
 
     const permissions = await tx.permission.findMany();

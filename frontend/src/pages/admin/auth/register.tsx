@@ -39,7 +39,7 @@ export default function Register() {
         <CardHeader>
           <CardTitle>Create your workspace</CardTitle>
           <CardDescription>
-            Set up your pharmacy tenant and admin account
+            Set up your pharmacy and admin account
           </CardDescription>
         </CardHeader>
 
@@ -51,20 +51,6 @@ export default function Register() {
               {errors.companyName && (
                 <p className="text-sm text-destructive">
                   {errors.companyName.message}
-                </p>
-              )}
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="companySlug">Workspace Slug</Label>
-              <Input
-                id="companySlug"
-                placeholder="acme-pharmacy"
-                {...register("companySlug")}
-              />
-              {errors.companySlug && (
-                <p className="text-sm text-destructive">
-                  {errors.companySlug.message}
                 </p>
               )}
             </div>

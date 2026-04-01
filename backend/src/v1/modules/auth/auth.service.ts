@@ -25,32 +25,17 @@ const formatUserPayload = (user: {
   createdAt: user.createdAt,
 });
 
-const slugify = (value: string) =>
-  value
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .replace(/-{2,}/g, "-");
-
 export const register = async (data: {
   companyName: string;
-  companySlug?: string;
   name: string;
   email: string;
   password: string;
 }) => {
   const passwordHash = await bcrypt.hash(data.password, 12);
-  const tenantSlug = slugify(data.companySlug || data.companyName);
-
-  if (!tenantSlug) {
-    throw new Error("Unable to generate a valid company slug");
-  }
 
   const { tenant, user } = await authRepository.createTenantWithAdmin({
     tenant: {
       name: data.companyName.trim(),
-      slug: tenantSlug,
     },
     adminUser: {
       name: data.name.trim(),
@@ -63,35 +48,29 @@ export const register = async (data: {
     tenant: {
       id: tenant.id,
       name: tenant.name,
-      slug: tenant.slug,
       status: tenant.status,
     },
     user: formatUserPayload(user),
   };
 };
 
-export const loginUser = async (
-  tenantSlug: string,
-  email: string,
-  password: string,
-) => {
-  const tenant = await authRepository.findTenantBySlug(tenantSlug.trim().toLowerCase());
-
-  if (!tenant || tenant.deletedAt) {
-    throw new Error("Tenant not found");
-  }
-
-  if (tenant.status !== "ACTIVE") {
-    throw new Error("Tenant access is currently disabled");
-  }
-
-  const user = await authRepository.findUserForLogin(
-    tenant.id,
-    email.trim().toLowerCase(),
-  );
+export const loginUser = async (email: string, password: string) => {
+  const user = await authRepository.findUserForLogin(email.trim().toLowerCase());
 
   if (!user || user.deletedAt) {
     throw new Error("Invalid credentials");
+  }
+
+  if (!user.tenant) {
+    throw new Error("Tenant not found");
+  }
+
+  if (user.tenant.deletedAt) {
+    throw new Error("Tenant not found");
+  }
+
+  if (user.tenant.status !== "ACTIVE") {
+    throw new Error("Tenant access is currently disabled");
   }
 
   if (user.status !== "ACTIVE") {
@@ -107,10 +86,9 @@ export const loginUser = async (
   return {
     ...formatUserPayload(user),
     tenant: {
-      id: tenant.id,
-      name: tenant.name,
-      slug: tenant.slug,
-      status: tenant.status,
+      id: user.tenant.id,
+      name: user.tenant.name,
+      status: user.tenant.status,
     },
   };
 };

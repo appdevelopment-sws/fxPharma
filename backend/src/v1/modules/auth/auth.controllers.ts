@@ -26,11 +26,7 @@ export const register = async (req: Request, res: Response) => {
 export const login = async (req: Request, res: Response) => {
   try {
     const payload = loginSchema.parse(req.body);
-    const user = await authService.loginUser(
-      payload.tenantSlug,
-      payload.email,
-      payload.password,
-    );
+    const user = await authService.loginUser(payload.email, payload.password);
 
     sendToken(user, res);
 

@@ -1,15 +1,6 @@
 import { z } from "zod"
 
 export const loginSchema = z.object({
-  tenantSlug: z
-    .string()
-    .min(3, "Workspace must be at least 3 characters")
-    .max(50, "Workspace is too long")
-    .regex(
-      /^[a-z0-9-]+$/,
-      "Workspace can only contain lowercase letters, numbers, and hyphens",
-    ),
-
   email: z.string().email("Invalid email address"),
 
   password: z

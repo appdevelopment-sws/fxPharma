@@ -20,7 +20,6 @@ enum UserStatus {
 model Tenant {
   id        String       @id @default(cuid())
   name      String
-  slug      String       @unique
   status    TenantStatus @default(ACTIVE)
   users     User[]
   roles     Role[]
@@ -34,7 +33,7 @@ model User {
   tenantId     String
   tenant       Tenant     @relation(fields: [tenantId], references: [id], onDelete: Restrict)
   name         String
-  email        String
+  email        String     @unique
   passwordHash String
   status       UserStatus @default(ACTIVE)
   roleId       String

@@ -37,27 +37,11 @@ export default function LoginPage() {
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Login</CardTitle>
-          <CardDescription>
-            Enter your workspace and credentials to sign in
-          </CardDescription>
+          <CardDescription>Enter your email and password to sign in</CardDescription>
         </CardHeader>
 
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="tenantSlug">Workspace</Label>
-              <Input
-                id="tenantSlug"
-                placeholder="acme-pharmacy"
-                {...register("tenantSlug")}
-              />
-              {errors.tenantSlug && (
-                <p className="text-sm text-destructive">
-                  {errors.tenantSlug.message}
-                </p>
-              )}
-            </div>
-
             <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>
               <Input id="email" type="email" {...register("email")} />

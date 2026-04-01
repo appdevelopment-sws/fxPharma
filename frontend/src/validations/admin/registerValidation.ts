@@ -7,15 +7,6 @@ export const registerSchema = z
       .min(2, "Company name must be at least 2 characters")
       .max(120, "Company name is too long"),
 
-    companySlug: z
-      .string()
-      .min(3, "Workspace must be at least 3 characters")
-      .max(50, "Workspace is too long")
-      .regex(
-        /^[a-z0-9-]+$/,
-        "Workspace can only contain lowercase letters, numbers, and hyphens",
-      ),
-
     name: z
       .string()
       .min(2, "Name must be at least 2 characters")

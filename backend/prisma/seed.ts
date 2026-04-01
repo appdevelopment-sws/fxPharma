@@ -35,54 +35,45 @@ async function main() {
     });
   }
 
-  const demoTenant = await prisma.tenant.upsert({
-    where: { slug: "demo-pharmacy" },
-    update: {
-      name: "Demo Pharmacy",
-      status: "ACTIVE",
+  let platformTenant = await prisma.tenant.findFirst({
+    where: {
+      name: "Platform",
       deletedAt: null,
     },
-    create: {
-      name: "Demo Pharmacy",
-      slug: "demo-pharmacy",
-      status: "ACTIVE",
-    },
   });
 
-  const adminRole = await prisma.role.upsert({
+  if (!platformTenant) {
+    platformTenant = await prisma.tenant.create({
+      data: {
+        name: "Platform",
+        status: "ACTIVE",
+      },
+    });
+  } else {
+    platformTenant = await prisma.tenant.update({
+      where: { id: platformTenant.id },
+      data: {
+        status: "ACTIVE",
+        deletedAt: null,
+      },
+    });
+  }
+
+  const superAdminRole = await prisma.role.upsert({
     where: {
       tenantId_name: {
-        tenantId: demoTenant.id,
-        name: "Admin",
+        tenantId: platformTenant.id,
+        name: "Super Admin",
       },
     },
     update: {
-      description: "Tenant administrator with full tenant access",
+      description: "Platform super administrator",
       isDefault: true,
     },
     create: {
-      tenantId: demoTenant.id,
-      name: "Admin",
-      description: "Tenant administrator with full tenant access",
-      isDefault: true,
-    },
-  });
-
-  const userRole = await prisma.role.upsert({
-    where: {
-      tenantId_name: {
-        tenantId: demoTenant.id,
-        name: "User",
-      },
-    },
-    update: {
-      description: "Default tenant user role",
-      isDefault: true,
-    },
-    create: {
-      tenantId: demoTenant.id,
-      name: "User",
-      description: "Default tenant user role",
+      tenantId: platformTenant.id,
+      name: "Super Admin",
+      description: "Platform super administrator",
       isDefault: true,
     },
   });
@@ -93,63 +84,54 @@ async function main() {
     await prisma.rolePermission.upsert({
       where: {
         roleId_permissionId: {
-          roleId: adminRole.id,
+          roleId: superAdminRole.id,
           permissionId: permission.id,
         },
       },
       update: {},
       create: {
-        roleId: adminRole.id,
+        roleId: superAdminRole.id,
         permissionId: permission.id,
       },
     });
   }
 
-  const readPermission = allPermissions.find(
-    (permission) => permission.name === "USER_READ",
-  );
+  const superAdminEmail = "superadmin@platform.local";
 
-  if (readPermission) {
-    await prisma.rolePermission.upsert({
-      where: {
-        roleId_permissionId: {
-          roleId: userRole.id,
-          permissionId: readPermission.id,
-        },
+  const existingSuperAdmin = await prisma.user.findFirst({
+    where: {
+      tenantId: platformTenant.id,
+      email: superAdminEmail,
+    },
+  });
+
+  if (existingSuperAdmin) {
+    await prisma.user.update({
+      where: { id: existingSuperAdmin.id },
+      data: {
+        tenantId: platformTenant.id,
+        name: "Super Admin",
+        email: superAdminEmail,
+        passwordHash,
+        roleId: superAdminRole.id,
+        status: "ACTIVE",
+        deletedAt: null,
       },
-      update: {},
-      create: {
-        roleId: userRole.id,
-        permissionId: readPermission.id,
+    });
+  } else {
+    await prisma.user.create({
+      data: {
+        tenantId: platformTenant.id,
+        name: "Super Admin",
+        email: superAdminEmail,
+        passwordHash,
+        roleId: superAdminRole.id,
+        status: "ACTIVE",
       },
     });
   }
 
-  await prisma.user.upsert({
-    where: {
-      tenantId_email: {
-        tenantId: demoTenant.id,
-        email: "admin@demo-pharmacy.com",
-      },
-    },
-    update: {
-      name: "Demo Admin",
-      passwordHash,
-      roleId: adminRole.id,
-      status: "ACTIVE",
-      deletedAt: null,
-    },
-    create: {
-      tenantId: demoTenant.id,
-      name: "Demo Admin",
-      email: "admin@demo-pharmacy.com",
-      passwordHash,
-      roleId: adminRole.id,
-      status: "ACTIVE",
-    },
-  });
-
-  console.log("Seed completed for tenant demo-pharmacy");
+  console.log("Seed completed with super admin email: superadmin@platform.local");
 }
 
 main()
