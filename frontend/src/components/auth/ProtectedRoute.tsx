@@ -3,12 +3,16 @@ import { useAuth } from "@/context/authContext"
 
 type ProtectedRouteProps = {
   allowedRoles?: string[]
+  allowedPermissions?: string[]
+  permissionMatch?: "all" | "any"
 }
 
 export default function ProtectedRoute({
   allowedRoles,
+  allowedPermissions,
+  permissionMatch = "all",
 }: ProtectedRouteProps) {
-  const { isAuthenticated, isLoading, user } = useAuth()
+  const { isAuthenticated, isLoading, user, hasPermission } = useAuth()
   const location = useLocation()
 
   if (isLoading) {
@@ -25,6 +29,17 @@ export default function ProtectedRoute({
 
   if (allowedRoles && user && !allowedRoles.includes(user.role)) {
     return <Navigate to="/unauthorized" replace />
+  }
+
+  if (allowedPermissions?.length) {
+    const hasAccess =
+      permissionMatch === "any"
+        ? allowedPermissions.some((permission) => hasPermission(permission))
+        : hasPermission(...allowedPermissions)
+
+    if (!hasAccess) {
+      return <Navigate to="/unauthorized" replace state={{ from: location }} />
+    }
   }
 
   return <Outlet />

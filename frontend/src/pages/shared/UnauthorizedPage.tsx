@@ -11,8 +11,8 @@ export default function UnauthorizedPage() {
           You do not have access to this page
         </h1>
         <p className="mt-3 text-sm text-slate-600">
-          Your account is authenticated, but your role does not match this
-          section.
+          Your account is authenticated, but your role or permission set does
+          not allow access to this section.
         </p>
         <Link
           to="/admin/dashboard"

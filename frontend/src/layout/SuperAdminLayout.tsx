@@ -1,30 +1,48 @@
-import { Outlet } from "react-router"
+import { useMemo } from "react"
+import { useMutation } from "@tanstack/react-query"
+import { useNavigate } from "react-router"
+import { WorkspaceShell } from "@/components/navigation/WorkspaceShell"
 import { useAuth } from "@/context/authContext"
+import AuthApi from "@/services/authApi"
+import { queryClient } from "@/services/customQueryClient"
+import { queryKeys } from "@/lib/queryKeys"
+import {
+  PlatformShieldIcon,
+  getVisibleSuperAdminNavigation,
+} from "@/components/super-admin/super-admin-navigation"
 
 const SuperAdminLayout = () => {
   const { user } = useAuth()
+  const navigate = useNavigate()
+
+  const navigationGroups = useMemo(
+    () => getVisibleSuperAdminNavigation(user),
+    [user]
+  )
+
+  const logoutMutation = useMutation({
+    mutationFn: AuthApi.logout,
+    onSuccess: async () => {
+      queryClient.setQueryData(queryKeys.auth.user(), null)
+      await queryClient.invalidateQueries({ queryKey: queryKeys.auth.all })
+      navigate("/admin/login", { replace: true })
+    },
+  })
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-50">
-      <div className="border-b border-stone-800 bg-stone-900/80">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-stone-400">
-              Platform Console
-            </p>
-            <h1 className="text-lg font-semibold">Super Admin</h1>
-          </div>
-          <div className="text-right">
-            <p className="text-sm font-medium">{user?.email}</p>
-            <p className="text-sm text-stone-400">{user?.role}</p>
-          </div>
-        </div>
-      </div>
-
-      <main className="mx-auto max-w-6xl px-6 py-8">
-        <Outlet />
-      </main>
-    </div>
+    <WorkspaceShell
+      appLabel="Pharmacy Software"
+      workspaceLabel="Super Admin"
+      workspaceTitle={user?.tenant?.name ?? "Platform Console"}
+      workspaceSubtitle="Role-aware super admin operations workspace"
+      userName={user?.name ?? "Super Admin"}
+      userRole={user?.role ?? "Super Admin"}
+      userEmail={user?.email}
+      isLoggingOut={logoutMutation.isPending}
+      navigationGroups={navigationGroups}
+      brandIcon={<PlatformShieldIcon className="size-5" />}
+      onLogout={() => logoutMutation.mutate()}
+    />
   )
 }
 

@@ -85,3 +85,75 @@ model RolePermission {
   @@index([roleId])
   @@index([permissionId])
 }
+
+model HsnTable {
+  id              Int       @id @default(autoincrement())
+  hsn_code        String    @unique
+  item_type       String
+  hsn_description String?
+  gst_rate        Decimal
+  last_changed    DateTime?
+  last_gst_rate   Decimal?
+
+  medicines MasterMedicine[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ProductType {
+  id          Int     @id @default(autoincrement())
+  name        String
+  unit_type   String
+  description String?
+
+  medicines MasterMedicine[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum CompanyStatus {
+  ACTIVE
+  INACTIVE
+  BLOCKED
+}
+
+model Company {
+  id     Int           @id @default(autoincrement())
+  gstin  String?       @unique
+  name   String
+  status CompanyStatus @default(ACTIVE)
+
+  medicines MasterMedicine[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model MasterMedicine {
+  id            Int     @id @default(autoincrement())
+  medicine_name String
+  salt          String
+  barcode       String? @unique
+  brand_name    String?
+  pack_size     String?
+  strength      String?
+
+  hsn_id Int
+  hsn    HsnTable @relation(fields: [hsn_id], references: [id])
+
+  company_id Int
+  company    Company @relation(fields: [company_id], references: [id])
+
+  product_type_id Int
+  product_type    ProductType @relation(fields: [product_type_id], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([medicine_name, strength, company_id])
+  @@index([company_id])
+  @@index([product_type_id])
+  @@index([hsn_id])
+}

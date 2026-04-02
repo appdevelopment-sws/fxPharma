@@ -1,8 +1,11 @@
-import { Route } from "react-router"
+import { Navigate, Route } from "react-router"
 import AdminLayout from "@/layout/AdminLayout"
 import LoginScreen from "@/pages/admin/auth/login"
 import RegisterPage from "@/pages/admin/auth/register"
 import AdminDashboard from "@/pages/admin/dashboard/AdminDashboard"
+import AdminUsersPage from "@/pages/admin/users/AdminUsersPage"
+import AdminRolesPage from "@/pages/admin/roles/AdminRolesPage"
+import AdminProfilePage from "@/pages/admin/profile/AdminProfilePage"
 import ProtectedRoute from "@/components/auth/ProtectedRoute"
 import PublicOnlyRoute from "@/components/auth/PublicOnlyRoute"
 
@@ -16,7 +19,19 @@ export const AdminRoutes = () => {
 
       <Route element={<ProtectedRoute allowedRoles={["Admin", "User"]} />}>
         <Route path="/admin" element={<AdminLayout />}>
+          <Route index element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="profile" element={<AdminProfilePage />} />
+          <Route
+            element={<ProtectedRoute allowedPermissions={["USER_READ"]} />}
+          >
+            <Route path="users" element={<AdminUsersPage />} />
+          </Route>
+          <Route
+            element={<ProtectedRoute allowedPermissions={["ROLE_MANAGE"]} />}
+          >
+            <Route path="roles" element={<AdminRolesPage />} />
+          </Route>
         </Route>
       </Route>
     </>

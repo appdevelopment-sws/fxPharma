@@ -1,12 +1,48 @@
+import { Badge } from "@/components/ui/badge"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { useAuth } from "@/context/authContext"
+import {
+  flattenSuperAdminNavigationItems,
+  getSuperAdminPermissionSummary,
+  getVisibleSuperAdminNavigation,
+} from "@/components/super-admin/super-admin-navigation"
 
 export default function SuperAdminDashboard() {
   const { user } = useAuth()
 
   if (!user) return null
 
+  const permissionCards = getSuperAdminPermissionSummary(user)
+  const visibleModules = flattenSuperAdminNavigationItems(
+    getVisibleSuperAdminNavigation(user)
+  ).filter((item) => item.to !== "/super-admin")
+
+  const stats = [
+    {
+      label: "Platform permissions",
+      value: String(permissionCards.length),
+      helper: "Resolved from the active super admin role",
+    },
+    {
+      label: "Visible modules",
+      value: String(visibleModules.length + 1),
+      helper: "Sidebar entries available to this platform user",
+    },
+    {
+      label: "Tenant scope",
+      value: user.tenant?.name ?? "Platform",
+      helper: "Reserved tenant boundary for platform operations",
+    },
+  ]
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="space-y-2">
         <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground">
           Platform Control
@@ -14,61 +50,72 @@ export default function SuperAdminDashboard() {
         <h1 className="text-3xl font-semibold tracking-tight">
           Super Admin Dashboard
         </h1>
-        <p className="text-muted-foreground">
+        <p className="max-w-2xl text-sm text-muted-foreground">
           Signed in as {user.email}
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <div className="rounded-2xl border bg-card p-5 shadow-sm">
-          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-            Role
-          </p>
-          <h2 className="mt-3 text-lg font-semibold">{user.role}</h2>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Full platform-level access across tenants.
-          </p>
-        </div>
-
-        <div className="rounded-2xl border bg-card p-5 shadow-sm">
-          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-            Tenant Scope
-          </p>
-          <h2 className="mt-3 text-lg font-semibold">
-            {user.tenant?.name ?? "Platform"}
-          </h2>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Reserved area for tenant oversight and platform operations.
-          </p>
-        </div>
-
-        <div className="rounded-2xl border bg-card p-5 shadow-sm">
-          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-            Permissions
-          </p>
-          <h2 className="mt-3 text-lg font-semibold">
-            {user.permissions.length}
-          </h2>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Active permissions loaded into the current session.
-          </p>
-        </div>
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {stats.map((stat) => (
+          <Card key={stat.label} className="border-border/60 shadow-sm">
+            <CardHeader>
+              <CardDescription className="uppercase tracking-[0.2em]">
+                {stat.label}
+              </CardDescription>
+              <CardTitle className="text-3xl">{stat.value}</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0 text-sm text-muted-foreground">
+              {stat.helper}
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
-      <div className="rounded-2xl border bg-card p-5 shadow-sm">
-        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-          Active Permission Set
-        </p>
-        <div className="mt-4 flex flex-wrap gap-2">
-          {user.permissions.map((permission) => (
-            <span
-              key={permission}
-              className="rounded-full border px-3 py-1 text-xs font-medium"
-            >
-              {permission}
-            </span>
-          ))}
-        </div>
+      <div className="grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
+        <Card className="border-border/60 shadow-sm">
+          <CardHeader>
+            <CardTitle>Accessible Platform Modules</CardTitle>
+            <CardDescription>
+              Super admin navigation is now driven by role and permission rules,
+              not a hardcoded dashboard-only layout.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-3">
+            {visibleModules.map((module) => (
+              <div
+                key={module.to}
+                className="rounded-2xl border border-border/60 bg-muted/20 p-4"
+              >
+                <p className="text-sm font-medium">{module.title}</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {module.description}
+                </p>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        <Card className="border-border/60 shadow-sm">
+          <CardHeader>
+            <CardTitle>Active Permission Set</CardTitle>
+            <CardDescription>
+              Permissions currently loaded into the super admin session.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2">
+              {permissionCards.map(({ permission, label }) => (
+                <Badge
+                  key={permission}
+                  variant="outline"
+                  className="rounded-full px-3 py-1"
+                >
+                  {label}
+                </Badge>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   )
