@@ -12,6 +12,9 @@ export default defineConfig({
     },
   },
   server: {
+    watch: {
+      usePolling: true,
+    },
     host: true, // important for docker
     port: 5173,
     proxy: {
