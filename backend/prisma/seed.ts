@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
+import { DEFAULT_PERMISSION_SEEDS } from "../src/constants/permissions.js";
 
 const connectionString = process.env.DATABASE_URL;
 
@@ -17,15 +18,7 @@ const prisma = new PrismaClient({ adapter });
 async function main() {
   const passwordHash = await bcrypt.hash("Supersecurepassword@1", 12);
 
-  const permissions = [
-    { name: "USER_CREATE", description: "Create tenant users" },
-    { name: "USER_READ", description: "Read tenant users" },
-    { name: "USER_UPDATE", description: "Update tenant users" },
-    { name: "USER_DELETE", description: "Delete tenant users" },
-    { name: "ROLE_MANAGE", description: "Manage tenant roles" },
-  ];
-
-  for (const permission of permissions) {
+  for (const permission of DEFAULT_PERMISSION_SEEDS) {
     await prisma.permission.upsert({
       where: { name: permission.name },
       update: {

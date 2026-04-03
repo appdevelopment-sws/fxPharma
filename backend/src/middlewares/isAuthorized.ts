@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { AuthRequest } from "./isAuthenticated.js";
+import type { PermissionName } from "@/constants/permissions.js";
 
 export const allowRoles = (...roles: string[]) => {
   return (req: AuthRequest, res: Response, next: NextFunction) => {
@@ -12,7 +13,7 @@ export const allowRoles = (...roles: string[]) => {
     next();
   };
 };
-export const allowPermissions = (...permissions: string[]) => {
+export const allowPermissions = (...permissions: PermissionName[]) => {
   return (req: AuthRequest, res: Response, next: NextFunction) => {
     if (!req.user) return res.status(401).json({ message: "Unauthorized" });
 

@@ -107,7 +107,7 @@ export function WorkspaceShell({
             </div>
           </header>
 
-          <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+          <main className="flex-1 bg-accent px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
             <div className="mx-auto w-full max-w-full">
               <Outlet />
             </div>
@@ -256,7 +256,7 @@ function SidebarContent({
         <Button
           type="button"
           variant="outline"
-          className="mt-4 w-full justify-start border-sidebar-border bg-destructive text-accent hover:bg-destructive/90"
+          className="mt-4 w-full justify-start border-sidebar-border bg-destructive/90 text-accent hover:bg-destructive/90"
           onClick={onLogout}
           disabled={isLoggingOut}
         >
