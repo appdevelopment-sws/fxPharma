@@ -13,14 +13,7 @@ import {
   isNavigationItemActive,
   type SidebarNavigationGroup,
 } from "@/components/navigation/sidebar-navigation"
-
-export const permissionLabels: Record<string, string> = {
-  USER_CREATE: "Create tenant users",
-  USER_READ: "View tenant users",
-  USER_UPDATE: "Update tenant users",
-  USER_DELETE: "Delete tenant users",
-  ROLE_MANAGE: "Manage tenant roles",
-}
+import { PERMISSIONS, permissionLabels } from "@/lib/access"
 
 export const adminNavigationGroups: SidebarNavigationGroup[] = [
   {
@@ -53,14 +46,14 @@ export const adminNavigationGroups: SidebarNavigationGroup[] = [
             to: "/admin/users",
             description: "Tenant users directory and access control",
             icon: Users,
-            permissions: ["USER_READ"],
+            permissions: [PERMISSIONS.USER_READ],
           },
           {
             title: "Roles & Permissions",
             to: "/admin/roles",
             description: "Role governance and permission matrix",
             icon: ShieldCheck,
-            permissions: ["ROLE_MANAGE"],
+            permissions: [PERMISSIONS.ROLE_MANAGE],
           },
         ],
       },

@@ -9,8 +9,8 @@ import {
 import { useAuth } from "@/context/authContext"
 import {
   getPermissionSummary,
-  permissionLabels,
 } from "@/components/admin/admin-navigation"
+import { permissionLabels } from "@/lib/access"
 
 export default function AdminProfilePage() {
   const { user } = useAuth()

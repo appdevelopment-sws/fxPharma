@@ -8,6 +8,7 @@ import AdminRolesPage from "@/pages/admin/roles/AdminRolesPage"
 import AdminProfilePage from "@/pages/admin/profile/AdminProfilePage"
 import ProtectedRoute from "@/components/auth/ProtectedRoute"
 import PublicOnlyRoute from "@/components/auth/PublicOnlyRoute"
+import { PERMISSIONS, ROLES } from "@/lib/access"
 
 export const AdminRoutes = () => {
   return (
@@ -17,18 +18,30 @@ export const AdminRoutes = () => {
         <Route path="/admin/register" element={<RegisterPage />} />
       </Route>
 
-      <Route element={<ProtectedRoute allowedRoles={["Admin", "User"]} />}>
+      <Route
+        element={
+          <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.USER]} />
+        }
+      >
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="profile" element={<AdminProfilePage />} />
           <Route
-            element={<ProtectedRoute allowedPermissions={["USER_READ"]} />}
+            element={
+              <ProtectedRoute
+                allowedPermissions={[PERMISSIONS.USER_READ]}
+              />
+            }
           >
             <Route path="users" element={<AdminUsersPage />} />
           </Route>
           <Route
-            element={<ProtectedRoute allowedPermissions={["ROLE_MANAGE"]} />}
+            element={
+              <ProtectedRoute
+                allowedPermissions={[PERMISSIONS.ROLE_MANAGE]}
+              />
+            }
           >
             <Route path="roles" element={<AdminRolesPage />} />
           </Route>

@@ -7,13 +7,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { useAuth } from "@/context/authContext"
-
-const capabilityChecklist = [
-  { permission: "USER_CREATE", label: "Invite and create users" },
-  { permission: "USER_READ", label: "Read user directory data" },
-  { permission: "USER_UPDATE", label: "Edit existing users" },
-  { permission: "USER_DELETE", label: "Deactivate or remove users" },
-]
+import { PERMISSIONS, userManagementCapabilities } from "@/lib/access"
 
 export default function AdminUsersPage() {
   const { user, hasPermission } = useAuth()
@@ -46,7 +40,7 @@ export default function AdminUsersPage() {
           <CardContent className="space-y-4 text-sm text-muted-foreground">
             <p>
               The sidebar only exposes this page when the signed-in user has the
-              `USER_READ` permission, and the route itself blocks direct access
+              `{PERMISSIONS.USER_READ}` permission, and the route itself blocks direct access
               without it.
             </p>
             <p>
@@ -64,7 +58,7 @@ export default function AdminUsersPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            {capabilityChecklist.map((item) => (
+            {userManagementCapabilities.map((item) => (
               <div
                 key={item.permission}
                 className="flex items-center justify-between rounded-xl border border-border/60 bg-background px-4 py-3"

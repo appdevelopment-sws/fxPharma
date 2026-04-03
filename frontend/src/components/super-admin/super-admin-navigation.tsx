@@ -12,14 +12,11 @@ import {
   isNavigationItemActive,
   type SidebarNavigationGroup,
 } from "@/components/navigation/sidebar-navigation"
-
-export const superAdminPermissionLabels: Record<string, string> = {
-  USER_CREATE: "Provision tenant administrators",
-  USER_READ: "Review tenant users and platform scope",
-  USER_UPDATE: "Update tenant access assignments",
-  USER_DELETE: "Disable users across tenants",
-  ROLE_MANAGE: "Govern platform and tenant roles",
-}
+import {
+  PERMISSIONS,
+  ROLES,
+  superAdminPermissionLabels,
+} from "@/lib/access"
 
 export const superAdminNavigationGroups: SidebarNavigationGroup[] = [
   {
@@ -30,14 +27,14 @@ export const superAdminNavigationGroups: SidebarNavigationGroup[] = [
         to: "/super-admin/dashboard",
         description: "Platform visibility, session scope, and access summary",
         icon: LayoutDashboard,
-        roles: ["Super Admin"],
+        roles: [ROLES.SUPER_ADMIN],
       },
       {
         title: "Profile",
         to: "/super-admin/profile",
         description: "Authenticated account and platform tenant context",
         icon: UserCog,
-        roles: ["Super Admin"],
+        roles: [ROLES.SUPER_ADMIN],
       },
     ],
   },
@@ -48,23 +45,23 @@ export const superAdminNavigationGroups: SidebarNavigationGroup[] = [
         title: "Platform Access",
         description: "Manage tenants, users, and platform role boundaries",
         icon: ShieldCheck,
-        roles: ["Super Admin"],
+        roles: [ROLES.SUPER_ADMIN],
         children: [
           {
             title: "Tenants",
             to: "/super-admin/tenants",
             description: "Platform-wide tenant oversight and health monitoring",
             icon: Building2,
-            roles: ["Super Admin"],
-            permissions: ["USER_READ"],
+            roles: [ROLES.SUPER_ADMIN],
+            permissions: [PERMISSIONS.USER_READ],
           },
           {
             title: "Roles & Permissions",
             to: "/super-admin/access",
             description: "Platform access policy and super admin controls",
             icon: ShieldCheck,
-            roles: ["Super Admin"],
-            permissions: ["ROLE_MANAGE"],
+            roles: [ROLES.SUPER_ADMIN],
+            permissions: [PERMISSIONS.ROLE_MANAGE],
           },
         ],
       },
@@ -77,14 +74,14 @@ export const superAdminNavigationGroups: SidebarNavigationGroup[] = [
         title: "Products",
         description: "Manage tenants, users, and platform role boundaries",
         icon: ShieldCheck,
-        roles: ["Super Admin"],
+        roles: [ROLES.SUPER_ADMIN],
         children: [
           {
             title: "Add Product",
             to: "/super-admin/products/new",
             description: "Platform-wide tenant oversight and health monitoring",
             icon: Building2,
-            roles: ["Super Admin"],
+            roles: [ROLES.SUPER_ADMIN],
           },
           // {
           //   title: "Roles & Permissions",

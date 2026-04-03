@@ -1,13 +1,14 @@
 import type { LucideIcon } from "lucide-react"
 import type { AuthUser } from "@/context/authContext"
+import type { PermissionName, RoleName } from "@/lib/access"
 
 export type SidebarNavigationItem = {
   title: string
   to?: string
   description: string
   icon: LucideIcon
-  permissions?: string[]
-  roles?: string[]
+  permissions?: PermissionName[]
+  roles?: RoleName[]
   children?: SidebarNavigationItem[]
 }
 
@@ -19,7 +20,7 @@ export type SidebarNavigationGroup = {
 export function canAccessNavigationItem(
   item: SidebarNavigationItem,
   user: AuthUser | null
-) {
+): boolean {
   if (!user) return false
 
   const matchesRole = !item.roles?.length || item.roles.includes(user.role)

@@ -2,6 +2,12 @@
 
 A full-stack Pharmacy Management SaaS application with Dockerized architecture.
 
+## 📚 Documentation
+
+- [Auth Flow](./docs/auth-flow.md)
+- [Sidebar Navigation](./docs/sidebar-navigation.md)
+- [Permissions Guide](./docs/permissions-guide.md)
+
 ## 🧰 Tech Stack
 
 - **Backend:** Node.js + Express + TypeScript + Prisma
