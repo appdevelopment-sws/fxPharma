@@ -4,6 +4,7 @@ import DataTable, { type DataTableColumn } from "@/components/data-table"
 import { FilterBar } from "@/components/filter-bar"
 import SectionCard from "@/components/SectionCard"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 
 type ProductRow = {
   id: string
@@ -151,46 +152,49 @@ export default function SuperAdminProductsNewPage() {
   }
 
   return (
-    <SectionCard
-      title="Products"
-      description="Reusable filter and table pattern for product, tenant, user, or ticket listing pages."
-    >
-      <div className="space-y-4">
-        <FilterBar values={filters} onChange={handleFilterChange}>
-          <FilterBar.Select
-            name="category"
-            options={CATEGORY_OPTIONS}
-            placeholder="All Categories"
-          />
-          <FilterBar.Select
-            name="status"
-            options={STATUS_OPTIONS}
-            placeholder="All Statuses"
-          />
-          <FilterBar.Search
-            name="search"
-            placeholder="Search by product id, name, or manufacturer"
-          />
-        </FilterBar>
+    <div>
+      <SectionCard
+        title="Products"
+        description="Reusable filter and table pattern for product, tenant, user, or ticket listing pages."
+        action={<Button>Add Product</Button>}
+      >
+        <div className="space-y-4">
+          <FilterBar values={filters} onChange={handleFilterChange}>
+            <FilterBar.Select
+              name="category"
+              options={CATEGORY_OPTIONS}
+              placeholder="All Categories"
+            />
+            <FilterBar.Select
+              name="status"
+              options={STATUS_OPTIONS}
+              placeholder="All Statuses"
+            />
+            <FilterBar.Search
+              name="search"
+              placeholder="Search by product id, name, or manufacturer"
+            />
+          </FilterBar>
 
-        <DataTable
-          columns={PRODUCT_COLUMNS}
-          data={paginatedRows}
-          rowKey="id"
-          currentPage={currentPage}
-          lastPage={lastPage}
-          pageSize={filters.perPage}
-          totalRecords={filteredRows.length}
-          onPageChange={(page) =>
-            setFilters((current) => ({ ...current, page }))
-          }
-          onPageSizeChange={(perPage) =>
-            setFilters((current) => ({ ...current, perPage, page: 1 }))
-          }
-          emptyTitle="No products matched these filters"
-          emptyDescription="Try changing category, status, or search terms to see matching products."
-        />
-      </div>
-    </SectionCard>
+          <DataTable
+            columns={PRODUCT_COLUMNS}
+            data={paginatedRows}
+            rowKey="id"
+            currentPage={currentPage}
+            lastPage={lastPage}
+            pageSize={filters.perPage}
+            totalRecords={filteredRows.length}
+            onPageChange={(page) =>
+              setFilters((current) => ({ ...current, page }))
+            }
+            onPageSizeChange={(perPage) =>
+              setFilters((current) => ({ ...current, perPage, page: 1 }))
+            }
+            emptyTitle="No products matched these filters"
+            emptyDescription="Try changing category, status, or search terms to see matching products."
+          />
+        </div>
+      </SectionCard>
+    </div>
   )
 }
