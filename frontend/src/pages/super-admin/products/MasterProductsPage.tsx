@@ -7,6 +7,7 @@ import { toast } from "sonner"
 import { ConfirmDialog } from "@/components/confirmDialog"
 import DataTable, { type DataTableColumn } from "@/components/data-table"
 import { FilterBar } from "@/components/filter-bar"
+import CreateHsnCodeDialog from "@/components/products/CreateHsnCodeDialog"
 import MasterProductDrawer, {
   PRODUCT_FORM_DEFAULT_VALUES,
   type MasterProductFormValues,
@@ -32,10 +33,16 @@ type DrawerState = {
   product: MasterProduct | null
 }
 
+const toOption = (value: string | number, label: string) => ({
+  value: String(value),
+  label,
+})
+
 export default function SuperAdminProductsPage() {
   const queryClient = useQueryClient()
   const drawerDisclosure = useDisclosure<DrawerState>()
   const deleteDisclosure = useDisclosure<MasterProduct>()
+  const hsnDisclosure = useDisclosure()
   const { filter, handleFilter } = useSearchFilter<ProductFilters>({
     companyId: "",
     productTypeId: "",
@@ -45,13 +52,19 @@ export default function SuperAdminProductsPage() {
     limit: 10,
   })
 
-  const { control, handleSubmit, reset } = useForm<MasterProductFormValues>({
-    defaultValues: PRODUCT_FORM_DEFAULT_VALUES,
-  })
+  const { control, handleSubmit, reset, setValue } =
+    useForm<MasterProductFormValues>({
+      defaultValues: PRODUCT_FORM_DEFAULT_VALUES,
+    })
 
   const { data: productsData, isLoading: isLoadingProducts } = useQuery({
     queryKey: queryKeys.masterProducts.list(filter),
     queryFn: () => ProductApi.getMasterProducts(filter),
+  })
+
+  const { data: references, isLoading: isLoadingReferences } = useQuery({
+    queryKey: queryKeys.masterProducts.references(),
+    queryFn: ProductApi.getReferences,
   })
 
   const createProductMutation = useMutation({
@@ -61,8 +74,8 @@ export default function SuperAdminProductsPage() {
       queryClient.invalidateQueries({ queryKey: queryKeys.masterProducts.all })
       drawerDisclosure.onClose()
       reset(PRODUCT_FORM_DEFAULT_VALUES)
+      toast.success("Master product created successfully")
     },
-    onError: (error: any) => {},
   })
 
   const updateProductMutation = useMutation({
@@ -72,8 +85,8 @@ export default function SuperAdminProductsPage() {
       queryClient.invalidateQueries({ queryKey: queryKeys.masterProducts.all })
       drawerDisclosure.onClose()
       reset(PRODUCT_FORM_DEFAULT_VALUES)
+      toast.success("Master product updated successfully")
     },
-    onError: () => {},
   })
 
   const deleteProductMutation = useMutation({
@@ -81,8 +94,52 @@ export default function SuperAdminProductsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.masterProducts.all })
       deleteDisclosure.onClose()
+      toast.success("Master product deleted successfully")
     },
-    onError: () => {},
+  })
+
+  const createHsnMutation = useMutation({
+    mutationFn: ({ code }: { code: string }) =>
+      ProductApi.createHsnCode({ code }),
+    onSuccess: async (hsnCode) => {
+      queryClient.setQueryData(
+        queryKeys.masterProducts.references(),
+        (
+          current:
+            | Awaited<ReturnType<typeof ProductApi.getReferences>>
+            | undefined
+        ) => {
+          if (!current) {
+            return {
+              companies: [],
+              productTypes: [],
+              hsnCodes: [hsnCode],
+            }
+          }
+
+          const exists = current.hsnCodes.some((item) => item.id === hsnCode.id)
+          if (exists) {
+            return current
+          }
+
+          return {
+            ...current,
+            hsnCodes: [...current.hsnCodes, hsnCode].sort((a, b) =>
+              a.code.localeCompare(b.code)
+            ),
+          }
+        }
+      )
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.masterProducts.references(),
+      })
+      setValue("hsnCodeId", String(hsnCode.id), {
+        shouldDirty: true,
+        shouldTouch: true,
+      })
+      hsnDisclosure.onClose()
+      toast.success("HSN code created successfully")
+    },
   })
 
   const handleFilterChange = useCallback(
@@ -107,11 +164,12 @@ export default function SuperAdminProductsPage() {
 
       reset({
         name: product.name,
-        salt: product.salt,
-        barcode: product.barcode ?? "",
+        generic_name: product.generic_name ?? "",
         brand_name: product.brand_name ?? "",
         pack_size: product.pack_size ?? "",
         strength: product.strength ?? "",
+        isPrescriptionRequired: product.isPrescriptionRequired ?? false,
+        scheduleType: product.scheduleType ?? "",
         hsnCodeId: String(product.hsnCodeId),
         company_id: String(product.company_id),
         product_type_id: String(product.product_type_id),
@@ -163,6 +221,36 @@ export default function SuperAdminProductsPage() {
     deleteProductMutation.mutate(deleteDisclosure.data.id)
   }, [deleteDisclosure.data, deleteProductMutation])
 
+  const companyOptions = useMemo(
+    () =>
+      (references?.companies ?? []).map((company) =>
+        toOption(
+          company.id,
+          company.gstin ? `${company.name} (${company.gstin})` : company.name
+        )
+      ),
+    [references?.companies]
+  )
+
+  const productTypeOptions = useMemo(
+    () =>
+      (references?.productTypes ?? []).map((productType) =>
+        toOption(
+          productType.id,
+          `${productType.name} (${productType.unit_type})`
+        )
+      ),
+    [references?.productTypes]
+  )
+
+  const hsnOptions = useMemo(
+    () =>
+      (references?.hsnCodes ?? []).map((hsnCode) =>
+        toOption(hsnCode.id, hsnCode.code)
+      ),
+    [references?.hsnCodes]
+  )
+
   const productColumns = useMemo<DataTableColumn<MasterProduct>[]>(
     () => [
       {
@@ -177,7 +265,9 @@ export default function SuperAdminProductsPage() {
         render: (row) => (
           <div className="space-y-1">
             <p className="font-medium text-foreground">{row.name}</p>
-            <p className="text-xs text-muted-foreground">{row.salt}</p>
+            <p className="text-xs text-muted-foreground">
+              {row.generic_name || "-"}
+            </p>
           </div>
         ),
       },
@@ -209,9 +299,14 @@ export default function SuperAdminProductsPage() {
         render: (row) => row.hsnCode?.code || `#${row.hsnCodeId}`,
       },
       {
-        key: "barcode",
-        header: "Barcode",
-        render: (row) => row.barcode || "-",
+        key: "schedule",
+        header: "Schedule",
+        render: (row) => row.scheduleType || "-",
+      },
+      {
+        key: "rx",
+        header: "Rx",
+        render: (row) => (row.isPrescriptionRequired ? "Yes" : "No"),
       },
       {
         key: "actions",
@@ -274,10 +369,29 @@ export default function SuperAdminProductsPage() {
             handleDrawerSubmit()
           }}
           mode={drawerDisclosure.data.mode}
+          variant="modal"
           isSubmitting={isSubmitting}
           isLoading={isSubmitting}
+          companyOptions={companyOptions}
+          productTypeOptions={productTypeOptions}
+          hsnOptions={hsnOptions}
+          onAddHsn={() => hsnDisclosure.onOpen()}
+          isReferenceLoading={isLoadingReferences}
         />
       )}
+
+      <CreateHsnCodeDialog
+        open={hsnDisclosure.isOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            hsnDisclosure.onClose()
+          }
+        }}
+        onSubmit={async ({ code }) => {
+          await createHsnMutation.mutateAsync({ code })
+        }}
+        isSubmitting={createHsnMutation.isPending}
+      />
 
       <ConfirmDialog
         open={deleteDisclosure.isOpen}
@@ -302,7 +416,7 @@ export default function SuperAdminProductsPage() {
           <Button
             type="button"
             onClick={() => openDrawer("create")}
-            disabled={isLoadingProducts}
+            disabled={isLoadingProducts || isLoadingReferences}
           >
             <Plus className="size-4" />
             Add Product
@@ -319,24 +433,24 @@ export default function SuperAdminProductsPage() {
             }}
             onChange={handleFilterChange}
           >
-            <FilterBar.Search
+            <FilterBar.Select
               name="companyId"
-              placeholder="Filter by company ID"
-              className="min-w-[180px] flex-1"
+              placeholder="All companies"
+              options={companyOptions}
             />
-            <FilterBar.Search
+            <FilterBar.Select
               name="productTypeId"
-              placeholder="Filter by product type ID"
-              className="min-w-[180px] flex-1"
+              placeholder="All product types"
+              options={productTypeOptions}
             />
-            <FilterBar.Search
+            <FilterBar.Select
               name="hsnCodeId"
-              placeholder="Filter by HSN code ID"
-              className="min-w-[180px] flex-1"
+              placeholder="All HSN codes"
+              options={hsnOptions}
             />
             <FilterBar.Search
               name="search"
-              placeholder="Search by name, salt, brand, or barcode"
+              placeholder="Search by name, generic, brand, strength, pack size, or company"
             />
           </FilterBar>
 
@@ -348,7 +462,7 @@ export default function SuperAdminProductsPage() {
             lastPage={lastPage}
             pageSize={filter.limit}
             totalRecords={totalRecords}
-            isLoading={isLoadingProducts}
+            isLoading={isLoadingProducts || isLoadingReferences}
             onPageChange={(page) => handleFilterChange({ page })}
             onPageSizeChange={(limit) => handleFilterChange({ limit, page: 1 })}
             emptyTitle="No master products found"

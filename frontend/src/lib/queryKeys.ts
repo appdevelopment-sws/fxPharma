@@ -16,5 +16,6 @@ export const queryKeys = {
     list: (filters?: any) =>
       [...queryKeys.masterProducts.all, filters] as const,
     detail: (id: string) => [...queryKeys.masterProducts.all, id] as const,
+    references: () => [...queryKeys.masterProducts.all, "references"] as const,
   },
 }

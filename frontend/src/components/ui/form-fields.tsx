@@ -109,9 +109,11 @@ interface FormSelectFieldProps<T extends FieldValues> {
   tooltip?: string
   options: Array<{ label: string; value: string }>
   disabled?: boolean
+  readOnly?: boolean
   error?: string
   placeholder?: string
   required?: boolean
+  action?: React.ReactNode
 }
 
 /**
@@ -134,9 +136,11 @@ export function FormSelectField<T extends FieldValues>({
   tooltip,
   options,
   disabled,
+  readOnly,
   error,
   placeholder,
   required,
+  action,
 }: FormSelectFieldProps<T>) {
   return (
     <Controller
@@ -144,18 +148,22 @@ export function FormSelectField<T extends FieldValues>({
       name={name}
       render={({ field }) => (
         <div className="space-y-2">
-          <FieldLabel
-            htmlFor={String(name)}
-            label={label}
-            required={required}
-            tooltip={tooltip}
-          />
+          <div className="flex items-center justify-between gap-3">
+            <FieldLabel
+              htmlFor={String(name)}
+              label={label}
+              required={required}
+              tooltip={tooltip}
+            />
+            {action}
+          </div>
           <select
             id={String(name)}
             {...field}
-            disabled={disabled}
+            disabled={disabled || readOnly}
             className={cn(
               "h-8 w-full rounded-lg border border-input bg-background px-2.5 text-sm text-foreground transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-100",
+              readOnly && "bg-muted/30 opacity-90",
               error && "border-destructive"
             )}
             aria-invalid={!!error}
@@ -254,6 +262,7 @@ interface FormCheckboxProps<T extends FieldValues> {
   name: Path<T>
   label: string
   error?: string
+  disabled?: boolean
 }
 
 /**
@@ -270,6 +279,7 @@ export function FormCheckbox<T extends FieldValues>({
   name,
   label,
   error,
+  disabled,
 }: FormCheckboxProps<T>) {
   return (
     <Controller
@@ -283,6 +293,7 @@ export function FormCheckbox<T extends FieldValues>({
               type="checkbox"
               {...field}
               checked={field.value as boolean}
+              disabled={disabled}
               className="h-4 w-4 rounded border border-input"
               aria-invalid={!!error}
             />
