@@ -49,18 +49,16 @@ export const findRoleByName = async (name: string) => {
   });
 };
 
-export const createTenantWithAdmin = async (
-  data: {
-    tenant: {
-      name: string;
-    };
-    adminUser: {
-      name: string;
-      email: string;
-      passwordHash: string;
-    };
-  },
-) => {
+export const createTenantWithAdmin = async (data: {
+  tenant: {
+    name: string;
+  };
+  adminUser: {
+    name: string;
+    email: string;
+    passwordHash: string;
+  };
+}) => {
   return rootPrisma.$transaction(async (tx) => {
     const existingEmail = await tx.user.findFirst({
       where: {

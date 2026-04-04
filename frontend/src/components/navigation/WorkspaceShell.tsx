@@ -1,6 +1,13 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react"
 import { NavLink, Outlet, useLocation } from "react-router"
-import { ChevronDown, ChevronRight, LogOut, Menu, X } from "lucide-react"
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  LogOut,
+  Menu,
+  X,
+} from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -39,6 +46,7 @@ export function WorkspaceShell({
   onLogout,
 }: WorkspaceShellProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [isCollapsed, setIsCollapsed] = useState(false)
   const location = useLocation()
 
   const activeItem = useMemo(() => {
@@ -57,9 +65,26 @@ export function WorkspaceShell({
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.1),transparent_30%),linear-gradient(180deg,rgba(255,255,255,0.98),rgba(248,250,252,1))] text-foreground">
       <div className="flex min-h-screen">
-        <aside className="sticky top-0 hidden h-screen w-80 shrink-0 border-r border-sidebar-border bg-sidebar lg:block">
+        <aside
+          className={cn(
+            "sticky top-0 hidden h-screen shrink-0 overflow-hidden border-r border-sidebar-border bg-sidebar transition-all duration-300 lg:block",
+            isCollapsed ? "w-20" : "w-70"
+          )}
+        >
           <div className="flex h-full flex-col px-5 py-5">
+            <div className="mb-2 flex justify-end">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                className="bg-sidebar-accent/70 text-sidebar-foreground"
+                onClick={() => setIsCollapsed(!isCollapsed)}
+              >
+                {isCollapsed ? <ChevronRight /> : <ChevronLeft />}
+              </Button>
+            </div>
             <SidebarContent
+              isCollapsed={isCollapsed}
               workspaceTitle={workspaceTitle}
               workspaceSubtitle={workspaceSubtitle}
               userName={userName}
@@ -145,6 +170,7 @@ export function WorkspaceShell({
               </Button>
             </div>
             <SidebarContent
+              isCollapsed={false}
               workspaceTitle={workspaceTitle}
               workspaceSubtitle={workspaceSubtitle}
               userName={userName}
@@ -164,6 +190,7 @@ export function WorkspaceShell({
 }
 
 type SidebarContentProps = {
+  isCollapsed: boolean
   workspaceTitle: string
   workspaceSubtitle: string
   userName: string
@@ -187,6 +214,7 @@ function SidebarContent({
   onLogout,
   navigationGroups,
   brandIcon,
+  isCollapsed,
 }: SidebarContentProps) {
   const activeParentKeys = useMemo(
     () =>
@@ -219,27 +247,41 @@ function SidebarContent({
   return (
     <>
       <div className="rounded-3xl border border-sidebar-border bg-sidebar-accent/40 p-1">
-        <div className="flex items-center gap-3">
+        <div
+          className={cn(
+            "flex items-center",
+            isCollapsed ? "justify-center" : "gap-3"
+          )}
+        >
           <div className="flex size-11 items-center justify-center rounded-2xl bg-sidebar-primary text-sidebar-primary-foreground shadow-sm">
             {brandIcon}
           </div>
-          <div className="min-w-0">
-            <h2 className="truncate text-base font-semibold text-sidebar-foreground">
-              {workspaceTitle}
-            </h2>
-            <p className="truncate text-xs text-sidebar-foreground/60">
-              {workspaceSubtitle}
-            </p>
-          </div>
+          {!isCollapsed && (
+            <div className="min-w-0">
+              <h2 className="truncate text-base font-semibold text-sidebar-foreground">
+                {workspaceTitle}
+              </h2>
+              <p className="truncate text-xs text-sidebar-foreground/60">
+                {workspaceSubtitle}
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
-      <nav className="mt-4 flex-1 space-y-6 overflow-y-auto">
+      <nav
+        className={cn(
+          "mt-4 flex-1 overflow-x-hidden overflow-y-auto",
+          isCollapsed ? "space-y-3" : "space-y-6"
+        )}
+      >
         {navigationGroups.map((group) => (
           <div key={group.title}>
-            <p className="px-2 text-[11px] font-medium tracking-[0.24em] text-sidebar-foreground/50 uppercase">
-              {group.title}
-            </p>
+            {!isCollapsed && (
+              <p className="px-2 text-[11px] font-medium tracking-[0.24em] text-sidebar-foreground/50 uppercase">
+                {group.title}
+              </p>
+            )}
             <div className="space-y-1">
               {group.items.map((item) => (
                 <SidebarNavigationEntry
@@ -249,6 +291,7 @@ function SidebarContent({
                   isExpanded={expandedItems.includes(item.title)}
                   onToggleExpanded={toggleExpandedItem}
                   onNavigate={onNavigate}
+                  isCollapsed={isCollapsed}
                 />
               ))}
             </div>
@@ -256,20 +299,45 @@ function SidebarContent({
         ))}
       </nav>
 
-      <Button
-        type="button"
-        className="w-full justify-start border-sidebar-border bg-destructive/90 py-5 text-accent"
-        onClick={onLogout}
-        disabled={isLoggingOut}
+      <div
+        className={cn(
+          "mt-6 rounded-3xl border border-sidebar-border bg-sidebar-accent/30",
+          isCollapsed ? "flex justify-center p-2" : "p-4"
+        )}
       >
-        <LogOut />
-        {isLoggingOut ? "Signing out..." : "Sign out"}
-      </Button>
+        {!isCollapsed && (
+          <div className="space-y-1">
+            <p className="truncate text-sm font-medium text-sidebar-foreground">
+              {userName}
+            </p>
+            <p className="text-xs tracking-[0.2em] text-sidebar-foreground/55 uppercase">
+              {userRole}
+            </p>
+          </div>
+        )}
+
+        <Button
+          type="button"
+          variant="outline"
+          className={cn(
+            "mt-4 w-full border-sidebar-border bg-destructive/90 text-sidebar-primary-foreground hover:bg-destructive/90",
+            isCollapsed
+              ? "flex h-10 w-10 items-center justify-center p-0"
+              : "justify-start"
+          )}
+          onClick={onLogout}
+          disabled={isLoggingOut}
+        >
+          <LogOut />
+          {!isCollapsed && (isLoggingOut ? "Signing out..." : "Sign out")}
+        </Button>
+      </div>
     </>
   )
 }
 
 type SidebarNavigationEntryProps = {
+  isCollapsed: boolean
   item: SidebarNavigationItem
   activePath: string
   isExpanded: boolean
@@ -283,10 +351,14 @@ function SidebarNavigationEntry({
   isExpanded,
   onToggleExpanded,
   onNavigate,
+  isCollapsed,
 }: SidebarNavigationEntryProps) {
   const Icon = item.icon
   const isActive = isNavigationItemActive(item, activePath)
 
+  {
+    /*with  children  */
+  }
   if (item.children?.length) {
     return (
       <div className="rounded-2xl">
@@ -294,27 +366,33 @@ function SidebarNavigationEntry({
           type="button"
           onClick={() => onToggleExpanded(item.title)}
           className={cn(
-            "flex w-full items-center gap-3 rounded-2xl border px-3 py-1 text-left transition-colors",
+            "flex w-full items-center rounded-xl transition-all duration-200",
+            isCollapsed ? "justify-center p-2" : "gap-3 px-3 py-2",
             isActive
-              ? "border-sidebar-primary/20 bg-sidebar-primary/95 text-sidebar-primary-foreground shadow-sm"
-              : "border-transparent text-sidebar-foreground/80 hover:border-sidebar-border hover:bg-sidebar-accent hover:text-sidebar-foreground"
+              ? "bg-sidebar-primary text-white shadow-sm"
+              : "text-sidebar-foreground/80 hover:bg-sidebar-accent"
           )}
         >
           <span
             className={cn(
-              "flex size-9 shrink-0 items-center justify-center rounded-xl",
+              "flex size-10 shrink-0 items-center justify-center rounded-2xl transition-all duration-200",
+              isCollapsed && "mx-auto",
+
               isActive
-                ? "bg-white/14"
-                : "bg-sidebar-accent/70 text-sidebar-foreground"
+                ? "scale-105 bg-white/20 text-white shadow-md"
+                : "bg-sidebar-accent/60 text-sidebar-foreground group-hover:scale-105 group-hover:bg-sidebar-accent"
             )}
           >
-            <Icon className="size-4" />
+            <Icon className="size-5" />
           </span>
-          <span className="min-w-0 flex-1">
-            <span className="block truncate text-sm font-medium">
-              {item.title}
+          {!isCollapsed && (
+            <span className="min-w-0">
+              <span className="block truncate text-xs font-medium">
+                {item.title}
+              </span>
             </span>
-            {/* <span
+          )}
+          {/* <span
               className={cn(
                 "block truncate text-xs",
                 isActive
@@ -324,7 +402,7 @@ function SidebarNavigationEntry({
             >
               {item.description}
             </span> */}
-          </span>
+
           <ChevronDown
             className={cn(
               "size-4 shrink-0 transition-transform",
@@ -344,7 +422,7 @@ function SidebarNavigationEntry({
                   to={child.to ?? "#"}
                   onClick={onNavigate}
                   className={cn(
-                    "block rounded-xl px-3 py-2.5 text-sm transition-colors",
+                    "group block rounded-xl px-3 py-2.5 text-sm transition-colors",
                     childIsActive
                       ? "bg-sidebar-accent text-sidebar-foreground shadow-sm"
                       : "text-sidebar-foreground/65 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground"
@@ -368,27 +446,36 @@ function SidebarNavigationEntry({
       to={item.to ?? "#"}
       onClick={onNavigate}
       className={cn(
-        "group flex items-center gap-3 rounded-2xl border px-3 py-1 transition-colors",
+        "group flex items-center rounded-xl transition-all duration-200",
+        isCollapsed ? "justify-center p-2" : "gap-3 px-3 py-2",
         isActive
-          ? "border-sidebar-primary/20 bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
-          : "border-transparent text-sidebar-foreground/80 hover:border-sidebar-border hover:bg-sidebar-accent hover:text-sidebar-foreground"
+          ? "bg-sidebar-primary text-white shadow-sm"
+          : "text-sidebar-foreground/80 hover:bg-sidebar-accent"
       )}
     >
       <span
         className={cn(
-          "flex size-9 shrink-0 items-center justify-center rounded-xl",
+          "flex size-9 shrink-0 items-center justify-center rounded-lg transition-all duration-200",
+          isCollapsed && "mx-auto",
+
           isActive
-            ? "bg-white/14"
-            : "bg-sidebar-accent/70 text-sidebar-foreground"
+            ? "bg-white text-sidebar-primary shadow-sm"
+            : "bg-sidebar-accent/50 text-sidebar-foreground group-hover:bg-sidebar-accent"
         )}
       >
-        <Icon className="size-4" />
+        <Icon className="size-5" />
       </span>
-      <span className="min-w-0">
-        <span className="block truncate text-sm font-medium">{item.title}</span>
-        {/* <span
+      {/*without children */}
+      {!isCollapsed && (
+        <span className="min-w-0">
+          <span className="block truncate text-xs font-medium">
+            {item.title}
+          </span>
+        </span>
+      )}
+      {/* <span
           className={cn(
-            "block truncate text-xs",
+            "block truncate text-xs", 
             isActive
               ? "text-sidebar-primary-foreground/80"
               : "text-sidebar-foreground/55"
@@ -396,7 +483,6 @@ function SidebarNavigationEntry({
         >
           {item.description}
         </span> */}
-      </span>
     </NavLink>
   )
 }
