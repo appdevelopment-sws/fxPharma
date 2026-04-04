@@ -247,26 +247,15 @@ function SidebarContent({
         ))}
       </nav>
 
-      <div className="mt-6 rounded-3xl border border-sidebar-border bg-sidebar-accent/30 p-4">
-        <div className="space-y-1">
-          <p className="truncate text-sm font-medium text-sidebar-foreground">
-            {userName}
-          </p>
-          <p className="text-xs tracking-[0.2em] text-sidebar-foreground/55 uppercase">
-            {userRole}
-          </p>
-        </div>
-        <Button
-          type="button"
-          variant="outline"
-          className="mt-4 w-full justify-start border-sidebar-border bg-destructive/90 text-accent hover:bg-destructive/90"
-          onClick={onLogout}
-          disabled={isLoggingOut}
-        >
-          <LogOut />
-          {isLoggingOut ? "Signing out..." : "Sign out"}
-        </Button>
-      </div>
+      <Button
+        type="button"
+        className="w-full justify-start border-sidebar-border bg-destructive/90 py-5 text-accent"
+        onClick={onLogout}
+        disabled={isLoggingOut}
+      >
+        <LogOut />
+        {isLoggingOut ? "Signing out..." : "Sign out"}
+      </Button>
     </>
   )
 }
