@@ -6,6 +6,10 @@ datasource db {
   provider = "postgresql"
 }
 
+//////////////////////////////////////////////////////
+// ENUMS
+//////////////////////////////////////////////////////
+
 enum TenantStatus {
   ACTIVE
   SUSPENDED
@@ -23,82 +27,6 @@ enum CompanyStatus {
   BLOCKED
 }
 
-model Tenant {
-  id                  String               @id @default(cuid())
-  name                String
-  status              TenantStatus         @default(ACTIVE)
-  users               User[]
-  roles               Role[]
-  createdAt           DateTime             @default(now())
-  updatedAt           DateTime             @updatedAt
-  deletedAt           DateTime?
-  tenantSubscriptions TenantSubscription[]
-  tenantFeatures      TenantFeature[]
-  tenantSettings      TenantSetting[]
-}
-
-model User {
-  id           String     @id @default(cuid())
-  tenantId     String
-  tenant       Tenant     @relation(fields: [tenantId], references: [id], onDelete: Restrict)
-  name         String
-  email        String     @unique
-  passwordHash String
-  status       UserStatus @default(ACTIVE)
-  roleId       String
-  role         Role       @relation(fields: [roleId], references: [id], onDelete: Restrict)
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-  deletedAt    DateTime?
-
-  @@unique([tenantId, id])
-  @@unique([tenantId, email])
-  @@index([tenantId])
-  @@index([tenantId, roleId])
-}
-
-model Role {
-  id          String           @id @default(cuid())
-  tenantId    String
-  tenant      Tenant           @relation(fields: [tenantId], references: [id], onDelete: Restrict)
-  name        String
-  description String?
-  isDefault   Boolean          @default(false)
-  users       User[]
-  permissions RolePermission[]
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-
-  @@unique([tenantId, id])
-  @@unique([tenantId, name])
-  @@index([tenantId])
-}
-
-model Permission {
-  id          String           @id @default(cuid())
-  name        String           @unique
-  description String?
-  roles       RolePermission[]
-  createdAt   DateTime         @default(now())
-}
-
-model RolePermission {
-  id           String     @id @default(cuid())
-  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  roleId       String
-  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
-  permissionId String
-  createdAt    DateTime   @default(now())
-
-  @@unique([roleId, permissionId])
-  @@index([roleId])
-  @@index([permissionId])
-}
-
-//////////////////////////////////////////////////////
-// NEW ENUMS
-//////////////////////////////////////////////////////
-
 enum TaxType {
   INCLUSIVE
   EXCLUSIVE
@@ -114,185 +42,126 @@ enum BillingCycle {
   YEARLY
 }
 
-//////////////////////////////////////////////////////
-// REPLACE HSN TABLE
-//////////////////////////////////////////////////////
-
-model HsnCode {
-  id          Int     @id @default(autoincrement())
-  code        String  @unique @db.VarChar(10)
-  description String?
-  type        HsnType
-  isActive    Boolean @default(true)
-
-  taxMappings HsnTaxMapping[]
-  products    MasterProduct[]
-
-  createdAt DateTime @default(now())
-}
-
-model TaxRule {
-  id       Int     @id @default(autoincrement())
-  name     String? @db.VarChar(50)
-  rate     Decimal @db.Decimal(5, 2)
-  type     TaxType
-  country  String  @default("India")
-  isActive Boolean @default(true)
-
-  mappings HsnTaxMapping[]
-
-  createdAt DateTime @default(now())
-}
-
-model HsnTaxMapping {
-  id Int @id @default(autoincrement())
-
-  hsnCodeId Int
-  taxRuleId Int
-
-  hsnCode HsnCode @relation(fields: [hsnCodeId], references: [id])
-  taxRule TaxRule @relation(fields: [taxRuleId], references: [id])
-
-  effectiveFrom DateTime
-  effectiveTo   DateTime?
-
-  createdAt DateTime @default(now())
-
-  @@index([hsnCodeId])
-  @@index([taxRuleId])
+enum StockMovementType {
+  PURCHASE
+  SALE
+  RETURN
+  ADJUSTMENT
 }
 
 //////////////////////////////////////////////////////
-// SaaS FEATURES SYSTEM
+// TENANT + RBAC (MULTI-TENANT ISOLATION CORE)
 //////////////////////////////////////////////////////
 
-model Feature {
-  id          Int     @id @default(autoincrement())
-  key         String  @unique
-  name        String
-  description String?
-  module      String?
-  isActive    Boolean @default(true)
+model Tenant {
+  id     String       @id @default(cuid())
+  name   String
+  status TenantStatus @default(ACTIVE)
 
-  planFeatures   PlanFeature[]
-  tenantFeatures TenantFeature[]
-}
+  users User[]
+  roles Role[]
 
-model Plan {
-  id           Int          @id @default(autoincrement())
-  name         String
-  price        Decimal      @db.Decimal(10, 2)
-  billingCycle BillingCycle
-
-  maxUsers    Int?
-  maxInvoices Int?
-
-  isActive Boolean @default(true)
-
-  features      PlanFeature[]
-  subscriptions TenantSubscription[]
-
-  createdAt DateTime @default(now())
-}
-
-model PlanFeature {
-  id Int @id @default(autoincrement())
-
-  planId    Int
-  featureId Int
-
-  plan    Plan    @relation(fields: [planId], references: [id])
-  feature Feature @relation(fields: [featureId], references: [id])
-
-  @@unique([planId, featureId])
-}
-
-//////////////////////////////////////////////////////
-// TENANT EXTENSIONS (NO BREAKING CHANGE)
-//////////////////////////////////////////////////////
-
-model TenantSubscription {
-  id Int @id @default(autoincrement())
-
-  tenantId String
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
-
-  planId Int
-  plan   Plan @relation(fields: [planId], references: [id])
-
-  startDate DateTime
-  endDate   DateTime?
-
-  status        String
-  paymentStatus String
-
-  createdAt DateTime @default(now())
-
-  @@index([tenantId])
-}
-
-model TenantFeature {
-  id Int @id @default(autoincrement())
-
-  tenantId String
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
-
-  featureId Int
-  feature   Feature @relation(fields: [featureId], references: [id])
-
-  enabled Boolean @default(true)
-  config  Json?
-
-  @@unique([tenantId, featureId])
-}
-
-model TenantSetting {
-  tenantId String @id
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
-
-  inventoryEnabled Boolean @default(true)
-  rackEnabled      Boolean @default(false)
-  batchEnabled     Boolean @default(false)
-  expiryEnabled    Boolean @default(false)
-  gstEnabled       Boolean @default(true)
-}
-
-//////////////////////////////////////////////////////
-// UPDATE EXISTING PRODUCT MODELS
-//////////////////////////////////////////////////////
-
-model ProductType {
-  id          Int     @id @default(autoincrement())
-  name        String
-  unit_type   String
-  description String?
-
-  products MasterProduct[]
+  branches  Branch[]
+  products  TenantProduct[]
+  suppliers Supplier[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model User {
+  id       String @id @default(cuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  name         String
+  email        String
+  passwordHash String
+  status       UserStatus @default(ACTIVE)
+
+  roleId String
+  role   Role   @relation(fields: [roleId], references: [id])
+
+  @@unique([tenantId, email])
+  @@index([tenantId])
+}
+
+model Role {
+  id       String @id @default(cuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  name String
+
+  users       User[]
+  permissions RolePermission[]
+
+  @@unique([tenantId, name])
+}
+
+model Permission {
+  id   String @id @default(cuid())
+  name String @unique
+
+  roles RolePermission[]
+}
+
+model RolePermission {
+  id           String @id @default(cuid())
+  roleId       String
+  permissionId String
+
+  role       Role       @relation(fields: [roleId], references: [id])
+  permission Permission @relation(fields: [permissionId], references: [id])
+
+  @@unique([roleId, permissionId])
+}
+
+//////////////////////////////////////////////////////
+// GLOBAL MASTER DATA (SHARED ACROSS TENANTS)
+//////////////////////////////////////////////////////
+
+model HsnCode {
+  id   Int    @id @default(autoincrement())
+  code String @unique
+
+  products MasterProduct[]
+}
+
+model Salt {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  compositions MedicineComposition[]
 }
 
 model Company {
   id     Int           @id @default(autoincrement())
-  gstin  String?       @unique
   name   String
+  gstin  String?       @unique
   status CompanyStatus @default(ACTIVE)
 
   products MasterProduct[]
+}
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model ProductType {
+  id        Int    @id @default(autoincrement())
+  name      String
+  unit_type String
+
+  products MasterProduct[]
 }
 
 model MasterProduct {
-  id         Int     @id @default(autoincrement())
-  name       String
-  salt       String
-  barcode    String? @unique
-  brand_name String?
-  pack_size  String?
-  strength   String?
+  id           Int     @id @default(autoincrement())
+  name         String
+  generic_name String?
+  brand_name   String?
+  strength     String?
+  pack_size    String?
+
+  isPrescriptionRequired Boolean @default(false)
+  scheduleType           String?
 
   hsnCodeId Int
   hsnCode   HsnCode @relation(fields: [hsnCodeId], references: [id])
@@ -303,11 +172,194 @@ model MasterProduct {
   product_type_id Int
   product_type    ProductType @relation(fields: [product_type_id], references: [id])
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  compositions   MedicineComposition[]
+  tenantProducts TenantProduct[]
 
   @@unique([name, strength, company_id])
-  @@index([company_id])
-  @@index([product_type_id])
-  @@index([hsnCodeId])
+}
+
+model MedicineComposition {
+  id Int @id @default(autoincrement())
+
+  productId Int
+  saltId    Int
+
+  strength String
+
+  product MasterProduct @relation(fields: [productId], references: [id])
+  salt    Salt          @relation(fields: [saltId], references: [id])
+
+  @@unique([productId, saltId])
+}
+
+//////////////////////////////////////////////////////
+// TENANT DATA (STRICTLY ISOLATED)
+//////////////////////////////////////////////////////
+
+model Branch {
+  id       String @id @default(cuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  name    String
+  address String?
+
+  racks     Rack[]
+  batches   Batch[]
+  sales     Sale[]
+  purchases Purchase[]
+
+  @@index([tenantId])
+}
+
+model Rack {
+  id       String @id @default(cuid())
+  branchId String
+  branch   Branch @relation(fields: [branchId], references: [id])
+
+  name String
+
+  batches Batch[]
+}
+
+model TenantProduct {
+  id String @id @default(cuid())
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  masterProductId Int?
+  masterProduct   MasterProduct? @relation(fields: [masterProductId], references: [id])
+
+  name       String
+  customName String?
+  barcode    String?
+
+  isActive Boolean @default(true)
+
+  batches       Batch[]
+  purchaseItems PurchaseItem[]
+
+  @@index([tenantId])
+  @@index([masterProductId])
+}
+
+model Batch {
+  id String @id @default(cuid())
+
+  tenantProductId String
+  tenantProduct   TenantProduct @relation(fields: [tenantProductId], references: [id])
+
+  branchId String
+  branch   Branch @relation(fields: [branchId], references: [id])
+
+  rackId String?
+  rack   Rack?   @relation(fields: [rackId], references: [id])
+
+  batchNumber String
+  expiryDate  DateTime
+
+  mrp           Decimal @db.Decimal(10, 2)
+  purchasePrice Decimal @db.Decimal(10, 2)
+  sellingPrice  Decimal @db.Decimal(10, 2)
+
+  quantity      Int
+  freeQuantity  Int            @default(0)
+  purchaseItems PurchaseItem[]
+  saleItems     SaleItem[]
+  stockLedgers  StockLedger[]
+
+  @@unique([batchNumber, tenantProductId, branchId])
+}
+
+model Supplier {
+  id String @id @default(cuid())
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  name String
+
+  purchases Purchase[]
+
+  @@index([tenantId])
+}
+
+//////////////////////////////////////////////////////
+// TRANSACTIONS
+//////////////////////////////////////////////////////
+
+model Purchase {
+  id String @id @default(cuid())
+
+  supplierId String
+  supplier   Supplier @relation(fields: [supplierId], references: [id])
+
+  branchId String
+  branch   Branch @relation(fields: [branchId], references: [id])
+
+  totalAmount Decimal @db.Decimal(12, 2)
+
+  items PurchaseItem[]
+}
+
+model PurchaseItem {
+  id String @id @default(cuid())
+
+  purchaseId String
+  purchase   Purchase @relation(fields: [purchaseId], references: [id])
+
+  tenantProductId String
+  tenantProduct   TenantProduct @relation(fields: [tenantProductId], references: [id])
+
+  batchId String
+  batch   Batch  @relation(fields: [batchId], references: [id])
+
+  quantity Int
+}
+
+model Sale {
+  id String @id @default(cuid())
+
+  branchId String
+  branch   Branch @relation(fields: [branchId], references: [id])
+
+  totalAmount Decimal @db.Decimal(12, 2)
+
+  items SaleItem[]
+
+  createdAt DateTime @default(now())
+}
+
+model SaleItem {
+  id String @id @default(cuid())
+
+  saleId String
+  sale   Sale   @relation(fields: [saleId], references: [id])
+
+  batchId String
+  batch   Batch  @relation(fields: [batchId], references: [id])
+
+  quantity Int
+  price    Decimal @db.Decimal(10, 2)
+}
+
+//////////////////////////////////////////////////////
+// STOCK LEDGER (AUDIT TRAIL)
+//////////////////////////////////////////////////////
+
+model StockLedger {
+  id String @id @default(cuid())
+
+  batchId String
+  batch   Batch  @relation(fields: [batchId], references: [id])
+
+  type StockMovementType
+
+  quantity    Int
+  referenceId String?
+
+  createdAt DateTime @default(now())
+
+  @@index([batchId])
 }

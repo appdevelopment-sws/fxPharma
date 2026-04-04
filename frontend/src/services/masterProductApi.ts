@@ -143,7 +143,9 @@ const ProductApi = {
   },
 
   getProduct: async (id: string | number): Promise<GetProductResponse> => {
-    const response = await api.get<RawMasterProductResponse>(`${BASE_URL}/${id}`)
+    const response = await api.get<RawMasterProductResponse>(
+      `${BASE_URL}/${id}`
+    )
 
     return {
       data: response.data as MasterProduct,

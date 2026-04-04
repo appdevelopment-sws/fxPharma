@@ -2,8 +2,8 @@ import * as React from "react"
 import { type Control } from "react-hook-form"
 
 import { Button } from "@/components/ui/button"
-import AppDrawer from "@/components/ui/app-drawer"
 import { FormField } from "@/components/ui/form-fields"
+import { FormContainer } from "../formContainer"
 
 export type MasterProductFormValues = {
   name: string
@@ -17,12 +17,13 @@ export type MasterProductFormValues = {
   product_type_id: string
 }
 
-type MasterProductDrawerProps = {
+type Props = {
   open: boolean
   onOpenChange: (open: boolean) => void
   control: Control<MasterProductFormValues>
   onSubmit: (e: React.FormEvent<HTMLFormElement>) => void
   mode?: "create" | "edit" | "view"
+  variant?: "drawer" | "modal" // ⭐ NEW
   isSubmitting?: boolean
   isLoading?: boolean
 }
@@ -39,7 +40,7 @@ export const PRODUCT_FORM_DEFAULT_VALUES: MasterProductFormValues = {
   product_type_id: "",
 }
 
-const DRAWER_COPY = {
+const COPY = {
   create: {
     title: "Add Master Product",
     description:
@@ -59,49 +60,54 @@ const DRAWER_COPY = {
   },
 } as const
 
-export default function MasterProductDrawer({
+export default function MasterProductForm({
   open,
   onOpenChange,
   control,
   onSubmit,
   mode = "create",
+  variant = "drawer",
   isSubmitting = false,
   isLoading = false,
-}: MasterProductDrawerProps) {
+}: Props) {
   const isReadOnly = mode === "view"
-  const drawerCopy = DRAWER_COPY[mode]
+  const copy = COPY[mode]
+
+  const footer = (
+    <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+      <Button
+        type="button"
+        variant="outline"
+        onClick={() => onOpenChange(false)}
+        disabled={isSubmitting || isLoading}
+      >
+        {isReadOnly ? "Close" : "Cancel"}
+      </Button>
+
+      {!isReadOnly && (
+        <Button
+          type="submit"
+          form="master-product-form"
+          disabled={isSubmitting || isLoading}
+        >
+          {copy.submitLabel}
+        </Button>
+      )}
+    </div>
+  )
 
   return (
-    <AppDrawer
+    <FormContainer
+      variant={"modal"}
       open={open}
       onOpenChange={onOpenChange}
-      title={drawerCopy.title}
-      description={drawerCopy.description}
+      title={copy.title}
+      description={copy.description}
+      footer={footer}
       size="lg"
-      footer={
-        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={isSubmitting || isLoading}
-          >
-            {isReadOnly ? "Close" : "Cancel"}
-          </Button>
-          {!isReadOnly ? (
-            <Button
-              type="submit"
-              form="master-product-form"
-              disabled={isSubmitting || isLoading}
-            >
-              {drawerCopy.submitLabel}
-            </Button>
-          ) : null}
-        </div>
-      }
     >
       <form id="master-product-form" onSubmit={onSubmit} className="space-y-5">
-        <section className="grid gap-4 sm:grid-cols-1">
+        <section className="grid gap-4">
           <FormField
             control={control}
             name="name"
@@ -126,7 +132,6 @@ export default function MasterProductDrawer({
             control={control}
             name="brand_name"
             label="Brand Name"
-            tooltip="Optional market-facing brand name."
             placeholder="Crocin"
             readOnly={isReadOnly}
           />
@@ -135,7 +140,6 @@ export default function MasterProductDrawer({
             control={control}
             name="barcode"
             label="Barcode"
-            tooltip="Optional barcode if available."
             placeholder="8901234567890"
             readOnly={isReadOnly}
           />
@@ -144,7 +148,6 @@ export default function MasterProductDrawer({
             control={control}
             name="pack_size"
             label="Pack Size"
-            tooltip="Packaging format like 10 tablets or 100 ml."
             placeholder="10 tablets"
             readOnly={isReadOnly}
           />
@@ -153,7 +156,6 @@ export default function MasterProductDrawer({
             control={control}
             name="strength"
             label="Strength"
-            tooltip="Product strength like 500mg."
             placeholder="500mg"
             readOnly={isReadOnly}
           />
@@ -164,11 +166,7 @@ export default function MasterProductDrawer({
             control={control}
             name="company_id"
             label="Company ID"
-            tooltip="Numeric company reference from the backend."
             inputType="number"
-            min="1"
-            step="1"
-            placeholder="1"
             required
             readOnly={isReadOnly}
           />
@@ -177,11 +175,7 @@ export default function MasterProductDrawer({
             control={control}
             name="product_type_id"
             label="Product Type ID"
-            tooltip="Numeric product type reference from the backend."
             inputType="number"
-            min="1"
-            step="1"
-            placeholder="1"
             required
             readOnly={isReadOnly}
           />
@@ -190,16 +184,12 @@ export default function MasterProductDrawer({
             control={control}
             name="hsnCodeId"
             label="HSN Code ID"
-            tooltip="Numeric HSN code reference from the backend."
             inputType="number"
-            min="1"
-            step="1"
-            placeholder="1"
             required
             readOnly={isReadOnly}
           />
         </section>
       </form>
-    </AppDrawer>
+    </FormContainer>
   )
 }

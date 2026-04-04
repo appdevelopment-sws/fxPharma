@@ -42,8 +42,15 @@ export function WorkspaceShell({
   const location = useLocation()
 
   const activeItem = useMemo(() => {
-    return flattenNavigationItems(navigationGroups).find((item) =>
-      isNavigationItemActive(item, location.pathname)
+    const allItems = flattenNavigationItems(navigationGroups)
+    const activeItems = allItems.filter((item) =>
+      isNavigationItemActive(item, location?.pathname)
+    )
+
+    // Return the most specific match (item with direct pathname match, not just child match)
+    return (
+      activeItems.find((item) => item.to === location.pathname) ||
+      activeItems[0]
     )
   }, [location.pathname, navigationGroups])
 
@@ -86,10 +93,12 @@ export function WorkspaceShell({
                     <span>{appLabel}</span>
                     <ChevronRight className="size-3" />
                     <span>{workspaceLabel}</span>
+                    <ChevronRight className="size-3" />
+                    <span>{activeItem?.title ?? workspaceTitle}</span>
                   </div>
-                  <h1 className="truncate text-lg font-semibold tracking-tight">
+                  {/* <h1 className="truncate text-lg font-semibold tracking-tight">
                     {activeItem?.title ?? workspaceTitle}
-                  </h1>
+                  </h1> */}
                 </div>
               </div>
 

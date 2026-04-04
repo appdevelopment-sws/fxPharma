@@ -31,7 +31,7 @@ const AdminLayout = () => {
 
   return (
     <WorkspaceShell
-      appLabel="Pharmacy Software"
+      appLabel="Dawa Dukaan"
       workspaceLabel={user?.tenant?.name ?? "Tenant Workspace"}
       workspaceTitle={user?.tenant?.name ?? "Tenant Workspace"}
       workspaceSubtitle="Permission-aware admin workspace"

@@ -7,6 +7,7 @@ import SuperAdminTenantsPage from "@/pages/super-admin/tenants/SuperAdminTenants
 import SuperAdminAccessPage from "@/pages/super-admin/access/SuperAdminAccessPage"
 import SuperAdminProductsNewPage from "@/pages/super-admin/products/MasterProductsPage"
 import { PERMISSIONS, ROLES } from "@/lib/access"
+import HsnPage from "@/pages/super-admin/hsn/HsnPage"
 
 export const SuperAdminRoutes = () => {
   return (
@@ -19,7 +20,8 @@ export const SuperAdminRoutes = () => {
         />
         <Route path="dashboard" element={<SuperAdminDashboard />} />
         <Route path="profile" element={<SuperAdminProfilePage />} />
-        <Route path="products/new" element={<SuperAdminProductsNewPage />} />
+        <Route path="master-products" element={<SuperAdminProductsNewPage />} />
+        <Route path="hsn" element={<HsnPage />} />
         <Route
           element={
             <ProtectedRoute

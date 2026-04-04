@@ -76,15 +76,15 @@ export const superAdminNavigationGroups: SidebarNavigationGroup[] = [
         children: [
           {
             title: "Master Product",
-            to: "/super-admin/products/new",
+            to: "/super-admin/master-products",
             description: "Platform-wide tenant oversight and health monitoring",
             icon: Box,
             roles: [ROLES.SUPER_ADMIN],
           },
           {
             title: "HSN",
-            to: "/super-admin/products/new",
-            description: "Platform-wide tenant oversight and health monitoring",
+            to: "/super-admin/hsn",
+            description: "HSN code management for master products",
             icon: Barcode,
             roles: [ROLES.SUPER_ADMIN],
           },

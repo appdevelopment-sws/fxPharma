@@ -31,10 +31,10 @@ const SuperAdminLayout = () => {
 
   return (
     <WorkspaceShell
-      appLabel="Pharmacy Software"
+      appLabel="Dawa Dukaan"
       workspaceLabel="Super Admin"
       workspaceTitle={user?.tenant?.name ?? "Platform Console"}
-      workspaceSubtitle="Role-aware super admin operations workspace"
+      workspaceSubtitle="Manage tenants, users, and platform-wide settings"
       userName={user?.name ?? "Super Admin"}
       userRole={user?.role ?? "Super Admin"}
       userEmail={user?.email}
