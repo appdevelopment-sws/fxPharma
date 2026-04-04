@@ -50,7 +50,7 @@ export function WorkspaceShell({
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.1),transparent_30%),linear-gradient(180deg,rgba(255,255,255,0.98),rgba(248,250,252,1))] text-foreground">
       <div className="flex min-h-screen">
-        <aside className="sticky top-0 hidden h-screen w-80 shrink-0 border-r border-sidebar-border bg-sidebar lg:block">
+        <aside className="sticky top-0 hidden h-screen w-70 shrink-0 border-r border-sidebar-border bg-sidebar lg:block">
           <div className="flex h-full flex-col px-5 py-5">
             <SidebarContent
               workspaceTitle={workspaceTitle}
@@ -289,6 +289,7 @@ function SidebarNavigationEntry({
   const Icon = item.icon
   const isActive = isNavigationItemActive(item, activePath)
 
+  {/*with  children  */ }
   if (item.children?.length) {
     return (
       <div className="rounded-2xl">
@@ -313,7 +314,7 @@ function SidebarNavigationEntry({
             <Icon className="size-4" />
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block truncate text-sm font-medium">
+            <span className="block truncate text-sm  font-medium">
               {item.title}
             </span>
             {/* <span
@@ -386,8 +387,9 @@ function SidebarNavigationEntry({
       >
         <Icon className="size-4" />
       </span>
+      {/*without children */}
       <span className="min-w-0">
-        <span className="block truncate text-sm font-medium">{item.title}</span>
+        <span className="block truncate text-xs font-medium">{item.title}</span>
         {/* <span
           className={cn(
             "block truncate text-xs",
