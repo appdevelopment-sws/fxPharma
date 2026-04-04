@@ -5,7 +5,7 @@ import SuperAdminDashboard from "@/pages/super-admin/dashboard/SuperAdminDashboa
 import SuperAdminProfilePage from "@/pages/super-admin/profile/SuperAdminProfilePage"
 import SuperAdminTenantsPage from "@/pages/super-admin/tenants/SuperAdminTenantsPage"
 import SuperAdminAccessPage from "@/pages/super-admin/access/SuperAdminAccessPage"
-import SuperAdminProductsNewPage from "@/pages/super-admin/products/ProductsNewPage"
+import SuperAdminProductsNewPage from "@/pages/super-admin/products/MasterProductsPage"
 import { PERMISSIONS, ROLES } from "@/lib/access"
 
 export const SuperAdminRoutes = () => {

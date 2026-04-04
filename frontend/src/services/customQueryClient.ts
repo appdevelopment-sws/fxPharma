@@ -28,11 +28,26 @@ export const queryClient = new QueryClient({
       }
     },
   }),
-
   defaultOptions: {
     queries: {
-      retry: 1,
       refetchOnWindowFocus: false,
+      refetchOnMount: true,
+      refetchOnReconnect: true,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      retry: (failureCount, error: any) => {
+        // Don't retry on specific error codes
+        const status = error?.response?.status || error?.code
+        if ([401, 403, 404, 422].includes(status)) return false
+
+        // Don't retry on server errors
+        if (status >= 500) return false
+
+        // Retry up to 2 times for other errors
+        return failureCount < 2
+      },
+    },
+    mutations: {
+      retry: false,
     },
   },
 })

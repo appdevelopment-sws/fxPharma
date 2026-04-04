@@ -3,25 +3,18 @@ import { type Control } from "react-hook-form"
 
 import { Button } from "@/components/ui/button"
 import AppDrawer from "@/components/ui/app-drawer"
-import {
-  FormField,
-  FormSelectField,
-  FormTextarea,
-} from "@/components/ui/form-fields"
+import { FormField } from "@/components/ui/form-fields"
 
 export type MasterProductFormValues = {
   name: string
-  genericName: string
-  category: string
-  manufacturer: string
-  unit: string
-  sku: string
-  purchasePrice: string
-  sellingPrice: string
-  stock: string
-  reorderLevel: string
-  status: "active" | "inactive"
-  description: string
+  salt: string
+  barcode: string
+  brand_name: string
+  pack_size: string
+  strength: string
+  hsnCodeId: string
+  company_id: string
+  product_type_id: string
 }
 
 type MasterProductDrawerProps = {
@@ -34,51 +27,34 @@ type MasterProductDrawerProps = {
   isLoading?: boolean
 }
 
-export const PRODUCT_CATEGORY_OPTIONS = [
-  { label: "Tablet", value: "Tablet" },
-  { label: "Capsule", value: "Capsule" },
-  { label: "Syrup", value: "Syrup" },
-  { label: "Drops", value: "Drops" },
-  { label: "Injection", value: "Injection" },
-]
-
-export const PRODUCT_STATUS_OPTIONS = [
-  { label: "Active", value: "active" },
-  { label: "Inactive", value: "inactive" },
-]
-
 export const PRODUCT_FORM_DEFAULT_VALUES: MasterProductFormValues = {
   name: "",
-  genericName: "",
-  category: "Tablet",
-  manufacturer: "",
-  unit: "",
-  sku: "",
-  purchasePrice: "",
-  sellingPrice: "",
-  stock: "",
-  reorderLevel: "",
-  status: "active",
-  description: "",
+  salt: "",
+  barcode: "",
+  brand_name: "",
+  pack_size: "",
+  strength: "",
+  hsnCodeId: "",
+  company_id: "",
+  product_type_id: "",
 }
 
 const DRAWER_COPY = {
   create: {
     title: "Add Master Product",
     description:
-      "Create a reusable master product entry with pricing, stock thresholds, and manufacturer details.",
+      "Create a reusable master product with company, product type, and HSN references.",
     submitLabel: "Save Product",
   },
   edit: {
     title: "Edit Master Product",
-    description:
-      "Update product details, pricing, and stock controls without leaving the listing page.",
+    description: "Update the master product metadata and reference mappings.",
     submitLabel: "Update Product",
   },
   view: {
     title: "Product Details",
     description:
-      "Review the full master product information, including inventory settings and pricing data.",
+      "Review the full master product information and linked references.",
     submitLabel: "",
   },
 } as const
@@ -125,126 +101,104 @@ export default function MasterProductDrawer({
       }
     >
       <form id="master-product-form" onSubmit={onSubmit} className="space-y-5">
-        <section className="grid gap-4 sm:grid-cols-2">
+        <section className="grid gap-4 sm:grid-cols-1">
           <FormField
             control={control}
             name="name"
             label="Product Name"
-            placeholder="Paracetamol 500mg"
+            tooltip="Primary master-product name."
+            placeholder="Paracetamol"
             required
             readOnly={isReadOnly}
           />
 
           <FormField
             control={control}
-            name="genericName"
-            label="Generic Name"
+            name="salt"
+            label="Salt"
+            tooltip="Generic salt or active composition."
             placeholder="Acetaminophen"
-            readOnly={isReadOnly}
-          />
-
-          <FormSelectField
-            control={control}
-            name="category"
-            label="Category"
-            options={PRODUCT_CATEGORY_OPTIONS}
-            disabled={isReadOnly}
-          />
-
-          <FormField
-            control={control}
-            name="manufacturer"
-            label="Manufacturer"
-            placeholder="MediCore Labs"
             required
             readOnly={isReadOnly}
           />
 
           <FormField
             control={control}
-            name="unit"
-            label="Unit"
-            placeholder="Box of 10 tablets"
-            required
+            name="brand_name"
+            label="Brand Name"
+            tooltip="Optional market-facing brand name."
+            placeholder="Crocin"
             readOnly={isReadOnly}
           />
 
           <FormField
             control={control}
-            name="sku"
-            label="SKU"
-            placeholder="PCM-500-TAB"
-            required
+            name="barcode"
+            label="Barcode"
+            tooltip="Optional barcode if available."
+            placeholder="8901234567890"
+            readOnly={isReadOnly}
+          />
+
+          <FormField
+            control={control}
+            name="pack_size"
+            label="Pack Size"
+            tooltip="Packaging format like 10 tablets or 100 ml."
+            placeholder="10 tablets"
+            readOnly={isReadOnly}
+          />
+
+          <FormField
+            control={control}
+            name="strength"
+            label="Strength"
+            tooltip="Product strength like 500mg."
+            placeholder="500mg"
             readOnly={isReadOnly}
           />
         </section>
 
-        <section className="grid gap-4 sm:grid-cols-2">
+        <section className="grid gap-4 sm:grid-cols-3">
           <FormField
             control={control}
-            name="purchasePrice"
-            label="Purchase Price"
+            name="company_id"
+            label="Company ID"
+            tooltip="Numeric company reference from the backend."
             inputType="number"
-            min="0"
-            step="0.01"
-            placeholder="2.25"
-            required
-            readOnly={isReadOnly}
-          />
-
-          <FormField
-            control={control}
-            name="sellingPrice"
-            label="Selling Price"
-            inputType="number"
-            min="0"
-            step="0.01"
-            placeholder="3.75"
-            required
-            readOnly={isReadOnly}
-          />
-
-          <FormField
-            control={control}
-            name="stock"
-            label="Opening Stock"
-            inputType="number"
-            min="0"
+            min="1"
             step="1"
-            placeholder="120"
+            placeholder="1"
             required
             readOnly={isReadOnly}
           />
 
           <FormField
             control={control}
-            name="reorderLevel"
-            label="Reorder Level"
+            name="product_type_id"
+            label="Product Type ID"
+            tooltip="Numeric product type reference from the backend."
             inputType="number"
-            min="0"
+            min="1"
             step="1"
-            placeholder="25"
+            placeholder="1"
             required
             readOnly={isReadOnly}
           />
 
-          <FormSelectField
+          <FormField
             control={control}
-            name="status"
-            label="Status"
-            options={PRODUCT_STATUS_OPTIONS}
-            disabled={isReadOnly}
+            name="hsnCodeId"
+            label="HSN Code ID"
+            tooltip="Numeric HSN code reference from the backend."
+            inputType="number"
+            min="1"
+            step="1"
+            placeholder="1"
+            required
+            readOnly={isReadOnly}
           />
         </section>
-
-        <FormTextarea
-          control={control}
-          name="description"
-          label="Description"
-          placeholder="Add packaging notes, strengths, or storage instructions."
-          readOnly={isReadOnly}
-          rows={5}
-        />
       </form>
     </AppDrawer>
   )

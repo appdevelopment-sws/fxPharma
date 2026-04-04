@@ -1,4 +1,6 @@
 import {
+  Barcode,
+  Box,
   Building2,
   LayoutDashboard,
   ShieldCheck,
@@ -12,11 +14,7 @@ import {
   isNavigationItemActive,
   type SidebarNavigationGroup,
 } from "@/components/navigation/sidebar-navigation"
-import {
-  PERMISSIONS,
-  ROLES,
-  superAdminPermissionLabels,
-} from "@/lib/access"
+import { PERMISSIONS, ROLES, superAdminPermissionLabels } from "@/lib/access"
 
 export const superAdminNavigationGroups: SidebarNavigationGroup[] = [
   {
@@ -68,7 +66,7 @@ export const superAdminNavigationGroups: SidebarNavigationGroup[] = [
     ],
   },
   {
-    title: "Product",
+    title: "Master Product",
     items: [
       {
         title: "Products",
@@ -77,10 +75,17 @@ export const superAdminNavigationGroups: SidebarNavigationGroup[] = [
         roles: [ROLES.SUPER_ADMIN],
         children: [
           {
-            title: "Add Product",
+            title: "Master Product",
             to: "/super-admin/products/new",
             description: "Platform-wide tenant oversight and health monitoring",
-            icon: Building2,
+            icon: Box,
+            roles: [ROLES.SUPER_ADMIN],
+          },
+          {
+            title: "HSN",
+            to: "/super-admin/products/new",
+            description: "Platform-wide tenant oversight and health monitoring",
+            icon: Barcode,
             roles: [ROLES.SUPER_ADMIN],
           },
           // {

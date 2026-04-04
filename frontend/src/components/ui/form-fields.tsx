@@ -5,11 +5,17 @@ import {
   type FieldValues,
   type Path,
 } from "react-hook-form"
+import { CircleHelp } from "lucide-react"
 
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
-
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 /**
  * Reusable form field components for react-hook-form
  * Use these components in any form to standardize field rendering
@@ -23,6 +29,7 @@ interface FormFieldProps<T extends FieldValues> {
   control: Control<T>
   name: Path<T>
   label: string
+  tooltip?: string
   placeholder?: string
   required?: boolean
   readOnly?: boolean
@@ -47,6 +54,7 @@ export function FormField<T extends FieldValues>({
   control,
   name,
   label,
+  tooltip,
   placeholder,
   required,
   readOnly,
@@ -61,10 +69,12 @@ export function FormField<T extends FieldValues>({
       name={name}
       render={({ field }) => (
         <div className="space-y-2">
-          <Label htmlFor={String(name)}>
-            {label}
-            {required ? <span className="text-destructive">*</span> : null}
-          </Label>
+          <FieldLabel
+            htmlFor={String(name)}
+            label={label}
+            required={required}
+            tooltip={tooltip}
+          />
           <Input
             id={String(name)}
             {...field}
@@ -96,6 +106,7 @@ interface FormSelectFieldProps<T extends FieldValues> {
   control: Control<T>
   name: Path<T>
   label: string
+  tooltip?: string
   options: Array<{ label: string; value: string }>
   disabled?: boolean
   error?: string
@@ -120,6 +131,7 @@ export function FormSelectField<T extends FieldValues>({
   control,
   name,
   label,
+  tooltip,
   options,
   disabled,
   error,
@@ -132,10 +144,12 @@ export function FormSelectField<T extends FieldValues>({
       name={name}
       render={({ field }) => (
         <div className="space-y-2">
-          <Label htmlFor={String(name)}>
-            {label}
-            {required ? <span className="text-destructive">*</span> : null}
-          </Label>
+          <FieldLabel
+            htmlFor={String(name)}
+            label={label}
+            required={required}
+            tooltip={tooltip}
+          />
           <select
             id={String(name)}
             {...field}
@@ -168,6 +182,7 @@ interface FormTextareaProps<T extends FieldValues> {
   control: Control<T>
   name: Path<T>
   label: string
+  tooltip?: string
   placeholder?: string
   readOnly?: boolean
   rows?: number
@@ -190,6 +205,7 @@ export function FormTextarea<T extends FieldValues>({
   control,
   name,
   label,
+  tooltip,
   placeholder,
   readOnly,
   rows,
@@ -202,10 +218,12 @@ export function FormTextarea<T extends FieldValues>({
       name={name}
       render={({ field }) => (
         <div className="space-y-2">
-          <Label htmlFor={String(name)}>
-            {label}
-            {required ? <span className="text-destructive">*</span> : null}
-          </Label>
+          <FieldLabel
+            htmlFor={String(name)}
+            label={label}
+            required={required}
+            tooltip={tooltip}
+          />
           <textarea
             id={String(name)}
             {...field}
@@ -276,5 +294,35 @@ export function FormCheckbox<T extends FieldValues>({
         </div>
       )}
     />
+  )
+}
+
+type FieldLabelProps = {
+  htmlFor: string
+  label: string
+  required?: boolean
+  tooltip?: string
+}
+
+function FieldLabel({ htmlFor, label, required, tooltip }: FieldLabelProps) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <Label htmlFor={htmlFor}>
+        {label}
+        {required ? <span className="text-destructive">*</span> : null}
+      </Label>
+      {tooltip ? (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="inline-flex cursor-help text-muted-foreground">
+                <CircleHelp className="size-3.5" />
+              </span>
+            </TooltipTrigger>
+            <TooltipContent side="top">{tooltip}</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      ) : null}
+    </div>
   )
 }
