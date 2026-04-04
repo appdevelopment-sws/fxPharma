@@ -9,8 +9,8 @@ import {
 import { useAuth } from "@/context/authContext"
 import {
   getPermissionSummary,
-  permissionLabels,
 } from "@/components/admin/admin-navigation"
+import { permissionLabels, type PermissionName } from "@/lib/access"
 
 export default function AdminRolesPage() {
   const { user } = useAuth()
@@ -57,7 +57,7 @@ export default function AdminRolesPage() {
       </Card>
 
       <div className="grid gap-4 md:grid-cols-2">
-        {Object.entries(permissionLabels).map(([permission, label]) => {
+        {(Object.entries(permissionLabels) as [PermissionName, string][]).map(([permission, label]) => {
           const granted = user.permissions.includes(permission)
 
           return (

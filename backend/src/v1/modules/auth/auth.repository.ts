@@ -1,4 +1,5 @@
 import type { Prisma, PrismaClient } from "@prisma/client";
+import { PERMISSIONS, type PermissionName } from "@/constants/permissions.js";
 import { prisma, rootPrisma } from "@/lib/prisma.js";
 
 type DbClient = PrismaClient | Prisma.TransactionClient;
@@ -98,17 +99,23 @@ export const createTenantWithAdmin = async (
       },
     });
 
-    const adminPermissionNames = new Set([
-      "USER_CREATE",
-      "USER_READ",
-      "USER_UPDATE",
-      "USER_DELETE",
-      "ROLE_MANAGE",
+    const adminPermissionNames = new Set<PermissionName>([
+      PERMISSIONS.USER_CREATE,
+      PERMISSIONS.USER_READ,
+      PERMISSIONS.USER_UPDATE,
+      PERMISSIONS.USER_DELETE,
+      PERMISSIONS.ROLE_MANAGE,
+      PERMISSIONS.MASTER_PRODUCT_CREATE,
+      PERMISSIONS.MASTER_PRODUCT_READ,
+      PERMISSIONS.MASTER_PRODUCT_UPDATE,
+      PERMISSIONS.MASTER_PRODUCT_DELETE,
     ]);
 
     await tx.rolePermission.createMany({
       data: permissions
-        .filter((permission) => adminPermissionNames.has(permission.name))
+        .filter((permission) =>
+          adminPermissionNames.has(permission.name as PermissionName),
+        )
         .map((permission) => ({
           roleId: adminRole.id,
           permissionId: permission.id,
@@ -116,7 +123,10 @@ export const createTenantWithAdmin = async (
     });
 
     const readPermission = permissions.find(
-      (permission) => permission.name === "USER_READ",
+      (permission) => permission.name === PERMISSIONS.USER_READ,
+    );
+    const productReadPermission = permissions.find(
+      (permission) => permission.name === PERMISSIONS.MASTER_PRODUCT_READ,
     );
 
     if (readPermission) {
@@ -124,6 +134,15 @@ export const createTenantWithAdmin = async (
         data: {
           roleId: userRole.id,
           permissionId: readPermission.id,
+        },
+      });
+    }
+
+    if (productReadPermission) {
+      await tx.rolePermission.create({
+        data: {
+          roleId: userRole.id,
+          permissionId: productReadPermission.id,
         },
       });
     }

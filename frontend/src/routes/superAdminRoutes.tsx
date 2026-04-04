@@ -6,10 +6,11 @@ import SuperAdminProfilePage from "@/pages/super-admin/profile/SuperAdminProfile
 import SuperAdminTenantsPage from "@/pages/super-admin/tenants/SuperAdminTenantsPage"
 import SuperAdminAccessPage from "@/pages/super-admin/access/SuperAdminAccessPage"
 import SuperAdminProductsNewPage from "@/pages/super-admin/products/ProductsNewPage"
+import { PERMISSIONS, ROLES } from "@/lib/access"
 
 export const SuperAdminRoutes = () => {
   return (
-    <Route element={<ProtectedRoute allowedRoles={["Super Admin"]} />}>
+    <Route element={<ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN]} />}>
       <Route path="/super-admin" element={<SuperAdminLayout />}>
         {" "}
         <Route
@@ -22,8 +23,8 @@ export const SuperAdminRoutes = () => {
         <Route
           element={
             <ProtectedRoute
-              allowedRoles={["Super Admin"]}
-              allowedPermissions={["USER_READ"]}
+              allowedRoles={[ROLES.SUPER_ADMIN]}
+              allowedPermissions={[PERMISSIONS.USER_READ]}
             />
           }
         >
@@ -32,8 +33,8 @@ export const SuperAdminRoutes = () => {
         <Route
           element={
             <ProtectedRoute
-              allowedRoles={["Super Admin"]}
-              allowedPermissions={["ROLE_MANAGE"]}
+              allowedRoles={[ROLES.SUPER_ADMIN]}
+              allowedPermissions={[PERMISSIONS.ROLE_MANAGE]}
             />
           }
         >

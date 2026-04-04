@@ -7,12 +7,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { useAuth } from "@/context/authContext"
-
-const platformCapabilities = [
-  { permission: "USER_READ", label: "Read tenant users and tenant health" },
-  { permission: "USER_UPDATE", label: "Adjust tenant-owned access records" },
-  { permission: "USER_DELETE", label: "Disable accounts across tenant scope" },
-]
+import { platformTenantCapabilities } from "@/lib/access"
 
 export default function SuperAdminTenantsPage() {
   const { user, hasPermission } = useAuth()
@@ -61,7 +56,7 @@ export default function SuperAdminTenantsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            {platformCapabilities.map((item) => (
+            {platformTenantCapabilities.map((item) => (
               <div
                 key={item.permission}
                 className="flex items-center justify-between rounded-xl border border-border/60 bg-background px-4 py-3"

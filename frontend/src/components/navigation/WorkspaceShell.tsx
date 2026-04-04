@@ -107,7 +107,7 @@ export function WorkspaceShell({
             </div>
           </header>
 
-          <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+          <main className="flex-1 bg-accent px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
             <div className="mx-auto w-full max-w-full">
               <Outlet />
             </div>
@@ -218,6 +218,9 @@ function SidebarContent({
             <h2 className="truncate text-base font-semibold text-sidebar-foreground">
               {workspaceTitle}
             </h2>
+            <p className="truncate text-xs text-sidebar-foreground/60">
+              {workspaceSubtitle}
+            </p>
           </div>
         </div>
       </div>
@@ -244,19 +247,19 @@ function SidebarContent({
         ))}
       </nav>
 
-      <div className="mt-6 rounded-3xl">
-        {/* <div className="space-y-1">
+      <div className="mt-6 rounded-3xl border border-sidebar-border bg-sidebar-accent/30 p-4">
+        <div className="space-y-1">
           <p className="truncate text-sm font-medium text-sidebar-foreground">
             {userName}
           </p>
           <p className="text-xs tracking-[0.2em] text-sidebar-foreground/55 uppercase">
             {userRole}
           </p>
-        </div> */}
+        </div>
         <Button
           type="button"
           variant="outline"
-          className="mt-4 w-full justify-start border-sidebar-border bg-destructive text-accent hover:bg-destructive/90"
+          className="mt-4 w-full justify-start border-sidebar-border bg-destructive/90 text-accent hover:bg-destructive/90"
           onClick={onLogout}
           disabled={isLoggingOut}
         >

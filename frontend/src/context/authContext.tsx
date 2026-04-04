@@ -6,14 +6,15 @@ import {
 import { useQuery } from "@tanstack/react-query"
 import AuthApi from "@/services/authApi"
 import { queryKeys } from "@/lib/queryKeys"
+import { ROLES, type PermissionName, type RoleName } from "@/lib/access"
 
 export type AuthUser = {
   id: string
   tenantId: string
   name: string
   email: string
-  role: string
-  permissions: string[]
+  role: RoleName
+  permissions: PermissionName[]
   tenant?: {
     id: string
     name: string
@@ -27,8 +28,8 @@ type AuthContextValue = {
   isLoading: boolean
   isAuthenticated: boolean
   isSuperAdmin: boolean
-  hasRole: (...roles: string[]) => boolean
-  hasPermission: (...permissions: string[]) => boolean
+  hasRole: (...roles: RoleName[]) => boolean
+  hasPermission: (...permissions: PermissionName[]) => boolean
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
@@ -47,7 +48,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     user,
     isLoading,
     isAuthenticated: Boolean(user),
-    isSuperAdmin: user?.role === "Super Admin",
+    isSuperAdmin: user?.role === ROLES.SUPER_ADMIN,
     hasRole: (...roles) => Boolean(user && roles.includes(user.role)),
     hasPermission: (...permissions) =>
       Boolean(

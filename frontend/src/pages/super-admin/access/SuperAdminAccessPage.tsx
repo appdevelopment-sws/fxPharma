@@ -9,8 +9,11 @@ import {
 import { useAuth } from "@/context/authContext"
 import {
   getSuperAdminPermissionSummary,
-  superAdminPermissionLabels,
 } from "@/components/super-admin/super-admin-navigation"
+import {
+  superAdminPermissionLabels,
+  type PermissionName,
+} from "@/lib/access"
 
 export default function SuperAdminAccessPage() {
   const { user } = useAuth()
@@ -57,7 +60,7 @@ export default function SuperAdminAccessPage() {
       </Card>
 
       <div className="grid gap-4 md:grid-cols-2">
-        {Object.entries(superAdminPermissionLabels).map(([permission, label]) => {
+        {(Object.entries(superAdminPermissionLabels) as [PermissionName, string][]).map(([permission, label]) => {
           const granted = user.permissions.includes(permission)
 
           return (

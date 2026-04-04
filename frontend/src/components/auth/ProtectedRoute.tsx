@@ -1,9 +1,10 @@
 import { Navigate, Outlet, useLocation } from "react-router"
 import { useAuth } from "@/context/authContext"
+import type { PermissionName, RoleName } from "@/lib/access"
 
 type ProtectedRouteProps = {
-  allowedRoles?: string[]
-  allowedPermissions?: string[]
+  allowedRoles?: RoleName[]
+  allowedPermissions?: PermissionName[]
   permissionMatch?: "all" | "any"
 }
 

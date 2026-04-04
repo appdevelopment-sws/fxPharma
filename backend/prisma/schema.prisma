@@ -17,15 +17,24 @@ enum UserStatus {
   DISABLED
 }
 
+enum CompanyStatus {
+  ACTIVE
+  INACTIVE
+  BLOCKED
+}
+
 model Tenant {
-  id        String       @id @default(cuid())
-  name      String
-  status    TenantStatus @default(ACTIVE)
-  users     User[]
-  roles     Role[]
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
-  deletedAt DateTime?
+  id                  String               @id @default(cuid())
+  name                String
+  status              TenantStatus         @default(ACTIVE)
+  users               User[]
+  roles               Role[]
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  deletedAt           DateTime?
+  tenantSubscriptions TenantSubscription[]
+  tenantFeatures      TenantFeature[]
+  tenantSettings      TenantSetting[]
 }
 
 model User {
@@ -86,20 +95,171 @@ model RolePermission {
   @@index([permissionId])
 }
 
-model HsnTable {
-  id              Int       @id @default(autoincrement())
-  hsn_code        String    @unique
-  item_type       String
-  hsn_description String?
-  gst_rate        Decimal
-  last_changed    DateTime?
-  last_gst_rate   Decimal?
+//////////////////////////////////////////////////////
+// NEW ENUMS
+//////////////////////////////////////////////////////
 
-  medicines MasterMedicine[]
+enum TaxType {
+  INCLUSIVE
+  EXCLUSIVE
+}
+
+enum HsnType {
+  GOODS
+  SERVICE
+}
+
+enum BillingCycle {
+  MONTHLY
+  YEARLY
+}
+
+//////////////////////////////////////////////////////
+// REPLACE HSN TABLE
+//////////////////////////////////////////////////////
+
+model HsnCode {
+  id          Int     @id @default(autoincrement())
+  code        String  @unique @db.VarChar(10)
+  description String?
+  type        HsnType
+  isActive    Boolean @default(true)
+
+  taxMappings HsnTaxMapping[]
+  products    MasterProduct[]
 
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 }
+
+model TaxRule {
+  id       Int     @id @default(autoincrement())
+  name     String? @db.VarChar(50)
+  rate     Decimal @db.Decimal(5, 2)
+  type     TaxType
+  country  String  @default("India")
+  isActive Boolean @default(true)
+
+  mappings HsnTaxMapping[]
+
+  createdAt DateTime @default(now())
+}
+
+model HsnTaxMapping {
+  id Int @id @default(autoincrement())
+
+  hsnCodeId Int
+  taxRuleId Int
+
+  hsnCode HsnCode @relation(fields: [hsnCodeId], references: [id])
+  taxRule TaxRule @relation(fields: [taxRuleId], references: [id])
+
+  effectiveFrom DateTime
+  effectiveTo   DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([hsnCodeId])
+  @@index([taxRuleId])
+}
+
+//////////////////////////////////////////////////////
+// SaaS FEATURES SYSTEM
+//////////////////////////////////////////////////////
+
+model Feature {
+  id          Int     @id @default(autoincrement())
+  key         String  @unique
+  name        String
+  description String?
+  module      String?
+  isActive    Boolean @default(true)
+
+  planFeatures   PlanFeature[]
+  tenantFeatures TenantFeature[]
+}
+
+model Plan {
+  id           Int          @id @default(autoincrement())
+  name         String
+  price        Decimal      @db.Decimal(10, 2)
+  billingCycle BillingCycle
+
+  maxUsers    Int?
+  maxInvoices Int?
+
+  isActive Boolean @default(true)
+
+  features      PlanFeature[]
+  subscriptions TenantSubscription[]
+
+  createdAt DateTime @default(now())
+}
+
+model PlanFeature {
+  id Int @id @default(autoincrement())
+
+  planId    Int
+  featureId Int
+
+  plan    Plan    @relation(fields: [planId], references: [id])
+  feature Feature @relation(fields: [featureId], references: [id])
+
+  @@unique([planId, featureId])
+}
+
+//////////////////////////////////////////////////////
+// TENANT EXTENSIONS (NO BREAKING CHANGE)
+//////////////////////////////////////////////////////
+
+model TenantSubscription {
+  id Int @id @default(autoincrement())
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  planId Int
+  plan   Plan @relation(fields: [planId], references: [id])
+
+  startDate DateTime
+  endDate   DateTime?
+
+  status        String
+  paymentStatus String
+
+  createdAt DateTime @default(now())
+
+  @@index([tenantId])
+}
+
+model TenantFeature {
+  id Int @id @default(autoincrement())
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  featureId Int
+  feature   Feature @relation(fields: [featureId], references: [id])
+
+  enabled Boolean @default(true)
+  config  Json?
+
+  @@unique([tenantId, featureId])
+}
+
+model TenantSetting {
+  tenantId String @id
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  inventoryEnabled Boolean @default(true)
+  rackEnabled      Boolean @default(false)
+  batchEnabled     Boolean @default(false)
+  expiryEnabled    Boolean @default(false)
+  gstEnabled       Boolean @default(true)
+}
+
+//////////////////////////////////////////////////////
+// UPDATE EXISTING PRODUCT MODELS
+//////////////////////////////////////////////////////
 
 model ProductType {
   id          Int     @id @default(autoincrement())
@@ -107,16 +267,10 @@ model ProductType {
   unit_type   String
   description String?
 
-  medicines MasterMedicine[]
+  products MasterProduct[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-}
-
-enum CompanyStatus {
-  ACTIVE
-  INACTIVE
-  BLOCKED
 }
 
 model Company {
@@ -125,23 +279,23 @@ model Company {
   name   String
   status CompanyStatus @default(ACTIVE)
 
-  medicines MasterMedicine[]
+  products MasterProduct[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-model MasterMedicine {
-  id            Int     @id @default(autoincrement())
-  medicine_name String
-  salt          String
-  barcode       String? @unique
-  brand_name    String?
-  pack_size     String?
-  strength      String?
+model MasterProduct {
+  id         Int     @id @default(autoincrement())
+  name       String
+  salt       String
+  barcode    String? @unique
+  brand_name String?
+  pack_size  String?
+  strength   String?
 
-  hsn_id Int
-  hsn    HsnTable @relation(fields: [hsn_id], references: [id])
+  hsnCodeId Int
+  hsnCode   HsnCode @relation(fields: [hsnCodeId], references: [id])
 
   company_id Int
   company    Company @relation(fields: [company_id], references: [id])
@@ -152,8 +306,8 @@ model MasterMedicine {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([medicine_name, strength, company_id])
+  @@unique([name, strength, company_id])
   @@index([company_id])
   @@index([product_type_id])
-  @@index([hsn_id])
+  @@index([hsnCodeId])
 }
