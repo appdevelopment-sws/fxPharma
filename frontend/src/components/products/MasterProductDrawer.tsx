@@ -1,192 +1,154 @@
-import * as React from "react"
-import { type Control } from "react-hook-form"
+import { useEffect } from "react"
+import { useForm, type SubmitHandler } from "react-hook-form"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { queryKeys } from "@/lib/queryKeys"
+import ProductApi from "@/services/masterProductApi"
+import { FormContainer } from "@/components/formContainer"
+import Each from "@/components/Each"
+import ControlledFormComponent from "@/components/shared/ControlledFormComponent"
+import {
+  MASTER_PRODUCT_DIALOG_FORM_LAYOUT,
+  MASTER_PRODUCT_REFERENCE_FORM_LAYOUT,
+  MASTER_PRODUCT_FORM_INITIAL_DATA,
+} from "@/constants/page/super-admin/master-products"
 
-import { Button } from "@/components/ui/button"
-import { FormField } from "@/components/ui/form-fields"
-import { FormContainer } from "../formContainer"
-
-export type MasterProductFormValues = {
-  name: string
-  salt: string
-  barcode: string
-  brand_name: string
-  pack_size: string
-  strength: string
-  hsnCodeId: string
-  company_id: string
-  product_type_id: string
-}
-
-type Props = {
+interface MasterProductDialogProps {
   open: boolean
-  onOpenChange: (open: boolean) => void
-  control: Control<MasterProductFormValues>
-  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void
-  mode?: "create" | "edit" | "view"
-  variant?: "drawer" | "modal" // ⭐ NEW
-  isSubmitting?: boolean
-  isLoading?: boolean
+  onClose: (open: boolean) => void
+  product?: any | null // using any for rapid prototyping, optimally a MasterProduct type
 }
 
-export const PRODUCT_FORM_DEFAULT_VALUES: MasterProductFormValues = {
-  name: "",
-  salt: "",
-  barcode: "",
-  brand_name: "",
-  pack_size: "",
-  strength: "",
-  hsnCodeId: "",
-  company_id: "",
-  product_type_id: "",
-}
-
-const COPY = {
-  create: {
-    title: "Add Master Product",
-    description:
-      "Create a reusable master product with company, product type, and HSN references.",
-    submitLabel: "Save Product",
-  },
-  edit: {
-    title: "Edit Master Product",
-    description: "Update the master product metadata and reference mappings.",
-    submitLabel: "Update Product",
-  },
-  view: {
-    title: "Product Details",
-    description:
-      "Review the full master product information and linked references.",
-    submitLabel: "",
-  },
-} as const
-
-export default function MasterProductForm({
+export default function MasterProductDialog({
   open,
-  onOpenChange,
-  control,
-  onSubmit,
-  mode = "create",
-  variant = "drawer",
-  isSubmitting = false,
-  isLoading = false,
-}: Props) {
-  const isReadOnly = mode === "view"
-  const copy = COPY[mode]
+  onClose,
+  product,
+}: MasterProductDialogProps) {
+  const isViewMode = !!product?.viewMode
+  const isEditMode = !!product?.id
+  const productId = product?.id
 
-  const footer = (
-    <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-      <Button
-        type="button"
-        variant="outline"
-        onClick={() => onOpenChange(false)}
-        disabled={isSubmitting || isLoading}
-      >
-        {isReadOnly ? "Close" : "Cancel"}
-      </Button>
+  const { handleSubmit, control, reset } = useForm({
+    defaultValues: MASTER_PRODUCT_FORM_INITIAL_DATA,
+    mode: "onChange",
+  })
 
-      {!isReadOnly && (
-        <Button
-          type="submit"
-          form="master-product-form"
-          disabled={isSubmitting || isLoading}
-        >
-          {copy.submitLabel}
-        </Button>
-      )}
-    </div>
-  )
+  useEffect(() => {
+    if (open) {
+      if (isEditMode || isViewMode) {
+        reset({
+          name: product?.name || "",
+          salt: product?.salt || "",
+          brand_name: product?.brand_name || "",
+          barcode: product?.barcode || "",
+          pack_size: product?.pack_size || "",
+          strength: product?.strength || "",
+          company_id: product?.company_id ? String(product.company_id) : "",
+          product_type_id: product?.product_type_id
+            ? String(product.product_type_id)
+            : "",
+          hsnCodeId: product?.hsnCodeId ? String(product.hsnCodeId) : "",
+        })
+      } else {
+        reset(MASTER_PRODUCT_FORM_INITIAL_DATA)
+      }
+    }
+  }, [open, product, reset, isEditMode, isViewMode])
+
+  const queryClient = useQueryClient()
+
+  const handleMutation = useMutation({
+    mutationFn: (submitData: any) =>
+      isEditMode
+        ? ProductApi.updateProduct(productId, submitData)
+        : ProductApi.createProduct(submitData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.masterProducts.all,
+      })
+      reset()
+      onClose(false)
+    },
+  })
+
+  const onSubmit: SubmitHandler<any> = async (data) => {
+    handleMutation.mutate(data)
+  }
 
   return (
     <FormContainer
-      variant={"modal"}
+      variant="drawer"
       open={open}
-      onOpenChange={onOpenChange}
-      title={copy.title}
-      description={copy.description}
-      footer={footer}
+      onOpenChange={(isOpen) => onClose(isOpen)}
+      title={
+        isViewMode
+          ? "View Product"
+          : isEditMode
+            ? "Edit Product"
+            : "Add Product"
+      }
+      description={
+        isViewMode
+          ? "Viewing master product details."
+          : isEditMode
+            ? "Update master product details."
+            : "Create a new generic master product."
+      }
       size="lg"
+      footer={
+        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <button
+            type="button"
+            className="rounded-md border px-4 py-2"
+            onClick={() => onClose(false)}
+            disabled={handleMutation.isPending}
+          >
+            {isViewMode ? "Close" : "Cancel"}
+          </button>
+          {!isViewMode && (
+            <button
+              type="submit"
+              form="master-product-dialog-form"
+              className="rounded-md bg-primary px-4 py-2 text-primary-foreground disabled:opacity-50"
+              disabled={handleMutation.isPending}
+            >
+              {handleMutation.isPending
+                ? "Saving..."
+                : isEditMode
+                  ? "Update"
+                  : "Save"}
+            </button>
+          )}
+        </div>
+      }
     >
-      <form id="master-product-form" onSubmit={onSubmit} className="space-y-5">
+      <form
+        id="master-product-dialog-form"
+        onSubmit={handleSubmit(onSubmit)}
+        className="space-y-5"
+      >
         <section className="grid gap-4">
-          <FormField
-            control={control}
-            name="name"
-            label="Product Name"
-            tooltip="Primary master-product name."
-            placeholder="Paracetamol"
-            required
-            readOnly={isReadOnly}
-          />
-
-          <FormField
-            control={control}
-            name="salt"
-            label="Salt"
-            tooltip="Generic salt or active composition."
-            placeholder="Acetaminophen"
-            required
-            readOnly={isReadOnly}
-          />
-
-          <FormField
-            control={control}
-            name="brand_name"
-            label="Brand Name"
-            placeholder="Crocin"
-            readOnly={isReadOnly}
-          />
-
-          <FormField
-            control={control}
-            name="barcode"
-            label="Barcode"
-            placeholder="8901234567890"
-            readOnly={isReadOnly}
-          />
-
-          <FormField
-            control={control}
-            name="pack_size"
-            label="Pack Size"
-            placeholder="10 tablets"
-            readOnly={isReadOnly}
-          />
-
-          <FormField
-            control={control}
-            name="strength"
-            label="Strength"
-            placeholder="500mg"
-            readOnly={isReadOnly}
+          <Each
+            of={MASTER_PRODUCT_DIALOG_FORM_LAYOUT}
+            render={(form: any) => (
+              <ControlledFormComponent
+                control={control}
+                {...form}
+                readOnly={isViewMode}
+              />
+            )}
           />
         </section>
 
         <section className="grid gap-4 sm:grid-cols-3">
-          <FormField
-            control={control}
-            name="company_id"
-            label="Company ID"
-            inputType="number"
-            required
-            readOnly={isReadOnly}
-          />
-
-          <FormField
-            control={control}
-            name="product_type_id"
-            label="Product Type ID"
-            inputType="number"
-            required
-            readOnly={isReadOnly}
-          />
-
-          <FormField
-            control={control}
-            name="hsnCodeId"
-            label="HSN Code ID"
-            inputType="number"
-            required
-            readOnly={isReadOnly}
+          <Each
+            of={MASTER_PRODUCT_REFERENCE_FORM_LAYOUT}
+            render={(form: any) => (
+              <ControlledFormComponent
+                control={control}
+                {...form}
+                readOnly={isViewMode}
+              />
+            )}
           />
         </section>
       </form>

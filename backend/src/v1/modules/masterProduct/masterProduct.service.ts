@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import * as masterProductRepository from "./masterProduct.repository.js";
 import type {
+  CreateHsnCodeInput,
   CreateMasterProductInput,
   ListMasterProductsQuery,
   UpdateMasterProductInput,
@@ -38,16 +39,14 @@ const ensureReferenceIntegrity = async (data: {
   if (data.hsnCodeId && !hsnCode) {
     throw new Error("HSN code not found");
   }
-
-  if (hsnCode && !hsnCode.isActive) {
-    throw new Error("HSN code is not active");
-  }
 };
 
 const mapPrismaError = (error: unknown) => {
   if (error instanceof Prisma.PrismaClientKnownRequestError) {
     if (error.code === "P2002") {
-      throw new Error("A master product with the same unique values already exists");
+      throw new Error(
+        "A master product with the same unique values already exists",
+      );
     }
 
     if (error.code === "P2025") {
@@ -58,10 +57,20 @@ const mapPrismaError = (error: unknown) => {
   throw error;
 };
 
+const mapHsnPrismaError = (error: unknown) => {
+  if (
+    error instanceof Prisma.PrismaClientKnownRequestError &&
+    error.code === "P2002"
+  ) {
+    throw new Error("HSN code already exists");
+  }
+
+  throw error;
+};
+
 export const listProducts = async (query: ListMasterProductsQuery) => {
-  const { items, total } = await masterProductRepository.listMasterProducts(
-    query,
-  );
+  const { items, total } =
+    await masterProductRepository.listMasterProducts(query);
 
   return {
     items,
@@ -82,6 +91,10 @@ export const getProductById = async (id: number) => {
   }
 
   return product;
+};
+
+export const getProductReferences = async () => {
+  return masterProductRepository.listMasterProductReferences();
 };
 
 export const createProduct = async (payload: CreateMasterProductInput) => {
@@ -112,5 +125,15 @@ export const deleteProduct = async (id: number) => {
     await masterProductRepository.deleteMasterProduct(id);
   } catch (error) {
     mapPrismaError(error);
+  }
+};
+
+export const createHsnCode = async (payload: CreateHsnCodeInput) => {
+  try {
+    return await masterProductRepository.createHsnCode({
+      code: payload.code.trim(),
+    });
+  } catch (error) {
+    mapHsnPrismaError(error);
   }
 };

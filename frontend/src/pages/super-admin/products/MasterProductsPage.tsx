@@ -1,17 +1,12 @@
 import { useCallback, useMemo } from "react"
-import { useForm } from "react-hook-form"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { Eye, PencilLine, Plus, Trash2 } from "lucide-react"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { Plus, Pencil, Eye, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
 import { ConfirmDialog } from "@/components/confirmDialog"
 import DataTable, { type DataTableColumn } from "@/components/data-table"
 import { FilterBar } from "@/components/filter-bar"
-import CreateHsnCodeDialog from "@/components/products/CreateHsnCodeDialog"
-import MasterProductDrawer, {
-  PRODUCT_FORM_DEFAULT_VALUES,
-  type MasterProductFormValues,
-} from "@/components/products/MasterProductDrawer"
+import MasterProductDialog from "@/components/products/MasterProductDrawer"
 import SectionCard from "@/components/SectionCard"
 import { Button } from "@/components/ui/button"
 import { useDisclosure } from "@/hooks/useDisclosure"
@@ -19,74 +14,21 @@ import useSearchFilter from "@/hooks/useSearchFilter"
 import { queryKeys } from "@/lib/queryKeys"
 import ProductApi, { type MasterProduct } from "@/services/masterProductApi"
 
-type ProductFilters = {
-  companyId: string
-  productTypeId: string
-  hsnCodeId: string
-  search: string
-  page: number
-  limit: number
-}
+import {
+  INITIAL_PRODUCT_FILTERS,
+  MASTER_PRODUCT_COLUMNS,
+} from "@/constants/page/super-admin/master-products"
 
-type DrawerState = {
-  mode: "create" | "edit" | "view"
-  product: MasterProduct | null
-}
-
-const toOption = (value: string | number, label: string) => ({
-  value: String(value),
-  label,
-})
-
-export default function SuperAdminProductsPage() {
+export default function MasterProductsPage() {
   const queryClient = useQueryClient()
-  const drawerDisclosure = useDisclosure<DrawerState>()
-  const deleteDisclosure = useDisclosure<MasterProduct>()
-  const hsnDisclosure = useDisclosure()
-  const { filter, handleFilter } = useSearchFilter<ProductFilters>({
-    companyId: "",
-    productTypeId: "",
-    hsnCodeId: "",
-    search: "",
-    page: 1,
-    limit: 10,
-  })
+  const drawerDisclosure = useDisclosure<any>()
+  const deleteDisclosure = useDisclosure<any>()
 
-  const { control, handleSubmit, reset, setValue } =
-    useForm<MasterProductFormValues>({
-      defaultValues: PRODUCT_FORM_DEFAULT_VALUES,
-    })
+  const { filter, handleFilter } = useSearchFilter(INITIAL_PRODUCT_FILTERS)
 
   const { data: productsData, isLoading: isLoadingProducts } = useQuery({
     queryKey: queryKeys.masterProducts.list(filter),
     queryFn: () => ProductApi.getMasterProducts(filter),
-  })
-
-  const { data: references, isLoading: isLoadingReferences } = useQuery({
-    queryKey: queryKeys.masterProducts.references(),
-    queryFn: ProductApi.getReferences,
-  })
-
-  const createProductMutation = useMutation({
-    mutationFn: (data: MasterProductFormValues) =>
-      ProductApi.createProduct(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.masterProducts.all })
-      drawerDisclosure.onClose()
-      reset(PRODUCT_FORM_DEFAULT_VALUES)
-      toast.success("Master product created successfully")
-    },
-  })
-
-  const updateProductMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: MasterProductFormValues }) =>
-      ProductApi.updateProduct(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.masterProducts.all })
-      drawerDisclosure.onClose()
-      reset(PRODUCT_FORM_DEFAULT_VALUES)
-      toast.success("Master product updated successfully")
-    },
   })
 
   const deleteProductMutation = useMutation({
@@ -98,311 +40,122 @@ export default function SuperAdminProductsPage() {
     },
   })
 
-  const createHsnMutation = useMutation({
-    mutationFn: ({ code }: { code: string }) =>
-      ProductApi.createHsnCode({ code }),
-    onSuccess: async (hsnCode) => {
-      queryClient.setQueryData(
-        queryKeys.masterProducts.references(),
-        (
-          current:
-            | Awaited<ReturnType<typeof ProductApi.getReferences>>
-            | undefined
-        ) => {
-          if (!current) {
-            return {
-              companies: [],
-              productTypes: [],
-              hsnCodes: [hsnCode],
-            }
-          }
-
-          const exists = current.hsnCodes.some((item) => item.id === hsnCode.id)
-          if (exists) {
-            return current
-          }
-
-          return {
-            ...current,
-            hsnCodes: [...current.hsnCodes, hsnCode].sort((a, b) =>
-              a.code.localeCompare(b.code)
-            ),
-          }
-        }
-      )
-      await queryClient.invalidateQueries({
-        queryKey: queryKeys.masterProducts.references(),
-      })
-      setValue("hsnCodeId", String(hsnCode.id), {
-        shouldDirty: true,
-        shouldTouch: true,
-      })
-      hsnDisclosure.onClose()
-      toast.success("HSN code created successfully")
-    },
-  })
+  const handleOpen = (
+    product: any = null,
+    mode: "create" | "edit" | "view" = "create"
+  ) => {
+    drawerDisclosure.onOpen(
+      product ? { ...product, id: product.id, viewMode: mode === "view" } : null
+    )
+  }
 
   const handleFilterChange = useCallback(
-    (updates: Partial<ProductFilters>) => {
-      handleFilter({
-        ...updates,
-        page: updates.page ?? 1,
-      })
+    (updates: Record<string, any>) => {
+      handleFilter({ ...updates, page: 1 })
     },
     [handleFilter]
   )
 
-  const openDrawer = useCallback(
-    (mode: DrawerState["mode"], product?: MasterProduct) => {
-      if (mode === "create") {
-        reset(PRODUCT_FORM_DEFAULT_VALUES)
-        drawerDisclosure.onOpen({ mode, product: null })
-        return
-      }
-
-      if (!product) return
-
-      reset({
-        name: product.name,
-        generic_name: product.generic_name ?? "",
-        brand_name: product.brand_name ?? "",
-        pack_size: product.pack_size ?? "",
-        strength: product.strength ?? "",
-        isPrescriptionRequired: product.isPrescriptionRequired ?? false,
-        scheduleType: product.scheduleType ?? "",
-        hsnCodeId: String(product.hsnCodeId),
-        company_id: String(product.company_id),
-        product_type_id: String(product.product_type_id),
-      })
-
-      drawerDisclosure.onOpen({ mode, product })
-    },
-    [drawerDisclosure, reset]
-  )
-
-  const handleDrawerChange = useCallback(
-    (open: boolean) => {
-      if (open) return
-
-      drawerDisclosure.onClose()
-      reset(PRODUCT_FORM_DEFAULT_VALUES)
-    },
-    [drawerDisclosure, reset]
-  )
-
-  const handleDrawerSubmit = useCallback(async () => {
-    await handleSubmit(async (values) => {
-      if (!drawerDisclosure.data) return
-
-      if (drawerDisclosure.data.mode === "create") {
-        await createProductMutation.mutateAsync(values)
-        return
-      }
-
-      if (
-        drawerDisclosure.data.mode === "edit" &&
-        drawerDisclosure.data.product
-      ) {
-        await updateProductMutation.mutateAsync({
-          id: drawerDisclosure.data.product.id,
-          data: values,
-        })
-      }
-    })()
-  }, [
-    createProductMutation,
-    drawerDisclosure,
-    handleSubmit,
-    updateProductMutation,
-  ])
-
-  const handleDeleteConfirm = useCallback(() => {
-    if (!deleteDisclosure.data) return
-    deleteProductMutation.mutate(deleteDisclosure.data.id)
-  }, [deleteDisclosure.data, deleteProductMutation])
-
-  const companyOptions = useMemo(
-    () =>
-      (references?.companies ?? []).map((company) =>
-        toOption(
-          company.id,
-          company.gstin ? `${company.name} (${company.gstin})` : company.name
-        )
-      ),
-    [references?.companies]
-  )
-
-  const productTypeOptions = useMemo(
-    () =>
-      (references?.productTypes ?? []).map((productType) =>
-        toOption(
-          productType.id,
-          `${productType.name} (${productType.unit_type})`
-        )
-      ),
-    [references?.productTypes]
-  )
-
-  const hsnOptions = useMemo(
-    () =>
-      (references?.hsnCodes ?? []).map((hsnCode) =>
-        toOption(hsnCode.id, hsnCode.code)
-      ),
-    [references?.hsnCodes]
-  )
-
-  const productColumns = useMemo<DataTableColumn<MasterProduct>[]>(
-    () => [
+  const columns: DataTableColumn<MasterProduct>[] = useMemo(() => {
+    return [
       {
-        key: "id",
-        header: "ID",
-        accessor: "id",
-        cellClassName: "font-medium text-foreground",
+        key: "serial",
+        header:
+          MASTER_PRODUCT_COLUMNS.find((c) => c.key === "serial")?.label || "#",
+        render: (_, index) => {
+          const currentPage = filter.page || 1
+          const limit = filter.limit || 10
+          return (currentPage - 1) * limit + index + 1
+        },
       },
       {
         key: "name",
-        header: "Product",
-        render: (row) => (
-          <div className="space-y-1">
-            <p className="font-medium text-foreground">{row.name}</p>
-            <p className="text-xs text-muted-foreground">
-              {row.generic_name || "-"}
-            </p>
-          </div>
-        ),
+        header:
+          MASTER_PRODUCT_COLUMNS.find((c) => c.key === "name")?.label ||
+          "Product",
+        accessor: "name",
       },
       {
-        key: "brand",
-        header: "Brand / Strength",
-        render: (row) => (
-          <div className="space-y-1">
-            <p>{row.brand_name || "-"}</p>
-            <p className="text-xs text-muted-foreground">
-              {row.strength || "-"}
-            </p>
-          </div>
-        ),
+        key: "salt",
+        header:
+          MASTER_PRODUCT_COLUMNS.find((c) => c.key === "salt")?.label ||
+          "Salt Composition",
+        accessor: "salt",
       },
       {
         key: "company",
-        header: "Company",
-        render: (row) => row.company?.name || `#${row.company_id}`,
+        header:
+          MASTER_PRODUCT_COLUMNS.find((c) => c.key === "company")?.label ||
+          "Company Id",
+        accessor: "company_id", // Just primitive rendering since references are removed
       },
       {
-        key: "productType",
-        header: "Product Type",
-        render: (row) => row.product_type?.name || `#${row.product_type_id}`,
+        key: "product_type",
+        header:
+          MASTER_PRODUCT_COLUMNS.find((c) => c.key === "product_type")?.label ||
+          "Type Id",
+        accessor: "product_type_id",
       },
       {
         key: "hsn",
-        header: "HSN",
-        render: (row) => row.hsnCode?.code || `#${row.hsnCodeId}`,
+        header:
+          MASTER_PRODUCT_COLUMNS.find((c) => c.key === "hsn")?.label ||
+          "HSN Code Id",
+        accessor: "hsnCodeId",
       },
       {
-        key: "schedule",
-        header: "Schedule",
-        render: (row) => row.scheduleType || "-",
-      },
-      {
-        key: "rx",
-        header: "Rx",
-        render: (row) => (row.isPrescriptionRequired ? "Yes" : "No"),
-      },
-      {
-        key: "actions",
-        header: "Actions",
-        className: "text-right",
-        cellClassName: "text-right",
+        key: "action",
+        header:
+          MASTER_PRODUCT_COLUMNS.find((c) => c.key === "action")?.label ||
+          "Actions",
         render: (row) => (
-          <div className="flex justify-end gap-2">
+          <div className="flex items-center gap-2">
             <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => openDrawer("view", row)}
+              size="icon-sm"
+              variant="ghost"
+              onClick={() => handleOpen(row, "view")}
+              className="text-muted-foreground hover:text-foreground"
             >
-              <Eye className="size-3.5" />
-              View
+              <Eye className="size-4" />
             </Button>
             <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => openDrawer("edit", row)}
+              size="icon-sm"
+              variant="ghost"
+              onClick={() => handleOpen(row, "edit")}
+              className="text-muted-foreground hover:text-foreground"
             >
-              <PencilLine className="size-3.5" />
-              Edit
+              <Pencil className="size-4" />
             </Button>
             <Button
-              type="button"
-              variant="outline"
-              size="sm"
+              size="icon-sm"
+              variant="ghost"
               onClick={() => deleteDisclosure.onOpen(row)}
-              className="text-destructive hover:text-destructive"
+              className="text-destructive hover:bg-destructive/10 hover:text-destructive"
             >
-              <Trash2 className="size-3.5" />
+              <Trash2 className="size-4" />
             </Button>
           </div>
         ),
       },
-    ],
-    [deleteDisclosure, openDrawer]
-  )
-
-  const isSubmitting =
-    createProductMutation.isPending || updateProductMutation.isPending
-  const totalRecords =
-    productsData?.meta?.total ?? productsData?.data.length ?? 0
-  const lastPage =
-    productsData?.meta?.pages ??
-    Math.max(1, Math.ceil(totalRecords / filter.limit))
+    ]
+  }, [filter.page, filter.limit, deleteDisclosure])
 
   return (
-    <div>
-      {drawerDisclosure.data && (
-        <MasterProductDrawer
-          open={drawerDisclosure.isOpen}
-          onOpenChange={handleDrawerChange}
-          control={control}
-          onSubmit={(event) => {
-            event.preventDefault()
-            handleDrawerSubmit()
-          }}
-          mode={drawerDisclosure.data.mode}
-          variant="modal"
-          isSubmitting={isSubmitting}
-          isLoading={isSubmitting}
-          companyOptions={companyOptions}
-          productTypeOptions={productTypeOptions}
-          hsnOptions={hsnOptions}
-          onAddHsn={() => hsnDisclosure.onOpen()}
-          isReferenceLoading={isLoadingReferences}
-        />
-      )}
-
-      <CreateHsnCodeDialog
-        open={hsnDisclosure.isOpen}
-        onOpenChange={(open) => {
-          if (!open) {
-            hsnDisclosure.onClose()
-          }
-        }}
-        onSubmit={async ({ code }) => {
-          await createHsnMutation.mutateAsync({ code })
-        }}
-        isSubmitting={createHsnMutation.isPending}
+    <div className="space-y-6">
+      <MasterProductDialog
+        open={drawerDisclosure.isOpen}
+        onClose={drawerDisclosure.onClose}
+        product={drawerDisclosure.data}
       />
 
       <ConfirmDialog
         open={deleteDisclosure.isOpen}
-        onOpenChange={(open) => {
-          if (!open) {
-            deleteDisclosure.onClose()
-          }
-        }}
+        onOpenChange={deleteDisclosure.onClose}
         title="Delete Master Product"
         description={`Are you sure you want to delete "${deleteDisclosure.data?.name}"? This action cannot be undone.`}
-        onConfirm={handleDeleteConfirm}
+        onConfirm={() =>
+          deleteProductMutation.mutate(deleteDisclosure.data?.id)
+        }
         isLoading={deleteProductMutation.isPending}
         confirmText="delete"
         variant="danger"
@@ -413,12 +166,8 @@ export default function SuperAdminProductsPage() {
         title="Master Products"
         description="Manage reusable product metadata linked to company, product type, and HSN records."
         action={
-          <Button
-            type="button"
-            onClick={() => openDrawer("create")}
-            disabled={isLoadingProducts || isLoadingReferences}
-          >
-            <Plus className="size-4" />
+          <Button type="button" onClick={() => handleOpen(null, "create")}>
+            <Plus className="mr-2 size-4" />
             Add Product
           </Button>
         }
@@ -426,43 +175,41 @@ export default function SuperAdminProductsPage() {
         <div className="space-y-4">
           <FilterBar
             values={{
-              companyId: filter.companyId,
-              productTypeId: filter.productTypeId,
-              hsnCodeId: filter.hsnCodeId,
-              search: filter.search,
+              search: filter.search || "",
+              companyId: filter.companyId || "",
+              productTypeId: filter.productTypeId || "",
+              hsnCodeId: filter.hsnCodeId || "",
             }}
             onChange={handleFilterChange}
           >
-            <FilterBar.Select
-              name="companyId"
-              placeholder="All companies"
-              options={companyOptions}
-            />
-            <FilterBar.Select
-              name="productTypeId"
-              placeholder="All product types"
-              options={productTypeOptions}
-            />
-            <FilterBar.Select
-              name="hsnCodeId"
-              placeholder="All HSN codes"
-              options={hsnOptions}
-            />
             <FilterBar.Search
               name="search"
-              placeholder="Search by name, generic, brand, strength, pack size, or company"
+              placeholder="Search by product name, generic, or brand..."
             />
+            {/* Keeping these as simple text inputs to search by IDs as per simplified API limits */}
+            <FilterBar.Search name="companyId" placeholder="Company ID" />
+            <FilterBar.Search
+              name="productTypeId"
+              placeholder="Product Type ID"
+            />
+            <FilterBar.Search name="hsnCodeId" placeholder="HSN ID" />
           </FilterBar>
 
           <DataTable
-            columns={productColumns}
-            data={productsData?.data ?? []}
+            columns={columns}
+            data={productsData?.data || []}
             rowKey="id"
-            currentPage={filter.page}
-            lastPage={lastPage}
-            pageSize={filter.limit}
-            totalRecords={totalRecords}
-            isLoading={isLoadingProducts || isLoadingReferences}
+            currentPage={filter.page || 1}
+            lastPage={
+              productsData?.meta?.last_page ||
+              Math.ceil(
+                (productsData?.meta?.total || 0) / (filter.limit || 10)
+              ) ||
+              1
+            }
+            pageSize={filter.limit || 10}
+            totalRecords={productsData?.meta?.total || 0}
+            isLoading={isLoadingProducts}
             onPageChange={(page) => handleFilterChange({ page })}
             onPageSizeChange={(limit) => handleFilterChange({ limit, page: 1 })}
             emptyTitle="No master products found"

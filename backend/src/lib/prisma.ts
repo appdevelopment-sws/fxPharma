@@ -13,8 +13,8 @@ const adapter = new PrismaPg({ connectionString });
 const tenantScopedModels = new Set(["User", "Role"]);
 
 const tenantUniqueFields: Record<string, string[]> = {
-  User: ["id", "email"],
-  Role: ["id", "name"],
+  User: ["email"],
+  Role: ["name"],
 };
 
 const rootPrisma = new PrismaClient({ adapter });
@@ -143,7 +143,11 @@ export const prisma = rootPrisma.$extends({
               ? mutableArgs.data.map((entry: Record<string, unknown>) =>
                   enforceTenantIdOnCreate(model, tenantId, entry),
                 )
-              : enforceTenantIdOnCreate(model, tenantId, mutableArgs.data ?? {});
+              : enforceTenantIdOnCreate(
+                  model,
+                  tenantId,
+                  mutableArgs.data ?? {},
+                );
             break;
           default:
             break;
