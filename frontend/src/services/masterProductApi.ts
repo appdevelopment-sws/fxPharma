@@ -109,74 +109,46 @@ const normalizePayload = (data: MasterProductFormValues) => ({
 })
 
 const ProductApi = {
-  getMasterProducts: async (filters?: {
-    companyId?: string
-    productTypeId?: string
-    hsnCodeId?: string
-    search?: string
-    page?: number
-    limit?: number
-  }): Promise<GetProductsResponse> => {
-    const params = new URLSearchParams()
-
-    if (filters?.companyId) params.append("companyId", filters.companyId)
-    if (filters?.productTypeId)
-      params.append("productTypeId", filters.productTypeId)
-    if (filters?.hsnCodeId) params.append("hsnCodeId", filters.hsnCodeId)
-    if (filters?.search) params.append("search", filters.search)
-    if (filters?.page) params.append("page", String(filters.page))
-    if (filters?.limit) params.append("limit", String(filters.limit))
-
-    const queryString = params.toString()
-    const url = queryString ? `${BASE_URL}?${queryString}` : BASE_URL
-    const response = await api.get<RawGetMasterProductsResponse>(url)
+  getMasterProducts: async (params?: any): Promise<GetProductsResponse> => {
+    const res = await api.get<RawGetMasterProductsResponse>(BASE_URL, {
+      params,
+    })
 
     return {
-      data: response.data?.items ?? [],
+      data: res.data?.items ?? [],
       meta: {
-        total: response.data?.pagination?.total ?? 0,
-        page: response.data?.pagination?.page ?? filters?.page ?? 1,
-        limit: response.data?.pagination?.limit ?? filters?.limit ?? 10,
-        pages: Math.max(1, response.data?.pagination?.totalPages ?? 0),
+        total: res.data?.pagination?.total ?? 0,
+        page: res.data?.pagination?.page ?? params?.page ?? 1,
+        limit: res.data?.pagination?.limit ?? params?.limit ?? 10,
+        pages: res.data?.pagination?.totalPages ?? 1,
       },
     }
   },
 
   getProduct: async (id: string | number): Promise<GetProductResponse> => {
-    const response = await api.get<RawMasterProductResponse>(
-      `${BASE_URL}/${id}`
-    )
-
-    return {
-      data: response.data as MasterProduct,
-    }
+    const res = await api.get<RawMasterProductResponse>(`${BASE_URL}/${id}`)
+    return { data: res.data! }
   },
 
   createProduct: async (
     data: MasterProductFormValues
   ): Promise<CreateProductResponse> => {
-    const response = await api.post<RawMasterProductResponse>(
+    const res = await api.post<RawMasterProductResponse>(
       BASE_URL,
       normalizePayload(data)
     )
-
-    return {
-      data: response.data as MasterProduct,
-    }
+    return { data: res.data! }
   },
 
   updateProduct: async (
     id: string | number,
     data: MasterProductFormValues
   ): Promise<UpdateProductResponse> => {
-    const response = await api.put<RawMasterProductResponse>(
+    const res = await api.put<RawMasterProductResponse>(
       `${BASE_URL}/${id}`,
       normalizePayload(data)
     )
-
-    return {
-      data: response.data as MasterProduct,
-    }
+    return { data: res.data! }
   },
 
   deleteProduct: async (id: string | number): Promise<{ success: boolean }> => {

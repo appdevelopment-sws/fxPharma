@@ -4,26 +4,30 @@
     "module": "nodenext",
     "moduleResolution": "nodenext",
     "baseUrl": ".",
-    "ignoreDeprecations": "6.0",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": [
+        "src/*"
+      ]
     },
-
     "rootDir": "./src",
     "outDir": "./dist",
-
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-
     "strict": true,
     "skipLibCheck": true,
     "isolatedModules": true,
-
     "sourceMap": true,
-
-    "types": ["node"]
+    "types": [
+      "node"
+    ]
   },
-
-  "include": ["src"],
-  "exclude": ["node_modules", "dist", "generated", "prisma.config.ts"]
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "generated",
+    "prisma.config.ts"
+  ]
 }

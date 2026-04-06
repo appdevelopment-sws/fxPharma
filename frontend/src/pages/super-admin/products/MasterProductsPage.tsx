@@ -24,7 +24,9 @@ export default function MasterProductsPage() {
   const drawerDisclosure = useDisclosure<any>()
   const deleteDisclosure = useDisclosure<any>()
 
-  const { filter, handleFilter } = useSearchFilter(INITIAL_PRODUCT_FILTERS)
+  const { filter, handleFilter } = useSearchFilter(
+  INITIAL_PRODUCT_FILTERS
+  )
 
   const { data: productsData, isLoading: isLoadingProducts } = useQuery({
     queryKey: queryKeys.masterProducts.list(filter),
@@ -64,8 +66,8 @@ export default function MasterProductsPage() {
           MASTER_PRODUCT_COLUMNS.find((c) => c.key === "serial")?.label || "#",
         render: (_, index) => {
           const currentPage = filter.page || 1
-          const limit = filter.limit || 10
-          return (currentPage - 1) * limit + index + 1
+          const perPage = filter.perPage || 10
+          return (currentPage - 1) * perPage + index + 1
         },
       },
       {
@@ -138,7 +140,7 @@ export default function MasterProductsPage() {
         ),
       },
     ]
-  }, [filter.page, filter.limit, deleteDisclosure])
+  }, [filter.page, filter.perPage, deleteDisclosure])
 
   return (
     <div className="space-y-6">
@@ -201,17 +203,19 @@ export default function MasterProductsPage() {
             rowKey="id"
             currentPage={filter.page || 1}
             lastPage={
-              productsData?.meta?.last_page ||
+              productsData?.meta?.pages ||
               Math.ceil(
-                (productsData?.meta?.total || 0) / (filter.limit || 10)
+                (productsData?.meta?.total || 0) / (filter.perPage || 10)
               ) ||
               1
             }
-            pageSize={filter.limit || 10}
+            pageSize={filter.perPage || 10}
             totalRecords={productsData?.meta?.total || 0}
             isLoading={isLoadingProducts}
             onPageChange={(page) => handleFilterChange({ page })}
-            onPageSizeChange={(limit) => handleFilterChange({ limit, page: 1 })}
+            onPageSizeChange={(perPage) =>
+              handleFilterChange({ perPage, page: 1 })
+            }
             emptyTitle="No master products found"
             emptyDescription="Create a master product or adjust the filters to see matching records."
           />

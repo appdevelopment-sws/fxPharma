@@ -39,6 +39,10 @@ export const updateMasterProductSchema = createMasterProductSchema
     message: "At least one field is required",
   });
 
+export const createHsnCodeSchema = z.object({
+  code: z.string().trim().min(2).max(12),
+});
+
 export type ListMasterProductsQuery = z.infer<
   typeof listMasterProductsQuerySchema
 >;
@@ -48,3 +52,4 @@ export type CreateMasterProductInput = z.infer<
 export type UpdateMasterProductInput = z.infer<
   typeof updateMasterProductSchema
 >;
+export type CreateHsnCodeInput = z.infer<typeof createHsnCodeSchema>;

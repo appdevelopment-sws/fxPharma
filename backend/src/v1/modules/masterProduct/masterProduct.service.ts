@@ -1,6 +1,6 @@
 import { Prisma } from "@prisma/client";
 import * as masterProductRepository from "./masterProduct.repository.js";
-import type {
+import {
   CreateHsnCodeInput,
   CreateMasterProductInput,
   ListMasterProductsQuery,

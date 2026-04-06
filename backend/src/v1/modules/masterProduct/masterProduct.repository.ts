@@ -16,6 +16,15 @@ type ListMasterProductsArgs = {
   hsnCodeId?: number;
 };
 
+const mapProduct = (product: any) => {
+  if (!product) return null;
+  const { generic_name, ...rest } = product;
+  return {
+    ...rest,
+    salt: generic_name,
+  };
+};
+
 const buildMasterProductWhere = ({
   search,
   companyId,
@@ -27,9 +36,8 @@ const buildMasterProductWhere = ({
   if (search) {
     where.OR = [
       { name: { contains: search, mode: "insensitive" } },
-      { salt: { contains: search, mode: "insensitive" } },
+      { generic_name: { contains: search, mode: "insensitive" } },
       { brand_name: { contains: search, mode: "insensitive" } },
-      { barcode: { contains: search, mode: "insensitive" } },
     ];
   }
 
@@ -58,22 +66,23 @@ export const listMasterProducts = async (args: ListMasterProductsArgs) => {
       include: masterProductInclude,
       skip,
       take: args.limit,
-      orderBy: { createdAt: "desc" },
+      orderBy: { id: "desc" },
     }),
     prisma.masterProduct.count({ where }),
   ]);
 
   return {
-    items,
+    items: items.map(mapProduct),
     total,
   };
 };
 
 export const findMasterProductById = async (id: number) => {
-  return prisma.masterProduct.findUnique({
+  const product = await prisma.masterProduct.findUnique({
     where: { id },
     include: masterProductInclude,
   });
+  return mapProduct(product);
 };
 
 export const findCompanyById = async (id: number) => {
@@ -95,27 +104,57 @@ export const findHsnCodeById = async (id: number) => {
 };
 
 export const createMasterProduct = async (
-  data: Prisma.MasterProductUncheckedCreateInput,
+  payload: any,
 ) => {
-  return prisma.masterProduct.create({
+  const { salt, barcode, ...rest } = payload;
+  const data = {
+    ...rest,
+    generic_name: salt,
+  };
+
+  const product = await prisma.masterProduct.create({
     data,
     include: masterProductInclude,
   });
+  return mapProduct(product);
 };
 
 export const updateMasterProduct = async (
   id: number,
-  data: Prisma.MasterProductUncheckedUpdateInput,
+  payload: any,
 ) => {
-  return prisma.masterProduct.update({
+  const { salt, barcode, ...rest } = payload;
+  const data = {
+    ...rest,
+    ...(salt && { generic_name: salt }),
+  };
+
+  const product = await prisma.masterProduct.update({
     where: { id },
     data,
     include: masterProductInclude,
   });
+  return mapProduct(product);
 };
 
 export const deleteMasterProduct = async (id: number) => {
   return prisma.masterProduct.delete({
     where: { id },
+  });
+};
+
+export const listMasterProductReferences = async () => {
+  const [companies, productTypes, hsnCodes] = await Promise.all([
+    prisma.company.findMany({ where: { status: "ACTIVE" } }),
+    prisma.productType.findMany(),
+    prisma.hsnCode.findMany(),
+  ]);
+
+  return { companies, productTypes, hsnCodes };
+};
+
+export const createHsnCode = async (data: { code: string }) => {
+  return prisma.hsnCode.create({
+    data,
   });
 };

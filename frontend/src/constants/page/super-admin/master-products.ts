@@ -7,12 +7,13 @@ export const MASTER_PRODUCT_BREADCRUMBS = [
 
 export const INITIAL_PRODUCT_FILTERS = {
   page: 1,
-  limit: 10,
+  perPage: 10,
   search: "",
   companyId: "",
   productTypeId: "",
   hsnCodeId: "",
 };
+
 
 export const MASTER_PRODUCT_COLUMNS = [
   { key: "serial", label: "#" },
