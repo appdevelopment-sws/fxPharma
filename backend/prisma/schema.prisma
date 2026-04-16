@@ -47,6 +47,43 @@ enum StockMovementType {
   SALE
   RETURN
   ADJUSTMENT
+  TRANSFER_IN
+  TRANSFER_OUT
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  PARTIAL
+  FAILED
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  UPI
+  BANK_TRANSFER
+  CREDIT
+}
+
+enum SaleStatus {
+  DRAFT
+  COMPLETED
+  CANCELLED
+}
+
+enum PurchaseStatus {
+  DRAFT
+  RECEIVED
+  CANCELLED
+  RETURNED
+}
+
+enum TransferStatus {
+  PENDING
+  IN_TRANSIT
+  COMPLETED
+  CANCELLED
 }
 
 //////////////////////////////////////////////////////
@@ -61,16 +98,22 @@ model Tenant {
   users User[]
   roles Role[]
 
-  branches  Branch[]
-  products  TenantProduct[]
-  suppliers Supplier[]
+  branches       Branch[]
+  products       TenantProduct[]
+  suppliers      Supplier[]
+  customers      Customer[]
+  doctors        Doctor[]
+  stockTransfers StockTransfer[]
 
   subscriptions TenantSubscription[]
   features      TenantFeature[]
   setting       TenantSetting?
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  hsnCodes     HsnCode[]
+  companies    Company[]
+  productTypes ProductType[]
 }
 
 model User {
@@ -83,8 +126,12 @@ model User {
   passwordHash String
   status       UserStatus @default(ACTIVE)
 
-  roleId String
-  role   Role   @relation(fields: [roleId], references: [id])
+  // Granular Role Access
+  userRoles      UserRole[]
+  stockTransfers StockTransfer[] // Track who did a transfer
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([tenantId, email])
   @@index([tenantId])
@@ -97,10 +144,29 @@ model Role {
 
   name String
 
-  users       User[]
   permissions RolePermission[]
+  userRoles   UserRole[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([tenantId, name])
+}
+
+model UserRole {
+  id       String  @id @default(cuid())
+  userId   String
+  roleId   String
+  branchId String? // If null, user is Tenant Admin. If Branch ID present, user has role in that branch.
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role   Role    @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  branch Branch? @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, roleId, branchId])
 }
 
 model Permission {
@@ -108,6 +174,9 @@ model Permission {
   name String @unique
 
   roles RolePermission[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model RolePermission {
@@ -115,8 +184,11 @@ model RolePermission {
   roleId       String
   permissionId String
 
-  role       Role       @relation(fields: [roleId], references: [id])
-  permission Permission @relation(fields: [permissionId], references: [id])
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([roleId, permissionId])
 }
@@ -132,32 +204,33 @@ model HsnCode {
   type        HsnType
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
-  tenantId String?   // ✅ ADD THIS
-  tenant   Tenant?   @relation(fields: [tenantId], references: [id])
+  tenantId    String?
+  tenant      Tenant?  @relation(fields: [tenantId], references: [id])
 
-  products MasterProduct[]
-  taxes    HsnTaxMapping[]
+  products       MasterProduct[]
+  tenantProducts TenantProduct[]
+  taxes          HsnTaxMapping[]
 }
 
 model TaxRule {
-  id       Int      @id @default(autoincrement())
-  name     String?
-  rate     Decimal  @db.Decimal(5, 2)
-  type     TaxType
-  country  String   @default("India")
-  isActive Boolean  @default(true)
+  id        Int      @id @default(autoincrement())
+  name      String?
+  rate      Decimal  @db.Decimal(5, 2)
+  type      TaxType
+  country   String   @default("India")
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
 
   hsnMappings HsnTaxMapping[]
 }
 
 model HsnTaxMapping {
-  id            Int      @id @default(autoincrement())
+  id            Int       @id @default(autoincrement())
   hsnCodeId     Int
   taxRuleId     Int
   effectiveFrom DateTime
   effectiveTo   DateTime?
-  createdAt     DateTime @default(now())
+  createdAt     DateTime  @default(now())
 
   hsnCode HsnCode @relation(fields: [hsnCodeId], references: [id])
   taxRule TaxRule @relation(fields: [taxRuleId], references: [id])
@@ -252,24 +325,32 @@ model Salt {
 }
 
 model Company {
-  id     Int           @id @default(autoincrement())
-  name   String
-  gstin  String?       @unique
-  status CompanyStatus @default(ACTIVE)
-  tenantId String? 
-  tenant   Tenant?  @relation(fields: [tenantId], references: [id])
+  id       Int           @id @default(autoincrement())
+  name     String
+  gstin    String?       @unique
+  status   CompanyStatus @default(ACTIVE)
+  tenantId String?
+  tenant   Tenant?       @relation(fields: [tenantId], references: [id])
 
-  products MasterProduct[]
+  products       MasterProduct[]
+  tenantProducts TenantProduct[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model ProductType {
-  id        Int    @id @default(autoincrement())
+  id        Int     @id @default(autoincrement())
   name      String
   unit_type String
-  tenantId String? 
-  tenant   Tenant?  @relation(fields: [tenantId], references: [id])
+  tenantId  String?
+  tenant    Tenant? @relation(fields: [tenantId], references: [id])
 
-  products MasterProduct[]
+  products       MasterProduct[]
+  tenantProducts TenantProduct[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model MasterProduct {
@@ -278,9 +359,8 @@ model MasterProduct {
   generic_name String?
   brand_name   String?
   strength     String?
-  pack_size    Int?    
-  unit         String? 
-
+  pack_size    Int?
+  unit         String?
 
   isPrescriptionRequired Boolean @default(false)
   scheduleType           String?
@@ -296,6 +376,9 @@ model MasterProduct {
 
   compositions   MedicineComposition[]
   tenantProducts TenantProduct[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([name, strength, company_id])
 }
@@ -318,6 +401,42 @@ model MedicineComposition {
 // TENANT DATA (STRICTLY ISOLATED)
 //////////////////////////////////////////////////////
 
+model Customer {
+  id       String @id @default(cuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  name    String
+  phone   String?
+  email   String?
+  address String?
+
+  sales Sale[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+}
+
+model Doctor {
+  id       String @id @default(cuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  name               String
+  registrationNumber String?
+  phone              String?
+  specialization     String?
+
+  sales Sale[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+}
+
 model Branch {
   id       String @id @default(cuid())
   tenantId String
@@ -326,10 +445,18 @@ model Branch {
   name    String
   address String?
 
-  racks     Rack[]
-  batches   Batch[]
-  sales     Sale[]
-  purchases Purchase[]
+  racks       Rack[]
+  batches     Batch[]
+  sales       Sale[]
+  purchases   Purchase[]
+  inventories Inventory[]
+  userRoles   UserRole[]
+
+  transfersFrom StockTransfer[] @relation("TransferFrom")
+  transfersTo   StockTransfer[] @relation("TransferTo")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([tenantId])
 }
@@ -342,6 +469,9 @@ model Rack {
   name String
 
   batches Batch[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model TenantProduct {
@@ -353,26 +483,53 @@ model TenantProduct {
   masterProductId Int?
   masterProduct   MasterProduct? @relation(fields: [masterProductId], references: [id])
 
-  name       String
-  displayName String? 
-  
+  // Custom Fallback Fields (used if masterProductId is null or for local overrides)
+  name                   String
+  displayName            String?
+  packSize               Int?
+  strength               String?
+  unit                   String?
+  isPrescriptionRequired Boolean @default(false)
+
+  productTypeId Int?
+  productType   ProductType? @relation(fields: [productTypeId], references: [id])
 
   hsnCodeId Int?
   hsnCode   HsnCode? @relation(fields: [hsnCodeId], references: [id])
 
-
-  companyId Int? // ✅ NEW (for custom products)
+  companyId Int?
   company   Company? @relation(fields: [companyId], references: [id])
 
-  barcode    String?
-
+  barcode  String?
   isActive Boolean @default(true)
 
   batches       Batch[]
+  inventories   Inventory[]
   purchaseItems PurchaseItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([tenantId])
   @@index([masterProductId])
+}
+
+// CQRS Materialized View for Inventory (fast reads instead of summing all batches)
+model Inventory {
+  id String @id @default(cuid())
+
+  branchId String
+  branch   Branch @relation(fields: [branchId], references: [id])
+
+  tenantProductId String
+  tenantProduct   TenantProduct @relation(fields: [tenantProductId], references: [id])
+
+  totalQuantity Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([branchId, tenantProductId])
 }
 
 model Batch {
@@ -390,17 +547,24 @@ model Batch {
   batchNumber String
   expiryDate  DateTime
 
-  mrp           Decimal @db.Decimal(10, 2)
-  purchasePrice Decimal @db.Decimal(10, 2)
-  sellingPrice  Decimal @db.Decimal(10, 2)
+  mrp            Decimal   @db.Decimal(10, 2)
+  purchasePrice  Decimal   @db.Decimal(10, 2)
+  sellingPrice   Decimal   @db.Decimal(10, 2)
   manufacturedAt DateTime?
-  isExpired      Boolean @default(false)
+  isExpired      Boolean   @default(false)
 
-  quantity      Int
-  freeQuantity  Int            @default(0)
+  quantity     Int
+  freeQuantity Int @default(0)
+
+  version Int @default(0) // Optimistic concurrency lock
+
   purchaseItems PurchaseItem[]
   saleItems     SaleItem[]
   stockLedgers  StockLedger[]
+  transferItems StockTransferItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([batchNumber, tenantProductId, branchId])
 }
@@ -411,14 +575,16 @@ model Supplier {
   tenantId String
   tenant   Tenant @relation(fields: [tenantId], references: [id])
 
-  name String
-  phone  String? // ✅ NEW
-  email  String? // ✅ NEW
-  gstin  String? // ✅ NEW
-  address String? // ✅ NEW
-
+  name    String
+  phone   String?
+  email   String?
+  gstin   String?
+  address String?
 
   purchases Purchase[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([tenantId])
 }
@@ -426,6 +592,45 @@ model Supplier {
 //////////////////////////////////////////////////////
 // TRANSACTIONS
 //////////////////////////////////////////////////////
+
+model StockTransfer {
+  id String @id @default(cuid())
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  fromBranchId String
+  fromBranch   Branch @relation("TransferFrom", fields: [fromBranchId], references: [id])
+
+  toBranchId String
+  toBranch   Branch @relation("TransferTo", fields: [toBranchId], references: [id])
+
+  status      TransferStatus @default(PENDING)
+  totalAmount Decimal?       @db.Decimal(12, 2)
+
+  items StockTransferItem[]
+
+  createdByUserId String
+  user            User   @relation(fields: [createdByUserId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model StockTransferItem {
+  id String @id @default(cuid())
+
+  transferId String
+  transfer   StockTransfer @relation(fields: [transferId], references: [id])
+
+  batchId String
+  batch   Batch  @relation(fields: [batchId], references: [id])
+
+  quantity Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
 
 model Purchase {
   id String @id @default(cuid())
@@ -436,11 +641,21 @@ model Purchase {
   branchId String
   branch   Branch @relation(fields: [branchId], references: [id])
 
-  totalAmount Decimal @db.Decimal(12, 2)
+  invoiceNumber String?
+  invoiceDate   DateTime?
+
+  totalAmount    Decimal @db.Decimal(12, 2)
+  taxAmount      Decimal @default(0) @db.Decimal(12, 2)
+  discountAmount Decimal @default(0) @db.Decimal(12, 2)
+  netAmount      Decimal @db.Decimal(12, 2)
+
+  status        PurchaseStatus @default(RECEIVED)
+  paymentStatus PaymentStatus  @default(PENDING)
 
   items PurchaseItem[]
-  status String @default("COMPLETED") // ✅ NEW
 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model PurchaseItem {
@@ -455,7 +670,16 @@ model PurchaseItem {
   batchId String
   batch   Batch  @relation(fields: [batchId], references: [id])
 
-  quantity Int
+  quantity     Int
+  freeQuantity Int @default(0)
+
+  purchasePrice  Decimal @db.Decimal(10, 2)
+  discountAmount Decimal @default(0) @db.Decimal(10, 2)
+  taxAmount      Decimal @default(0) @db.Decimal(10, 2)
+  netAmount      Decimal @db.Decimal(10, 2)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Sale {
@@ -464,25 +688,46 @@ model Sale {
   branchId String
   branch   Branch @relation(fields: [branchId], references: [id])
 
-  totalAmount Decimal @db.Decimal(12, 2)
-  status String @default("COMPLETED") // ✅ NEW
+  customerId String?
+  customer   Customer? @relation(fields: [customerId], references: [id])
+
+  doctorId String?
+  doctor   Doctor? @relation(fields: [doctorId], references: [id])
+
+  totalAmount    Decimal @db.Decimal(12, 2)
+  taxAmount      Decimal @default(0) @db.Decimal(12, 2)
+  discountAmount Decimal @default(0) @db.Decimal(12, 2)
+  netAmount      Decimal @db.Decimal(12, 2)
+
+  status        SaleStatus    @default(COMPLETED)
+  paymentMethod PaymentMethod @default(CASH)
+  paymentStatus PaymentStatus @default(PAID)
 
   items SaleItem[]
 
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model SaleItem {
   id String @id @default(cuid())
 
   saleId String
-  sale   Sale   @relation(fields: [saleId], references: [id])
+  sale   Sale   @relation(fields: [saleId], references: [id], onDelete: Cascade)
 
   batchId String
   batch   Batch  @relation(fields: [batchId], references: [id])
 
   quantity Int
-  price    Decimal @db.Decimal(10, 2)
+
+  // Historical lock-in fields
+  price          Decimal @db.Decimal(10, 2)
+  discountAmount Decimal @default(0) @db.Decimal(10, 2)
+  taxAmount      Decimal @default(0) @db.Decimal(10, 2)
+  total          Decimal @db.Decimal(10, 2)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 //////////////////////////////////////////////////////
@@ -495,14 +740,13 @@ model StockLedger {
   batchId String
   batch   Batch  @relation(fields: [batchId], references: [id])
 
-  type StockMovementType
-  direction String // ✅ NEW: IN / OUT
-  unitCost Decimal? @db.Decimal(10, 2) // ✅ NEW
+  type      StockMovementType
+  direction String // IN / OUT
+  unitCost  Decimal?          @db.Decimal(10, 2)
 
-  quantity    Int
-  referenceId String?
-  
-  referenceType String? // ✅ NEW (SALE / PURCHASE)
+  quantity      Int
+  referenceId   String?
+  referenceType String? // SALE / PURCHASE / TRANSFER
 
   createdAt DateTime @default(now())
 
