@@ -20,7 +20,7 @@ export const AdminRoutes = () => {
 
       <Route
         element={
-          <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.USER]} />
+          <ProtectedRoute allowedRoles={[ROLES.BRANCH_ADMIN, ROLES.STAFF]} />
         }
       >
         <Route path="/admin" element={<AdminLayout />}>

@@ -47,6 +47,7 @@ export const login = async (req: Request, res: Response) => {
 export const getUser = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user?.id;
+    const branchId = req.headers["x-branch-id"] as string | undefined;
 
     if (!userId) {
       return res.status(401).json({
@@ -55,7 +56,7 @@ export const getUser = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const user = await authService.getUserById(userId);
+    const user = await authService.getUserById(userId, branchId);
 
     res.status(200).json({
       success: true,

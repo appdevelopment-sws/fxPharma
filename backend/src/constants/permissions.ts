@@ -1,13 +1,13 @@
 export const PERMISSIONS = {
-  USER_CREATE: "USER_CREATE",
-  USER_READ: "USER_READ",
-  USER_UPDATE: "USER_UPDATE",
-  USER_DELETE: "USER_DELETE",
-  ROLE_MANAGE: "ROLE_MANAGE",
-  MASTER_PRODUCT_CREATE: "MASTER_PRODUCT_CREATE",
-  MASTER_PRODUCT_READ: "MASTER_PRODUCT_READ",
-  MASTER_PRODUCT_UPDATE: "MASTER_PRODUCT_UPDATE",
-  MASTER_PRODUCT_DELETE: "MASTER_PRODUCT_DELETE",
+  USER_CREATE: "users.create",
+  USER_READ: "users.view",
+  USER_UPDATE: "users.edit",
+  USER_DELETE: "users.delete",
+  ROLE_MANAGE: "roles.manage",
+  MASTER_PRODUCT_CREATE: "master-products.create",
+  MASTER_PRODUCT_READ: "master-products.view",
+  MASTER_PRODUCT_UPDATE: "master-products.edit",
+  MASTER_PRODUCT_DELETE: "master-products.delete",
 } as const;
 
 export type PermissionName =

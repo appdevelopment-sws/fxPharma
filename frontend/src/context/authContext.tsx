@@ -1,25 +1,29 @@
 import {
   createContext,
   useContext,
+  useState,
+  useEffect,
   type PropsWithChildren,
 } from "react"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import AuthApi from "@/services/authApi"
 import { queryKeys } from "@/lib/queryKeys"
 import { ROLES, type PermissionName, type RoleName } from "@/lib/access"
 
 export type AuthUser = {
   id: string
-  tenantId: string
   name: string
   email: string
-  role: RoleName
-  permissions: PermissionName[]
-  tenant?: {
-    id: string
-    name: string
-    status: string
-  }
+  role?: string // Resolved role for active scope
+  permissions?: string[] // Resolved permissions for active scope
+  memberships: Array<{
+    role: string
+    roleName: string
+    level: number
+    scopeType: string
+    scopeId: string | null
+    branchName?: string
+  }>
   createdAt: string
 }
 
@@ -28,13 +32,20 @@ type AuthContextValue = {
   isLoading: boolean
   isAuthenticated: boolean
   isSuperAdmin: boolean
-  hasRole: (...roles: RoleName[]) => boolean
-  hasPermission: (...permissions: PermissionName[]) => boolean
+  activeBranchId: string | null
+  switchBranch: (branchId: string | null) => void
+  hasRole: (...roles: string[]) => boolean
+  hasPermission: (...permissions: string[]) => boolean
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 
 export function AuthProvider({ children }: PropsWithChildren) {
+  const queryClient = useQueryClient()
+  const [activeBranchId, setActiveBranchId] = useState<string | null>(
+    localStorage.getItem("activeBranchId"),
+  )
+
   const { data, isLoading } = useQuery({
     queryKey: queryKeys.auth.user(),
     queryFn: AuthApi.getCurrentUser,
@@ -44,18 +55,29 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
   const user = (data?.data ?? null) as AuthUser | null
 
+  const switchBranch = (branchId: string | null) => {
+    if (branchId) {
+      localStorage.setItem("activeBranchId", branchId)
+    } else {
+      localStorage.removeItem("activeBranchId")
+    }
+    setActiveBranchId(branchId)
+    queryClient.invalidateQueries({ queryKey: queryKeys.auth.user() })
+  }
+
   const value: AuthContextValue = {
     user,
     isLoading,
     isAuthenticated: Boolean(user),
-    isSuperAdmin: user?.role === ROLES.SUPER_ADMIN,
-    hasRole: (...roles) => Boolean(user && roles.includes(user.role)),
+    isSuperAdmin: user?.memberships?.some((m) => m.level >= 100) ?? false,
+    activeBranchId,
+    switchBranch,
+    hasRole: (...roles) =>
+      Boolean(user?.role && roles.includes(user.role)),
     hasPermission: (...permissions) =>
       Boolean(
-        user &&
-          permissions.every((permission) =>
-            user.permissions.includes(permission),
-          ),
+        user?.permissions &&
+          permissions.every((p) => user.permissions?.includes(p)),
       ),
   }
 

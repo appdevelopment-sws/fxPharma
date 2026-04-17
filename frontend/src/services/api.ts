@@ -5,6 +5,14 @@ const CustomApi = axios.create({
   withCredentials: true,
 })
 
+CustomApi.interceptors.request.use((config) => {
+  const branchId = localStorage.getItem("activeBranchId")
+  if (branchId) {
+    config.headers["x-branch-id"] = branchId
+  }
+  return config
+})
+
 CustomApi.interceptors.response.use(
   (response) => {
     if (response.config.responseType === "blob") {

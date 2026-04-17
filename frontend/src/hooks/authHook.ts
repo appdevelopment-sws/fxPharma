@@ -27,12 +27,20 @@ export function useLogin() {
     mutationFn: AuthApi.login,
 
     onSuccess: async (response) => {
+      // 1. If user has memberships, set the first one as active branch
+      const user = response?.data
+      const firstBranchId = user?.memberships?.find((m: any) => m.scopeId)?.scopeId
+
+      if (firstBranchId) {
+        localStorage.setItem("activeBranchId", firstBranchId)
+      }
+
       await queryClient.invalidateQueries({
         queryKey: queryKeys.auth.user(),
       })
 
-      const role = response?.data?.role
-      navigate(role === "Super Admin" ? "/super-admin" : "/admin/dashboard")
+      const isSuperAdmin = user?.memberships?.some((m: any) => m.level >= 100)
+      navigate(isSuperAdmin ? "/super-admin" : "/admin/dashboard")
     },
   })
 }
