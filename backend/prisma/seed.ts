@@ -1,7 +1,6 @@
+import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient } from "@prisma/client";
-import { DEFAULT_PERMISSION_SEEDS } from "../src/constants/permissions.js";
 
 const connectionString = process.env.DATABASE_URL;
 
@@ -16,119 +15,233 @@ const adapter = new PrismaPg({
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  const passwordHash = await bcrypt.hash("Supersecurepassword@1", 12);
+  console.log("Starting seed...");
 
-  for (const permission of DEFAULT_PERMISSION_SEEDS) {
-    await prisma.permission.upsert({
-      where: { name: permission.name },
-      update: {
-        description: permission.description,
-      },
-      create: permission,
-    });
-  }
+  // 1. Clear existing data (optional but helpful for development with force-reset)
+  // Note: db push --force-reset handles this at the DB level usually.
 
-  let platformTenant = await prisma.tenant.findFirst({
-    where: {
-      name: "Platform",
-      deletedAt: null,
-    },
-  });
+  // 2. Seed Permissions
+  const permissionsData = [
+    { key: "users.create", module: "Users" },
+    { key: "users.view", module: "Users" },
+    { key: "users.edit", module: "Users" },
+    { key: "users.delete", module: "Users" },
+    { key: "roles.manage", module: "Access Control" },
+    { key: "workflows.manage", module: "Access Control" },
+    { key: "inventory.view", module: "Inventory" },
+    { key: "inventory.manage", module: "Inventory" },
+    { key: "sales.create", module: "Sales" },
+    { key: "sales.view", module: "Sales" },
+    { key: "organizations.manage", module: "Platform" },
+  ];
 
-  if (!platformTenant) {
-    platformTenant = await prisma.tenant.create({
-      data: {
-        name: "Platform",
-        status: "ACTIVE",
-      },
-    });
-  } else {
-    platformTenant = await prisma.tenant.update({
-      where: { id: platformTenant.id },
-      data: {
-        status: "ACTIVE",
-        deletedAt: null,
-      },
-    });
-  }
+  console.log("Seeding permissions...");
+  const permissions = await Promise.all(
+    permissionsData.map((p) =>
+      prisma.permission.upsert({
+        where: { key: p.key },
+        update: { module: p.module },
+        create: p,
+      }),
+    ),
+  );
 
-  const superAdminRole = await prisma.role.upsert({
-    where: {
-      tenantId_name: {
-        tenantId: platformTenant.id,
-        name: "Super Admin",
-      },
-    },
-    update: {
-      description: "Platform super administrator",
-      isDefault: true,
-    },
+  // 3. Seed Workflows
+  console.log("Seeding workflows...");
+  const adminWorkflow = await prisma.workflow.upsert({
+    where: { key: "admin_workflow" },
+    update: {},
     create: {
-      tenantId: platformTenant.id,
-      name: "Super Admin",
-      description: "Platform super administrator",
-      isDefault: true,
+      key: "admin_workflow",
+      name: "Full Administrative Access",
+      description: "Grants all permissions in the system.",
     },
   });
 
-  const allPermissions = await prisma.permission.findMany();
+  // Link all permissions to admin workflow
+  await Promise.all(
+    permissions.map((p) =>
+      prisma.workflowPermission.upsert({
+        where: {
+          workflowId_permissionId: {
+            workflowId: adminWorkflow.id,
+            permissionId: p.id,
+          },
+        },
+        update: {},
+        create: {
+          workflowId: adminWorkflow.id,
+          permissionId: p.id,
+        },
+      }),
+    ),
+  );
 
-  for (const permission of allPermissions) {
-    await prisma.rolePermission.upsert({
+  const staffWorkflow = await prisma.workflow.upsert({
+    where: { key: "staff_workflow" },
+    update: {},
+    create: {
+      key: "staff_workflow",
+      name: "Staff Access",
+      description: "Basic access for branch staff.",
+    },
+  });
+
+  // Link basic permissions to staff workflow
+  const staffPermissionKeys = ["inventory.view", "sales.create", "sales.view"];
+  const staffPermissions = permissions.filter((p) =>
+    staffPermissionKeys.includes(p.key),
+  );
+
+  await Promise.all(
+    staffPermissions.map((p) =>
+      prisma.workflowPermission.upsert({
+        where: {
+          workflowId_permissionId: {
+            workflowId: staffWorkflow.id,
+            permissionId: p.id,
+          },
+        },
+        update: {},
+        create: {
+          workflowId: staffWorkflow.id,
+          permissionId: p.id,
+        },
+      }),
+    ),
+  );
+
+  // 4. Seed Roles
+  console.log("Seeding roles...");
+  const superAdminRole = await prisma.role.upsert({
+    where: { key: "super_admin" },
+    update: { level: 100, scopeType: "global" },
+    create: {
+      key: "super_admin",
+      name: "Super Administrator",
+      level: 100,
+      scopeType: "global",
+    },
+  });
+
+  const branchAdminRole = await prisma.role.upsert({
+    where: { key: "branch_admin" },
+    update: { level: 50, scopeType: "branch" },
+    create: {
+      key: "branch_admin",
+      name: "Branch Administrator",
+      level: 50,
+      scopeType: "branch",
+    },
+  });
+
+  const staffRole = await prisma.role.upsert({
+    where: { key: "staff" },
+    update: { level: 10, scopeType: "branch" },
+    create: {
+      key: "staff",
+      name: "Staff Member",
+      level: 10,
+      scopeType: "branch",
+    },
+  });
+
+  // 5. Create Platform User (Super Admin)
+  console.log("Creating super admin user...");
+  const hashedPassword = await bcrypt.hash("SuperAdmin@123", 12);
+  const superAdminUser = await prisma.user.upsert({
+    where: { email: "superadmin@platform.com" },
+    update: { password: hashedPassword },
+    create: {
+      email: "superadmin@platform.com",
+      name: "Platform Super Admin",
+      password: hashedPassword,
+      status: 1,
+    },
+  });
+
+  // Assign Super Admin Role (GLOBAL)
+  await prisma.userRole
+    .upsert({
       where: {
-        roleId_permissionId: {
+        userId_roleId_scopeId: {
+          userId: superAdminUser.id,
           roleId: superAdminRole.id,
-          permissionId: permission.id,
+          scopeId: "global_scope", // Specific string or null for global. Using null is cleaner if schema allows.
         },
       },
       update: {},
       create: {
+        userId: superAdminUser.id,
         roleId: superAdminRole.id,
-        permissionId: permission.id,
+        scopeType: "global",
+        // scopeId remains null for global roles
       },
+    })
+    .catch(() => {
+      // If we use null in unique constraint, we might need a different approach.
+      // However, our schema allows null scopeId in the unique constraint [userId, roleId, scopeId].
     });
-  }
 
-  const superAdminEmail = "superadmin@platform.local";
+  // 6. Create Example Organization and Branch
+  console.log("Creating example organization...");
+  const org = await prisma.organization.create({
+    data: {
+      name: "HealthCare Pharmacy Solutions",
+      status: 1,
+      branches: {
+        create: [
+          { name: "Downtown Branch", status: 1 },
+          { name: "Westside Branch", status: 1 },
+        ],
+      },
+    },
+    include: { branches: true },
+  });
 
-  const existingSuperAdmin = await prisma.user.findFirst({
-    where: {
-      tenantId: platformTenant.id,
-      email: superAdminEmail,
+  const mainBranch = org.branches[0];
+
+  // 7. Create Branch Admin User
+  console.log("Creating branch admin user...");
+  const branchAdminUser = await prisma.user.upsert({
+    where: { email: "admin@healthcare.com" },
+    update: { password: hashedPassword },
+    create: {
+      email: "admin@healthcare.com",
+      name: "Healthcare Admin",
+      password: hashedPassword,
+      status: 1,
     },
   });
 
-  if (existingSuperAdmin) {
-    await prisma.user.update({
-      where: { id: existingSuperAdmin.id },
-      data: {
-        tenantId: platformTenant.id,
-        name: "Super Admin",
-        email: superAdminEmail,
-        passwordHash,
-        roleId: superAdminRole.id,
-        status: "ACTIVE",
-        deletedAt: null,
-      },
-    });
-  } else {
-    await prisma.user.create({
-      data: {
-        tenantId: platformTenant.id,
-        name: "Super Admin",
-        email: superAdminEmail,
-        passwordHash,
-        roleId: superAdminRole.id,
-        status: "ACTIVE",
-      },
-    });
-  }
+  // Assign Branch Admin Role for Downtown Branch
+  await prisma.userRole.create({
+    data: {
+      userId: branchAdminUser.id,
+      roleId: branchAdminRole.id,
+      scopeType: "branch",
+      scopeId: mainBranch.id,
+    },
+  });
 
-  console.log(
-    "Seed completed with super admin email: superadmin@platform.local",
-  );
+  // Assign Staff Workflow for Westside Branch (Direct Workflow Assignment)
+  await prisma.userWorkflow.create({
+    data: {
+      userId: branchAdminUser.id,
+      workflowId: staffWorkflow.id,
+      scopeType: "branch",
+      scopeId: org.branches[1].id,
+    },
+  });
+
+  console.log("Seed completed successfully!");
 }
-
+//@ts-ignore
 main()
-  .catch(console.error)
-  .finally(() => prisma.$disconnect());
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

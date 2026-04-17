@@ -12,7 +12,7 @@ export const register = async (req: Request, res: Response) => {
     res.status(201).json({
       success: true,
       data: result,
-      message: "Tenant created successfully",
+      message: "Organization and management branch created successfully",
     });
   } catch (error: any) {
     console.error(error);

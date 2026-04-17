@@ -7,6 +7,7 @@ import helmet from "helmet";
 import compression from "compression";
 import authRoutes from "./v1/modules/auth/auth.routes.js";
 import masterProductRoutes from "./v1/modules/masterProduct/masterProduct.route.js";
+import demoRoutes from "./v1/modules/demo/demo.routes.js";
 import { authLimiter, generalLimiter } from "./helpers/rateLimit.js";
 
 dotenv.config();
@@ -33,6 +34,7 @@ const port = process.env.PORT || 5000;
 
 app.use("/api/v1/auth", authLimiter, authRoutes);
 app.use("/api/v1/master-products", generalLimiter, masterProductRoutes);
+app.use("/api/v1/demo", generalLimiter, demoRoutes);
 
 app.get("/", (_req: Request, res: Response) => {
   res.json("hello from backend");

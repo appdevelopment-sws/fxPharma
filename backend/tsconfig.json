@@ -5,9 +5,7 @@
     "moduleResolution": "nodenext",
     "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "src/*"
-      ]
+      "@/*": ["src/*"]
     },
     "rootDir": "./src",
     "outDir": "./dist",
@@ -17,17 +15,8 @@
     "skipLibCheck": true,
     "isolatedModules": true,
     "sourceMap": true,
-    "types": [
-      "node"
-    ]
+    "types": ["node"]
   },
-  "include": [
-    "src"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "generated",
-    "prisma.config.ts"
-  ]
+  "include": ["src"],
+  "exclude": ["node_modules", "dist", "generated", "prisma.config.ts"]
 }

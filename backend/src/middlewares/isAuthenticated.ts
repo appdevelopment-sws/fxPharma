@@ -4,12 +4,8 @@ import { Request, Response, NextFunction } from "express";
 export interface AuthRequest extends Request {
   user?: {
     id: string;
-    role: string;
-    tenantId: string;
     email: string;
-    permissions?: string[];
   };
-  tenantId?: string;
 }
 
 const accessTokenSecret = process.env.JWT_SECRET;
@@ -33,12 +29,11 @@ export const isAuthenticated = (
 
     const decoded = jwt.verify(token, accessTokenSecret) as AuthRequest["user"];
 
-    if (!decoded?.id || !decoded.tenantId || !decoded.role) {
+    if (!decoded?.id || !decoded.email) {
       return res.status(401).json({ message: "Invalid token payload" });
     }
 
     req.user = decoded;
-    req.tenantId = decoded.tenantId;
 
     next();
   } catch {
