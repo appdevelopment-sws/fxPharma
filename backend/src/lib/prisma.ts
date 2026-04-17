@@ -10,12 +10,9 @@ if (!connectionString) {
 
 const adapter = new PrismaPg({ connectionString });
 
-const tenantScopedModels = new Set(["User", "Role"]);
+const tenantScopedModels = new Set([]);
 
-const tenantUniqueFields: Record<string, string[]> = {
-  User: ["email"],
-  Role: ["name"],
-};
+const tenantUniqueFields: Record<string, string[]> = {};
 
 const rootPrisma = new PrismaClient({ adapter });
 

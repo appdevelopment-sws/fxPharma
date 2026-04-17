@@ -7,15 +7,16 @@ export const attachTenant = (
   res: Response,
   next: NextFunction,
 ) => {
-  if (!req.user?.tenantId) {
-    return res.status(403).json({ message: "Tenant not found" });
-  }
+  const branchId =
+    (req.headers["x-branch-id"] as string) || req.params.branchId || null;
 
-  req.tenantId = req.user.tenantId;
-
+  // We allow the request to proceed even if branchId is missing, 
+  // because the model being accessed might be global (like User).
+  // The prisma extension will only block if a scoped model is accessed without context.
+  
   runWithTenantContext(
     {
-      tenantId: req.user.tenantId,
+      tenantId: branchId || undefined,
     },
     () => next(),
   );
