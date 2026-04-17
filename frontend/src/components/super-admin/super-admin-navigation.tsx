@@ -27,13 +27,6 @@ export const superAdminNavigationGroups: SidebarNavigationGroup[] = [
         icon: LayoutDashboard,
         roles: [ROLES.SUPER_ADMIN],
       },
-      {
-        title: "Profile",
-        to: "/super-admin/profile",
-        description: "Authenticated account and platform tenant context",
-        icon: UserCog,
-        roles: [ROLES.SUPER_ADMIN],
-      },
     ],
   },
   {
