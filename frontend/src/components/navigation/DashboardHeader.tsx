@@ -31,7 +31,7 @@ export function DashboardHeader({
   onOpenSidebar,
 }: DashboardHeaderProps) {
   return (
-    <header className="sticky top-0 z-30 h-16 border-b border-slate-200/60 bg-white/80 backdrop-blur-md">
+    <header className="sticky top-0 z-30 h-16 border-b border-slate-200/60 backdrop-blur-md">
       <div className="flex h-full items-center justify-between px-4 sm:px-6">
         {/* Left: Mobile trigger & Breadcrumbs */}
         <div className="flex items-center gap-4">
@@ -56,7 +56,7 @@ export function DashboardHeader({
             {activeItemTitle && (
               <>
                 <ChevronRight className="size-3.5 opacity-50" />
-                <span className="font-bold text-slate-900">
+                <span className="font-bold text-primary">
                   {activeItemTitle}
                 </span>
               </>

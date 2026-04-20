@@ -18,4 +18,17 @@ export const queryKeys = {
     detail: (id: string) => [...queryKeys.masterProducts.all, id] as const,
     references: () => [...queryKeys.masterProducts.all, "references"] as const,
   },
+  taxes: {
+    all: ["taxes"] as const,
+    list: (filters?: any) => [...queryKeys.taxes.all, filters] as const,
+    detail: (id: string | number) => [...queryKeys.taxes.all, id] as const,
+  },
+  hsnCodes: {
+    all: ["hsnCodes"] as const,
+    list: (filters?: any) => [...queryKeys.hsnCodes.all, filters] as const,
+  },
+  hsnMappings: {
+    all: ["hsnMappings"] as const,
+    list: (filters?: any) => [...queryKeys.hsnMappings.all, filters] as const,
+  },
 }
