@@ -10,6 +10,9 @@ import { PERMISSIONS, ROLES } from "@/lib/access"
 import HsnPage from "@/pages/super-admin/hsn/HsnPage"
 import StoreList from "@/pages/super-admin/store-list/storeList"
 import TaxHsnPage from "@/pages/shared/Hsntax/hsnTax"
+import TaxSettings from "@/pages/shared/Hsntax/TaxSettings"
+import HsnList from "@/pages/shared/Hsntax/HsnList"
+import HsnMapping from "@/pages/shared/Hsntax/HsnMapping"
 
 export const SuperAdminRoutes = () => {
   return (
@@ -22,7 +25,12 @@ export const SuperAdminRoutes = () => {
         />
         <Route path="dashboard" element={<SuperAdminDashboard />} />
         <Route path="store-list" element={<StoreList />} />
-        <Route path="tax-hsn" element={<TaxHsnPage />} />
+        <Route path="tax-hsn" element={<TaxHsnPage />}>
+          <Route index element={<Navigate to="tax" replace />} />
+          <Route path="tax" element={<TaxSettings />} />
+          <Route path="hsn" element={<HsnList />} />
+          <Route path="mapping" element={<HsnMapping />} />
+        </Route>
         <Route path="profile" element={<SuperAdminProfilePage />} />
         <Route path="master-products" element={<SuperAdminProductsNewPage />} />
         <Route path="hsn" element={<HsnPage />} />
