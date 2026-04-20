@@ -93,12 +93,12 @@ export function DashboardSidebar({
         )}
       >
         {navigationGroups.map((group) => (
-          <div key={group.title} className="space-y-2">
-            {!isCollapsed && (
+          <div key={group.title} className="m-0 my-1">
+            {/* {!isCollapsed && (
               <p className="px-4 text-[10px] font-bold tracking-[0.2em] uppercase">
                 {group.title}
               </p>
-            )}
+            )} */}
             <div className="space-y-1">
               {group.items.map((item) => (
                 <SidebarItem
@@ -162,12 +162,12 @@ function SidebarItem({
   const hasChildren = !!item.children?.length
   const baseStyles = cn(
     "group flex w-full items-center rounded-sm transition-all duration-300 ease-out",
-    isCollapsed ? "mx-auto justify-center p-2" : "gap-2 px-3 py-2",
+    isCollapsed ? "mx-auto justify-center px-2" : "gap-x-2 px-3 py-2",
     (isActive || isExpanded) && "bg-primary/10 text-primary" // 👈 apply bg to main item
   )
   if (hasChildren) {
     return (
-      <div className="w-full space-y-1">
+      <div className="w-full">
         <button
           type="button"
           onClick={() => onToggleExpanded(item.title)}

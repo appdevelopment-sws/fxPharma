@@ -8,6 +8,8 @@ import SuperAdminAccessPage from "@/pages/super-admin/access/SuperAdminAccessPag
 import SuperAdminProductsNewPage from "@/pages/super-admin/products/MasterProductsPage"
 import { PERMISSIONS, ROLES } from "@/lib/access"
 import HsnPage from "@/pages/super-admin/hsn/HsnPage"
+import StoreList from "@/pages/super-admin/store-list/storeList"
+import TaxHsnPage from "@/pages/shared/Hsntax/hsnTax"
 
 export const SuperAdminRoutes = () => {
   return (
@@ -19,6 +21,8 @@ export const SuperAdminRoutes = () => {
           element={<Navigate to="/super-admin/dashboard" replace />}
         />
         <Route path="dashboard" element={<SuperAdminDashboard />} />
+        <Route path="store-list" element={<StoreList />} />
+        <Route path="tax-hsn" element={<TaxHsnPage />} />
         <Route path="profile" element={<SuperAdminProfilePage />} />
         <Route path="master-products" element={<SuperAdminProductsNewPage />} />
         <Route path="hsn" element={<HsnPage />} />

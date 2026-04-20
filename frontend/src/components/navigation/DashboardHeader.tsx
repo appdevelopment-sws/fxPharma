@@ -1,4 +1,12 @@
-import { Bell, ChevronRight, Menu, Search, Globe, Settings, ChevronDown } from "lucide-react"
+import {
+  Bell,
+  ChevronRight,
+  Menu,
+  Search,
+  Globe,
+  Settings,
+  ChevronDown,
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
@@ -30,21 +38,27 @@ export function DashboardHeader({
           <Button
             variant="ghost"
             size="icon"
-            className="lg:hidden text-slate-500 hover:bg-slate-100"
+            className="text-slate-500 hover:bg-slate-100 lg:hidden"
             onClick={onOpenSidebar}
           >
             <Menu className="size-5" />
             <span className="sr-only">Open sidebar</span>
           </Button>
 
-          <div className="hidden sm:flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-slate-400">
-            <span className="hover:text-blue-600 cursor-default transition-colors">{appLabel}</span>
+          <div className="hidden items-center gap-2 text-xs font-medium tracking-wider text-slate-400 uppercase sm:flex">
+            <span className="cursor-default transition-colors hover:text-blue-600">
+              {appLabel}
+            </span>
             <ChevronRight className="size-3.5 opacity-50" />
-            <span className="hover:text-blue-600 cursor-default transition-colors">{workspaceLabel}</span>
+            <span className="cursor-default transition-colors hover:text-blue-600">
+              {workspaceLabel}
+            </span>
             {activeItemTitle && (
               <>
                 <ChevronRight className="size-3.5 opacity-50" />
-                <span className="text-slate-900 font-bold">{activeItemTitle}</span>
+                <span className="font-bold text-slate-900">
+                  {activeItemTitle}
+                </span>
               </>
             )}
           </div>
@@ -53,44 +67,52 @@ export function DashboardHeader({
         {/* Right: Actions & Profile */}
         <div className="flex items-center gap-2 sm:gap-4">
           {/* Search - Desktop only for now */}
-          <div className="hidden md:flex items-center relative mr-2">
+          <div className="relative mr-2 hidden items-center md:flex">
             <Search className="absolute left-3 size-4 text-slate-400" />
-            <input 
-              type="text" 
-              placeholder="Search..." 
-              className="h-9 w-48 lg:w-64 rounded-full bg-slate-100/80 border-transparent pl-10 pr-4 text-sm focus:bg-white focus:ring-2 focus:ring-blue-500/20 transition-all outline-none"
+            <input
+              type="text"
+              placeholder="Search..."
+              className="h-9 w-48 rounded-full border-transparent bg-slate-100/80 pr-4 pl-10 text-sm transition-all outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 lg:w-64"
             />
           </div>
 
-          <div className="flex items-center gap-1 sm:gap-2 pr-2 border-r border-slate-200">
-            <Button variant="ghost" size="icon" className="text-slate-500 hover:text-blue-600 hover:bg-blue-50 hidden sm:flex">
+          <div className="flex items-center gap-1 border-r border-slate-200 pr-2 sm:gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="hidden text-slate-500 hover:bg-blue-50 hover:text-blue-600 sm:flex"
+            >
               <Globe className="size-5" />
             </Button>
             <div className="relative">
-              <Button variant="ghost" size="icon" className="text-slate-500 hover:text-blue-600 hover:bg-blue-50">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-slate-500 hover:bg-blue-50 hover:text-blue-600"
+              >
                 <Bell className="size-5" />
-                <span className="absolute top-2 right-2 flex size-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white border-2 border-white">
-                  5
-                </span>
               </Button>
             </div>
           </div>
 
           {/* User Profile */}
-          <button className="flex items-center gap-3 pl-2 group outline-none">
-            <div className="hidden lg:block text-right">
-              <p className="text-sm font-semibold text-slate-900 leading-none group-hover:text-blue-600 transition-colors">
+          <button className="group flex items-center gap-3 pl-2 outline-none">
+            <div className="hidden text-right lg:block">
+              <p className="text-sm leading-none font-semibold text-slate-900 transition-colors group-hover:text-blue-600">
                 {userName}
               </p>
-              <p className="mt-1 text-[10px] font-bold uppercase tracking-tighter text-slate-400 leading-none">
+              <p className="mt-1 text-[10px] leading-none font-bold tracking-tighter text-slate-400 uppercase">
                 {userRole}
               </p>
             </div>
-            <div className="relative flex size-9 items-center justify-center rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-bold text-xs shadow-sm ring-2 ring-white group-hover:ring-blue-100 transition-all">
-              {userName.split(' ').map(n => n[0]).join('')}
-              <div className="absolute bottom-0 right-0 size-2.5 rounded-full bg-green-500 border-2 border-white ring-1 ring-slate-100" />
+            <div className="relative flex size-9 items-center justify-center rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-xs font-bold text-white shadow-sm ring-2 ring-white transition-all group-hover:ring-blue-100">
+              {userName
+                .split(" ")
+                .map((n) => n[0])
+                .join("")}
+              <div className="absolute right-0 bottom-0 size-2.5 rounded-full border-2 border-white bg-green-500 ring-1 ring-slate-100" />
             </div>
-            <ChevronDown className="size-4 text-slate-400 group-hover:text-blue-600 transition-colors" />
+            <ChevronDown className="size-4 text-slate-400 transition-colors group-hover:text-blue-600" />
           </button>
         </div>
       </div>

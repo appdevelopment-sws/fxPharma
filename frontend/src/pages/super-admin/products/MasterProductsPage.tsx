@@ -24,9 +24,7 @@ export default function MasterProductsPage() {
   const drawerDisclosure = useDisclosure<any>()
   const deleteDisclosure = useDisclosure<any>()
 
-  const { filter, handleFilter } = useSearchFilter(
-  INITIAL_PRODUCT_FILTERS
-  )
+  const { filter, handleFilter } = useSearchFilter(INITIAL_PRODUCT_FILTERS)
 
   const { data: productsData, isLoading: isLoadingProducts } = useQuery({
     queryKey: queryKeys.masterProducts.list(filter),
