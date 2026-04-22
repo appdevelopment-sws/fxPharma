@@ -27,79 +27,41 @@ export const MASTER_PRODUCT_COLUMNS = [
 
 export const MASTER_PRODUCT_FORM_INITIAL_DATA = {
   name: "",
-  salt: "",
-  brand_name: "",
-  barcode: "",
-  pack_size: "",
-  strength: "",
-  company_id: "",
-  product_type_id: "",
-  hsnCodeId: "",
+  industry_segment: "1",
+  category_id: "",
+  brand_id: "",
+  manufacturer_id: "",
+  salt_id: "",
+  category_type: "TAB",
+  status: "CONTINUE",
+  hsn_code_id: "",
+  color_type: "NORMAL",
+  is_narcotic: false,
+  is_schedule_h: false,
+  is_schedule_h1: false,
+  barcodes: [{ value: "" }],
 };
 
-export const MASTER_PRODUCT_DIALOG_FORM_LAYOUT = [
-  {
-    name: "name",
-    label: "Product Name",
-    type: FORM_TYPE.TEXT,
-    placeholder: "e.g. Paracetamol 500mg",
-    tooltip: "Primary master-product name.",
-    required: true,
-  },
-  {
-    name: "salt",
-    label: "Salt",
-    type: FORM_TYPE.TEXT,
-    placeholder: "e.g. Acetaminophen",
-    tooltip: "Generic salt or active composition.",
-    required: true,
-  },
-  {
-    name: "brand_name",
-    label: "Brand Name",
-    type: FORM_TYPE.TEXT,
-    placeholder: "e.g. Crocin",
-  },
-  {
-    name: "barcode",
-    label: "Barcode",
-    type: FORM_TYPE.TEXT,
-    placeholder: "e.g. 8901234567890",
-  },
-  {
-    name: "pack_size",
-    label: "Pack Size",
-    type: FORM_TYPE.TEXT,
-    placeholder: "e.g. 10 tablets",
-  },
-  {
-    name: "strength",
-    label: "Strength",
-    type: FORM_TYPE.TEXT,
-    placeholder: "e.g. 500mg",
-  },
+export const INDUSTRY_SEGMENT_OPTIONS = [
+  { label: "Medicine (Pharma)", value: "1" },
 ];
 
-export const MASTER_PRODUCT_REFERENCE_FORM_LAYOUT = [
-  {
-    name: "company_id",
-    label: "Company ID",
-    type: FORM_TYPE.NUMBER,
-    placeholder: "e.g. 1",
-    required: true,
-  },
-  {
-    name: "product_type_id",
-    label: "Product Type ID",
-    type: FORM_TYPE.NUMBER,
-    placeholder: "e.g. 2",
-    required: true,
-  },
-  {
-    name: "hsnCodeId",
-    label: "HSN Code ID",
-    type: FORM_TYPE.NUMBER,
-    placeholder: "e.g. 3",
-    required: true,
-  },
+export const CATEGORY_TYPE_OPTIONS = [
+  { label: "TAB", value: "TAB" },
+  { label: "CAP", value: "CAP" },
+  { label: "SYP", value: "SYP" },
+  { label: "INJ", value: "INJ" },
 ];
+
+export const PRODUCT_STATUS_OPTIONS = [
+  { label: "CONTINUE", value: "CONTINUE" },
+  { label: "DISCONTINUE", value: "DISCONTINUE" },
+];
+
+export const COLOR_TYPE_OPTIONS = [
+  { label: "NORMAL", value: "NORMAL" },
+  { label: "SCHEDULE H", value: "SCHEDULE_H" },
+  { label: "SCHEDULE H1", value: "SCHEDULE_H1" },
+  { label: "NARCOTIC", value: "NARCOTIC" },
+];
+

@@ -16,6 +16,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { Switch } from "@/components/ui/switch"
 /**
  * Reusable form field components for react-hook-form
  * Use these components in any form to standardize field rendering
@@ -307,6 +308,63 @@ export function FormCheckbox<T extends FieldValues>({
     />
   )
 }
+
+// ============================================================================
+// FormSwitch Component
+// ============================================================================
+
+interface FormSwitchProps<T extends FieldValues> {
+  control: Control<T>
+  name: Path<T>
+  label: string
+  description?: string
+  error?: string
+  disabled?: boolean
+}
+
+/**
+ * Generic switch/toggle field with label and optional description
+ */
+export function FormSwitch<T extends FieldValues>({
+  control,
+  name,
+  label,
+  description,
+  error,
+  disabled,
+}: FormSwitchProps<T>) {
+  return (
+    <Controller
+      control={control}
+      name={name}
+      render={({ field }) => (
+        <div className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm transition-colors hover:bg-muted/10">
+          <div className="space-y-0.5">
+            <Label htmlFor={String(name)} className="cursor-pointer text-base font-semibold">
+              {label}
+            </Label>
+            {description && (
+              <p className="text-sm text-muted-foreground">
+                {description}
+              </p>
+            )}
+          </div>
+          <Switch
+            id={String(name)}
+            checked={field.value as boolean}
+            onCheckedChange={field.onChange}
+            disabled={disabled}
+            aria-invalid={!!error}
+          />
+        </div>
+      )}
+    />
+  )
+}
+
+// ============================================================================
+// Helper Components
+// ============================================================================
 
 type FieldLabelProps = {
   htmlFor: string

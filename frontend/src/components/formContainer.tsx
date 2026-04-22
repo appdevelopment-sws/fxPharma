@@ -42,7 +42,9 @@ export function FormContainer({
   if (variant === "modal") {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className={sizeMap[size]!}>
+        <DialogContent
+          className={sizeMap[size]! + " max-h-[90vh] overflow-y-auto"}
+        >
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
             <DialogDescription>{description}</DialogDescription>
