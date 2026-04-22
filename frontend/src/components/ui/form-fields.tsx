@@ -5,7 +5,7 @@ import {
   type FieldValues,
   type Path,
 } from "react-hook-form"
-import { CircleHelp, Check, ChevronsUpDown, Search, Loader2 } from "lucide-react"
+import { CircleHelp, Check, ChevronsUpDown, Search, Loader2, Upload, File as FileIcon } from "lucide-react"
 import { debounce } from "lodash"
 
 import { Input } from "@/components/ui/input"
@@ -544,6 +544,151 @@ export function FormSearchSelect<T extends FieldValues>({
           {error && <p className="text-xs text-destructive">{error}</p>}
         </div>
       )}
+    />
+  )
+}
+
+// ============================================================================
+// FormFileUpload Component
+// ============================================================================
+
+interface FormFileUploadProps<T extends FieldValues> {
+  control: Control<T>
+  name: Path<T>
+  label?: string
+  tooltip?: string
+  accept?: string
+  maxSizeText?: string
+  required?: boolean
+  error?: string
+  disabled?: boolean
+}
+
+/**
+ * Generic file upload component
+ */
+export function FormFileUpload<T extends FieldValues>({
+  control,
+  name,
+  label,
+  tooltip,
+  accept,
+  maxSizeText,
+  required,
+  error,
+  disabled,
+}: FormFileUploadProps<T>) {
+  const fileInputRef = React.useRef<HTMLInputElement>(null)
+  const isImage = accept?.includes("image")
+
+  return (
+    <Controller
+      control={control}
+      name={name}
+      render={({ field: { onChange, value, ref, ...field } }) => {
+        // Generate preview URL if it's a file and an image
+        const previewUrl = React.useMemo(() => {
+          if (!value) return null
+          if (typeof value === "string") return value
+          if ((value as any) instanceof File && isImage) {
+            return URL.createObjectURL(value as File)
+          }
+          return null
+        }, [value, isImage])
+
+        // Cleanup object URL
+        React.useEffect(() => {
+          return () => {
+            if (previewUrl && previewUrl.startsWith("blob:")) {
+              URL.revokeObjectURL(previewUrl)
+            }
+          }
+        }, [previewUrl])
+
+        return (
+          <div className="space-y-2">
+            {label && (
+              <FieldLabel
+                htmlFor={String(name)}
+                label={label}
+                required={required}
+                tooltip={tooltip}
+              />
+            )}
+            <input
+              {...field}
+              type="file"
+              ref={(e) => {
+                // @ts-ignore
+                ref?.(e)
+                // @ts-ignore
+                fileInputRef.current = e
+              }}
+              className="hidden"
+              accept={accept}
+              disabled={disabled}
+              onChange={(e) => {
+                const file = e.target.files?.[0] || null
+                onChange(file)
+              }}
+            />
+            <div
+              onClick={() => !disabled && fileInputRef.current?.click()}
+              className={cn(
+                "group relative flex h-32 w-full flex-col items-center justify-center overflow-hidden rounded-lg border-2 border-dashed bg-muted/50 transition-all",
+                !disabled
+                  ? "cursor-pointer hover:border-primary/50 hover:bg-muted"
+                  : "cursor-not-allowed opacity-50",
+                error && "border-destructive hover:border-destructive"
+              )}
+            >
+              {value ? (
+                isImage && previewUrl ? (
+                  <>
+                    <img
+                      src={previewUrl}
+                      alt="Preview"
+                      className="h-full w-full object-contain"
+                    />
+                    {!disabled && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
+                        <Upload className="size-6 text-white" />
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="flex flex-col items-center justify-center space-y-2 p-4 text-center">
+                    <FileIcon className="size-8 text-primary" />
+                    <span className="max-w-[200px] truncate text-sm font-medium text-foreground">
+                      {typeof value === "string" ? value : (value as File).name}
+                    </span>
+                    {(value as any) instanceof File && (
+                      <span className="text-xs text-muted-foreground">
+                        {((value as File).size / 1024).toFixed(2)} KB
+                      </span>
+                    )}
+                  </div>
+                )
+              ) : (
+                <>
+                  <div className="flex flex-col items-center">
+                    <Upload className="mb-2 size-6 text-muted-foreground transition-colors group-hover:text-primary" />
+                    <span className="text-xs font-semibold text-primary">
+                      {disabled ? "No File" : "Click to Browse File"}
+                    </span>
+                  </div>
+                  {maxSizeText && (
+                    <p className="mt-1 text-[10px] text-muted-foreground">
+                      {maxSizeText}
+                    </p>
+                  )}
+                </>
+              )}
+            </div>
+            {error && <p className="text-xs text-destructive">{error}</p>}
+          </div>
+        )
+      }}
     />
   )
 }

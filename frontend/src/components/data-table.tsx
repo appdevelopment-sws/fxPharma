@@ -38,7 +38,11 @@ type DataTableProps<T> = {
   className?: string
 }
 
-function resolveCellValue<T>(column: DataTableColumn<T>, row: T, index: number) {
+function resolveCellValue<T>(
+  column: DataTableColumn<T>,
+  row: T,
+  index: number
+) {
   if (column.render) {
     return column.render(row, index)
   }
@@ -57,7 +61,7 @@ function resolveCellValue<T>(column: DataTableColumn<T>, row: T, index: number) 
 function resolveRowKey<T>(
   rowKey: DataTableProps<T>["rowKey"],
   row: T,
-  index: number,
+  index: number
 ) {
   if (typeof rowKey === "function") {
     return rowKey(row, index)
@@ -110,7 +114,10 @@ function DataTable<T>({
               data.map((row, index) => (
                 <TableRow key={resolveRowKey(rowKey, row, index)}>
                   {columns.map((column) => (
-                    <TableCell key={column.key} className={column.cellClassName}>
+                    <TableCell
+                      key={column.key}
+                      className={column.cellClassName}
+                    >
                       {resolveCellValue(column, row, index)}
                     </TableCell>
                   ))}
@@ -134,8 +141,10 @@ function DataTable<T>({
                 <span>Rows</span>
                 <select
                   value={pageSize}
-                  onChange={(event) => onPageSizeChange(Number(event.target.value))}
-                  className="h-8 rounded-lg border border-input bg-background px-2.5 text-sm text-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                  onChange={(event) =>
+                    onPageSizeChange(Number(event.target.value))
+                  }
+                  className="h-8 rounded-lg border border-input bg-background px-2.5 text-sm text-foreground transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                 >
                   {pageSizeOptions.map((option) => (
                     <option key={option} value={option}>
@@ -162,7 +171,9 @@ function DataTable<T>({
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => onPageChange(Math.min(lastPage, currentPage + 1))}
+                  onClick={() =>
+                    onPageChange(Math.min(lastPage, currentPage + 1))
+                  }
                   disabled={currentPage >= lastPage}
                 >
                   Next
@@ -193,7 +204,9 @@ function TableEmptyState({
       <TableCell colSpan={colSpan} className="h-40">
         <div className="flex flex-col items-center justify-center gap-1 text-center">
           <p className="text-sm font-medium text-foreground">{title}</p>
-          <p className="max-w-md text-sm text-muted-foreground">{description}</p>
+          <p className="max-w-md text-sm text-muted-foreground">
+            {description}
+          </p>
         </div>
       </TableCell>
     </TableRow>
@@ -205,14 +218,14 @@ type TableSkeletonLoaderProps = {
   rows?: number
 }
 
-function TableSkeletonLoader({
-  columns,
-  rows = 5,
-}: TableSkeletonLoaderProps) {
+function TableSkeletonLoader({ columns, rows = 5 }: TableSkeletonLoaderProps) {
   return (
     <>
       {Array.from({ length: rows }).map((_, rowIndex) => (
-        <TableRow key={`skeleton-row-${rowIndex}`} className="hover:bg-transparent">
+        <TableRow
+          key={`skeleton-row-${rowIndex}`}
+          className="hover:bg-transparent"
+        >
           {Array.from({ length: columns }).map((__, columnIndex) => (
             <TableCell key={`skeleton-cell-${rowIndex}-${columnIndex}`}>
               <div className="h-4 w-full animate-pulse rounded bg-muted" />

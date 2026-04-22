@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { Plus, Pencil, Eye, Trash2 } from "lucide-react"
+import { Plus, Pencil, Eye, Trash2, Download } from "lucide-react"
 import { toast } from "sonner"
 
 import { ConfirmDialog } from "@/components/confirmDialog"
@@ -18,12 +18,13 @@ import {
   INITIAL_PRODUCT_FILTERS,
   MASTER_PRODUCT_COLUMNS,
 } from "@/constants/page/super-admin/master-products"
+import BulkUploadProductModal from "@/components/shared/bulkUploadProductModal"
 
 export default function MasterProductsPage() {
   const queryClient = useQueryClient()
   const drawerDisclosure = useDisclosure<any>()
   const deleteDisclosure = useDisclosure<any>()
-
+  const bulkDisclosure = useDisclosure<any>()
   const { filter, handleFilter } = useSearchFilter(INITIAL_PRODUCT_FILTERS)
 
   const { data: productsData, isLoading: isLoadingProducts } = useQuery({
@@ -48,7 +49,9 @@ export default function MasterProductsPage() {
       product ? { ...product, id: product.id, viewMode: mode === "view" } : null
     )
   }
-
+  const handleBulkOpen = () => {
+    bulkDisclosure.onOpen(null)
+  }
   const handleFilterChange = useCallback(
     (updates: Record<string, any>) => {
       handleFilter({ ...updates, page: 1 })
@@ -147,7 +150,10 @@ export default function MasterProductsPage() {
         onClose={drawerDisclosure.onClose}
         product={drawerDisclosure.data}
       />
-
+      <BulkUploadProductModal
+        open={bulkDisclosure.isOpen}
+        onClose={bulkDisclosure.onClose}
+      />
       <ConfirmDialog
         open={deleteDisclosure.isOpen}
         onOpenChange={deleteDisclosure.onClose}
@@ -166,10 +172,16 @@ export default function MasterProductsPage() {
         title="Master Products"
         description="Manage reusable product metadata linked to company, product type, and HSN records."
         action={
-          <Button type="button" onClick={() => handleOpen(null, "create")}>
-            <Plus className="mr-2 size-4" />
-            Add Product
-          </Button>
+          <div className="flex items-center justify-center gap-x-3">
+            <Button type="button" onClick={() => handleOpen(null, "create")}>
+              <Plus className="mr-2 size-4" />
+              Add Product
+            </Button>
+            <Button type="button" variant="outline" onClick={handleBulkOpen}>
+              <Download className="mr-2 size-4" />
+              Bulk Import
+            </Button>
+          </div>
         }
       >
         <div className="space-y-4">
@@ -184,15 +196,16 @@ export default function MasterProductsPage() {
           >
             <FilterBar.Search
               name="search"
+              className="w-[30%]"
               placeholder="Search by product name, generic, or brand..."
             />
             {/* Keeping these as simple text inputs to search by IDs as per simplified API limits */}
-            <FilterBar.Search name="companyId" placeholder="Company ID" />
+            {/* <FilterBar.Search name="companyId" placeholder="Company ID" />
             <FilterBar.Search
               name="productTypeId"
               placeholder="Product Type ID"
             />
-            <FilterBar.Search name="hsnCodeId" placeholder="HSN ID" />
+            <FilterBar.Search name="hsnCodeId" placeholder="HSN ID" /> */}
           </FilterBar>
 
           <DataTable

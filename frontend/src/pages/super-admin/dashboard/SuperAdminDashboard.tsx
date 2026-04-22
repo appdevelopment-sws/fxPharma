@@ -8,7 +8,7 @@ import {
 import { StatCard } from "@/components/stat-card"
 import { ChartCard } from "@/components/chart-card"
 import { DashboardAreaChart, DashboardBarChart } from "@/components/charts"
-import { Layers, ShieldAlert, Cpu, Network } from "lucide-react"
+import { Layers, ShieldAlert, Cpu, Network, Boxes } from "lucide-react"
 import SectionCard from "@/components/SectionCard"
 
 // Mock data for demonstration purposes
@@ -83,7 +83,7 @@ Businesses"
           title="Total Plans"
           value="24%"
           helper="Stable operational metrics"
-          icon={<Cpu className="h-4 w-4" />}
+          icon={<Boxes className="h-4 w-4" />}
         />
       </div>
 

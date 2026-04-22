@@ -40,6 +40,7 @@ export const MASTER_PRODUCT_FORM_INITIAL_DATA = {
   is_schedule_h: false,
   is_schedule_h1: false,
   barcodes: [{ value: "" }],
+  image_url: null as string | File | null,
 };
 
 export const INDUSTRY_SEGMENT_OPTIONS = [

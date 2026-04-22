@@ -8,6 +8,7 @@ export const FORM_TYPE = {
   RADIO: "radio",
   MULTI_SELECT: "multi-select",
   DATETIME: "datetime",
+  DATE: "date",
 } as const
 
 export type FormType = (typeof FORM_TYPE)[keyof typeof FORM_TYPE]

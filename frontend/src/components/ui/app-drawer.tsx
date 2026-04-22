@@ -48,6 +48,7 @@ function AppDrawer({
   return (
     <Drawer open={open} onOpenChange={onOpenChange} direction={direction}>
       <DrawerContent
+        onInteractOutside={(e) => e.preventDefault()}
         className={cn(
           "data-[vaul-drawer-direction=right]:w-full",
           SIZE_CLASS_MAP[size],

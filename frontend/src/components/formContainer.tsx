@@ -43,6 +43,7 @@ export function FormContainer({
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent
+          onInteractOutside={(e) => e.preventDefault()}
           className={sizeMap[size]! + " max-h-[90vh] overflow-y-auto"}
         >
           <DialogHeader>

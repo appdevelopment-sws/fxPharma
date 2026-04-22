@@ -145,7 +145,9 @@ const TaxSettings = () => {
         onClose={dialogDisclosure.onClose}
         onSubmit={handleSubmit}
         tax={dialogDisclosure.data}
-        isSubmitting={createTaxMutation.isPending || updateTaxMutation.isPending}
+        isSubmitting={
+          createTaxMutation.isPending || updateTaxMutation.isPending
+        }
       />
 
       <ConfirmDialog

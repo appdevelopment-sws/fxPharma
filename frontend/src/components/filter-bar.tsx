@@ -49,15 +49,15 @@ type FilterBarSearchProps = BaseFilterControlProps & {
   placeholder?: string
 }
 
-function FilterBar({
-  values,
-  onChange,
-  children,
-  className,
-}: FilterBarProps) {
+function FilterBar({ values, onChange, children, className }: FilterBarProps) {
   return (
     <FilterBarContext.Provider value={{ values, onChange }}>
-      <div className={cn("flex flex-col gap-3 lg:flex-row lg:flex-wrap", className)}>
+      <div
+        className={cn(
+          "flex flex-col gap-3 lg:flex-row lg:flex-wrap",
+          className
+        )}
+      >
         {children}
       </div>
     </FilterBarContext.Provider>
@@ -78,7 +78,7 @@ function FilterBarSelect({
       <select
         value={value}
         onChange={(event) => onChange({ [name]: event.target.value })}
-        className="h-9 w-full appearance-none rounded-lg border border-input bg-background px-3 pr-9 text-sm text-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+        className="h-9 w-full appearance-none rounded-lg border border-input bg-background px-3 pr-9 text-sm text-foreground transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
       >
         <option value="">{placeholder}</option>
         {options.map((option) => (
@@ -101,7 +101,7 @@ function FilterBarSearch({
   const value = String(values[name] ?? "")
 
   return (
-    <div className={cn("relative min-w-[240px] flex-[1.3]", className)}>
+    <div className={cn("relative min-w-[240px]", className)}>
       <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
       <Input
         value={value}

@@ -11,6 +11,7 @@ import {
   FormSelectField,
   FormSwitch,
   FormSearchSelect,
+  FormFileUpload,
 } from "@/components/ui/form-fields"
 import { Button } from "@/components/ui/button"
 import { HsnApi } from "@/services/taxApi"
@@ -37,60 +38,63 @@ export default function MasterProductDialog({
   const isViewMode = !!product?.viewMode
   const isEditMode = !!product?.id
   const productId = product?.id
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
 
   // Centralized search selects
   const hsn = useSearchSelect(
     queryKeys.hsnCodes.all,
     (search) => HsnApi.getHsnCodes({ search }),
-    (data) => (data?.data || []).map((hsn: any) => ({
-      label: `${hsn.code} - ${hsn.description || ""}`,
-      value: String(hsn.id),
-    })),
+    (data) =>
+      (data?.data || []).map((hsn: any) => ({
+        label: `${hsn.code} - ${hsn.description || ""}`,
+        value: String(hsn.id),
+      })),
     open
   )
 
   const category = useSearchSelect(
     ["categories"],
-    async (search) => [
-      { label: "Analgesics", value: "analgesics" },
-      { label: "Antibiotics", value: "antibiotics" },
-      { label: "Antiseptics", value: "antiseptics" },
-    ].filter(opt => opt.label.toLowerCase().includes(search.toLowerCase())),
+    async (search) =>
+      [
+        { label: "Analgesics", value: "analgesics" },
+        { label: "Antibiotics", value: "antibiotics" },
+        { label: "Antiseptics", value: "antiseptics" },
+      ].filter((opt) => opt.label.toLowerCase().includes(search.toLowerCase())),
     (data) => data,
     open
   )
 
   const brand = useSearchSelect(
     ["brands"],
-    async (search) => [
-      { label: "Cipla", value: "cipla" },
-      { label: "Sun Pharma", value: "sun_pharma" },
-      { label: "GSK", value: "gsk" },
-    ].filter(opt => opt.label.toLowerCase().includes(search.toLowerCase())),
+    async (search) =>
+      [
+        { label: "Cipla", value: "cipla" },
+        { label: "Sun Pharma", value: "sun_pharma" },
+        { label: "GSK", value: "gsk" },
+      ].filter((opt) => opt.label.toLowerCase().includes(search.toLowerCase())),
     (data) => data,
     open
   )
 
   const manufacturer = useSearchSelect(
     ["manufacturers"],
-    async (search) => [
-      { label: "Pfizer Inc.", value: "pfizer" },
-      { label: "Novartis AG", value: "novartis" },
-      { label: "Bayer AG", value: "bayer" },
-    ].filter(opt => opt.label.toLowerCase().includes(search.toLowerCase())),
+    async (search) =>
+      [
+        { label: "Pfizer Inc.", value: "pfizer" },
+        { label: "Novartis AG", value: "novartis" },
+        { label: "Bayer AG", value: "bayer" },
+      ].filter((opt) => opt.label.toLowerCase().includes(search.toLowerCase())),
     (data) => data,
     open
   )
 
   const salt = useSearchSelect(
     ["salts"],
-    async (search) => [
-      { label: "PARACETAMOL", value: "paracetamol" },
-      { label: "IBUPROFEN", value: "ibuprofen" },
-      { label: "AMOXICILLIN", value: "amoxicillin" },
-    ].filter(opt => opt.label.toLowerCase().includes(search.toLowerCase())),
+    async (search) =>
+      [
+        { label: "PARACETAMOL", value: "paracetamol" },
+        { label: "IBUPROFEN", value: "ibuprofen" },
+        { label: "AMOXICILLIN", value: "amoxicillin" },
+      ].filter((opt) => opt.label.toLowerCase().includes(search.toLowerCase())),
     (data) => data,
     open
   )
@@ -124,11 +128,10 @@ export default function MasterProductDialog({
           is_schedule_h: !!product?.is_schedule_h,
           is_schedule_h1: !!product?.is_schedule_h1,
           barcodes: product?.barcodes || [{ value: "" }],
+          image_url: product?.image_url || null,
         })
-        setPreviewUrl(product?.image_url || null)
       } else {
         reset(MASTER_PRODUCT_FORM_INITIAL_DATA)
-        setPreviewUrl(null)
       }
     }
   }, [open, product, reset, isEditMode, isViewMode])
@@ -281,58 +284,14 @@ export default function MasterProductDialog({
               />
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium">PRODUCT IMAGE</label>
-              <input
-                type="file"
-                ref={fileInputRef}
-                className="hidden"
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0]
-                  if (file) {
-                    const url = URL.createObjectURL(file)
-                    setPreviewUrl(url)
-                    console.log("File selected:", file)
-                  }
-                }}
-              />
-              <div
-                onClick={() => !isViewMode && fileInputRef.current?.click()}
-                className={`group relative flex h-32 w-full flex-col items-center justify-center overflow-hidden rounded-lg border-2 border-dashed bg-muted/50 transition-all ${
-                  !isViewMode
-                    ? "cursor-pointer hover:border-primary/50 hover:bg-muted"
-                    : ""
-                }`}
-              >
-                {previewUrl ? (
-                  <>
-                    <img
-                      src={previewUrl}
-                      alt="Preview"
-                      className="h-full w-full object-contain"
-                    />
-                    {!isViewMode && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
-                        <Upload className="size-6 text-white" />
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    <div className="flex flex-col items-center">
-                      <Upload className="mb-2 size-6 text-muted-foreground transition-colors group-hover:text-primary" />
-                      <span className="text-xs font-semibold text-primary">
-                        {isViewMode ? "No Image" : "Upload Media"}
-                      </span>
-                    </div>
-                    <p className="mt-1 text-[10px] text-muted-foreground">
-                      PNG, JPG up to 5MB
-                    </p>
-                  </>
-                )}
-              </div>
-            </div>
+            <FormFileUpload
+              control={control}
+              name="image_url"
+              label="PRODUCT IMAGE"
+              accept="image/*"
+              maxSizeText="PNG, JPG up to 5MB"
+              disabled={isViewMode}
+            />
           </div>
         </div>
 
