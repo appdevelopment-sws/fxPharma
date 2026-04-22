@@ -1,16 +1,19 @@
 import { useEffect, useRef, useState } from "react"
 import { useForm, type SubmitHandler, useFieldArray } from "react-hook-form"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Plus, Trash2, Upload, Camera, ImageIcon } from "lucide-react"
 import { queryKeys } from "@/lib/queryKeys"
 import ProductApi from "@/services/masterProductApi"
+import { useSearchSelect } from "@/hooks/useSearchSelect"
 import { FormContainer } from "@/components/formContainer"
 import {
   FormField,
   FormSelectField,
   FormSwitch,
+  FormSearchSelect,
 } from "@/components/ui/form-fields"
 import { Button } from "@/components/ui/button"
+import { HsnApi } from "@/services/taxApi"
 import {
   MASTER_PRODUCT_FORM_INITIAL_DATA,
   INDUSTRY_SEGMENT_OPTIONS,
@@ -36,6 +39,61 @@ export default function MasterProductDialog({
   const productId = product?.id
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+
+  // Centralized search selects
+  const hsn = useSearchSelect(
+    queryKeys.hsnCodes.all,
+    (search) => HsnApi.getHsnCodes({ search }),
+    (data) => (data?.data || []).map((hsn: any) => ({
+      label: `${hsn.code} - ${hsn.description || ""}`,
+      value: String(hsn.id),
+    })),
+    open
+  )
+
+  const category = useSearchSelect(
+    ["categories"],
+    async (search) => [
+      { label: "Analgesics", value: "analgesics" },
+      { label: "Antibiotics", value: "antibiotics" },
+      { label: "Antiseptics", value: "antiseptics" },
+    ].filter(opt => opt.label.toLowerCase().includes(search.toLowerCase())),
+    (data) => data,
+    open
+  )
+
+  const brand = useSearchSelect(
+    ["brands"],
+    async (search) => [
+      { label: "Cipla", value: "cipla" },
+      { label: "Sun Pharma", value: "sun_pharma" },
+      { label: "GSK", value: "gsk" },
+    ].filter(opt => opt.label.toLowerCase().includes(search.toLowerCase())),
+    (data) => data,
+    open
+  )
+
+  const manufacturer = useSearchSelect(
+    ["manufacturers"],
+    async (search) => [
+      { label: "Pfizer Inc.", value: "pfizer" },
+      { label: "Novartis AG", value: "novartis" },
+      { label: "Bayer AG", value: "bayer" },
+    ].filter(opt => opt.label.toLowerCase().includes(search.toLowerCase())),
+    (data) => data,
+    open
+  )
+
+  const salt = useSearchSelect(
+    ["salts"],
+    async (search) => [
+      { label: "PARACETAMOL", value: "paracetamol" },
+      { label: "IBUPROFEN", value: "ibuprofen" },
+      { label: "AMOXICILLIN", value: "amoxicillin" },
+    ].filter(opt => opt.label.toLowerCase().includes(search.toLowerCase())),
+    (data) => data,
+    open
+  )
 
   const { handleSubmit, control, reset, watch, setValue } = useForm({
     defaultValues: MASTER_PRODUCT_FORM_INITIAL_DATA,
@@ -165,38 +223,44 @@ export default function MasterProductDialog({
               options={INDUSTRY_SEGMENT_OPTIONS}
               readOnly={isViewMode}
             />
-            <FormSelectField
+            <FormSearchSelect
               control={control}
               name="category_id"
               label="MASTER CATEGORY"
-              placeholder="Choose Industry Category..."
-              options={[]}
+              placeholder="Search Category..."
+              options={category.options}
+              onSearch={category.onSearch}
+              loading={category.loading}
               readOnly={isViewMode}
             />
-            <FormSelectField
+            <FormSearchSelect
               control={control}
               name="brand_id"
               label="PRODUCT BRAND"
-              placeholder="Choose Brand Alias..."
-              options={[]}
+              placeholder="Search Brand..."
+              options={brand.options}
+              onSearch={brand.onSearch}
+              loading={brand.loading}
               readOnly={isViewMode}
             />
-            <FormSelectField
+            <FormSearchSelect
               control={control}
               name="manufacturer_id"
               label="PARENT MANUFACTURER"
-              placeholder="Select Parent Entity..."
-              options={[]}
+              placeholder="Search Manufacturer..."
+              options={manufacturer.options}
+              onSearch={manufacturer.onSearch}
+              loading={manufacturer.loading}
               readOnly={isViewMode}
             />
-            <FormSelectField
+            <FormSearchSelect
               control={control}
               name="salt_id"
               label="SALT COMPOSITION"
-              placeholder="Search and Link Salt..."
-              options={[
-                { label: "CETIRIZINE DIHYDROCHLORIDE", value: "cetirizine" },
-              ]}
+              placeholder="Search Salt..."
+              options={salt.options}
+              onSearch={salt.onSearch}
+              loading={salt.loading}
               readOnly={isViewMode}
             />
 
@@ -277,11 +341,14 @@ export default function MasterProductDialog({
           {sectionHeader("02", "Classifications & Units")}
 
           <div className="grid gap-6 sm:grid-cols-3">
-            <FormSelectField
+            <FormSearchSelect
               control={control}
               name="hsn_code_id"
               label="HSN / SAC CODE"
-              options={[{ label: "45654345", value: "45654345" }]}
+              placeholder="Search HSN..."
+              options={hsn.options}
+              loading={hsn.loading}
+              onSearch={hsn.onSearch}
               readOnly={isViewMode}
             />
             <FormSelectField
@@ -310,7 +377,10 @@ export default function MasterProductDialog({
               </div>
               <div className="space-y-3">
                 {fields.map((field, index) => (
-                  <div key={field.id} className="flex gap-2">
+                  <div
+                    key={field.id}
+                    className="flex items-center justify-center gap-2"
+                  >
                     <div className="relative flex-1">
                       <FormField
                         control={control}
@@ -319,7 +389,7 @@ export default function MasterProductDialog({
                         placeholder="SCAN PRODUCT BARCODE"
                         readOnly={isViewMode}
                       />
-                      <Camera className="absolute top-3 right-3 size-4 cursor-pointer text-muted-foreground" />
+                      {/* <Camera className="absolute top-3 right-3 size-4 cursor-pointer text-muted-foreground" /> */}
                     </div>
                     {fields.length > 1 && !isViewMode && (
                       <Button

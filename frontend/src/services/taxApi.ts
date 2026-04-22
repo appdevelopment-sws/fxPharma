@@ -107,6 +107,7 @@ const MAPPING_BASE_URL = "/hsn-tax-mappings"
 
 export const HsnApi = {
   getHsnCodes: async (params?: any): Promise<{ data: HsnCode[]; meta?: any }> => {
+    console.log("Fetching HSN codes with params:", params);
     try {
       const res = await api.get<any>(HSN_BASE_URL, { params })
       return {
