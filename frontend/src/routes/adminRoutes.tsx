@@ -9,6 +9,7 @@ import AdminProfilePage from "@/pages/admin/profile/AdminProfilePage"
 import ProtectedRoute from "@/components/auth/ProtectedRoute"
 import PublicOnlyRoute from "@/components/auth/PublicOnlyRoute"
 import { PERMISSIONS, ROLES } from "@/lib/access"
+import AllInventory from "@/pages/admin/inventory/AllInventory"
 
 export const AdminRoutes = () => {
   return (
@@ -27,6 +28,7 @@ export const AdminRoutes = () => {
           <Route index element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="profile" element={<AdminProfilePage />} />
+          <Route path="all-inventory" element={<AllInventory />} />
           <Route
             element={
               <ProtectedRoute
@@ -34,6 +36,8 @@ export const AdminRoutes = () => {
               />
             }
           >
+
+
             <Route path="users" element={<AdminUsersPage />} />
           </Route>
           <Route
