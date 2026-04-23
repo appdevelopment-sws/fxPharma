@@ -39,6 +39,11 @@ cd backend
 cp .env.sample .env
 ```
 
+```bash
+cd ..
+```
+
+
 3. Run the docker commands to start the bakcend server and frontend.
 
 ```bash
@@ -52,9 +57,9 @@ docker compose up -d
 To seed the database run:
 
 ```bash
-docker exec -it pharmacy-software-backend-1 npx prisma migrate dev
+docker exec -it dawadukaan-backend-1 npx prisma migrate dev
 
-docker exec -it pharmacy-software-backend-1 npx prisma db seed
+docker exec -it dawadukaan-backend-1 npx prisma db seed
 ```
 
 Now after this your project will be ready to run.

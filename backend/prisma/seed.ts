@@ -148,7 +148,7 @@ async function main() {
 
   // 5. Create Platform User (Super Admin)
   console.log("Creating super admin user...");
-  const hashedPassword = await bcrypt.hash("SuperAdmin@123", 12);
+  const hashedPassword = await bcrypt.hash("  ", 12);
   const superAdminUser = await prisma.user.upsert({
     where: { email: "superadmin@platform.com" },
     update: { password: hashedPassword },
