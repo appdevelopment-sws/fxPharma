@@ -74,7 +74,7 @@ function FilterBarSelect({
   const value = String(values[name] ?? "")
 
   return (
-    <div className={cn("relative min-w-[180px] flex-1", className)}>
+    <div className={cn("relative min-w-[180px] ", className)}>
       <select
         value={value}
         onChange={(event) => onChange({ [name]: event.target.value })}

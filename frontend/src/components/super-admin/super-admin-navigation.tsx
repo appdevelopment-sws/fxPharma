@@ -7,6 +7,7 @@ import {
   PercentSquare,
   ShieldCheck,
   Store,
+  SubscriptIcon,
   UserCog,
   type LucideProps,
 } from "lucide-react"
@@ -107,6 +108,18 @@ export const superAdminNavigationGroups: SidebarNavigationGroup[] = [
           //   // permissions: ["ROLE_MANAGE"],
           // },
         ],
+      },
+    ],
+  },
+  {
+    title: "Manage Subscription",
+    items: [
+      {
+        title: "Manage Subscription",
+        to: "/super-admin/subscription",
+        description: "Manage subscription plans and billing cycles",
+        icon: SubscriptIcon,
+        roles: [ROLES.SUPER_ADMIN],
       },
     ],
   },
