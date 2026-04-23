@@ -60,7 +60,7 @@ export default function ManageSubscriptionPage() {
     },
     [handleFilter]
   )
-
+  console.log("harsh")
   const columns: DataTableColumn<any>[] = useMemo(() => {
     return [
       {
@@ -81,6 +81,7 @@ export default function ManageSubscriptionPage() {
           "Store Name",
         accessor: "store_name",
       },
+
 
       {
         key: "owner",
