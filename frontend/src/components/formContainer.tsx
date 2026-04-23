@@ -26,7 +26,6 @@ const sizeMap = {
   md: "min-w-lg",
   lg: "min-w-2xl",
   xl: "min-w-4xl",
-  "2xl": "min-w-5xl",
   full: "min-w-[95vw]",
 }
 

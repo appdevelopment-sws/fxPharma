@@ -84,7 +84,7 @@ export default function ManageStoreDialog({
                         ? "Edit Store"
                         : "Create Store"
             }
-            size="2xl"
+            size="xl"
             footer={
                 <div className="flex justify-end gap-3">
                     <Button variant="outline" onClick={() => onClose(false)}>

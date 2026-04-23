@@ -1,6 +1,17 @@
 import { useCallback, useMemo } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { Plus, Pencil, Eye, Trash2, Download, ShieldAlert, Layers, Network, Cpu, Boxes } from "lucide-react"
+import {
+  Plus,
+  Pencil,
+  Eye,
+  Trash2,
+  Download,
+  ShieldAlert,
+  Layers,
+  Network,
+  Cpu,
+  Boxes,
+} from "lucide-react"
 import { toast } from "sonner"
 
 import { ConfirmDialog } from "@/components/confirmDialog"
@@ -18,10 +29,9 @@ import {
   MANAGE_SUBSCRIPTION_COLUMNS,
 } from "@/constants/page/super-admin/manage-subscription"
 import { StatCard } from "@/components/stat-card"
-import ManageSubscriptionDialog from "@/components/products/ManageSubscriptionDialog"
+import ManageSubscriptionDialog from "@/components/dialog/ManageSubscriptionDialog"
 import { Badge } from "@/components/ui/badge"
 import ExportSubscriptionModal from "@/components/shared/exportSubscriptionData"
-
 
 export default function ManageSubscriptionPage() {
   const queryClient = useQueryClient()
@@ -70,9 +80,9 @@ export default function ManageSubscriptionPage() {
           MANAGE_SUBSCRIPTION_COLUMNS.find((c) => c.key === "serial")?.label ||
           "#",
         render: (_, index) => {
-          const currentPage = filter.page || 1;
-          const perPage = filter.perPage || 10;
-          return (currentPage - 1) * perPage + index + 1;
+          const currentPage = filter.page || 1
+          const perPage = filter.perPage || 10
+          return (currentPage - 1) * perPage + index + 1
         },
       },
       {
@@ -109,9 +119,7 @@ export default function ManageSubscriptionPage() {
           MANAGE_SUBSCRIPTION_COLUMNS.find((c) => c.key === "status")?.label ||
           "Status",
         render: (row) => (
-          <Badge
-            variant={row.status === "ACTIVE" ? "success" : "secondary"}
-          >
+          <Badge variant={row.status === "ACTIVE" ? "success" : "secondary"}>
             {row.status}
           </Badge>
         ),
@@ -149,8 +157,8 @@ export default function ManageSubscriptionPage() {
           </div>
         ),
       },
-    ];
-  }, [filter.page, filter.perPage, deleteDisclosure]);
+    ]
+  }, [filter.page, filter.perPage, deleteDisclosure])
   return (
     <div className="space-y-6">
       <ManageSubscriptionDialog
@@ -176,7 +184,7 @@ export default function ManageSubscriptionPage() {
         variant="danger"
         confirmationKeyword="DELETE"
       />
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 ">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Total Shops"
           value={239999}
@@ -203,10 +211,7 @@ Businesses"
           helper="Stable operational metrics"
           icon={<Cpu className="h-4 w-4" />}
         />
-
       </div>
-
-
 
       <SectionCard
         title="Manage Subscription"
@@ -247,7 +252,6 @@ Businesses"
               placeholder="Product Type ID"
             />
             <FilterBar.Search name="hsnCodeId" placeholder="HSN ID" /> */}
-
           </FilterBar>
 
           <DataTable

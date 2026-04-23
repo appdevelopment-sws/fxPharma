@@ -18,7 +18,8 @@ import {
   STORE_COLUMNS,
 } from "@/constants/page/super-admin/store"
 import { Badge } from "@/components/ui/badge"
-import AddStoreListDialog from "@/components/products/AddStoreListDialog"
+import AddStoreListDialog from "@/components/dialog/AddStoreListDialog"
+
 
 
 export default function ManageSubscriptionPage() {
