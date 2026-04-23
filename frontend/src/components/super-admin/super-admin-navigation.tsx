@@ -46,35 +46,35 @@ export const superAdminNavigationGroups: SidebarNavigationGroup[] = [
       },
     ],
   },
-  {
-    title: "Governance",
-    items: [
-      {
-        title: "Platform Access",
-        description: "Manage tenants, users, and platform role boundaries",
-        icon: ShieldCheck,
-        roles: [ROLES.SUPER_ADMIN],
-        children: [
-          {
-            title: "Tenants",
-            to: "/super-admin/tenants",
-            description: "Platform-wide tenant oversight and health monitoring",
-            icon: Building2,
-            roles: [ROLES.SUPER_ADMIN],
-            permissions: [PERMISSIONS.USER_READ],
-          },
-          {
-            title: "Roles & Permissions",
-            to: "/super-admin/access",
-            description: "Platform access policy and super admin controls",
-            icon: ShieldCheck,
-            roles: [ROLES.SUPER_ADMIN],
-            permissions: [PERMISSIONS.ROLE_MANAGE],
-          },
-        ],
-      },
-    ],
-  },
+  // {
+  //   title: "Governance",
+  //   items: [
+  //     {
+  //       title: "Platform Access",
+  //       description: "Manage tenants, users, and platform role boundaries",
+  //       icon: ShieldCheck,
+  //       roles: [ROLES.SUPER_ADMIN],
+  //       children: [
+  //         {
+  //           title: "Tenants",
+  //           to: "/super-admin/tenants",
+  //           description: "Platform-wide tenant oversight and health monitoring",
+  //           icon: Building2,
+  //           roles: [ROLES.SUPER_ADMIN],
+  //           permissions: [PERMISSIONS.USER_READ],
+  //         },
+  //         {
+  //           title: "Roles & Permissions",
+  //           to: "/super-admin/access",
+  //           description: "Platform access policy and super admin controls",
+  //           icon: ShieldCheck,
+  //           roles: [ROLES.SUPER_ADMIN],
+  //           permissions: [PERMISSIONS.ROLE_MANAGE],
+  //         },
+  //       ],
+  //     },
+  //   ],
+  // },
   {
     title: "Master Product",
     items: [
@@ -92,8 +92,8 @@ export const superAdminNavigationGroups: SidebarNavigationGroup[] = [
             roles: [ROLES.SUPER_ADMIN],
           },
           {
-            title: "HSN",
-            to: "/super-admin/hsn",
+            title: "Attributes",
+            to: "/super-admin/brands",
             description: "HSN code management for master products",
             icon: Barcode,
             roles: [ROLES.SUPER_ADMIN],

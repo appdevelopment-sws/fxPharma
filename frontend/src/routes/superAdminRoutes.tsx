@@ -13,6 +13,10 @@ import TaxHsnPage from "@/pages/shared/Hsntax/hsnTax"
 import TaxSettings from "@/pages/shared/Hsntax/TaxSettings"
 import HsnList from "@/pages/shared/Hsntax/HsnList"
 import HsnMapping from "@/pages/shared/Hsntax/HsnMapping"
+import Brands from "@/pages/shared/Attributes/brands"
+import Categories from "@/pages/shared/Attributes/categories"
+import Manufacturers from "@/pages/shared/Attributes/manufacturers"
+import Units from "@/pages/shared/Attributes/units"
 
 export const SuperAdminRoutes = () => {
   return (
@@ -34,6 +38,10 @@ export const SuperAdminRoutes = () => {
         <Route path="profile" element={<SuperAdminProfilePage />} />
         <Route path="master-products" element={<SuperAdminProductsNewPage />} />
         <Route path="hsn" element={<HsnPage />} />
+        <Route path="brands" element={<Brands />} />
+        <Route path="categories" element={<Categories />} />
+        <Route path="manufacturers" element={<Manufacturers />} />
+        <Route path="units" element={<Units />} />
         <Route
           element={
             <ProtectedRoute
