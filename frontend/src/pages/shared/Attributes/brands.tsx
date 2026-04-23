@@ -18,6 +18,7 @@ import {
   INITIAL_BRAND_FILTERS,
   BRAND_COLUMNS,
 } from "@/constants/page/super-admin/brands"
+import BrandDrawer from "@/components/products/BrandsDialog"
 
 const Brands = () => {
   const queryClient = useQueryClient()
@@ -149,6 +150,12 @@ const Brands = () => {
 
   return (
     <div className="space-y-6">
+      <BrandDrawer
+        open={drawerDisclosure.isOpen}
+        onClose={drawerDisclosure.onClose}
+        brand={drawerDisclosure.data}
+      />
+
       {/* Delete Dialog */}
       <ConfirmDialog
         open={deleteDisclosure.isOpen}
