@@ -18,7 +18,7 @@ import {
   INITIAL_BRAND_FILTERS,
   BRAND_COLUMNS,
 } from "@/constants/page/super-admin/brands"
-import BrandDrawer from "@/components/products/BrandsDialog"
+import BrandDrawer from "@/components/dialog/BrandsDialog"
 
 const Brands = () => {
   const queryClient = useQueryClient()
