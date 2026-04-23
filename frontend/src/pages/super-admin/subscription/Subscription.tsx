@@ -20,6 +20,7 @@ import {
 import { StatCard } from "@/components/stat-card"
 import ManageSubscriptionDialog from "@/components/products/ManageSubscriptionDialog"
 import { Badge } from "@/components/ui/badge"
+import ExportSubscriptionModal from "@/components/shared/exportSubscriptionData"
 
 
 export default function ManageSubscriptionPage() {
@@ -157,7 +158,11 @@ export default function ManageSubscriptionPage() {
         onClose={drawerDisclosure.onClose}
         plan={drawerDisclosure.data}
       />
-
+      <ExportSubscriptionModal
+        open={bulkDisclosure.isOpen}
+        onClose={bulkDisclosure.onClose}
+        plan={bulkDisclosure.data}
+      />
       <ConfirmDialog
         open={deleteDisclosure.isOpen}
         onOpenChange={deleteDisclosure.onClose}
@@ -211,6 +216,11 @@ Businesses"
             <Button type="button" onClick={() => handleOpen(null, "create")}>
               <Plus className="mr-2 size-4" />
               Create New Plan
+            </Button>
+
+            <Button type="button" variant="outline" onClick={handleBulkOpen}>
+              <Download className="mr-2 size-4" />
+              Export Data
             </Button>
           </div>
         }

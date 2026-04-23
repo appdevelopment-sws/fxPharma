@@ -113,6 +113,7 @@ export default function ManageSubscriptionDialog({
                             control={control}
                             name="name"
                             label="Plan Name"
+                            required={true}
                             placeholder="e.g. Standard Monthly"
                             readOnly={isViewMode}
                         />
@@ -136,6 +137,7 @@ export default function ManageSubscriptionDialog({
                             control={control}
                             name="price"
                             label="Price"
+                            required={true}
                             placeholder="₹1299"
                             readOnly={isViewMode}
                         />
@@ -144,6 +146,7 @@ export default function ManageSubscriptionDialog({
                             control={control}
                             name="billing_type"
                             label="Billing Cycle"
+                            required={true}
                             options={BILLING_TYPE_OPTIONS}
                             readOnly={isViewMode}
                         />
@@ -175,6 +178,7 @@ export default function ManageSubscriptionDialog({
                             control={control}
                             name="max_staff_users"
                             label="Max Users (Staff)"
+                            required={true}
                             placeholder="5"
                             readOnly={isViewMode}
                         />
@@ -183,6 +187,7 @@ export default function ManageSubscriptionDialog({
                             control={control}
                             name="max_stores"
                             label="Max Stores / Locations"
+                            required={true}
                             placeholder="2"
                             readOnly={isViewMode}
                         />
