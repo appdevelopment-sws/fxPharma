@@ -99,7 +99,7 @@ export function WorkspaceShell({
         />
 
         <main className="scrollbar-thin scrollbar-thumb-slate-200 flex-1 overflow-y-auto">
-          <div className="mx-auto h-full w-full max-w-[1600px] p-4 sm:p-6 lg:p-8">
+          <div className="mx-auto h-full w-full max-w-[1600px] p-4 sm:p-5 lg:p-6">
             <Outlet />
           </div>
         </main>

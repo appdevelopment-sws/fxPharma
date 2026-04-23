@@ -19,6 +19,7 @@ import Manufacturers from "@/pages/shared/Attributes/manufacturers"
 import Units from "@/pages/shared/Attributes/units"
 import ManageSubscriptionPage from "@/pages/super-admin/subscription/Subscription"
 
+import AttributesPage from "@/pages/shared/Attributes/AttributesPage"
 
 export const SuperAdminRoutes = () => {
   return (
@@ -37,15 +38,17 @@ export const SuperAdminRoutes = () => {
           <Route path="hsn" element={<HsnList />} />
           <Route path="mapping" element={<HsnMapping />} />
         </Route>
-        
         <Route path="subscription" element={<ManageSubscriptionPage />} />
         <Route path="profile" element={<SuperAdminProfilePage />} />
         <Route path="master-products" element={<SuperAdminProductsNewPage />} />
         <Route path="hsn" element={<HsnPage />} />
-        <Route path="brands" element={<Brands />} />
-        <Route path="categories" element={<Categories />} />
-        <Route path="manufacturers" element={<Manufacturers />} />
-        <Route path="units" element={<Units />} />
+        <Route path="attributes" element={<AttributesPage />}>
+          <Route index element={<Navigate to="brands" replace />} />
+          <Route path="brands" element={<Brands />} />
+          <Route path="categories" element={<Categories />} />
+          <Route path="manufacturers" element={<Manufacturers />} />
+          <Route path="units" element={<Units />} />
+        </Route>
         <Route
           element={
             <ProtectedRoute

@@ -31,4 +31,25 @@ export const queryKeys = {
     all: ["hsnMappings"] as const,
     list: (filters?: any) => [...queryKeys.hsnMappings.all, filters] as const,
   },
+  brands: {
+    all: ["brands"] as const,
+    list: (filters?: any) => [...queryKeys.brands.all, filters] as const,
+    detail: (id: string | number) => [...queryKeys.brands.all, id] as const,
+  },
+  categories: {
+    all: ["categories"] as const,
+    list: (filters?: any) => [...queryKeys.categories.all, filters] as const,
+    detail: (id: string | number) => [...queryKeys.categories.all, id] as const,
+  },
+  manufacturers: {
+    all: ["manufacturers"] as const,
+    list: (filters?: any) => [...queryKeys.manufacturers.all, filters] as const,
+    detail: (id: string | number) =>
+      [...queryKeys.manufacturers.all, id] as const,
+  },
+  units: {
+    all: ["units"] as const,
+    list: (filters?: any) => [...queryKeys.units.all, filters] as const,
+    detail: (id: string | number) => [...queryKeys.units.all, id] as const,
+  },
 }

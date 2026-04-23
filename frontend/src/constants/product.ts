@@ -1,5 +1,7 @@
 // masterProduct.constants.ts
 
+import { FORM_TYPE } from "./formType"
+
 export const PRODUCT_FORM_INITIAL_DATA = {
   name: "",
   generic_name: "",

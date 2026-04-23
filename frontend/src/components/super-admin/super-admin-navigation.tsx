@@ -94,8 +94,8 @@ export const superAdminNavigationGroups: SidebarNavigationGroup[] = [
           },
           {
             title: "Attributes",
-            to: "/super-admin/brands",
-            description: "HSN code management for master products",
+            to: "/super-admin/attributes",
+            description: "Attributes management for master products",
             icon: Barcode,
             roles: [ROLES.SUPER_ADMIN],
           },
@@ -134,7 +134,6 @@ export const isSuperAdminItemActive = isNavigationItemActive
 
 export function getSuperAdminPermissionSummary(user: AuthUser | null) {
   if (!user) return []
-
   return user.permissions.map((permission) => ({
     permission,
     label: superAdminPermissionLabels[permission] ?? permission,
