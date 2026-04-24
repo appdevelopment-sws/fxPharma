@@ -10,6 +10,7 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute"
 import PublicOnlyRoute from "@/components/auth/PublicOnlyRoute"
 import { PERMISSIONS, ROLES } from "@/lib/access"
 import AllInventory from "@/pages/admin/inventory/AllInventory"
+import Orders from "@/pages/admin/orders/Orders"
 
 export const AdminRoutes = () => {
   return (
@@ -29,22 +30,18 @@ export const AdminRoutes = () => {
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="profile" element={<AdminProfilePage />} />
           <Route path="all-inventory" element={<AllInventory />} />
+          <Route path="orders" element={<Orders />} />
+
           <Route
             element={
-              <ProtectedRoute
-                allowedPermissions={[PERMISSIONS.USER_READ]}
-              />
+              <ProtectedRoute allowedPermissions={[PERMISSIONS.USER_READ]} />
             }
           >
-
-
             <Route path="users" element={<AdminUsersPage />} />
           </Route>
           <Route
             element={
-              <ProtectedRoute
-                allowedPermissions={[PERMISSIONS.ROLE_MANAGE]}
-              />
+              <ProtectedRoute allowedPermissions={[PERMISSIONS.ROLE_MANAGE]} />
             }
           >
             <Route path="roles" element={<AdminRolesPage />} />

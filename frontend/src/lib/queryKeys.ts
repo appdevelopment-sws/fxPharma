@@ -52,4 +52,9 @@ export const queryKeys = {
     list: (filters?: any) => [...queryKeys.units.all, filters] as const,
     detail: (id: string | number) => [...queryKeys.units.all, id] as const,
   },
+  orders: {
+    all: ["orders"] as const,
+    list: (filters?: any) => [...queryKeys.orders.all, filters] as const,
+    detail: (id: string | number) => [...queryKeys.orders.all, id] as const,
+  },
 }

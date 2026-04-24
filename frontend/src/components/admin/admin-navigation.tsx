@@ -48,14 +48,12 @@ export const adminNavigationGroups: SidebarNavigationGroup[] = [
             to: "/admin/all-inventory",
             description: "View, Search, and Filter Inventory across all Stores",
             icon: Box,
-
           },
           {
             title: "Import Inventory",
             to: "/admin/import-inventory",
             description: "Import Inventory from csv/excel file.",
             icon: Box,
-
           },
           // {
           //   title: "Roles & Permissions",
@@ -66,6 +64,17 @@ export const adminNavigationGroups: SidebarNavigationGroup[] = [
           //   // permissions: ["ROLE_MANAGE"],
           // },
         ],
+      },
+    ],
+  },
+  {
+    title: "Orders",
+    items: [
+      {
+        title: "Orders",
+        to: "/admin/orders",
+        description: "Order management system for pharmacies",
+        icon: LayoutDashboard,
       },
     ],
   },
