@@ -12,6 +12,7 @@ import { PERMISSIONS, ROLES } from "@/lib/access"
 import AllInventory from "@/pages/admin/inventory/AllInventory"
 import Orders from "@/pages/admin/orders/Orders"
 import Suppliers from "@/pages/admin/supplier/suppliers"
+import ReturnsPage from "@/pages/admin/returns/ReturnsPage"
 
 export const AdminRoutes = () => {
   return (
@@ -33,6 +34,7 @@ export const AdminRoutes = () => {
           <Route path="all-inventory" element={<AllInventory />} />
           <Route path="orders" element={<Orders />} />
           <Route path="suppliers" element={<Suppliers />} />
+          <Route path="returns" element={<ReturnsPage />} />
           <Route
             element={
               <ProtectedRoute allowedPermissions={[PERMISSIONS.USER_READ]} />

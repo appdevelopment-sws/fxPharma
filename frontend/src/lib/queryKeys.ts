@@ -62,4 +62,10 @@ export const queryKeys = {
     list: (filters?: any) => [...queryKeys.suppliers.all, filters] as const,
     detail: (id: string | number) => [...queryKeys.suppliers.all, id] as const,
   },
+  returns: {
+    all: ["returns"] as const,
+    list: (filters?: any) => [...queryKeys.returns.all, filters] as const,
+    stats: () => [...queryKeys.returns.all, "stats"] as const,
+    detail: (id: string) => [...queryKeys.returns.all, id] as const,
+  },
 }
