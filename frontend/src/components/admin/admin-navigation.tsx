@@ -8,6 +8,7 @@ import {
   Barcode,
   Box,
   RotateCcw,
+  FileText,
 } from "lucide-react"
 import type { AuthUser } from "@/context/authContext"
 import {
@@ -82,6 +83,12 @@ export const adminNavigationGroups: SidebarNavigationGroup[] = [
         to: "/admin/returns",
         description: "Manage customer returns and refunds",
         icon: RotateCcw,
+      },
+      {
+        title: "Recent Invoices",
+        to: "/admin/invoices",
+        description: "View and manage all sales transactions",
+        icon: FileText,
       },
     ],
   },

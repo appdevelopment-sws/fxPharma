@@ -68,4 +68,10 @@ export const queryKeys = {
     stats: () => [...queryKeys.returns.all, "stats"] as const,
     detail: (id: string) => [...queryKeys.returns.all, id] as const,
   },
+  invoices: {
+    all: ["invoices"] as const,
+    list: (filters?: any) => [...queryKeys.invoices.all, filters] as const,
+    stats: () => [...queryKeys.invoices.all, "stats"] as const,
+    detail: (id: string) => [...queryKeys.invoices.all, id] as const,
+  },
 }
