@@ -57,4 +57,9 @@ export const queryKeys = {
     list: (filters?: any) => [...queryKeys.orders.all, filters] as const,
     detail: (id: string | number) => [...queryKeys.orders.all, id] as const,
   },
+  suppliers: {
+    all: ["suppliers"] as const,
+    list: (filters?: any) => [...queryKeys.suppliers.all, filters] as const,
+    detail: (id: string | number) => [...queryKeys.suppliers.all, id] as const,
+  },
 }

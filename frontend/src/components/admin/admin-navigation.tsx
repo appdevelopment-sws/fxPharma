@@ -79,6 +79,17 @@ export const adminNavigationGroups: SidebarNavigationGroup[] = [
     ],
   },
   {
+    title: "Suppliers",
+    items: [
+      {
+        title: "Suppliers",
+        to: "/admin/suppliers",
+        description: "Supplier management system for pharmacies",
+        icon: Users,
+      },
+    ],
+  },
+  {
     title: "Workspace",
     items: [
       {
