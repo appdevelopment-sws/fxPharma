@@ -35,11 +35,13 @@ import ExportSubscriptionModal from "@/components/shared/exportSubscriptionData"
 import { INITIAL_SUBSCRIPTION_FILTERS } from "@/constants/page/super-admin/manage-subscription"
 import AddMedicineDialog from "@/components/dialog/admin/AddMedicineDialog"
 import NewCompoundDialog from "@/components/dialog/admin/NewCompoundDialog"
+import InterStoreTransfer from "@/components/dialog/admin/InterStoreTransfer"
 
 export default function AllInventoryPage() {
     const queryClient = useQueryClient()
     const drawerDisclosure = useDisclosure<any>()
     const deleteDisclosure = useDisclosure<any>()
+    const interstoreTransferDisclosure = useDisclosure<any>()
     const compoundDisclosure = useDisclosure<any>()
     const { filter, handleFilter } = useSearchFilter(INITIAL_MEDICINE_STOCK_FILTERS)
 
@@ -67,6 +69,10 @@ export default function AllInventoryPage() {
     }
     const handleCompoundOpen = () => {
         compoundDisclosure.onOpen(null)
+    }
+
+    const handleInterstoreTransferOpen = () => {
+        interstoreTransferDisclosure.onOpen(null)
     }
     const handleFilterChange = useCallback(
         (updates: Record<string, any>) => {
@@ -167,6 +173,13 @@ export default function AllInventoryPage() {
                 onClose={compoundDisclosure.onClose}
                 compound={compoundDisclosure.data}
             />
+
+            <InterStoreTransfer
+                open={interstoreTransferDisclosure.isOpen}
+                onClose={interstoreTransferDisclosure.onClose}
+                product={interstoreTransferDisclosure.data}
+            />
+
             <ConfirmDialog
                 open={deleteDisclosure.isOpen}
                 onOpenChange={deleteDisclosure.onClose}
@@ -196,7 +209,7 @@ export default function AllInventoryPage() {
                             New Compound RX
                         </Button>
 
-                        <Button type="button" variant="outline" onClick={handleOpen}>
+                        <Button type="button" variant="outline" onClick={handleInterstoreTransferOpen}>
                             <Plus className="mr-2 size-4" />
                             Inter Store Transfer
                         </Button>

@@ -264,7 +264,7 @@ export default function CompoundingDialog({
                                     <FormSelectField
                                         control={control}
                                         name="total_unit"
-                                        label=" "
+                                        label="Total Qty"
                                         options={UNIT_OPTIONS}
                                         readOnly={isViewMode}
                                     />
@@ -283,14 +283,14 @@ export default function CompoundingDialog({
                                     <FormField
                                         control={control}
                                         name="beyond_use_date"
-                                        label="Beyond Use Date"
+                                        label="Use By Date "
                                         readOnly={isViewMode}
                                     />
 
                                     <FormSelectField
                                         control={control}
                                         name="beyond_use_unit"
-                                        label=" "
+                                        label=" BUD"
                                         options={BUD_OPTIONS}
                                         readOnly={isViewMode}
                                     />
