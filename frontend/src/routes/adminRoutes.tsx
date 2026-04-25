@@ -14,6 +14,7 @@ import Orders from "@/pages/admin/orders/Orders"
 import Suppliers from "@/pages/admin/supplier/suppliers"
 import ReturnsPage from "@/pages/admin/returns/ReturnsPage"
 import RecentInvoicesPage from "@/pages/admin/invoices/RecentInvoicesPage"
+import POS from "@/pages/admin/sales/pos"
 
 export const AdminRoutes = () => {
   return (
@@ -37,6 +38,7 @@ export const AdminRoutes = () => {
           <Route path="suppliers" element={<Suppliers />} />
           <Route path="returns" element={<ReturnsPage />} />
           <Route path="invoices" element={<RecentInvoicesPage />} />
+          <Route path="pos" element={<POS />} />
           <Route
             element={
               <ProtectedRoute allowedPermissions={[PERMISSIONS.USER_READ]} />

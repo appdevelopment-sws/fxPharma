@@ -104,6 +104,17 @@ export const adminNavigationGroups: SidebarNavigationGroup[] = [
     ],
   },
   {
+    title: "Sales",
+    items: [
+      {
+        title: "POS",
+        to: "/admin/pos",
+        description: "Point of Sale system for pharmacies",
+        icon: Barcode,
+      },
+    ],
+  },
+  {
     title: "Workspace",
     items: [
       {
