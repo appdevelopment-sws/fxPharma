@@ -17,12 +17,10 @@ export default function AdminUsersPage() {
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground">
+        <p className="text-xs tracking-[0.25em] text-muted-foreground uppercase">
           Workspace Management
         </p>
-        <h1 className="text-3xl font-semibold tracking-tight">
-          Tenant Users
-        </h1>
+        <h1 className="text-3xl font-semibold tracking-tight">Tenant Users</h1>
         <p className="max-w-2xl text-sm text-muted-foreground">
           This section is already protected by route permissions and gives you a
           safe place to plug in a full users table later.
@@ -40,8 +38,8 @@ export default function AdminUsersPage() {
           <CardContent className="space-y-4 text-sm text-muted-foreground">
             <p>
               The sidebar only exposes this page when the signed-in user has the
-              `{PERMISSIONS.USER_READ}` permission, and the route itself blocks direct access
-              without it.
+              `{PERMISSIONS.USER_READ}` permission, and the route itself blocks
+              direct access without it.
             </p>
             <p>
               That means future CRUD screens can live here without duplicating
@@ -71,7 +69,11 @@ export default function AdminUsersPage() {
                     {item.permission}
                   </p>
                 </div>
-                <Badge variant={hasPermission(item.permission) ? "default" : "outline"}>
+                <Badge
+                  variant={
+                    hasPermission(item.permission) ? "default" : "outline"
+                  }
+                >
                   {hasPermission(item.permission) ? "Granted" : "Not Granted"}
                 </Badge>
               </div>

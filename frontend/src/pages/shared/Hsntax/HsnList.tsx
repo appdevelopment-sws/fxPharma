@@ -102,10 +102,13 @@ const HsnList = () => {
         header: "Description",
         accessor: "description",
         render: (row) => (
-          <div className="max-w-md truncate text-muted-foreground" title={row.description}>
+          <div
+            className="max-w-md truncate text-muted-foreground"
+            title={row.description}
+          >
             {row.description || "—"}
           </div>
-        )
+        ),
       },
       {
         key: "action",
@@ -142,7 +145,9 @@ const HsnList = () => {
         onClose={dialogDisclosure.onClose}
         onSubmit={handleSubmit}
         hsn={dialogDisclosure.data}
-        isSubmitting={createHsnMutation.isPending || updateHsnMutation.isPending}
+        isSubmitting={
+          createHsnMutation.isPending || updateHsnMutation.isPending
+        }
       />
 
       <ConfirmDialog

@@ -43,7 +43,7 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 export function AuthProvider({ children }: PropsWithChildren) {
   const queryClient = useQueryClient()
   const [activeBranchId, setActiveBranchId] = useState<string | null>(
-    localStorage.getItem("activeBranchId"),
+    localStorage.getItem("activeBranchId")
   )
 
   const { data, isLoading } = useQuery({
@@ -72,12 +72,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
     isSuperAdmin: user?.memberships?.some((m) => m.level >= 100) ?? false,
     activeBranchId,
     switchBranch,
-    hasRole: (...roles) =>
-      Boolean(user?.role && roles.includes(user.role)),
+    hasRole: (...roles) => Boolean(user?.role && roles.includes(user.role)),
     hasPermission: (...permissions) =>
       Boolean(
         user?.permissions &&
-          permissions.every((p) => user.permissions?.includes(p)),
+        permissions.every((p) => user.permissions?.includes(p))
       ),
   }
 

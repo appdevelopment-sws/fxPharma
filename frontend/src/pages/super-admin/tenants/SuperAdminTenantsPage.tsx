@@ -17,7 +17,7 @@ export default function SuperAdminTenantsPage() {
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground">
+        <p className="text-sm tracking-[0.2em] text-muted-foreground uppercase">
           Platform Oversight
         </p>
         <h1 className="text-3xl font-semibold tracking-tight">Tenants</h1>
@@ -42,8 +42,8 @@ export default function SuperAdminTenantsPage() {
               instead of a hidden dashboard-only concern.
             </p>
             <p>
-              That keeps platform operations aligned with the same permission and
-              route-boundary rules used elsewhere in the app.
+              That keeps platform operations aligned with the same permission
+              and route-boundary rules used elsewhere in the app.
             </p>
           </CardContent>
         </Card>
@@ -69,7 +69,11 @@ export default function SuperAdminTenantsPage() {
                     {item.permission}
                   </p>
                 </div>
-                <Badge variant={hasPermission(item.permission) ? "default" : "outline"}>
+                <Badge
+                  variant={
+                    hasPermission(item.permission) ? "default" : "outline"
+                  }
+                >
                   {hasPermission(item.permission) ? "Granted" : "Not Granted"}
                 </Badge>
               </div>

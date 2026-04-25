@@ -7,9 +7,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { useAuth } from "@/context/authContext"
-import {
-  getPermissionSummary,
-} from "@/components/admin/admin-navigation"
+import { getPermissionSummary } from "@/components/admin/admin-navigation"
 import { permissionLabels } from "@/lib/access"
 
 export default function AdminProfilePage() {
@@ -22,7 +20,7 @@ export default function AdminProfilePage() {
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground">
+        <p className="text-xs tracking-[0.25em] text-muted-foreground uppercase">
           Account Workspace
         </p>
         <h1 className="text-3xl font-semibold tracking-tight">Profile</h1>
@@ -102,7 +100,7 @@ export default function AdminProfilePage() {
 function ProfileField({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-xl border border-border/60 bg-muted/30 p-4">
-      <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+      <p className="text-xs tracking-[0.2em] text-muted-foreground uppercase">
         {label}
       </p>
       <p className="mt-2 text-sm font-medium text-foreground">{value}</p>

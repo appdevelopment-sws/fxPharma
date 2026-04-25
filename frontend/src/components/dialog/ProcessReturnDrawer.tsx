@@ -136,7 +136,7 @@ export default function ProcessReturnDrawer({
         {/* Invoice Details */}
         <div className="space-y-4 rounded-xl border bg-card p-6 shadow-sm">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+            <h3 className="text-sm font-semibold tracking-wider text-muted-foreground uppercase">
               Invoice Details
             </h3>
             {isInvoiceFound && (
@@ -149,7 +149,7 @@ export default function ProcessReturnDrawer({
 
           <div className="flex gap-2">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Search Invoice ID (e.g. INV-2023-086)"
                 className="pl-10"
@@ -166,9 +166,9 @@ export default function ProcessReturnDrawer({
         {isInvoiceFound && (
           <>
             {/* Select Items */}
-            <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
-              <div className="p-4 border-b bg-muted/30">
-                <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+            <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
+              <div className="border-b bg-muted/30 p-4">
+                <h3 className="text-sm font-semibold tracking-wider text-muted-foreground uppercase">
                   Select Items to Return
                 </h3>
               </div>
@@ -176,7 +176,7 @@ export default function ProcessReturnDrawer({
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b bg-muted/20 text-left font-medium text-muted-foreground">
-                      <th className="p-4 w-12">
+                      <th className="w-12 p-4">
                         <Checkbox />
                       </th>
                       <th className="p-4">ITEM DETAILS</th>
@@ -269,8 +269,8 @@ export default function ProcessReturnDrawer({
 
             {/* Refund Processing */}
             <div className="grid gap-6 lg:grid-cols-3">
-              <div className="lg:col-span-2 space-y-6 rounded-xl border bg-card p-6 shadow-sm">
-                <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground border-b pb-2">
+              <div className="space-y-6 rounded-xl border bg-card p-6 shadow-sm lg:col-span-2">
+                <h3 className="border-b pb-2 text-sm font-semibold tracking-wider text-muted-foreground uppercase">
                   Refund Processing
                 </h3>
                 <div className="grid gap-6 sm:grid-cols-2">
@@ -297,25 +297,31 @@ export default function ProcessReturnDrawer({
                 />
               </div>
 
-              <div className="space-y-6 rounded-xl border bg-card p-6 shadow-sm flex flex-col">
-                <div className="space-y-3 flex-1">
+              <div className="flex flex-col space-y-6 rounded-xl border bg-card p-6 shadow-sm">
+                <div className="flex-1 space-y-3">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">
                       Subtotal ({summary.count} item)
                     </span>
-                    <span className="font-medium">₹{summary.subtotal.toFixed(2)}</span>
+                    <span className="font-medium">
+                      ₹{summary.subtotal.toFixed(2)}
+                    </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Tax (GST)</span>
-                    <span className="font-medium">₹{summary.tax.toFixed(2)}</span>
+                    <span className="font-medium">
+                      ₹{summary.tax.toFixed(2)}
+                    </span>
                   </div>
                   <div className="flex justify-between text-sm text-destructive">
                     <span>Restocking Fee</span>
-                    <span className="font-medium">-₹{restockingFee.toFixed(2)}</span>
+                    <span className="font-medium">
+                      -₹{restockingFee.toFixed(2)}
+                    </span>
                   </div>
-                  <div className="border-t pt-3 flex justify-between items-center">
-                    <span className="font-bold text-lg">Total Refund</span>
-                    <span className="font-bold text-lg text-primary">
+                  <div className="flex items-center justify-between border-t pt-3">
+                    <span className="text-lg font-bold">Total Refund</span>
+                    <span className="text-lg font-bold text-primary">
                       ₹{summary.total.toFixed(2)}
                     </span>
                   </div>

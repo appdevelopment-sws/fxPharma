@@ -1,26 +1,26 @@
-import * as React from "react";
-import { type Control, type FieldValues, type Path } from "react-hook-form";
-import { FORM_TYPE, type FormType } from "@/constants/shared/form";
+import * as React from "react"
+import { type Control, type FieldValues, type Path } from "react-hook-form"
+import { FORM_TYPE, type FormType } from "@/constants/shared/form"
 import {
   FormField,
   FormSelectField,
   FormTextarea,
   FormCheckbox,
-} from "@/components/ui/form-fields";
+} from "@/components/ui/form-fields"
 
 interface ControlledFormComponentProps<T extends FieldValues> {
-  control: Control<T>;
-  name: Path<T>;
-  label: string;
-  type?: FormType | string;
-  tooltip?: string;
-  placeholder?: string;
-  required?: boolean;
-  readOnly?: boolean;
-  disabled?: boolean;
-  options?: Array<{ label: string; value: string; text?: string; key?: string }>;
-  action?: React.ReactNode;
-  rows?: number;
+  control: Control<T>
+  name: Path<T>
+  label: string
+  type?: FormType | string
+  tooltip?: string
+  placeholder?: string
+  required?: boolean
+  readOnly?: boolean
+  disabled?: boolean
+  options?: Array<{ label: string; value: string; text?: string; key?: string }>
+  action?: React.ReactNode
+  rows?: number
 }
 
 export default function ControlledFormComponent<T extends FieldValues>({
@@ -39,12 +39,12 @@ export default function ControlledFormComponent<T extends FieldValues>({
 }: ControlledFormComponentProps<T>) {
   // Normalize options for FormSelectField in case `text`/`key` format from Notice examples is used
   const mappedOptions = React.useMemo(() => {
-    if (!options) return [];
+    if (!options) return []
     return options.map((opt) => ({
       label: opt.label || opt.text || "",
       value: opt.value ?? String(opt.key ?? ""),
-    }));
-  }, [options]);
+    }))
+  }, [options])
 
   switch (type) {
     case FORM_TYPE.TEXTAREA:
@@ -59,7 +59,7 @@ export default function ControlledFormComponent<T extends FieldValues>({
           readOnly={readOnly}
           rows={rows || 4}
         />
-      );
+      )
 
     case FORM_TYPE.SELECT:
     case FORM_TYPE.RADIO: // Simplified fallback to Select if Radio isn't natively built in ui/form-fields
@@ -76,7 +76,7 @@ export default function ControlledFormComponent<T extends FieldValues>({
           options={mappedOptions}
           action={action}
         />
-      );
+      )
 
     case FORM_TYPE.CHECKBOX:
       return (
@@ -86,7 +86,7 @@ export default function ControlledFormComponent<T extends FieldValues>({
           label={label}
           disabled={disabled || readOnly}
         />
-      );
+      )
 
     case FORM_TYPE.NUMBER:
       return (
@@ -100,7 +100,7 @@ export default function ControlledFormComponent<T extends FieldValues>({
           readOnly={readOnly}
           inputType="number"
         />
-      );
+      )
 
     // Fallback to basic text input
     case FORM_TYPE.TEXT:
@@ -114,8 +114,14 @@ export default function ControlledFormComponent<T extends FieldValues>({
           placeholder={placeholder}
           required={required}
           readOnly={readOnly}
-          inputType={type === FORM_TYPE.EMAIL ? "email" : type === FORM_TYPE.PASSWORD ? "password" : "text"}
+          inputType={
+            type === FORM_TYPE.EMAIL
+              ? "email"
+              : type === FORM_TYPE.PASSWORD
+                ? "password"
+                : "text"
+          }
         />
-      );
+      )
   }
 }

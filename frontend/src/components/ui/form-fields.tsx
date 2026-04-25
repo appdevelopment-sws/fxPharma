@@ -5,7 +5,15 @@ import {
   type FieldValues,
   type Path,
 } from "react-hook-form"
-import { CircleHelp, Check, ChevronsUpDown, Search, Loader2, Upload, File as FileIcon } from "lucide-react"
+import {
+  CircleHelp,
+  Check,
+  ChevronsUpDown,
+  Search,
+  Loader2,
+  Upload,
+  File as FileIcon,
+} from "lucide-react"
 import { debounce } from "lodash"
 
 import { Input } from "@/components/ui/input"
@@ -347,13 +355,14 @@ export function FormSwitch<T extends FieldValues>({
       render={({ field }) => (
         <div className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm transition-colors hover:bg-muted/10">
           <div className="space-y-0.5">
-            <Label htmlFor={String(name)} className="cursor-pointer text-base font-semibold">
+            <Label
+              htmlFor={String(name)}
+              className="cursor-pointer text-base font-semibold"
+            >
               {label}
             </Label>
             {description && (
-              <p className="text-sm text-muted-foreground">
-                {description}
-              </p>
+              <p className="text-sm text-muted-foreground">{description}</p>
             )}
           </div>
           <Switch
@@ -516,7 +525,7 @@ export function FormSearchSelect<T extends FieldValues>({
                       <div
                         key={option.value}
                         className={cn(
-                          "relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+                          "relative flex cursor-pointer items-center rounded-sm px-2 py-1.5 text-sm outline-none select-none hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
                           field.value === option.value &&
                             "bg-accent text-accent-foreground"
                         )}

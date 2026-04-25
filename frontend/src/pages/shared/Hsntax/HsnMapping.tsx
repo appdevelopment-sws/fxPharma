@@ -11,7 +11,11 @@ import { Button } from "@/components/ui/button"
 import { useDisclosure } from "@/hooks/useDisclosure"
 import useSearchFilter from "@/hooks/useSearchFilter"
 import { queryKeys } from "@/lib/queryKeys"
-import { HsnApi, type HsnMapping, type HsnMappingFormValues } from "@/services/taxApi"
+import {
+  HsnApi,
+  type HsnMapping,
+  type HsnMappingFormValues,
+} from "@/services/taxApi"
 import HsnMappingDialog from "./HsnMappingDialog"
 
 const INITIAL_MAPPING_FILTERS = {
@@ -42,8 +46,13 @@ const HsnMappingPage = () => {
   })
 
   const updateMappingMutation = useMutation({
-    mutationFn: ({ id, values }: { id: number; values: HsnMappingFormValues }) =>
-      HsnApi.updateMapping(id, values),
+    mutationFn: ({
+      id,
+      values,
+    }: {
+      id: number
+      values: HsnMappingFormValues
+    }) => HsnApi.updateMapping(id, values),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.hsnMappings.all })
       dialogDisclosure.onClose()
@@ -101,7 +110,10 @@ const HsnMappingPage = () => {
       {
         key: "tax",
         header: "Tax Rule",
-        render: (row) => row.taxRate ? `${row.taxRate.name} (${row.taxRate.rate}%)` : `Tax #${row.taxId}`,
+        render: (row) =>
+          row.taxRate
+            ? `${row.taxRate.name} (${row.taxRate.rate}%)`
+            : `Tax #${row.taxId}`,
       },
       {
         key: "effective",
@@ -111,10 +123,12 @@ const HsnMappingPage = () => {
             <Calendar className="size-3" />
             <span>
               {format(new Date(row.effectiveFrom), "dd MMM yyyy")}
-              {row.effectiveTo ? ` — ${format(new Date(row.effectiveTo), "dd MMM yyyy")}` : " — Present"}
+              {row.effectiveTo
+                ? ` — ${format(new Date(row.effectiveTo), "dd MMM yyyy")}`
+                : " — Present"}
             </span>
           </div>
-        )
+        ),
       },
       {
         key: "action",
@@ -151,7 +165,9 @@ const HsnMappingPage = () => {
         onClose={dialogDisclosure.onClose}
         onSubmit={handleSubmit}
         mapping={dialogDisclosure.data}
-        isSubmitting={createMappingMutation.isPending || updateMappingMutation.isPending}
+        isSubmitting={
+          createMappingMutation.isPending || updateMappingMutation.isPending
+        }
       />
 
       <ConfirmDialog
@@ -159,7 +175,9 @@ const HsnMappingPage = () => {
         onOpenChange={deleteDisclosure.onClose}
         title="Delete HSN-Tax Link"
         description="Are you sure you want to remove this mapping? This might affect tax calculations for medicines under this HSN."
-        onConfirm={() => deleteMappingMutation.mutate(deleteDisclosure.data!.id)}
+        onConfirm={() =>
+          deleteMappingMutation.mutate(deleteDisclosure.data!.id)
+        }
         isLoading={deleteMappingMutation.isPending}
         confirmText="delete"
         variant="danger"

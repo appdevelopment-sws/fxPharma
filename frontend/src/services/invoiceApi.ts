@@ -41,7 +41,10 @@ const BASE_URL = "/invoices"
 
 const InvoiceApi = {
   getInvoices: async (params?: any): Promise<GetInvoicesResponse> => {
-    const res = await api.get<{ success: boolean; data: { items: Invoice[]; pagination: any } }>(BASE_URL, {
+    const res = await api.get<{
+      success: boolean
+      data: { items: Invoice[]; pagination: any }
+    }>(BASE_URL, {
       params,
     })
     return {
@@ -56,12 +59,16 @@ const InvoiceApi = {
   },
 
   getInvoiceStats: async (): Promise<{ data: InvoiceStats }> => {
-    const res = await api.get<{ success: boolean; data: InvoiceStats }>(`${BASE_URL}/stats`)
+    const res = await api.get<{ success: boolean; data: InvoiceStats }>(
+      `${BASE_URL}/stats`
+    )
     return { data: res.data }
   },
 
   getInvoice: async (id: string): Promise<{ data: Invoice }> => {
-    const res = await api.get<{ success: boolean; data: Invoice }>(`${BASE_URL}/${id}`)
+    const res = await api.get<{ success: boolean; data: Invoice }>(
+      `${BASE_URL}/${id}`
+    )
     return { data: res.data }
   },
 }

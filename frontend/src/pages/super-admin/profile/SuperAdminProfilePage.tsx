@@ -19,7 +19,7 @@ export default function SuperAdminProfilePage() {
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground">
+        <p className="text-sm tracking-[0.2em] text-muted-foreground uppercase">
           Platform Identity
         </p>
         <h1 className="text-3xl font-semibold tracking-tight">Profile</h1>
@@ -33,9 +33,7 @@ export default function SuperAdminProfilePage() {
         <Card className="border-border/60 shadow-sm">
           <CardHeader>
             <CardTitle>Identity</CardTitle>
-            <CardDescription>
-              Current platform session details.
-            </CardDescription>
+            <CardDescription>Current platform session details.</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
             <ProfileField label="Name" value={user.name} />
@@ -93,7 +91,7 @@ export default function SuperAdminProfilePage() {
 function ProfileField({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-xl border border-border/60 bg-muted/30 p-4">
-      <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+      <p className="text-xs tracking-[0.2em] text-muted-foreground uppercase">
         {label}
       </p>
       <p className="mt-2 text-sm font-medium text-foreground">{value}</p>

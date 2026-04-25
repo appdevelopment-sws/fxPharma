@@ -7,9 +7,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { useAuth } from "@/context/authContext"
-import {
-  getPermissionSummary,
-} from "@/components/admin/admin-navigation"
+import { getPermissionSummary } from "@/components/admin/admin-navigation"
 import { permissionLabels, type PermissionName } from "@/lib/access"
 
 export default function AdminRolesPage() {
@@ -22,7 +20,7 @@ export default function AdminRolesPage() {
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground">
+        <p className="text-xs tracking-[0.25em] text-muted-foreground uppercase">
           Access Control
         </p>
         <h1 className="text-3xl font-semibold tracking-tight">
@@ -57,23 +55,29 @@ export default function AdminRolesPage() {
       </Card>
 
       <div className="grid gap-4 md:grid-cols-2">
-        {(Object.entries(permissionLabels) as [PermissionName, string][]).map(([permission, label]) => {
-          const granted = user.permissions.includes(permission)
+        {(Object.entries(permissionLabels) as [PermissionName, string][]).map(
+          ([permission, label]) => {
+            const granted = user.permissions.includes(permission)
 
-          return (
-            <Card key={permission} size="sm" className="border-border/60 shadow-sm">
-              <CardHeader>
-                <CardTitle>{permission}</CardTitle>
-                <CardDescription>{label}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Badge variant={granted ? "default" : "outline"}>
-                  {granted ? "Granted in this role" : "Not included"}
-                </Badge>
-              </CardContent>
-            </Card>
-          )
-        })}
+            return (
+              <Card
+                key={permission}
+                size="sm"
+                className="border-border/60 shadow-sm"
+              >
+                <CardHeader>
+                  <CardTitle>{permission}</CardTitle>
+                  <CardDescription>{label}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Badge variant={granted ? "default" : "outline"}>
+                    {granted ? "Granted in this role" : "Not included"}
+                  </Badge>
+                </CardContent>
+              </Card>
+            )
+          }
+        )}
       </div>
     </div>
   )

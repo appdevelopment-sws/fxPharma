@@ -1,6 +1,17 @@
 import { useCallback, useMemo } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { Plus, Pencil, Eye, Trash2, Download, ShieldAlert, Layers, Network, Cpu, Boxes } from "lucide-react"
+import {
+  Plus,
+  Pencil,
+  Eye,
+  Trash2,
+  Download,
+  ShieldAlert,
+  Layers,
+  Network,
+  Cpu,
+  Boxes,
+} from "lucide-react"
 import { toast } from "sonner"
 
 import { ConfirmDialog } from "@/components/confirmDialog"
@@ -19,8 +30,6 @@ import {
 } from "@/constants/page/super-admin/store"
 import { Badge } from "@/components/ui/badge"
 import AddStoreListDialog from "@/components/dialog/AddStoreListDialog"
-
-
 
 export default function ManageSubscriptionPage() {
   const queryClient = useQueryClient()
@@ -65,12 +74,11 @@ export default function ManageSubscriptionPage() {
     return [
       {
         key: "serial",
-        header:
-          STORE_COLUMNS.find((c) => c.key === "serial")?.label || "#",
+        header: STORE_COLUMNS.find((c) => c.key === "serial")?.label || "#",
         render: (_, index) => {
-          const currentPage = filter.page || 1;
-          const perPage = filter.perPage || 10;
-          return (currentPage - 1) * perPage + index + 1;
+          const currentPage = filter.page || 1
+          const perPage = filter.perPage || 10
+          return (currentPage - 1) * perPage + index + 1
         },
       },
 
@@ -82,12 +90,9 @@ export default function ManageSubscriptionPage() {
         accessor: "store_name",
       },
 
-
       {
         key: "owner",
-        header:
-          STORE_COLUMNS.find((c) => c.key === "owner")?.label ||
-          "Owner",
+        header: STORE_COLUMNS.find((c) => c.key === "owner")?.label || "Owner",
         accessor: "owner",
       },
 
@@ -101,17 +106,14 @@ export default function ManageSubscriptionPage() {
 
       {
         key: "city",
-        header:
-          STORE_COLUMNS.find((c) => c.key === "city")?.label ||
-          "City",
+        header: STORE_COLUMNS.find((c) => c.key === "city")?.label || "City",
         accessor: "city",
       },
 
       {
         key: "status",
         header:
-          STORE_COLUMNS.find((c) => c.key === "status")?.label ||
-          "Status",
+          STORE_COLUMNS.find((c) => c.key === "status")?.label || "Status",
         render: (row) => (
           <Badge
             variant={
@@ -130,8 +132,7 @@ export default function ManageSubscriptionPage() {
       {
         key: "action",
         header:
-          STORE_COLUMNS.find((c) => c.key === "action")?.label ||
-          "Actions",
+          STORE_COLUMNS.find((c) => c.key === "action")?.label || "Actions",
         render: (row) => (
           <div className="flex items-center gap-2">
             <Button
@@ -160,8 +161,8 @@ export default function ManageSubscriptionPage() {
           </div>
         ),
       },
-    ];
-  }, [filter.page, filter.perPage, deleteDisclosure]);
+    ]
+  }, [filter.page, filter.perPage, deleteDisclosure])
   return (
     <div className="space-y-6">
       <AddStoreListDialog
@@ -183,7 +184,6 @@ export default function ManageSubscriptionPage() {
         variant="danger"
         confirmationKeyword="DELETE"
       />
-
 
       <SectionCard
         title="Store List"
@@ -219,7 +219,6 @@ export default function ManageSubscriptionPage() {
               placeholder="Product Type ID"
             />
             <FilterBar.Search name="hsnCodeId" placeholder="HSN ID" /> */}
-
           </FilterBar>
 
           <DataTable

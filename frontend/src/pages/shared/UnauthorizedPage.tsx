@@ -4,7 +4,7 @@ export default function UnauthorizedPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
       <div className="w-full max-w-md rounded-2xl border bg-white p-8 text-center shadow-sm">
-        <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
+        <p className="text-xs tracking-[0.2em] text-slate-500 uppercase">
           Access Restricted
         </p>
         <h1 className="mt-3 text-2xl font-semibold text-slate-900">

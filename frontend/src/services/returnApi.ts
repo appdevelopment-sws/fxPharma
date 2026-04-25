@@ -59,7 +59,10 @@ const BASE_URL = "/returns"
 
 const ReturnApi = {
   getReturns: async (params?: any): Promise<GetReturnsResponse> => {
-    const res = await api.get<{ success: boolean; data: { items: SalesReturn[]; pagination: any } }>(BASE_URL, {
+    const res = await api.get<{
+      success: boolean
+      data: { items: SalesReturn[]; pagination: any }
+    }>(BASE_URL, {
       params,
     })
     return {
@@ -74,12 +77,16 @@ const ReturnApi = {
   },
 
   getReturnStats: async (): Promise<{ data: ReturnStats }> => {
-    const res = await api.get<{ success: boolean; data: ReturnStats }>(`${BASE_URL}/stats`)
+    const res = await api.get<{ success: boolean; data: ReturnStats }>(
+      `${BASE_URL}/stats`
+    )
     return { data: res.data }
   },
 
   getReturn: async (id: string): Promise<{ data: SalesReturn }> => {
-    const res = await api.get<{ success: boolean; data: SalesReturn }>(`${BASE_URL}/${id}`)
+    const res = await api.get<{ success: boolean; data: SalesReturn }>(
+      `${BASE_URL}/${id}`
+    )
     return { data: res.data }
   },
 
@@ -87,7 +94,10 @@ const ReturnApi = {
     return api.post(BASE_URL, data)
   },
 
-  updateStatus: async (id: string, status: ReturnStatus): Promise<{ success: boolean }> => {
+  updateStatus: async (
+    id: string,
+    status: ReturnStatus
+  ): Promise<{ success: boolean }> => {
     return api.patch(`${BASE_URL}/${id}/status`, { status })
   },
 }

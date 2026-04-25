@@ -79,7 +79,8 @@ export default function Suppliers() {
       {
         key: "gstin",
         header:
-          SUPPLIER_COLUMNS.find((c) => c.key === "gstin")?.label || "GST Number",
+          SUPPLIER_COLUMNS.find((c) => c.key === "gstin")?.label ||
+          "GST Number",
         accessor: "gstin",
       },
       {
@@ -91,7 +92,8 @@ export default function Suppliers() {
       },
       {
         key: "phone",
-        header: SUPPLIER_COLUMNS.find((c) => c.key === "phone")?.label || "Phone",
+        header:
+          SUPPLIER_COLUMNS.find((c) => c.key === "phone")?.label || "Phone",
         accessor: "phone",
       },
       {

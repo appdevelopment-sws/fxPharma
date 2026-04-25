@@ -63,11 +63,7 @@ export function DashboardBarChart({
           }}
           itemStyle={{ color: "var(--foreground)" }}
         />
-        <Bar
-          dataKey={yKey}
-          fill={color}
-          radius={[4, 4, 0, 0]}
-        />
+        <Bar dataKey={yKey} fill={color} radius={[4, 4, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   )

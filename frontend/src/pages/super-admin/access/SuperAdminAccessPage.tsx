@@ -7,13 +7,8 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { useAuth } from "@/context/authContext"
-import {
-  getSuperAdminPermissionSummary,
-} from "@/components/super-admin/super-admin-navigation"
-import {
-  superAdminPermissionLabels,
-  type PermissionName,
-} from "@/lib/access"
+import { getSuperAdminPermissionSummary } from "@/components/super-admin/super-admin-navigation"
+import { superAdminPermissionLabels, type PermissionName } from "@/lib/access"
 
 export default function SuperAdminAccessPage() {
   const { user } = useAuth()
@@ -25,7 +20,7 @@ export default function SuperAdminAccessPage() {
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground">
+        <p className="text-sm tracking-[0.2em] text-muted-foreground uppercase">
           Platform Governance
         </p>
         <h1 className="text-3xl font-semibold tracking-tight">
@@ -60,11 +55,20 @@ export default function SuperAdminAccessPage() {
       </Card>
 
       <div className="grid gap-4 md:grid-cols-2">
-        {(Object.entries(superAdminPermissionLabels) as [PermissionName, string][]).map(([permission, label]) => {
+        {(
+          Object.entries(superAdminPermissionLabels) as [
+            PermissionName,
+            string,
+          ][]
+        ).map(([permission, label]) => {
           const granted = user.permissions.includes(permission)
 
           return (
-            <Card key={permission} size="sm" className="border-border/60 shadow-sm">
+            <Card
+              key={permission}
+              size="sm"
+              className="border-border/60 shadow-sm"
+            >
               <CardHeader>
                 <CardTitle>{permission}</CardTitle>
                 <CardDescription>{label}</CardDescription>

@@ -3,14 +3,14 @@ import { useQuery } from "@tanstack/react-query"
 
 /**
  * A custom hook to manage multiple search-based selects in a form.
- * 
+ *
  * @param configs - Configuration for each search field
  * @returns An object containing the options, loading state, and search handler for each field
- * 
+ *
  * @example
  * const searches = useFormSearches({
- *   hsn: { 
- *     queryKey: queryKeys.hsnCodes.all, 
+ *   hsn: {
+ *     queryKey: queryKeys.hsnCodes.all,
  *     queryFn: (search) => HsnApi.getHsnCodes({ search }),
  *     transform: (res) => res.data.map(i => ({ label: i.code, value: i.id }))
  *   }
@@ -27,9 +27,9 @@ export function useFormSearches<T extends Record<string, any>>(configs: {
   const results: any = {}
 
   // We need to use state for each search field
-  // Since we can't call hooks in a loop dynamically if keys change, 
+  // Since we can't call hooks in a loop dynamically if keys change,
   // but here the keys are static based on the config object passed.
-  
+
   for (const key in configs) {
     const config = configs[key]
     const [search, setSearch] = useState("")

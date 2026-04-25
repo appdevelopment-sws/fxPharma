@@ -4,11 +4,11 @@ import { useQuery } from "@tanstack/react-query"
 import { FormContainer } from "@/components/formContainer"
 import { Button } from "@/components/ui/button"
 import { FormField, FormSelectField } from "@/components/ui/form-fields"
-import { 
-  type HsnMappingFormValues, 
-  type HsnMapping, 
+import {
+  type HsnMappingFormValues,
+  type HsnMapping,
   HsnApi,
-  default as TaxApi 
+  default as TaxApi,
 } from "@/services/taxApi"
 import { queryKeys } from "@/lib/queryKeys"
 
@@ -57,7 +57,9 @@ export default function HsnMappingDialog({
           hsnId: String(mapping.hsnId),
           taxId: String(mapping.taxId),
           effectiveFrom: mapping.effectiveFrom.split("T")[0],
-          effectiveTo: mapping.effectiveTo ? mapping.effectiveTo.split("T")[0] : "",
+          effectiveTo: mapping.effectiveTo
+            ? mapping.effectiveTo.split("T")[0]
+            : "",
         })
       } else {
         reset(DEFAULT_VALUES)
@@ -81,13 +83,21 @@ export default function HsnMappingDialog({
     </div>
   )
 
-  const hsnOptions = React.useMemo(() => 
-    (hsnCodes?.data || []).map(h => ({ label: h.code, value: String(h.id) })),
+  const hsnOptions = React.useMemo(
+    () =>
+      (hsnCodes?.data || []).map((h) => ({
+        label: h.code,
+        value: String(h.id),
+      })),
     [hsnCodes]
   )
 
-  const taxOptions = React.useMemo(() => 
-    (taxes?.data || []).map(t => ({ label: `${t.name} (${t.rate}%)`, value: String(t.id) })),
+  const taxOptions = React.useMemo(
+    () =>
+      (taxes?.data || []).map((t) => ({
+        label: `${t.name} (${t.rate}%)`,
+        value: String(t.id),
+      })),
     [taxes]
   )
 

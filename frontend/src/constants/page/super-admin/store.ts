@@ -1,9 +1,9 @@
-import { FORM_TYPE } from "@/constants/shared/form";
+import { FORM_TYPE } from "@/constants/shared/form"
 
 export const STORE_BREADCRUMBS = [
   { title: "Store Management", href: "/super-admin/stores" },
   { title: "Create Store", href: "/super-admin/stores/create" },
-];
+]
 
 export const INITIAL_STORE_FILTERS = {
   page: 1,
@@ -11,7 +11,7 @@ export const INITIAL_STORE_FILTERS = {
   search: "",
   status: "",
   subscriptionId: "",
-};
+}
 
 export const STORE_COLUMNS = [
   { key: "serial", label: "#" },
@@ -21,7 +21,7 @@ export const STORE_COLUMNS = [
   { key: "city", label: "City" },
   { key: "status", label: "Status" },
   { key: "action", label: "Actions" },
-];
+]
 
 export const STORE_FORM_INITIAL_DATA = {
   id: "",
@@ -39,7 +39,6 @@ export const STORE_FORM_INITIAL_DATA = {
   email: "",
   phone: "",
 
-
   login_email: "",
   password: "",
   gst_number: "",
@@ -53,25 +52,24 @@ export const STORE_FORM_INITIAL_DATA = {
   state: "",
   zip_code: "",
   country: "United States",
-};
-
+}
 
 export const FORM_MODE = {
   CREATE: FORM_TYPE.CREATE,
   EDIT: FORM_TYPE.EDIT,
   VIEW: FORM_TYPE.VIEW,
-};
+}
 
 export const STORE_STATUS_COLORS = {
   ACTIVE: "success",
   INACTIVE: "secondary",
   SUSPENDED: "danger",
-};
+}
 
 export const STORE_VISIBILITY_OPTIONS = [
   { label: "Active", value: "ACTIVE" },
   { label: "Inactive", value: "INACTIVE" },
-];
+]
 
 export const TIMEZONE_OPTIONS = [
   {
@@ -86,20 +84,20 @@ export const TIMEZONE_OPTIONS = [
     label: "(UTC+00:00) London",
     value: "GMT",
   },
-];
+]
 
 export const CURRENCY_OPTIONS = [
   { label: "USD ($)", value: "USD" },
   { label: "INR (₹)", value: "INR" },
   { label: "EUR (€)", value: "EUR" },
-];
+]
 
 export const STORE_CATEGORY_OPTIONS = [
   { label: "Retail", value: "RETAIL" },
   { label: "Wholesale", value: "WHOLESALE" },
   { label: "Hospital", value: "HOSPITAL" },
   { label: "Clinic", value: "CLINIC" },
-];
+]
 
 export const STORE_SUBSCRIPTION_OPTIONS = [
   {
@@ -129,7 +127,7 @@ export const STORE_SUBSCRIPTION_OPTIONS = [
     billing: "/year",
     badge: "",
   },
-];
+]
 
 export const STORE_SAMPLE_DATA = [
   {
@@ -156,4 +154,4 @@ export const STORE_SAMPLE_DATA = [
     city: "Chicago",
     status: "INACTIVE",
   },
-];
+]

@@ -34,7 +34,7 @@ export default function BulkUploadProductModal({
     try {
       console.log("Uploading file...", data.file)
       await new Promise((resolve) => setTimeout(resolve, 2000)) // Mock API call
-      
+
       onClose(false)
       reset()
     } catch (error) {

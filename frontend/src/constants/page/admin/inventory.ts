@@ -1,150 +1,148 @@
-import { FORM_TYPE } from "@/constants/shared/form";
+import { FORM_TYPE } from "@/constants/shared/form"
 
 export const MEDICINE_STOCK_BREADCRUMBS = [
-    { title: "Inventory", href: "/super-admin/medicine-stock" },
-    { title: "Medicine Stock", href: "/super-admin/medicine-stock" },
-];
+  { title: "Inventory", href: "/super-admin/medicine-stock" },
+  { title: "Medicine Stock", href: "/super-admin/medicine-stock" },
+]
 
 export const INITIAL_MEDICINE_STOCK_FILTERS = {
-    page: 1,
-    perPage: 10,
-    search: "",
-    category: "",
-    status: "",
-};
+  page: 1,
+  perPage: 10,
+  search: "",
+  category: "",
+  status: "",
+}
 
 export const MEDICINE_STOCK_COLUMNS = [
-    { key: "serial", label: "#" },
-    { key: "medicine_salt", label: "Medicine & Salt" },
-    { key: "category", label: "Category" },
-    { key: "total_stock", label: "Total Stock" },
-    { key: "batches", label: "Batches" },
-    { key: "action", label: "Actions" },
-];
+  { key: "serial", label: "#" },
+  { key: "medicine_salt", label: "Medicine & Salt" },
+  { key: "category", label: "Category" },
+  { key: "total_stock", label: "Total Stock" },
+  { key: "batches", label: "Batches" },
+  { key: "action", label: "Actions" },
+]
 
 export const MEDICINE_STOCK_FORM_INITIAL_DATA = {
-    id: "",
+  id: "",
 
-    /* Product Identification */
-    product_name: "",
-    status: "CONTINUE",
-    company: "",
-    salt_composition: "",
-    category: "TAB",
+  /* Product Identification */
+  product_name: "",
+  status: "CONTINUE",
+  company: "",
+  salt_composition: "",
+  category: "TAB",
 
-    /* Classification & Units */
-    packing: "",
-    unit_1st: "",
-    unit_2nd: "",
-    hsn_code: "",
+  /* Classification & Units */
+  packing: "",
+  unit_1st: "",
+  unit_2nd: "",
+  hsn_code: "",
 
-    item_type: "NORMAL",
-    color_type: "NORMAL",
-    decimal: "NO",
-    type: "NORMAL",
+  item_type: "NORMAL",
+  color_type: "NORMAL",
+  decimal: "NO",
+  type: "NORMAL",
 
-    /* Pricing & Taxation */
-    local_tax: "Taxable",
-    central_tax: "Taxable",
-    sgst: "",
-    cgst: "",
-    mrp: "",
-    purchase_rate: "",
-    cost_unit: "",
-    igst: "",
-    rate_a: "",
-    rate_b: "",
-    rate_c: "",
-    cer: "",
+  /* Pricing & Taxation */
+  local_tax: "Taxable",
+  central_tax: "Taxable",
+  sgst: "",
+  cgst: "",
+  mrp: "",
+  purchase_rate: "",
+  cost_unit: "",
+  igst: "",
+  rate_a: "",
+  rate_b: "",
+  rate_c: "",
+  cer: "",
 
-    /* Inventory Thresholds */
-    minimum_qty: "0",
-    maximum_qty: "0",
-    reorder_qty: "0",
-    days_limit: "0",
-    conv_stri: "",
-    conv_cas: "",
+  /* Inventory Thresholds */
+  minimum_qty: "0",
+  maximum_qty: "0",
+  reorder_qty: "0",
+  days_limit: "0",
+  conv_stri: "",
+  conv_cas: "",
 
-    /* Discounts & Margins */
-    volume_discount: "",
-    item_discount: "",
-    maximum_discount: "",
-    minimum_margin: "",
-    special_discount: "",
-    purchase_discount: "",
+  /* Discounts & Margins */
+  volume_discount: "",
+  item_discount: "",
+  maximum_discount: "",
+  minimum_margin: "",
+  special_discount: "",
+  purchase_discount: "",
 
-    /* Flags */
-    is_narcotic: false,
-    is_schedule_h: false,
-    is_schedule_h1: false,
-    hide_product: false,
-    negative_stock: false,
-    edit_rates: true,
-};
+  /* Flags */
+  is_narcotic: false,
+  is_schedule_h: false,
+  is_schedule_h1: false,
+  hide_product: false,
+  negative_stock: false,
+  edit_rates: true,
+}
 
 export const PRODUCT_STATUS_OPTIONS = [
-    { label: "CONTINUE", value: "CONTINUE" },
-    { label: "DISCONTINUE", value: "DISCONTINUE" },
-];
+  { label: "CONTINUE", value: "CONTINUE" },
+  { label: "DISCONTINUE", value: "DISCONTINUE" },
+]
 
 export const CATEGORY_OPTIONS = [
-    { label: "TAB", value: "TAB" },
-    { label: "CAP", value: "CAP" },
-    { label: "SYRUP", value: "SYRUP" },
-    { label: "INJ", value: "INJ" },
-];
+  { label: "TAB", value: "TAB" },
+  { label: "CAP", value: "CAP" },
+  { label: "SYRUP", value: "SYRUP" },
+  { label: "INJ", value: "INJ" },
+]
 
 export const TAX_OPTIONS = [
-    { label: "Taxable", value: "Taxable" },
-    { label: "Non Taxable", value: "Non Taxable" },
-];
+  { label: "Taxable", value: "Taxable" },
+  { label: "Non Taxable", value: "Non Taxable" },
+]
 
-export const NORMAL_OPTIONS = [
-    { label: "NORMAL", value: "NORMAL" },
-];
+export const NORMAL_OPTIONS = [{ label: "NORMAL", value: "NORMAL" }]
 
 export const YES_NO_OPTIONS = [
-    { label: "Yes", value: "YES" },
-    { label: "No", value: "NO" },
-];
+  { label: "Yes", value: "YES" },
+  { label: "No", value: "NO" },
+]
 
 export const FORM_MODE = {
-    CREATE: FORM_TYPE.CREATE,
-    EDIT: FORM_TYPE.EDIT,
-    VIEW: FORM_TYPE.VIEW,
-};
+  CREATE: FORM_TYPE.CREATE,
+  EDIT: FORM_TYPE.EDIT,
+  VIEW: FORM_TYPE.VIEW,
+}
 
 export const STOCK_STATUS_COLORS = {
-    CONTINUE: "success",
-    DISCONTINUE: "danger",
-};
+  CONTINUE: "success",
+  DISCONTINUE: "danger",
+}
 
 export const MEDICINE_STOCK_SAMPLE_DATA = [
-    {
-        id: "1",
-        product_name: "CROSIN 20GM",
-        medicine_salt: "CROSIN 20GM / CETIRIZINE",
-        category: "TAB",
-        total_stock: 240,
-        batches: 3,
-        status: "CONTINUE",
-    },
-    {
-        id: "2",
-        product_name: "DOLO 650",
-        medicine_salt: "DOLO 650 / PARACETAMOL",
-        category: "TAB",
-        total_stock: 520,
-        batches: 5,
-        status: "CONTINUE",
-    },
-    {
-        id: "3",
-        product_name: "AUGMENTIN",
-        medicine_salt: "AUGMENTIN / AMOXICILLIN",
-        category: "CAP",
-        total_stock: 110,
-        batches: 2,
-        status: "CONTINUE",
-    },
-];
+  {
+    id: "1",
+    product_name: "CROSIN 20GM",
+    medicine_salt: "CROSIN 20GM / CETIRIZINE",
+    category: "TAB",
+    total_stock: 240,
+    batches: 3,
+    status: "CONTINUE",
+  },
+  {
+    id: "2",
+    product_name: "DOLO 650",
+    medicine_salt: "DOLO 650 / PARACETAMOL",
+    category: "TAB",
+    total_stock: 520,
+    batches: 5,
+    status: "CONTINUE",
+  },
+  {
+    id: "3",
+    product_name: "AUGMENTIN",
+    medicine_salt: "AUGMENTIN / AMOXICILLIN",
+    category: "CAP",
+    total_stock: 110,
+    batches: 2,
+    status: "CONTINUE",
+  },
+]

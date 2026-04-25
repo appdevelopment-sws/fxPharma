@@ -98,7 +98,9 @@ const SupplierApi = {
     return { data: res.data! }
   },
 
-  deleteSupplier: async (id: string | number): Promise<{ success: boolean }> => {
+  deleteSupplier: async (
+    id: string | number
+  ): Promise<{ success: boolean }> => {
     return api.delete(`${BASE_URL}/${id}`)
   },
 }

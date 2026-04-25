@@ -9,6 +9,6 @@ export const FORM_TYPE = {
   MULTI_SELECT: "multi_select",
   PASSWORD: "password",
   EMAIL: "email",
-} as const;
+} as const
 
-export type FormType = (typeof FORM_TYPE)[keyof typeof FORM_TYPE];
+export type FormType = (typeof FORM_TYPE)[keyof typeof FORM_TYPE]

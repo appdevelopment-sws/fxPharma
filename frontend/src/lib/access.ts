@@ -18,8 +18,7 @@ export const PERMISSIONS = {
   MASTER_PRODUCT_DELETE: "master-products.delete",
 } as const
 
-export type PermissionName =
-  (typeof PERMISSIONS)[keyof typeof PERMISSIONS]
+export type PermissionName = (typeof PERMISSIONS)[keyof typeof PERMISSIONS]
 
 export const permissionLabels: Record<PermissionName, string> = {
   [PERMISSIONS.USER_CREATE]: "Create tenant users",

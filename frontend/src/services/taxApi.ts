@@ -31,7 +31,7 @@ const BASE_URL = "/tax-settings" // Generic placeholder, adjust if backend path 
 
 const TaxApi = {
   getTaxes: async (params?: any): Promise<GetTaxesResponse> => {
-    // In a real app, this would call the API. 
+    // In a real app, this would call the API.
     // For now, I'll return mock data if the API isn't ready, but standardizing on the real pattern.
     try {
       const res = await api.get<any>(BASE_URL, { params })
@@ -52,7 +52,7 @@ const TaxApi = {
           { id: 2, name: "GST 12%", rate: 12, type: "EXCLUSIVE" },
           { id: 3, name: "GST 18%", rate: 18, type: "EXCLUSIVE" },
         ],
-        meta: { total: 3, page: 1, limit: 10, pages: 1 }
+        meta: { total: 3, page: 1, limit: 10, pages: 1 },
       }
     }
   },
@@ -62,14 +62,17 @@ const TaxApi = {
     return { data: res.data }
   },
 
-  updateTax: async (id: number, data: TaxFormValues): Promise<{ data: TaxRate }> => {
+  updateTax: async (
+    id: number,
+    data: TaxFormValues
+  ): Promise<{ data: TaxRate }> => {
     const res = await api.put<any>(`${BASE_URL}/${id}`, data)
     return { data: res.data }
   },
 
   deleteTax: async (id: number): Promise<{ success: boolean }> => {
     return api.delete(`${BASE_URL}/${id}`)
-  }
+  },
 }
 
 export type HsnCode = {
@@ -106,13 +109,20 @@ const HSN_BASE_URL = "/hsn-codes"
 const MAPPING_BASE_URL = "/hsn-tax-mappings"
 
 export const HsnApi = {
-  getHsnCodes: async (params?: any): Promise<{ data: HsnCode[]; meta?: any }> => {
-    console.log("Fetching HSN codes with params:", params);
+  getHsnCodes: async (
+    params?: any
+  ): Promise<{ data: HsnCode[]; meta?: any }> => {
+    console.log("Fetching HSN codes with params:", params)
     try {
       const res = await api.get<any>(HSN_BASE_URL, { params })
       return {
         data: res.data?.items ?? [],
-        meta: res.data?.pagination ?? { total: 0, page: 1, limit: 10, pages: 1 }
+        meta: res.data?.pagination ?? {
+          total: 0,
+          page: 1,
+          limit: 10,
+          pages: 1,
+        },
       }
     } catch (e) {
       return {
@@ -120,32 +130,42 @@ export const HsnApi = {
           { id: 1, code: "3004", description: "Medicaments" },
           { id: 2, code: "3006", description: "Pharmaceutical goods" },
         ],
-        meta: { total: 2, page: 1, limit: 10, pages: 1 }
+        meta: { total: 2, page: 1, limit: 10, pages: 1 },
       }
     }
   },
 
   createHsn: async (data: HsnFormValues) => api.post(HSN_BASE_URL, data),
-  updateHsn: async (id: number, data: HsnFormValues) => api.put(`${HSN_BASE_URL}/${id}`, data),
+  updateHsn: async (id: number, data: HsnFormValues) =>
+    api.put(`${HSN_BASE_URL}/${id}`, data),
   deleteHsn: async (id: number) => api.delete(`${HSN_BASE_URL}/${id}`),
 
-  getMappings: async (params?: any): Promise<{ data: HsnMapping[]; meta?: any }> => {
+  getMappings: async (
+    params?: any
+  ): Promise<{ data: HsnMapping[]; meta?: any }> => {
     try {
       const res = await api.get<any>(MAPPING_BASE_URL, { params })
       return {
         data: res.data?.items ?? [],
-        meta: res.data?.pagination ?? { total: 0, page: 1, limit: 10, pages: 1 }
+        meta: res.data?.pagination ?? {
+          total: 0,
+          page: 1,
+          limit: 10,
+          pages: 1,
+        },
       }
     } catch (e) {
       return {
         data: [],
-        meta: { total: 0, page: 1, limit: 10, pages: 1 }
+        meta: { total: 0, page: 1, limit: 10, pages: 1 },
       }
     }
   },
 
-  createMapping: async (data: HsnMappingFormValues) => api.post(MAPPING_BASE_URL, data),
-  updateMapping: async (id: number, data: HsnMappingFormValues) => api.put(`${MAPPING_BASE_URL}/${id}`, data),
+  createMapping: async (data: HsnMappingFormValues) =>
+    api.post(MAPPING_BASE_URL, data),
+  updateMapping: async (id: number, data: HsnMappingFormValues) =>
+    api.put(`${MAPPING_BASE_URL}/${id}`, data),
   deleteMapping: async (id: number) => api.delete(`${MAPPING_BASE_URL}/${id}`),
 }
 
