@@ -1,0 +1,349 @@
+import { useState, useEffect } from "react"
+import {
+    Search,
+    Plus,
+    Minus,
+    Trash2,
+    Truck,
+    History,
+    MessageCircle,
+    Mail,
+    CheckCircle2,
+    Clock
+} from "lucide-react"
+
+import { Button } from "@/components/ui/button"
+import { FormContainer } from "@/components/formContainer"
+import { Input } from "@/components/ui/input"
+import { Badge } from "@/components/ui/badge"
+import {
+    FormSelectField,
+} from "@/components/ui/form-fields"
+import { useForm } from "react-hook-form"
+
+import {
+    SUPPLIER_OPTIONS,
+    UNIT_OPTIONS,
+    SUGGESTED_ORDER_ITEMS,
+    SUPPLIER_ACCOUNT_SUMMARY,
+    RECENT_ORDERS,
+} from "@/constants/page/admin/order"
+
+interface OrderDialogProps {
+    open: boolean
+    onClose: (open: boolean) => void
+    order?: any | null
+}
+
+export default function OrderDialog({
+    open,
+    onClose,
+    order,
+}: OrderDialogProps) {
+    const [selectedItems, setSelectedItems] = useState<any[]>([
+        { id: 1, name: "Dolo 650mg", description: "Paracetamol • Micro Labs", qty: 250, unit: "strips" },
+        { id: 2, name: "Cetirizine 10mg", description: "Anti-allergic • Cipla", qty: 100, unit: "strips" },
+    ])
+
+    const [selectedSupplier, setSelectedSupplier] = useState("apollo_distributors")
+
+    const { control } = useForm({
+        defaultValues: {
+            supplier: "apollo_distributors",
+            status: "DRAFT",
+        }
+    })
+
+    const updateQty = (id: number, delta: number) => {
+        setSelectedItems(prev => prev.map(item =>
+            item.id === id ? { ...item, qty: Math.max(1, item.qty + delta) } : item
+        ))
+    }
+
+    const removeItem = (id: number) => {
+        setSelectedItems(prev => prev.filter(item => item.id !== id))
+    }
+
+    const addItem = (name: string, description: string = "") => {
+        const newItem = {
+            id: Date.now(),
+            name,
+            description,
+            qty: 1,
+            unit: "strips"
+        }
+        setSelectedItems(prev => [...prev, newItem])
+    }
+
+    return (
+        <FormContainer
+            variant="modal"
+            open={open}
+            onOpenChange={(isOpen) => onClose(isOpen)}
+            title="Create New Order"
+            size="full"
+            footer={null} // Custom footer inside
+        >
+            <div className="grid h-full grid-cols-1 gap-8 p-1 xl:grid-cols-3">
+                {/* Left Column: Order Items & Suggestions */}
+                <div className="space-y-8 xl:col-span-2">
+                    {/* Order Items Section */}
+                    <div className="rounded-2xl border bg-card p-6 shadow-sm">
+                        <div className="mb-6 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                                    <Plus className="size-5" />
+                                </div>
+                                <h2 className="text-xl font-bold">Order Items</h2>
+                            </div>
+
+                        </div>
+
+                        <div className="relative mb-8">
+                            <Search className="absolute left-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground" />
+                            <Input
+                                className="h-12 pl-12 pr-4 text-base focus-visible:ring-primary/20"
+                                placeholder="Search existing medicines to add..."
+                            />
+                        </div>
+
+                        <div className="space-y-4">
+                            <div className="grid grid-cols-12 px-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                                <div className="col-span-6">Medicine</div>
+                                <div className="col-span-3 text-center">Quantity</div>
+                                <div className="col-span-2 text-center">Unit</div>
+                                <div className="col-span-1 text-right"></div>
+                            </div>
+
+                            <div className="space-y-3">
+                                {selectedItems.map((item) => (
+                                    <div key={item.id} className="grid grid-cols-12 items-center rounded-xl border p-4 transition-all hover:border-primary/30 hover:bg-primary/5">
+                                        <div className="col-span-6">
+                                            <p className="text-lg font-bold">{item.name}</p>
+                                            <p className="text-sm text-muted-foreground">{item.description}</p>
+                                        </div>
+
+                                        <div className="col-span-3 flex justify-center">
+                                            <div className="flex items-center gap-1 rounded-xl border bg-background p-1 shadow-sm">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon-sm"
+                                                    onClick={() => updateQty(item.id, -1)}
+                                                    className="h-8 w-8 rounded-lg hover:bg-muted"
+                                                >
+                                                    <Minus className="size-4" />
+                                                </Button>
+                                                <Input
+                                                    type="number"
+                                                    value={item.qty}
+                                                    onChange={(e) => updateQty(item.id, parseInt(e.target.value) - item.qty)}
+                                                    className="h-8 w-16 border-none text-center font-bold focus-visible:ring-0"
+                                                />
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon-sm"
+                                                    onClick={() => updateQty(item.id, 1)}
+                                                    className="h-8 w-8 rounded-lg hover:bg-muted"
+                                                >
+                                                    <Plus className="size-4" />
+                                                </Button>
+                                            </div>
+                                        </div>
+
+                                        <div className="col-span-2 flex justify-center">
+                                            <select
+                                                className="h-10 rounded-xl border bg-background px-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                                value={item.unit}
+                                                onChange={(e) => { }}
+                                            >
+                                                {UNIT_OPTIONS.map(opt => (
+                                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        <div className="col-span-1 flex justify-end">
+                                            <Button
+                                                variant="ghost"
+                                                size="icon-sm"
+                                                onClick={() => removeItem(item.id)}
+                                                className="h-10 w-10 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                                            >
+                                                <Trash2 className="size-5" />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Suggested Section */}
+                    <div className="rounded-2xl border bg-muted/30 p-6">
+                        <div className="mb-6 flex items-center gap-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-500/10 text-purple-500">
+                                <CheckCircle2 className="size-5" />
+                            </div>
+                            <h2 className="text-xl font-bold">Suggested to Order</h2>
+                        </div>
+
+                        <div className="space-y-3">
+                            {SUGGESTED_ORDER_ITEMS.map((item, idx) => (
+                                <div key={idx} className="flex items-center justify-between rounded-xl border bg-card p-4 transition-all hover:border-purple-300">
+                                    <div className="flex items-center gap-4">
+                                        <div className="space-y-1">
+                                            <p className="font-bold">{item.name}</p>
+                                            <div className="flex items-center gap-2">
+                                                <Badge variant="destructive" className="h-5 rounded-md px-2 text-[10px] font-bold uppercase tracking-wider">
+                                                    {item.status}
+                                                </Badge>
+                                                <p className="text-xs text-muted-foreground">{item.note}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <Button
+                                        size="icon-sm"
+                                        variant="outline"
+                                        className="h-10 w-10 rounded-xl border-purple-200 text-purple-500 hover:bg-purple-500 hover:text-white"
+                                        onClick={() => addItem(item.name)}
+                                    >
+                                        <Plus className="size-5" />
+                                    </Button>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Right Column: Supplier & Status */}
+                <div className="space-y-6">
+                    {/* Supplier Section */}
+                    <div className="rounded-2xl border bg-card p-6 shadow-sm">
+                        <div className="mb-6 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-500/10 text-orange-500">
+                                    <Truck className="size-5" />
+                                </div>
+                                <h2 className="text-xl font-bold">Supplier</h2>
+                            </div>
+                        </div>
+
+                        <div className="space-y-3">
+                            {SUPPLIER_OPTIONS.map((supplier) => (
+                                <div
+                                    key={supplier.value}
+                                    onClick={() => setSelectedSupplier(supplier.value)}
+                                    className={`cursor-pointer rounded-2xl border-2 p-4 transition-all ${selectedSupplier === supplier.value
+                                        ? "border-primary bg-primary/5 ring-4 ring-primary/5"
+                                        : "border-border hover:border-primary/30"
+                                        }`}
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <div className="flex items-center gap-2">
+                                                <p className="font-bold">{supplier.label}</p>
+                                                {supplier.value === "apollo_distributors" && (
+                                                    <Badge variant="outline" className="h-5 rounded-md border-primary/30 bg-primary/10 px-2 text-[9px] font-bold uppercase tracking-wider text-primary">
+                                                        Preferred
+                                                    </Badge>
+                                                )}
+                                            </div>
+                                            <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+                                                <Clock className="size-3" />
+                                                <span>Delivers in {supplier.value === "apollo_distributors" ? "24h" : "48h"}</span>
+                                            </div>
+                                        </div>
+                                        {selectedSupplier === supplier.value && (
+                                            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-white">
+                                                <CheckCircle2 className="size-4" />
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Account Status Section */}
+                    <div className="rounded-2xl border bg-card p-6 shadow-sm">
+                        <div className="mb-6 flex items-center gap-3 text-muted-foreground">
+                            <Clock className="size-5" />
+                            <h3 className="font-bold">{SUPPLIER_ACCOUNT_SUMMARY.supplier} - Account Status</h3>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div className="flex justify-between text-sm">
+                                <div className="space-y-1">
+                                    <p className="text-muted-foreground">Total Paid</p>
+                                    <p className="text-lg font-bold text-emerald-500">${SUPPLIER_ACCOUNT_SUMMARY.paid.toLocaleString()}</p>
+                                </div>
+                                <div className="space-y-1 text-right">
+                                    <p className="text-muted-foreground">Remaining</p>
+                                    <p className="text-lg font-bold text-destructive">${SUPPLIER_ACCOUNT_SUMMARY.remaining.toLocaleString()}</p>
+                                </div>
+                            </div>
+
+                            {/* Custom Progress Bar */}
+                            <div className="h-2 w-full overflow-hidden rounded-full bg-destructive/10">
+                                <div
+                                    className="h-full bg-emerald-500 transition-all"
+                                    style={{ width: `${(SUPPLIER_ACCOUNT_SUMMARY.paid / SUPPLIER_ACCOUNT_SUMMARY.total) * 100}%` }}
+                                />
+                            </div>
+                            <p className="text-right text-xs font-bold text-muted-foreground">Total Billed: ${SUPPLIER_ACCOUNT_SUMMARY.total.toLocaleString()}</p>
+                        </div>
+
+                        <div className="mt-8 space-y-4">
+                            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Recent Orders</p>
+                            <div className="space-y-2">
+                                {RECENT_ORDERS.map((order, idx) => (
+                                    <div key={idx} className="flex items-center justify-between rounded-xl bg-muted/30 p-3 text-sm">
+                                        <span className="font-medium text-muted-foreground">{order.date}</span>
+                                        <span className="font-bold">${order.amount.toFixed(2)}</span>
+                                        <Badge variant="outline" className="h-5 rounded-md border-emerald-200 bg-emerald-50 px-2 text-[9px] font-bold uppercase text-emerald-600">
+                                            {order.status}
+                                        </Badge>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Order Summary & Actions */}
+                    <div className="rounded-2xl bg-card p-6">
+                        <div className="space-y-4 text-sm font-medium">
+                            <div className="flex justify-between">
+                                <span className="text-muted-foreground">Total Items</span>
+                                <span className="font-bold">{selectedItems.length}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-muted-foreground">Supplier Email</span>
+                                <span className="font-bold">orders@apollo.dist</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-muted-foreground">Supplier Phone</span>
+                                <span className="font-bold">+1 987 654 3210</span>
+                            </div>
+                        </div>
+
+                        <div className="my-6 border-t border-dashed" />
+
+                        <div className="flex items-center justify-between">
+                            <p className="font-bold text-muted-foreground uppercase tracking-widest text-[10px]">Order Status</p>
+                            <p className="font-black text-cyan-400 tracking-tighter text-xl italic">DRAFT</p>
+                        </div>
+
+                        <div className="mt-8 space-y-3">
+                            <Button className="h-14 w-full rounded-2xl bg-emerald-500 text-base font-bold shadow-lg shadow-emerald-500/20 hover:bg-emerald-600 active:scale-[0.98]">
+                                <MessageCircle className="mr-3 size-6" /> Send Order via WhatsApp
+                            </Button>
+                            <Button className="h-14 w-full rounded-2xl bg-cyan-400 text-base font-bold shadow-lg shadow-cyan-400/20 hover:bg-cyan-500 active:scale-[0.98]">
+                                <Mail className="mr-3 size-6" /> Send Order via Email
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </FormContainer>
+    )
+}
