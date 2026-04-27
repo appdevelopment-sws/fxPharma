@@ -15,6 +15,7 @@ import Suppliers from "@/pages/admin/supplier/suppliers"
 import ReturnsPage from "@/pages/admin/returns/ReturnsPage"
 import RecentInvoicesPage from "@/pages/admin/invoices/RecentInvoicesPage"
 import POS from "@/pages/admin/sales/pos"
+import ImportInventory from "@/pages/admin/inventory/ImportInventory"
 
 export const AdminRoutes = () => {
   return (
@@ -34,6 +35,7 @@ export const AdminRoutes = () => {
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="profile" element={<AdminProfilePage />} />
           <Route path="all-inventory" element={<AllInventory />} />
+          <Route path="import-inventory" element={<ImportInventory />} />
           <Route path="orders" element={<Orders />} />
           <Route path="suppliers" element={<Suppliers />} />
           <Route path="returns" element={<ReturnsPage />} />
