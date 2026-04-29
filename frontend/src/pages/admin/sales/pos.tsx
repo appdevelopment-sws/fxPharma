@@ -1,17 +1,11 @@
-import React, { useState } from "react"
+import { useState } from "react"
 import {
-  Search,
   Plus,
   Minus,
   Trash2,
-  Printer,
-  Save,
-  RefreshCw,
-  X,
   Receipt,
   ShoppingCart,
   User,
-  Package,
   Pill,
   ScanLine,
   Filter,
@@ -20,9 +14,15 @@ import {
   Phone,
   Stethoscope,
   CheckCircle2,
+  MapPin,
+  Building2,
+  AlertCircle,
 } from "lucide-react"
 
-// Mock Data
+import FilterPointofSale from "@/components/dialog/admin/FilterPointofSale"
+import { cn } from "@/lib/utils"
+
+// Mock Data Restructured for Batch Management
 const CATEGORIES = [
   "All Categories",
   "Rx Only",
@@ -43,144 +43,109 @@ const DUMMY_PRODUCTS = [
   {
     id: 1,
     name: "Amoxicillin 500mg Cap",
-    composition: "Amoxicillin Trihydrate IP",
-    stock: 450,
-    price: 12.5,
     type: "Rx",
+    composition: "Amoxicillin Trihydrate IP",
     mfg: "Cipla Ltd.",
-    batch: "AMX-24B",
-    expiry: "12/26",
+    rack: "A-04",
+    totalStock: 450,
+    formulation: "tablet_capsule",
+    batches: [
+      { id: "1-b1", number: "AMX-23A", expiry: "10/25", stock: 150, price: 12.5, isNearExpiry: true },
+      { id: "1-b2", number: "AMX-24B", expiry: "12/26", stock: 300, price: 13.0 },
+    ],
   },
   {
     id: 2,
     name: "Cetirizine 10mg Tab",
-    composition: "Cetirizine Hydrochloride IP",
-    stock: 85,
-    price: 4.5,
     type: "OTC",
+    composition: "Cetirizine Hydrochloride IP",
     mfg: "Sun Pharma",
-    batch: "CET-24A",
-    expiry: "01/27",
+    rack: "B-12",
+    totalStock: 85,
+    formulation: "tablet_capsule",
+    batches: [
+      { id: "2-b1", number: "CET-24A", expiry: "01/27", stock: 85, price: 4.5 },
+    ],
   },
   {
     id: 3,
     name: "Dolo 650mg Tab",
-    composition: "Paracetamol IP 650mg",
-    stock: 0,
-    price: 3.0,
     type: "OTC",
+    composition: "Paracetamol IP 650mg",
     mfg: "Micro Labs",
-    batch: "DOL-23C",
-    expiry: "10/25",
+    rack: "C-05",
+    totalStock: 0,
+    formulation: "tablet_capsule",
+    batches: [
+      { id: "3-b1", number: "DOL-23C", expiry: "10/25", stock: 0, price: 3.0, isNearExpiry: true },
+    ],
   },
   {
     id: 4,
     name: "Azithromycin 250mg",
-    composition: "Azithromycin IP",
-    stock: 120,
-    price: 22.0,
     type: "Rx",
+    composition: "Azithromycin IP",
     mfg: "Cipla Ltd.",
-    batch: "AZI-24",
-    expiry: "11/26",
+    rack: "A-09",
+    totalStock: 120,
+    formulation: "tablet_capsule",
+    batches: [
+      { id: "4-b1", number: "AZI-24", expiry: "11/26", stock: 120, price: 22.0 },
+    ],
   },
   {
     id: 5,
-    name: "Vitamin C 500mg",
-    composition: "Ascorbic Acid",
-    stock: 500,
-    price: 2.0,
-    type: "Supplement",
-    mfg: "Abbott",
-    batch: "VIT-24",
-    expiry: "05/27",
-  },
-  {
-    id: 6,
     name: "Cough Syrup 100ml",
+    type: "OTC",
     composition: "Diphenhydramine",
-    stock: 40,
-    price: 45.0,
-    type: "OTC",
     mfg: "Sun Pharma",
-    batch: "SYR-23",
-    expiry: "08/25",
-  },
-  {
-    id: 7,
-    name: "Pain Relief Spray",
-    composition: "Diclofenac Diethylamine",
-    stock: 30,
-    price: 120.0,
-    type: "OTC",
-    mfg: "Cipla Ltd.",
-    batch: "SPR-24",
-    expiry: "09/26",
-  },
-  {
-    id: 8,
-    name: "Band-Aid (Waterproof)",
-    composition: "Plaster",
-    stock: 1000,
-    price: 1.0,
-    type: "First Aid",
-    mfg: "Johnson",
-    batch: "BND-24",
-    expiry: "12/28",
-  },
-  {
-    id: 9,
-    name: "Omeprazole 20mg",
-    composition: "Omeprazole IP",
-    stock: 210,
-    price: 8.5,
-    type: "Rx",
-    mfg: "Sun Pharma",
-    batch: "OMP-24",
-    expiry: "03/26",
-  },
-  {
-    id: 10,
-    name: "Pantoprazole 40mg",
-    composition: "Pantoprazole Sodium",
-    stock: 150,
-    price: 10.0,
-    type: "Rx",
-    mfg: "Micro Labs",
-    batch: "PAN-23",
-    expiry: "02/25",
+    rack: "S-02",
+    totalStock: 40,
+    formulation: "syrup_suspension",
+    batches: [
+      { id: "5-b1", number: "SYR-23", expiry: "08/25", stock: 40, price: 45.0, isNearExpiry: true },
+    ],
   },
 ]
 
 const POS = () => {
-  const [cart, setCart] = useState<{ product: any; qty: number }[]>([])
+  const [cart, setCart] = useState<{ product: any; batch: any; qty: number }[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [category, setCategory] = useState("All Categories")
   const [manufacturer, setManufacturer] = useState("All Manufacturers")
+
+  // Filter Dialog State
+  const [isFilterOpen, setIsFilterOpen] = useState(false)
+  const [posFilters, setPosFilters] = useState<any>({
+    stockStatus: "all",
+    itemType: "all",
+    formulation: [],
+    manufacturers: [],
+  })
 
   // Invoice state
   const [discountPercent, setDiscountPercent] = useState(0)
   const [paymentMode, setPaymentMode] = useState("Cash")
   const [tendered, setTendered] = useState("")
 
-  const addToCart = (product: any) => {
-    if (product.stock <= 0) return
+  const addToCart = (product: any, batch: any) => {
+    if (batch.stock <= 0) return
 
     setCart((prev) => {
-      const existing = prev.find((item) => item.product.id === product.id)
+      const existing = prev.find((item) => item.batch.id === batch.id)
       if (existing) {
         return prev.map((item) =>
-          item.product.id === product.id ? { ...item, qty: item.qty + 1 } : item
+          item.batch.id === batch.id ? { ...item, qty: item.qty + 1 } : item
         )
       }
-      return [...prev, { product, qty: 1 }]
+      return [...prev, { product, batch, qty: 1 }]
     })
   }
 
-  const updateQty = (id: number, delta: number) => {
+  const updateQty = (batchId: string, delta: number) => {
     setCart((prev) =>
       prev.map((item) => {
-        if (item.product.id === id) {
+        if (item.batch.id === batchId) {
           const newQty = Math.max(1, item.qty + delta)
           return { ...item, qty: newQty }
         }
@@ -189,13 +154,13 @@ const POS = () => {
     )
   }
 
-  const removeFromCart = (id: number) => {
-    setCart((prev) => prev.filter((item) => item.product.id !== id))
+  const removeFromCart = (batchId: string) => {
+    setCart((prev) => prev.filter((item) => item.batch.id !== batchId))
   }
 
   // Calculations
   const grossTotal = cart.reduce(
-    (sum, item) => sum + item.product.price * item.qty,
+    (sum, item) => sum + item.batch.price * item.qty,
     0
   )
   const discountAmount = (grossTotal * discountPercent) / 100
@@ -210,13 +175,61 @@ const POS = () => {
     tenderedAmount > roundedNet ? tenderedAmount - roundedNet : 0
 
   const filteredProducts = DUMMY_PRODUCTS.filter((p) => {
+    // 1. Search filter
     const matchesSearch =
       p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       p.composition.toLowerCase().includes(searchTerm.toLowerCase())
+    if (!matchesSearch) return false
+
+    // 2. Simple top filters (Category & Manufacturer)
     const matchesCat = category === "All Categories" || p.type === category
+    if (!matchesCat) return false
+
     const matchesMfg =
       manufacturer === "All Manufacturers" || p.mfg === manufacturer
-    return matchesSearch && matchesCat && matchesMfg
+    if (!matchesMfg) return false
+
+    // 3. Advanced Dialog Filters
+    // Stock Status
+    if (posFilters.stockStatus !== "all") {
+      if (posFilters.stockStatus === "in_stock" && p.totalStock <= 0) return false
+      if (posFilters.stockStatus === "out_of_stock" && p.totalStock > 0) return false
+      if (posFilters.stockStatus === "low_stock" && (p.totalStock <= 0 || p.totalStock > 50))
+        return false
+    }
+
+    // Item Type
+    if (posFilters.itemType !== "all") {
+      if (posFilters.itemType === "rx" && p.type !== "Rx") return false
+      if (posFilters.itemType === "otc" && p.type !== "OTC") return false
+      if (posFilters.itemType === "generics" && p.type === "Rx") return false
+    }
+
+    // Formulation
+    if (
+      posFilters.formulation.length > 0 &&
+      !posFilters.formulation.includes(p.formulation)
+    ) {
+      return false
+    }
+
+    // Manufacturers
+    if (posFilters.manufacturers.length > 0) {
+      const mfgMap: any = {
+        cipla: "Cipla Ltd.",
+        sun_pharma: "Sun Pharma",
+        abbott: "Abbott",
+        mankind: "Mankind",
+        gsk: "GSK",
+        torrent: "Torrent",
+      }
+      const matchesAnyMfg = posFilters.manufacturers.some(
+        (val: string) => mfgMap[val] === p.mfg
+      )
+      if (!matchesAnyMfg) return false
+    }
+
+    return true
   })
 
   return (
@@ -270,61 +283,119 @@ const POS = () => {
               F2
             </div>
           </div>
-          <button className="flex items-center gap-2 rounded-lg border border-border bg-background px-4 py-3 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground">
+          <button
+            onClick={() => setIsFilterOpen(true)}
+            className="flex items-center gap-2 rounded-lg border border-border bg-background px-4 py-3 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground"
+          >
             <Filter className="h-4 w-4" />
             Filters
           </button>
         </div>
 
-        {/* Product Grid */}
-        <div className="custom-scrollbar flex-1 overflow-y-auto pr-2 pb-20">
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
-            {filteredProducts.map((product) => (
-              <div
-                key={product.id}
-                onClick={() => addToCart(product)}
-                className={`group relative flex h-full cursor-pointer flex-col rounded-xl border p-4 transition-all hover:shadow-md ${product.stock <= 0 ? "cursor-not-allowed border-destructive/30 bg-destructive/10 opacity-60" : "border-border bg-card hover:border-ring"}`}
-              >
-                <div className="mb-3 flex items-start justify-between">
-                  <div
-                    className={`flex h-10 w-10 items-center justify-center rounded-lg ${product.type === "Rx" ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"}`}
-                  >
-                    <Pill className="h-5 w-5" />
-                  </div>
-                  <span
-                    className={`rounded-full px-2 py-1 text-xs font-bold ${product.stock > 0 ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-destructive/10 text-destructive"}`}
-                  >
-                    {product.stock > 0
-                      ? `${product.stock} IN STOCK`
-                      : "OUT OF STOCK"}
-                  </span>
+        {/* Product List - Redesigned Cards */}
+        <div className="custom-scrollbar flex-1 overflow-y-auto pr-2 pb-20 space-y-4">
+          {filteredProducts.map((product) => (
+            <div
+              key={product.id}
+              className="rounded-2xl border border-blue-100 bg-white overflow-hidden shadow-sm transition-all hover:shadow-md dark:bg-slate-900/50 dark:border-slate-800"
+            >
+              {/* Card Header */}
+              <div className="p-5 flex items-start gap-4">
+                <div className={cn(
+                  "h-16 w-16 rounded-2xl flex items-center justify-center flex-shrink-0",
+                  product.type === "Rx" ? "bg-red-50 text-red-500" : "bg-blue-50 text-blue-500"
+                )}>
+                  <Pill className="h-8 w-8" />
                 </div>
 
-                <h3 className="mb-1 line-clamp-2 text-sm leading-snug font-semibold text-card-foreground">
-                  {product.name}
-                </h3>
-                <p className="mb-3 line-clamp-1 text-xs text-muted-foreground">
-                  {product.mfg}
-                </p>
-
-                <div className="mt-auto flex items-end justify-between border-t border-border pt-3">
-                  <div>
-                    <p className="mb-0.5 text-[10px] font-medium tracking-wider text-muted-foreground uppercase">
-                      Price
-                    </p>
-                    <p className="font-bold text-card-foreground">
-                      ₹{product.price.toFixed(2)}
-                    </p>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="text-xl font-bold text-slate-900 truncate dark:text-white">
+                      {product.name}
+                    </h3>
+                    {product.type === "Rx" && (
+                      <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded uppercase">
+                        Rx
+                      </span>
+                    )}
                   </div>
-                  {product.stock > 0 && (
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary opacity-0 transition-opacity group-hover:opacity-100">
-                      <Plus className="h-4 w-4" />
-                    </div>
-                  )}
+                  <p className="text-sm text-slate-500 mb-2 truncate dark:text-slate-400">
+                    {product.composition}
+                  </p>
+                  <div className="flex flex-wrap gap-4 text-xs font-medium text-slate-400">
+                    <span className="flex items-center gap-1">
+                      <Building2 className="h-3.5 w-3.5" />
+                      {product.mfg}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <MapPin className="h-3.5 w-3.5" />
+                      Rack: {product.rack}
+                    </span>
+                  </div>
+                </div>
+
+                <div className={cn(
+                  "px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap",
+                  product.totalStock > 0 ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"
+                )}>
+                  {product.totalStock} IN STOCK
                 </div>
               </div>
-            ))}
-          </div>
+
+              {/* Batches Table */}
+              <div className="border-t border-slate-100 bg-slate-50/30 dark:border-slate-800 dark:bg-transparent">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="text-slate-400 font-bold tracking-wider border-b border-slate-100 dark:border-slate-800">
+                      <th className="px-6 py-3">BATCH NO.</th>
+                      <th className="px-6 py-3">EXPIRY</th>
+                      <th className="px-6 py-3">AVAILABLE STOCK</th>
+                      <th className="px-6 py-3">UNIT PRICE</th>
+                      <th className="px-6 py-3 text-right">ACTION</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                    {product.batches.map((batch) => (
+                      <tr key={batch.id} className="group hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                        <td className="px-6 py-4 font-bold text-slate-700 dark:text-slate-300">
+                          {batch.number}
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className={cn(
+                            "flex items-center gap-1.5 font-bold",
+                            batch.isNearExpiry ? "text-red-500" : "text-slate-600 dark:text-slate-400"
+                          )}>
+                            {batch.isNearExpiry && <AlertCircle className="h-3.5 w-3.5" />}
+                            {batch.expiry}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 font-semibold text-slate-600 dark:text-slate-400">
+                          {batch.stock} Strips
+                        </td>
+                        <td className="px-6 py-4 font-black text-slate-900 text-sm dark:text-white">
+                          ₹{batch.price.toFixed(2)}
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <button
+                            onClick={() => addToCart(product, batch)}
+                            disabled={batch.stock <= 0}
+                            className={cn(
+                              "h-9 w-9 rounded-xl flex items-center justify-center transition-all",
+                              batch.stock > 0
+                                ? "bg-white border border-blue-200 text-blue-600 hover:bg-blue-600 hover:text-white hover:border-blue-600 shadow-sm"
+                                : "bg-slate-100 text-slate-400 cursor-not-allowed"
+                            )}
+                          >
+                            <Plus className="h-5 w-5" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -393,7 +464,7 @@ const POS = () => {
             <div className="space-y-3">
               {cart.map((item) => (
                 <div
-                  key={item.product.id}
+                  key={item.batch.id}
                   className="flex flex-col gap-2 rounded-xl border border-border bg-card p-3 shadow-sm"
                 >
                   <div className="flex items-start justify-between">
@@ -407,16 +478,16 @@ const POS = () => {
                         )}
                       </h4>
                       <div className="mt-0.5 flex gap-2 text-[11px] text-muted-foreground">
-                        <span>Batch: {item.product.batch}</span>
-                        <span>Exp: {item.product.expiry}</span>
+                        <span>Batch: {item.batch.number}</span>
+                        <span>Exp: {item.batch.expiry}</span>
                       </div>
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-bold text-card-foreground">
-                        ₹{(item.product.price * item.qty).toFixed(2)}
+                        ₹{(item.batch.price * item.qty).toFixed(2)}
                       </p>
                       <p className="text-[10px] text-muted-foreground">
-                        ₹{item.product.price.toFixed(2)} / unit
+                        ₹{item.batch.price.toFixed(2)} / unit
                       </p>
                     </div>
                   </div>
@@ -424,7 +495,7 @@ const POS = () => {
                   <div className="mt-1 flex items-center justify-between border-t border-border/50 pt-2">
                     <div className="flex items-center overflow-hidden rounded-lg border border-border bg-muted">
                       <button
-                        onClick={() => updateQty(item.product.id, -1)}
+                        onClick={() => updateQty(item.batch.id, -1)}
                         className="px-2 py-1 text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
                       >
                         <Minus className="h-3.5 w-3.5" />
@@ -436,7 +507,7 @@ const POS = () => {
                         className="w-8 border-x border-border bg-transparent py-1 text-center text-sm font-bold text-foreground outline-none"
                       />
                       <button
-                        onClick={() => updateQty(item.product.id, 1)}
+                        onClick={() => updateQty(item.batch.id, 1)}
                         className="px-2 py-1 text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
                       >
                         <Plus className="h-3.5 w-3.5" />
@@ -450,7 +521,7 @@ const POS = () => {
                         <span className="text-xs font-bold">%</span>
                       </button>
                       <button
-                        onClick={() => removeFromCart(item.product.id)}
+                        onClick={() => removeFromCart(item.batch.id)}
                         className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -586,6 +657,13 @@ const POS = () => {
           </div>
         </div>
       </div>
+
+      <FilterPointofSale
+        open={isFilterOpen}
+        onClose={setIsFilterOpen}
+        initialFilters={posFilters}
+        onFilter={setPosFilters}
+      />
     </div>
   )
 }
