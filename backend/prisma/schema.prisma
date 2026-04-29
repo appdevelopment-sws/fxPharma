@@ -7,18 +7,47 @@ datasource db {
 }
 
 //////////////////////////////////////////////////////
-// 1. ORGANIZATIONS & BRANCHES (MULTI-TENANCY)
+// 1. SYSTEM CONFIGURATION & FEATURES (GLOBAL)
+//////////////////////////////////////////////////////
+
+model Feature {
+  id          String  @id @default(cuid())
+  key         String  @unique
+  name        String
+  description String?
+  module      String?
+
+  organizations OrganizationFeature[]
+
+  createdAt DateTime @default(now())
+}
+
+model OrganizationFeature {
+  id             String  @id @default(cuid())
+  organizationId String
+  featureId      String
+  enabled        Boolean @default(true)
+  config         Json?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  feature      Feature      @relation(fields: [featureId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, featureId])
+}
+
+//////////////////////////////////////////////////////
+// 2. MULTI-TENANCY ROOT (ORGANIZATIONS & BRANCHES)
 //////////////////////////////////////////////////////
 
 model Organization {
-  id      String @id @default(cuid())
-  name    String
-  status  Int    @default(1) // 1=Active, 0=Inactive
-  type    OrganizationType @default(PHARMACY)
+  id     String           @id @default(cuid())
+  name   String
+  status Int              @default(1) // 1=Active, 0=Inactive
+  type   OrganizationType @default(PHARMACY)
 
   branches Branch[]
   features OrganizationFeature[]
-  
+
   // Shared Master Data Scoped to Org
   masterProducts MasterProduct[]
   companies      Company[]
@@ -38,20 +67,20 @@ model Branch {
   id             String       @id @default(cuid())
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  
-  name           String
-  address        String?
-  status         Int          @default(1)
+
+  name    String
+  address String?
+  status  Int     @default(1)
 
   // Scoped Operations
-  inventory       Inventory[]
-  sales           Sale[]
-  purchaseOrders  PurchaseOrder[]
+  inventory      Inventory[]
+  sales          Sale[]
+  purchaseOrders PurchaseOrder[]
 
   // Assignments scoped to this branch
   userRoles       UserRole[]
-  userWorkflows    UserWorkflow[]
-  userPermissions  UserPermission[]
+  userWorkflows   UserWorkflow[]
+  userPermissions UserPermission[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -60,22 +89,22 @@ model Branch {
 }
 
 //////////////////////////////////////////////////////
-// 2. AUTHENTICATION (USERS)
+// 3. IDENTITY & RBAC SYSTEM (GLOBAL/CROSS-TENANT)
 //////////////////////////////////////////////////////
 
 model User {
-  id       String @id @default(cuid())
+  id       String  @id @default(cuid())
   name     String
-  email    String @unique
+  email    String  @unique
   password String // Hashed password
   mobile   String?
   regNo    String? @unique @map("reg_no")
-  status   Int    @default(1) // 1=Active, 0=Inactive
+  status   Int     @default(1) // 1=Active, 0=Inactive
 
   // 2FA (Fortify-style)
   twoFactorSecret      String?   @map("two_factor_secret")
   twoFactorConfirmedAt DateTime? @map("two_factor_confirmed_at")
-  
+
   lastLogin DateTime? @map("last_login")
 
   // RBAC & Workflow Assignments
@@ -84,7 +113,7 @@ model User {
   permissions UserPermission[]
 
   // Records created by user
-  sales       Sale[]
+  sales Sale[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -92,16 +121,12 @@ model User {
   @@index([email])
 }
 
-//////////////////////////////////////////////////////
-// 3. RBAC & WORKFLOW SYSTEM
-//////////////////////////////////////////////////////
-
 model Role {
-  id        String  @id @default(cuid())
-  key       String  @unique // e.g., 'super_admin', 'pharmacy_admin'
-  name      String? // Human readable name
-  level     Int     @default(0) // Hierarchy level (higher = more power)
-  
+  id    String  @id @default(cuid())
+  key   String  @unique // e.g., 'super_admin', 'pharmacy_admin'
+  name  String? // Human readable name
+  level Int     @default(0) // Hierarchy level (higher = more power)
+
   scopeType String  @default("global") @map("scope_type") // 'global' or 'branch'
   scopeId   String? @map("scope_id") // Optional specific scope
 
@@ -111,28 +136,6 @@ model Role {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-}
-
-model RolePermission {
-  id           String @id @default(cuid())
-  roleId       String
-  permissionId String
-
-  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
-
-  @@unique([roleId, permissionId])
-}
-
-model RoleWorkflow {
-  id         String @id @default(cuid())
-  roleId     String
-  workflowId String
-
-  role     Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  workflow Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
-
-  @@unique([roleId, workflowId])
 }
 
 model Permission {
@@ -162,6 +165,29 @@ model Workflow {
   updatedAt DateTime @updatedAt
 }
 
+// Relation Tables for RBAC
+model RolePermission {
+  id           String @id @default(cuid())
+  roleId       String
+  permissionId String
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+}
+
+model RoleWorkflow {
+  id         String @id @default(cuid())
+  roleId     String
+  workflowId String
+
+  role     Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  workflow Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, workflowId])
+}
+
 model WorkflowPermission {
   id           String @id @default(cuid())
   workflowId   String
@@ -174,35 +200,37 @@ model WorkflowPermission {
 }
 
 //////////////////////////////////////////////////////
-// 4. ASSIGNMENTS (WITH SCOPING)
+// 4. TENANT ASSIGNMENTS (SCOPING USERS TO BRANCHES)
 //////////////////////////////////////////////////////
 
 model UserRole {
-  id        String  @id @default(cuid())
-  userId    String
-  roleId    String
-  
-  scopeType String  @map("scope_type") // 'global' or 'branch'
-  scopeId   String? @map("scope_id") // Specific Branch ID if scopeType is 'branch'
+  id     String @id @default(cuid())
+  userId String
+  roleId String
 
-  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  role   Role    @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  branch Branch? @relation(fields: [scopeId], references: [id], onDelete: Cascade)
+  scopeType String  @map("scope_type") // 'global', 'organization' or 'branch'
+  scopeId   String? @map("scope_id")
+
+  user     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role     Role    @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  branch   Branch? @relation(fields: [branchId], references: [id])
+  branchId String?
 
   @@unique([userId, roleId, scopeId])
 }
 
 model UserWorkflow {
-  id         String  @id @default(cuid())
+  id         String @id @default(cuid())
   userId     String
   workflowId String
-  
-  scopeType String  @map("scope_type") // 'global' or 'branch'
+
+  scopeType String  @map("scope_type") // 'global', 'organization' or 'branch'
   scopeId   String? @map("scope_id")
 
   user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   workflow Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
-  branch   Branch?  @relation(fields: [scopeId], references: [id], onDelete: Cascade)
+  branch   Branch?  @relation(fields: [branchId], references: [id])
+  branchId String?
 
   @@unique([userId, workflowId, scopeId])
 }
@@ -213,41 +241,42 @@ model UserPermission {
   permissionId String
   granted      Boolean @default(true) // true = grant, false = revoke override
 
-  scopeType String  @map("scope_type") // 'global' or 'branch'
+  scopeType String  @map("scope_type") // 'global', 'organization' or 'branch'
   scopeId   String? @map("scope_id")
 
   user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
-  branch     Branch?    @relation(fields: [scopeId], references: [id], onDelete: Cascade)
+  branch     Branch?    @relation(fields: [branchId], references: [id])
+  branchId   String?
 
   @@unique([userId, permissionId, scopeId])
 }
 
 //////////////////////////////////////////////////////
-// 5. MASTER DATA & INVENTORY
+// 5. ORGANIZATION MASTER DATA (SHARED ACROSS BRANCHES)
 //////////////////////////////////////////////////////
 
 model MasterProduct {
-  id             String @id @default(cuid())
+  id             String       @id @default(cuid())
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
-  name           String
-  genericName    String? @map("generic_name")
-  brandName      String? @map("brand_name")
-  barcode        String?
-  
-  companyId      String?
-  company        Company? @relation(fields: [companyId], references: [id])
-  
-  productTypeId  String?
-  productType    ProductType? @relation(fields: [productTypeId], references: [id])
-  
-  hsnCodeId      String?
-  hsnCode        HsnCode? @relation(fields: [hsnCodeId], references: [id])
+  name        String
+  genericName String? @map("generic_name")
+  brandName   String? @map("brand_name")
+  barcode     String?
 
-  inventory      Inventory[]
-  saleItems      SaleItem[]
+  companyId String?
+  company   Company? @relation(fields: [companyId], references: [id])
+
+  productTypeId String?
+  productType   ProductType? @relation(fields: [productTypeId], references: [id])
+
+  hsnCodeId String?
+  hsnCode   HsnCode? @relation(fields: [hsnCodeId], references: [id])
+
+  inventory Inventory[]
+  saleItems SaleItem[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -257,55 +286,75 @@ model MasterProduct {
 }
 
 model Company {
-  id             String @id @default(cuid())
+  id             String       @id @default(cuid())
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  
-  name           String
-  status         String @default("ACTIVE") // ACTIVE, INACTIVE
 
-  products       MasterProduct[]
+  name   String
+  status String @default("ACTIVE") // ACTIVE, INACTIVE
+
+  products MasterProduct[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model ProductType {
-  id       String @id @default(cuid())
-  name     String @unique // Tablet, Syrup, etc.
+  id       String          @id @default(cuid())
+  name     String          @unique // Tablet, Syrup, etc.
   products MasterProduct[]
 }
 
 model HsnCode {
-  id             String @id @default(cuid())
+  id             String       @id @default(cuid())
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  
-  code           String
-  gstPercent     Decimal @default(18.0) @map("gst_percent")
 
-  products       MasterProduct[]
+  code       String
+  gstPercent Decimal @default(18.0) @map("gst_percent")
+
+  products MasterProduct[]
 
   @@unique([organizationId, code])
 }
 
+model Supplier {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  name          String
+  contactPerson String? @map("contact_person")
+  mobile        String?
+  gstin         String?
+
+  purchaseOrders PurchaseOrder[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+//////////////////////////////////////////////////////
+// 6. BRANCH OPERATIONS (INVENTORY & SALES)
+//////////////////////////////////////////////////////
+
 model Inventory {
-  id              String @id @default(cuid())
-  branchId        String
-  branch          Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  
+  id       String @id @default(cuid())
+  branchId String
+  branch   Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
   masterProductId String
   masterProduct   MasterProduct @relation(fields: [masterProductId], references: [id], onDelete: Cascade)
 
-  batchNumber     String @map("batch_number")
-  expiryDate      DateTime @map("expiry_date")
-  
-  purchasePrice   Decimal @map("purchase_price")
-  mrp             Decimal
-  salePrice       Decimal @map("sale_price")
-  
-  stockQuantity   Int @default(0) @map("stock_quantity")
-  
+  batchNumber String   @map("batch_number")
+  expiryDate  DateTime @map("expiry_date")
+
+  purchasePrice Decimal @map("purchase_price")
+  mrp           Decimal
+  salePrice     Decimal @map("sale_price")
+
+  stockQuantity Int @default(0) @map("stock_quantity")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -313,30 +362,26 @@ model Inventory {
   @@index([masterProductId])
 }
 
-//////////////////////////////////////////////////////
-// 6. SALES & BILLING
-//////////////////////////////////////////////////////
-
 model Sale {
-  id             String @id @default(cuid())
-  branchId       String
-  branch         Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  
-  userId         String // Created by
-  user           User @relation(fields: [userId], references: [id])
+  id       String @id @default(cuid())
+  branchId String
+  branch   Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  userId String // Created by
+  user   User   @relation(fields: [userId], references: [id])
 
   customerName   String? @map("customer_name")
   customerMobile String? @map("customer_mobile")
-  
+
   totalAmount    Decimal @map("total_amount")
   taxAmount      Decimal @map("tax_amount")
   discountAmount Decimal @default(0) @map("discount_amount")
   payableAmount  Decimal @map("payable_amount")
-  
-  paymentMethod  String @default("CASH") // CASH, UPI, CARD
-  status         String @default("COMPLETED") // COMPLETED, RETURNED, CANCELLED
 
-  items          SaleItem[]
+  paymentMethod String @default("CASH") // CASH, UPI, CARD
+  status        String @default("COMPLETED") // COMPLETED, RETURNED, CANCELLED
+
+  items SaleItem[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -345,83 +390,33 @@ model Sale {
 }
 
 model SaleItem {
-  id              String @id @default(cuid())
-  saleId          String
-  sale            Sale @relation(fields: [saleId], references: [id], onDelete: Cascade)
-  
+  id     String @id @default(cuid())
+  saleId String
+  sale   Sale   @relation(fields: [saleId], references: [id], onDelete: Cascade)
+
   masterProductId String
   masterProduct   MasterProduct @relation(fields: [masterProductId], references: [id])
-  
-  batchNumber     String? @map("batch_number")
-  quantity        Int
-  unitPrice       Decimal @map("unit_price")
-  taxAmount       Decimal @map("tax_amount")
-  totalAmount     Decimal @map("total_amount")
+
+  batchNumber String? @map("batch_number")
+  quantity    Int
+  unitPrice   Decimal @map("unit_price")
+  taxAmount   Decimal @map("tax_amount")
+  totalAmount Decimal @map("total_amount")
 
   createdAt DateTime @default(now())
-}
-
-//////////////////////////////////////////////////////
-// 7. WHOLESALE SPECIFIC
-//////////////////////////////////////////////////////
-
-model Supplier {
-  id             String @id @default(cuid())
-  organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  
-  name           String
-  contactPerson  String? @map("contact_person")
-  mobile         String?
-  gstin          String?
-
-  purchaseOrders PurchaseOrder[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 }
 
 model PurchaseOrder {
-  id             String @id @default(cuid())
-  branchId       String
-  branch         Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  
-  supplierId     String
-  supplier       Supplier @relation(fields: [supplierId], references: [id])
-  
-  status         String @default("PENDING") // PENDING, RECEIVED, CANCELLED
-  totalAmount    Decimal @map("total_amount")
+  id       String @id @default(cuid())
+  branchId String
+  branch   Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  supplierId String
+  supplier   Supplier @relation(fields: [supplierId], references: [id])
+
+  status      String  @default("PENDING") // PENDING, RECEIVED, CANCELLED
+  totalAmount Decimal @map("total_amount")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
-
-//////////////////////////////////////////////////////
-// 8. FEATURES FLAGS
-//////////////////////////////////////////////////////
-
-model Feature {
-  id          String  @id @default(cuid())
-  key         String  @unique
-  name        String
-  description String?
-  module      String?
-
-  organizations OrganizationFeature[]
-
-  createdAt DateTime @default(now())
-}
-
-model OrganizationFeature {
-  id             String @id @default(cuid())
-  organizationId String
-  featureId      String
-  enabled        Boolean @default(true)
-  config         Json?
-
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  feature      Feature      @relation(fields: [featureId], references: [id], onDelete: Cascade)
-
-  @@unique([organizationId, featureId])
-}
-

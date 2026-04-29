@@ -108,8 +108,8 @@ export const createOrganizationWithAdmin = async (data: {
       data: {
         userId: user.id,
         roleId: branchAdminRole.id,
-        scopeType: "branch",
-        scopeId: branch.id,
+        scopeType: "organization",
+        scopeId: organization.id,
       },
     });
 

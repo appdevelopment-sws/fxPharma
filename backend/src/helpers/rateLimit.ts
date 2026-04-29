@@ -9,7 +9,7 @@ const authLimiter = rateLimit({
 
 const generalLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
-  limit: 1000,
+  limit: 100,
   standardHeaders: true,
   legacyHeaders: false,
 });
