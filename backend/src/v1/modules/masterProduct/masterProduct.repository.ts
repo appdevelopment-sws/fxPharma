@@ -4,24 +4,24 @@ import { prisma } from "@/lib/prisma.js";
 const masterProductInclude = {
   company: true,
   hsnCode: true,
-  product_type: true,
+  productType: true,
 } satisfies Prisma.MasterProductInclude;
 
 type ListMasterProductsArgs = {
   page: number;
   limit: number;
   search?: string;
-  companyId?: number;
-  productTypeId?: number;
-  hsnCodeId?: number;
+  companyId?: string;
+  productTypeId?: string;
+  hsnCodeId?: string;
 };
 
 const mapProduct = (product: any) => {
   if (!product) return null;
-  const { generic_name, ...rest } = product;
+  const { genericName, ...rest } = product;
   return {
     ...rest,
-    salt: generic_name,
+    salt: genericName,
   };
 };
 
@@ -36,17 +36,17 @@ const buildMasterProductWhere = ({
   if (search) {
     where.OR = [
       { name: { contains: search, mode: "insensitive" } },
-      { generic_name: { contains: search, mode: "insensitive" } },
-      { brand_name: { contains: search, mode: "insensitive" } },
+      { genericName: { contains: search, mode: "insensitive" } },
+      { brandName: { contains: search, mode: "insensitive" } },
     ];
   }
 
   if (companyId) {
-    where.company_id = companyId;
+    where.companyId = companyId;
   }
 
   if (productTypeId) {
-    where.product_type_id = productTypeId;
+    where.productTypeId = productTypeId;
   }
 
   if (hsnCodeId) {
@@ -77,7 +77,7 @@ export const listMasterProducts = async (args: ListMasterProductsArgs) => {
   };
 };
 
-export const findMasterProductById = async (id: number) => {
+export const findMasterProductById = async (id: string) => {
   const product = await prisma.masterProduct.findUnique({
     where: { id },
     include: masterProductInclude,
@@ -85,19 +85,19 @@ export const findMasterProductById = async (id: number) => {
   return mapProduct(product);
 };
 
-export const findCompanyById = async (id: number) => {
+export const findCompanyById = async (id: string) => {
   return prisma.company.findUnique({
     where: { id },
   });
 };
 
-export const findProductTypeById = async (id: number) => {
+export const findProductTypeById = async (id: string) => {
   return prisma.productType.findUnique({
     where: { id },
   });
 };
 
-export const findHsnCodeById = async (id: number) => {
+export const findHsnCodeById = async (id: string) => {
   return prisma.hsnCode.findUnique({
     where: { id },
   });
@@ -106,10 +106,12 @@ export const findHsnCodeById = async (id: number) => {
 export const createMasterProduct = async (
   payload: any,
 ) => {
-  const { salt, barcode, ...rest } = payload;
+  const { salt, barcode, brand_name, ...rest } = payload;
   const data = {
     ...rest,
-    generic_name: salt,
+    genericName: salt,
+    brandName: brand_name,
+    barcode,
   };
 
   const product = await prisma.masterProduct.create({
@@ -120,13 +122,15 @@ export const createMasterProduct = async (
 };
 
 export const updateMasterProduct = async (
-  id: number,
+  id: string,
   payload: any,
 ) => {
-  const { salt, barcode, ...rest } = payload;
+  const { salt, barcode, brand_name, ...rest } = payload;
   const data = {
     ...rest,
-    ...(salt && { generic_name: salt }),
+    ...(salt && { genericName: salt }),
+    ...(brand_name && { brandName: brand_name }),
+    ...(barcode && { barcode }),
   };
 
   const product = await prisma.masterProduct.update({
@@ -137,7 +141,7 @@ export const updateMasterProduct = async (
   return mapProduct(product);
 };
 
-export const deleteMasterProduct = async (id: number) => {
+export const deleteMasterProduct = async (id: string) => {
   return prisma.masterProduct.delete({
     where: { id },
   });
@@ -153,7 +157,11 @@ export const listMasterProductReferences = async () => {
   return { companies, productTypes, hsnCodes };
 };
 
-export const createHsnCode = async (data: { code: string }) => {
+export const createHsnCode = async (data: {
+  code: string;
+  organizationId: string;
+  gstPercent?: number;
+}) => {
   return prisma.hsnCode.create({
     data,
   });

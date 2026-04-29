@@ -1,10 +1,10 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import * as authService from "./auth.service.js";
 import { loginSchema, registerSchema } from "./auth.validation.js";
 import { sendToken } from "@/helpers/jwtToken.js";
 import type { AuthRequest } from "@/middlewares/isAuthenticated.js";
 
-export const register = async (req: Request, res: Response) => {
+export const register = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const payload = registerSchema.parse(req.body);
     const result = await authService.register(payload);
@@ -15,15 +15,11 @@ export const register = async (req: Request, res: Response) => {
       message: "Organization and management branch created successfully",
     });
   } catch (error: any) {
-    console.error(error);
-    res.status(400).json({
-      success: false,
-      message: error.message ?? "Registration failed",
-    });
+    next(error);
   }
 };
 
-export const login = async (req: Request, res: Response) => {
+export const login = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const payload = loginSchema.parse(req.body);
     const user = await authService.loginUser(payload.email, payload.password);
@@ -36,15 +32,11 @@ export const login = async (req: Request, res: Response) => {
       message: "User logged in successfully",
     });
   } catch (error: any) {
-    console.error(error);
-    res.status(400).json({
-      success: false,
-      message: error.message ?? "Login failed",
-    });
+    next(error);
   }
 };
 
-export const getUser = async (req: AuthRequest, res: Response) => {
+export const getUser = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const userId = req.user?.id;
     const branchId = req.headers["x-branch-id"] as string | undefined;
@@ -64,11 +56,7 @@ export const getUser = async (req: AuthRequest, res: Response) => {
       message: "User retrieved successfully",
     });
   } catch (error: any) {
-    console.error(error);
-    res.status(404).json({
-      success: false,
-      message: error.message ?? "User not found",
-    });
+    next(error);
   }
 };
 
