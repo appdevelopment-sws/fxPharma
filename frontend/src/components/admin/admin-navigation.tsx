@@ -116,38 +116,7 @@ export const adminNavigationGroups: SidebarNavigationGroup[] = [
       },
     ],
   },
-  {
-    title: "Orders",
-    items: [
-      {
-        title: "Orders",
-        description: "View, Search, and Filter Inventory across all Stores",
-        icon: ShieldCheck,
-        children: [
-          {
-            title: "All Inventory",
-            to: "/admin/all-inventory",
-            description: "View, Search, and Filter Inventory across all Stores",
-            icon: Box,
-          },
-          {
-            title: "Import Inventory",
-            to: "/admin/import-inventory",
-            description: "Import Inventory from csv/excel file.",
-            icon: Box,
-          },
-          // {
-          //   title: "Roles & Permissions",
-          //   to: "/super-admin/access",
-          //   description: "Platform access policy and super admin controls",
-          //   icon: ShieldCheck,
-          //   roles: ["Super Admin"],
-          //   // permissions: ["ROLE_MANAGE"],
-          // },
-        ],
-      },
-    ],
-  },
+
   {
     title: "Reports",
     items: [
