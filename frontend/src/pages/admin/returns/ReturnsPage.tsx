@@ -75,6 +75,16 @@ export default function ReturnsPage() {
   const columns: DataTableColumn<SalesReturn>[] = useMemo(() => {
     return [
       {
+        key: "serial",
+        header:
+          RETURN_COLUMNS.find((c) => c.key === "serial")?.label || "#",
+        render: (_, index) => {
+          const currentPage = filter.page || 1
+          const perPage = filter.perPage || 10
+          return (currentPage - 1) * perPage + index + 1
+        },
+      },
+      {
         key: "return_id",
         header: "RETURN ID",
         render: (row) => (
