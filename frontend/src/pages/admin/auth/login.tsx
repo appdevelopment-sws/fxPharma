@@ -92,10 +92,10 @@ export default function LoginPage() {
       `}</style>
 
       <div className="flex min-h-screen w-full bg-background font-sans selection:bg-primary/10 selection:text-primary overflow-hidden">
-        
+
         {/* Left Column - Branding / Visual */}
         <div className="hidden lg:flex w-1/2 bg-gradient-to-br from-slate-900 via-indigo-950 to-indigo-900 p-12 flex-col justify-between relative overflow-hidden">
-          
+
           <div className="absolute top-0 left-0 w-full h-full opacity-20 pointer-events-none">
             <div className="absolute -top-[10%] -left-[10%] w-[60%] h-[60%] rounded-full bg-indigo-500 mix-blend-screen blur-[100px] animate-blob" />
             <div className="absolute top-[40%] -right-[10%] w-[70%] h-[70%] rounded-full bg-violet-600 mix-blend-screen blur-[100px] animate-blob" style={{ animationDelay: '2s' }} />
@@ -143,13 +143,13 @@ export default function LoginPage() {
 
         {/* Right Column - Form */}
         <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 relative bg-background">
-          
+
           <div className="absolute top-0 right-0 -z-10 w-full h-full opacity-50 pointer-events-none">
             <div className="absolute top-[-10%] right-[-5%] w-[40%] h-[40%] rounded-full bg-primary/5 blur-[100px]" />
           </div>
 
           <div className="w-full max-w-[420px] space-y-8">
-            
+
             <div className="space-y-3 text-center lg:text-left">
               <div className="lg:hidden flex justify-center mb-8 animate-drop-in-center">
                 <div className="bg-gradient-to-br from-indigo-50 to-violet-50 dark:from-indigo-950/20 dark:to-violet-950/20 p-4 rounded-2xl shadow-sm border border-border">
@@ -165,7 +165,7 @@ export default function LoginPage() {
             </div>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-              
+
               <div className="space-y-2 animate-shatter-top-right delay-300">
                 <Label htmlFor="email">Work Email</Label>
                 <Input
