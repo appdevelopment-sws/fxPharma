@@ -8,9 +8,9 @@ import {
 } from "./masterProduct.validation.js";
 
 const ensureReferenceIntegrity = async (data: {
-  company_id?: number;
-  product_type_id?: number;
-  hsnCodeId?: number;
+  company_id?: string;
+  product_type_id?: string;
+  hsnCodeId?: string;
 }) => {
   const [company, productType, hsnCode] = await Promise.all([
     data.company_id
@@ -83,7 +83,7 @@ export const listProducts = async (query: ListMasterProductsQuery) => {
   };
 };
 
-export const getProductById = async (id: number) => {
+export const getProductById = async (id: string) => {
   const product = await masterProductRepository.findMasterProductById(id);
 
   if (!product) {
@@ -108,7 +108,7 @@ export const createProduct = async (payload: CreateMasterProductInput) => {
 };
 
 export const updateProduct = async (
-  id: number,
+  id: string,
   payload: UpdateMasterProductInput,
 ) => {
   try {
@@ -120,7 +120,7 @@ export const updateProduct = async (
   }
 };
 
-export const deleteProduct = async (id: number) => {
+export const deleteProduct = async (id: string) => {
   try {
     await masterProductRepository.deleteMasterProduct(id);
   } catch (error) {

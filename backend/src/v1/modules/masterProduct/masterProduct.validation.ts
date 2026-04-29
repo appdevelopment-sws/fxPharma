@@ -9,16 +9,16 @@ const optionalTrimmedString = z
   .nullable();
 
 export const productIdParamSchema = z.object({
-  id: z.coerce.number().int().positive(),
+  id: z.string().cuid(),
 });
 
 export const listMasterProductsQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(100).default(10),
   search: z.string().trim().max(120).optional(),
-  companyId: z.coerce.number().int().positive().optional(),
-  productTypeId: z.coerce.number().int().positive().optional(),
-  hsnCodeId: z.coerce.number().int().positive().optional(),
+  companyId: z.string().cuid().optional(),
+  productTypeId: z.string().cuid().optional(),
+  hsnCodeId: z.string().cuid().optional(),
 });
 
 export const createMasterProductSchema = z.object({
@@ -28,9 +28,9 @@ export const createMasterProductSchema = z.object({
   brand_name: optionalTrimmedString,
   pack_size: optionalTrimmedString,
   strength: optionalTrimmedString,
-  hsnCodeId: z.coerce.number().int().positive(),
-  company_id: z.coerce.number().int().positive(),
-  product_type_id: z.coerce.number().int().positive(),
+  hsnCodeId: z.string().cuid(),
+  company_id: z.string().cuid(),
+  product_type_id: z.string().cuid(),
 });
 
 export const updateMasterProductSchema = createMasterProductSchema
