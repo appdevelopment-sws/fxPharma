@@ -9,6 +9,7 @@ import {
   Box,
   RotateCcw,
   FileText,
+  LineChart,
 } from "lucide-react"
 import type { AuthUser } from "@/context/authContext"
 import {
@@ -92,6 +93,7 @@ export const adminNavigationGroups: SidebarNavigationGroup[] = [
       },
     ],
   },
+
   {
     title: "Suppliers",
     items: [
@@ -115,31 +117,95 @@ export const adminNavigationGroups: SidebarNavigationGroup[] = [
     ],
   },
   {
-    title: "Workspace",
+    title: "Orders",
     items: [
       {
-        title: "Access Control",
-        description: "Govern workspace members, roles, and permissions",
-        icon: BriefcaseMedical,
+        title: "Orders",
+        description: "View, Search, and Filter Inventory across all Stores",
+        icon: ShieldCheck,
         children: [
           {
-            title: "Users",
-            to: "/admin/users",
-            description: "Tenant users directory and access control",
-            icon: Users,
-            permissions: [PERMISSIONS.USER_READ],
+            title: "All Inventory",
+            to: "/admin/all-inventory",
+            description: "View, Search, and Filter Inventory across all Stores",
+            icon: Box,
           },
           {
-            title: "Roles & Permissions",
-            to: "/admin/roles",
-            description: "Role governance and permission matrix",
-            icon: ShieldCheck,
-            permissions: [PERMISSIONS.ROLE_MANAGE],
+            title: "Import Inventory",
+            to: "/admin/import-inventory",
+            description: "Import Inventory from csv/excel file.",
+            icon: Box,
           },
+          // {
+          //   title: "Roles & Permissions",
+          //   to: "/super-admin/access",
+          //   description: "Platform access policy and super admin controls",
+          //   icon: ShieldCheck,
+          //   roles: ["Super Admin"],
+          //   // permissions: ["ROLE_MANAGE"],
+          // },
         ],
       },
     ],
   },
+  {
+    title: "Reports",
+    items: [
+      {
+        title: "Reports",
+        description: "Daily Transaction Report",
+        icon: LineChart,
+        children: [
+          {
+            title: "Daily Transaction Report",
+            to: "/admin/reports/daily-transaction-report",
+            description: "Daily Transaction Report",
+            icon: Box,
+          },
+          {
+            title: "Expiry Reports",
+            to: "/admin/reports/expiry-reports",
+            description: "Expiry Reports",
+            icon: Box,
+          },
+          // {
+          //   title: "Roles & Permissions",
+          //   to: "/super-admin/access",
+          //   description: "Platform access policy and super admin controls",
+          //   icon: ShieldCheck,
+          //   roles: ["Super Admin"],
+          //   // permissions: ["ROLE_MANAGE"],
+          // },
+        ],
+      },
+    ],
+  },
+  // {
+  //   title: "Workspace",
+  //   items: [
+  //     {
+  //       title: "Access Control",
+  //       description: "Govern workspace members, roles, and permissions",
+  //       icon: BriefcaseMedical,
+  //       children: [
+  //         {
+  //           title: "Users",
+  //           to: "/admin/users",
+  //           description: "Tenant users directory and access control",
+  //           icon: Users,
+  //           permissions: [PERMISSIONS.USER_READ],
+  //         },
+  //         {
+  //           title: "Roles & Permissions",
+  //           to: "/admin/roles",
+  //           description: "Role governance and permission matrix",
+  //           icon: ShieldCheck,
+  //           permissions: [PERMISSIONS.ROLE_MANAGE],
+  //         },
+  //       ],
+  //     },
+  //   ],
+  // },
 ]
 
 export function getVisibleAdminNavigation(user: AuthUser | null) {

@@ -15,6 +15,8 @@ import Suppliers from "@/pages/admin/supplier/suppliers"
 import ReturnsPage from "@/pages/admin/returns/ReturnsPage"
 import RecentInvoicesPage from "@/pages/admin/invoices/RecentInvoicesPage"
 import POS from "@/pages/admin/sales/pos"
+import DailyTransactionReport from "@/pages/admin/reports/DailyTransactionReport"
+import ExpiryReports from "@/pages/admin/reports/ExpiryReports"
 
 export const AdminRoutes = () => {
   return (
@@ -53,6 +55,11 @@ export const AdminRoutes = () => {
           >
             <Route path="roles" element={<AdminRolesPage />} />
           </Route>
+          <Route
+            path="reports/daily-transaction-report"
+            element={<DailyTransactionReport />}
+          />
+          <Route path="reports/expiry-reports" element={<ExpiryReports />} />
         </Route>
       </Route>
     </>
