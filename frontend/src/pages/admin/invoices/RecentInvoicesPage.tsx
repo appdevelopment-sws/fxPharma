@@ -28,6 +28,7 @@ import {
   INITIAL_INVOICE_FILTERS,
   PAYMENT_MODE_OPTIONS,
   INVOICE_STATUS_OPTIONS,
+  INVOICE_COLUMNS,
 } from "@/constants/page/admin/invoices"
 
 export default function RecentInvoicesPage() {
@@ -67,6 +68,16 @@ export default function RecentInvoicesPage() {
 
   const columns: DataTableColumn<Invoice>[] = useMemo(() => {
     return [
+      {
+        key: "serial",
+        header:
+          INVOICE_COLUMNS.find((c) => c.key === "serial")?.label || "#",
+        render: (_, index) => {
+          const currentPage = filter.page || 1
+          const perPage = filter.perPage || 10
+          return (currentPage - 1) * perPage + index + 1
+        },
+      },
       {
         key: "invoice_details",
         header: "INVOICE DETAILS",

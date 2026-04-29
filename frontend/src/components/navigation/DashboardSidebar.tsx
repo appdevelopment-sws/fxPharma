@@ -48,16 +48,12 @@ export function DashboardSidebar({
   const [expandedItems, setExpandedItems] = useState<string[]>(activeParentKeys)
 
   useEffect(() => {
-    setExpandedItems((current) =>
-      Array.from(new Set([...current, ...activeParentKeys]))
-    )
+    setExpandedItems(activeParentKeys)
   }, [activeParentKeys])
 
   const toggleExpandedItem = (title: string) => {
     setExpandedItems((current) =>
-      current.includes(title)
-        ? current.filter((item) => item !== title)
-        : [...current, title]
+      current.includes(title) ? [] : [title]
     )
   }
 
