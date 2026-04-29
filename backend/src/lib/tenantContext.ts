@@ -1,7 +1,9 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 
 export type TenantContextState = {
-  tenantId?: string;
+  organizationId?: string;
+  branchId?: string;
+  userId?: string;
   bypassTenant?: boolean;
 };
 
@@ -14,7 +16,9 @@ export const runWithTenantContext = <T>(
 
 export const getTenantContext = () => tenantContext.getStore();
 
-export const getTenantId = () => tenantContext.getStore()?.tenantId;
+export const getOrganizationId = () => tenantContext.getStore()?.organizationId;
+export const getBranchId = () => tenantContext.getStore()?.branchId;
+export const getUserId = () => tenantContext.getStore()?.userId;
 
 export const shouldBypassTenant = () =>
   tenantContext.getStore()?.bypassTenant === true;
