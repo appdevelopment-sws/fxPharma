@@ -14,6 +14,7 @@ import useSearchFilter from "@/hooks/useSearchFilter"
 import { queryKeys } from "@/lib/queryKeys"
 import { ORDER_COLUMNS } from "@/constants/page/admin/order"
 import { INITIAL_ORDER_FILTERS } from "@/constants/page/admin/order"
+import OrderDialog from "@/components/dialog/admin/orderDialog"
 
 const Orders = () => {
   const queryClient = useQueryClient()
@@ -171,11 +172,11 @@ const Orders = () => {
 
   return (
     <div className="space-y-6">
-      {/* <OrderDialog
+      <OrderDialog
         open={drawerDisclosure.isOpen}
         onClose={drawerDisclosure.onClose}
         order={drawerDisclosure.data}
-      /> */}
+      />
 
       <ConfirmDialog
         open={deleteDisclosure.isOpen}
