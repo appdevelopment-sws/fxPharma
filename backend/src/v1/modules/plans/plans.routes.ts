@@ -28,18 +28,9 @@ const router = Router();
  *         schema:
  *           type: integer
  *         description: Filter by status (1=Active, 0=Inactive)
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *           default: 1
- *         description: Page number
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           default: 10
- *         description: Items per page
+ *       - $ref: '#/components/parameters/page'
+ *       - $ref: '#/components/parameters/limit'
+ *       - $ref: '#/components/parameters/search'
  *     responses:
  *       200:
  *         description: List of plans

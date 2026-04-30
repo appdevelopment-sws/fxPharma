@@ -1,16 +1,14 @@
 import { Request, Response } from "express";
 import { PlansService } from "./plans.service.js";
 import { catchAsync } from "../../../utils/catchAsync.js";
-import { getPaginationOptions, formatPaginatedResponse } from "../../../utils/pagination.js";
+import { paginate } from "../../../utils/pagination.js";
 
 export class PlansController {
   static getAll = catchAsync(async (req: Request, res: Response) => {
     const status = req.query.status ? parseInt(req.query.status as string) : undefined;
-    const pagination = getPaginationOptions(req.query);
-
-    const { data, total } = await PlansService.getAllPlans(status, pagination.skip, pagination.take);
-    
-    res.json(formatPaginatedResponse(data, total, pagination));
+    await paginate(res, req.query, (skip, take, search) =>
+      PlansService.getAllPlans({ status, search }, skip, take)
+    );
   });
 
   static getById = catchAsync(async (req: Request, res: Response) => {

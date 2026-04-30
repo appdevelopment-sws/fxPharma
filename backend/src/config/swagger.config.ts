@@ -84,6 +84,26 @@ const options: swaggerJsdoc.Options = {
           },
         },
       },
+      parameters: {
+        page: {
+          in: "query",
+          name: "page",
+          schema: { type: "integer", default: 1 },
+          description: "Page number",
+        },
+        limit: {
+          in: "query",
+          name: "limit",
+          schema: { type: "integer", default: 10 },
+          description: "Items per page",
+        },
+        search: {
+          in: "query",
+          name: "search",
+          schema: { type: "string" },
+          description: "Search by name or key",
+        },
+      },
     },
   },
   apis: ["src/v1/modules/**/*.ts", "src/index.ts"],

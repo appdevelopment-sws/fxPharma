@@ -1,11 +1,13 @@
 import { Request, Response } from "express";
 import { FeaturesService } from "./features.service.js";
 import { catchAsync } from "../../../utils/catchAsync.js";
+import { paginate } from "../../../utils/pagination.js";
 
 export class FeaturesController {
   static getAll = catchAsync(async (req: Request, res: Response) => {
-    const features = await FeaturesService.getAllFeatures();
-    res.json({ success: true, data: features });
+    await paginate(res, req.query, (skip, take, search) =>
+      FeaturesService.getAllFeatures(search, skip, take)
+    );
   });
 
   static getById = catchAsync(async (req: Request, res: Response) => {

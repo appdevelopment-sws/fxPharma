@@ -1,9 +1,11 @@
 import ErrorHandler from "../../../utils/ErrorHandler.js";
 import { FeaturesRepository } from "./features.repository.js";
+import { buildSearchFilter } from "../../../utils/prisma.js";
 
 export class FeaturesService {
-  static async getAllFeatures() {
-    return FeaturesRepository.findAll();
+  static async getAllFeatures(search?: string, skip?: number, take?: number) {
+    const where = buildSearchFilter(search);
+    return FeaturesRepository.findAll(where, skip, take);
   }
 
   static async getFeatureById(id: string) {
