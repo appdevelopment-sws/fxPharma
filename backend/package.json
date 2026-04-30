@@ -44,5 +44,8 @@
     "prisma": "^7.6.0",
     "ts-node-dev": "^2.0.0",
     "typescript": "^6.0.2"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   }
 }
