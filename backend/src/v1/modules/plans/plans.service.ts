@@ -2,10 +2,10 @@ import ErrorHandler from "../../../utils/ErrorHandler.js";
 import { PlansRepository } from "./plans.repository.js";
 
 export class PlansService {
-  static async getAllPlans(status?: number) {
+  static async getAllPlans(status?: number, skip?: number, take?: number) {
     const filters: any = {};
     if (status !== undefined) filters.status = status;
-    return PlansRepository.findAll(filters);
+    return PlansRepository.findAll(filters, skip, take);
   }
 
   static async getPlanById(id: string) {
@@ -36,5 +36,10 @@ export class PlansService {
   static async deletePlan(id: string) {
     await this.getPlanById(id);
     return PlansRepository.delete(id);
+  }
+
+  static async updatePlanStatus(id: string, status: number) {
+    await this.getPlanById(id);
+    return PlansRepository.update(id, { status });
   }
 }

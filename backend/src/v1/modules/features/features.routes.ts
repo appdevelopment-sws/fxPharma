@@ -2,6 +2,7 @@ import { Router } from "express";
 import { FeaturesController } from "./features.controller.js";
 import { validate } from "@/middlewares/validate.js";
 import { createFeatureSchema, updateFeatureSchema } from "./features.validation.js";
+import { isAuthenticated } from "@/middlewares/isAuthenticated.js";
 
 const router = Router();
 
@@ -16,20 +17,26 @@ const router = Router();
  * @swagger
  * /features:
  *   get:
+ *     security:
+ *       - bearerAuth: []
  *     summary: Get all system features
- *     tags: [Features]
+ *     tags:
+ *       - Features
  *     responses:
  *       200:
  *         description: List of features
  */
-router.get("/", FeaturesController.getAll);
+router.get("/", isAuthenticated, FeaturesController.getAll);
 
 /**
  * @swagger
  * /features/{id}:
  *   get:
+ *     security:
+ *       - bearerAuth: []
  *     summary: Get feature by ID
- *     tags: [Features]
+ *     tags:
+ *       - Features
  *     parameters:
  *       - in: path
  *         name: id
@@ -42,14 +49,17 @@ router.get("/", FeaturesController.getAll);
  *       404:
  *         description: Feature not found
  */
-router.get("/:id", FeaturesController.getById);
+router.get("/:id", isAuthenticated, FeaturesController.getById);
 
 /**
  * @swagger
  * /features:
  *   post:
+ *     security:
+ *       - bearerAuth: []
  *     summary: Create a new system feature
- *     tags: [Features]
+ *     tags:
+ *       - Features
  *     requestBody:
  *       required: true
  *       content:
@@ -68,14 +78,17 @@ router.get("/:id", FeaturesController.getById);
  *       201:
  *         description: Feature created
  */
-router.post("/", validate(createFeatureSchema), FeaturesController.create);
+router.post("/", isAuthenticated, validate(createFeatureSchema), FeaturesController.create);
 
 /**
  * @swagger
  * /features/{id}:
  *   patch:
+ *     security:
+ *       - bearerAuth: []
  *     summary: Update a feature
- *     tags: [Features]
+ *     tags:
+ *       - Features
  *     parameters:
  *       - in: path
  *         name: id
@@ -91,12 +104,14 @@ router.post("/", validate(createFeatureSchema), FeaturesController.create);
  *       200:
  *         description: Feature updated
  */
-router.patch("/:id", validate(updateFeatureSchema), FeaturesController.update);
+router.patch("/:id", isAuthenticated, validate(updateFeatureSchema), FeaturesController.update);
 
 /**
  * @swagger
  * /features/{id}:
  *   delete:
+ *     security:
+ *       - bearerAuth: []
  *     summary: Delete a feature
  *     tags: [Features]
  *     parameters:
@@ -109,6 +124,6 @@ router.patch("/:id", validate(updateFeatureSchema), FeaturesController.update);
  *       200:
  *         description: Feature deleted
  */
-router.delete("/:id", FeaturesController.delete);
+router.delete("/:id", isAuthenticated, FeaturesController.delete);
 
 export default router;

@@ -13,7 +13,8 @@ const router = Router();
  *   post:
  *     summary: Register a new organization and user
  *     description: Creates a new organization, a main branch, and an admin user in a single transaction.
- *     tags: [Auth]
+ *     tags:
+ *       - Auth
  *     requestBody:
  *       required: true
  *       content:
@@ -64,7 +65,8 @@ router.post("/register", validate(registerSchema), AuthController.register);
  *   post:
  *     summary: Login user
  *     description: Authenticates a user and returns their profile with organization memberships.
- *     tags: [Auth]
+ *     tags:
+ *       - Auth
  *     requestBody:
  *       required: true
  *       content:
@@ -103,7 +105,8 @@ router.post("/login", validate(loginSchema), AuthController.login);
  *   post:
  *     summary: Logout user
  *     description: Clears authentication cookies.
- *     tags: [Auth]
+ *     tags:
+ *       - Auth
  *     responses:
  *       200:
  *         description: Logged out successfully
@@ -116,7 +119,8 @@ router.post("/logout", AuthController.logout);
  *   get:
  *     summary: Get current user details
  *     description: Returns the profile of the authenticated user. Optionally scoped to a branch if x-branch-id header is provided.
- *     tags: [Auth]
+ *     tags:
+ *       - Auth
  *     security:
  *       - bearerAuth: []
  *     parameters:
