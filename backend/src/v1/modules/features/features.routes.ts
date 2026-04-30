@@ -22,6 +22,10 @@ const router = Router();
  *     summary: Get all system features
  *     tags:
  *       - Features
+ *     parameters:
+ *       - $ref: '#/components/parameters/page'
+ *       - $ref: '#/components/parameters/limit'
+ *       - $ref: '#/components/parameters/search'
  *     responses:
  *       200:
  *         description: List of features

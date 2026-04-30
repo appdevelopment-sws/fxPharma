@@ -1,3 +1,5 @@
+import { Response } from "express";
+
 export interface PaginationOptions {
   page: number;
   limit: number;
@@ -45,4 +47,21 @@ export const formatPaginatedResponse = <T>(
       hasPrevPage: page > 1,
     },
   };
+};
+
+/**
+ * Handles the standard pagination and search flow in a controller.
+ * @param res - Express response object
+ * @param query - Request query object
+ * @param fetchFn - Function to fetch data and total count (receives skip, take, and search)
+ */
+export const paginate = async <T>(
+  res: Response,
+  query: any,
+  fetchFn: (skip: number, take: number, search?: string) => Promise<{ data: T[]; total: number }>
+) => {
+  const options = getPaginationOptions(query);
+  const search = query.search as string;
+  const { data, total } = await fetchFn(options.skip, options.take, search);
+  return res.json(formatPaginatedResponse(data, total, options));
 };

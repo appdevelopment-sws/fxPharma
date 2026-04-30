@@ -1,11 +1,15 @@
 import ErrorHandler from "../../../utils/ErrorHandler.js";
 import { PlansRepository } from "./plans.repository.js";
+import { buildSearchFilter } from "../../../utils/prisma.js";
 
 export class PlansService {
-  static async getAllPlans(status?: number, skip?: number, take?: number) {
-    const filters: any = {};
-    if (status !== undefined) filters.status = status;
-    return PlansRepository.findAll(filters, skip, take);
+  static async getAllPlans(filters: any, skip?: number, take?: number) {
+    const { status, search } = filters;
+    const where = {
+      ...(status !== undefined && { status }),
+      ...buildSearchFilter(search),
+    };
+    return PlansRepository.findAll(where, skip, take);
   }
 
   static async getPlanById(id: string) {
