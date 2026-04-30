@@ -1,7 +1,9 @@
 import { Router } from "express";
-import * as authController from "./auth.controllers.js";
+import { AuthController } from "./auth.controllers.js";
 import { isAuthenticated } from "@/middlewares/isAuthenticated.js";
 import { attachTenant } from "@/middlewares/tenant.js";
+import { validate } from "@/middlewares/validate.js";
+import { loginSchema, registerSchema } from "./auth.validation.js";
 
 const router = Router();
 
@@ -54,7 +56,7 @@ const router = Router();
  *                 - $ref: '#/components/schemas/ValidationError'
  *                 - $ref: '#/components/schemas/Error'
  */
-router.post("/register", authController.register);
+router.post("/register", validate(registerSchema), AuthController.register);
 
 /**
  * @swagger
@@ -93,7 +95,7 @@ router.post("/register", authController.register);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.post("/login", authController.login);
+router.post("/login", validate(loginSchema), AuthController.login);
 
 /**
  * @swagger
@@ -106,7 +108,7 @@ router.post("/login", authController.login);
  *       200:
  *         description: Logged out successfully
  */
-router.post("/logout", authController.logout);
+router.post("/logout", AuthController.logout);
 
 /**
  * @swagger
@@ -133,6 +135,6 @@ router.post("/logout", authController.logout);
  *       401:
  *         description: Unauthorized
  */
-router.get("/getuser", isAuthenticated, attachTenant, authController.getUser);
+router.get("/getuser", isAuthenticated, attachTenant, AuthController.getUser);
 
 export default router;

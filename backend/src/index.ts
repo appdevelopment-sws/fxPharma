@@ -10,6 +10,11 @@ import compression from "compression";
 import swaggerUi from "swagger-ui-express";
 
 import authRoutes from "./v1/modules/auth/auth.routes.js";
+// import masterProductRoutes from "./v1/modules/masterProduct/masterProduct.route.js";
+// import organizationRoutes from "./v1/modules/organization/organization.routes.js";
+import demoRoutes from "./v1/modules/demo/demo.routes.js";
+import planRoutes from "./v1/modules/plans/plans.routes.js";
+import featureRoutes from "./v1/modules/features/features.routes.js";
 import demoRoutes from "./v1/modules/demo/demo.routes.js";
 import taxHsnRoutes from "./v1/modules/taxhsn/taxhsn.routes.js";
 
@@ -51,6 +56,12 @@ app.use("/api/v1/auth", authLimiter, authRoutes);
 const protectedRouter = Router();
 protectedRouter.use(isAuthenticated as any);
 protectedRouter.use(tenantMiddleware as any);
+
+// protectedRouter.use("/master-products", generalLimiter, masterProductRoutes);
+// protectedRouter.use("/organizations", generalLimiter, organizationRoutes);
+protectedRouter.use("/demo", generalLimiter, demoRoutes);
+protectedRouter.use("/plans", generalLimiter, planRoutes);
+protectedRouter.use("/features", generalLimiter, featureRoutes);
 protectedRouter.use("/tax-hsn", taxHsnRoutes);
 
 app.use("/api/v1", protectedRouter);

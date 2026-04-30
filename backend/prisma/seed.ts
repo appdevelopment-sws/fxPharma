@@ -20,7 +20,145 @@ async function main() {
   // 1. Clear existing data (optional but helpful for development with force-reset)
   // Note: db push --force-reset handles this at the DB level usually.
 
-  // 2. Seed Permissions
+  // 2. Seed Features (Core Modules & Add-ons)
+  const featuresData = [
+    { key: "inventory", name: "Inventory Management", module: "Core" },
+    { key: "billing", name: "Billing & Invoicing", module: "Core" },
+    { key: "rack_system", name: "Rack & Shelf Management", module: "Core" },
+    { key: "gst_ledger", name: "GST Ledger & Reports", module: "Core" },
+    { key: "analytics", name: "Business Analytics", module: "Advanced" },
+    { key: "whatsapp_alerts", name: "WhatsApp Alerts", module: "Add-on" },
+    { key: "white_labeling", name: "White Labeling", module: "Enterprise" },
+    { key: "api_access", name: "API Access", module: "Enterprise" },
+  ];
+
+  console.log("Seeding features...");
+  const seededFeatures = await Promise.all(
+    featuresData.map((f) =>
+      prisma.feature.upsert({
+        where: { key: f.key },
+        update: { name: f.name, module: f.module },
+        create: f,
+      })
+    )
+  );
+
+  // 3. Seed Plans (Starter, Professional, Enterprise)
+  console.log("Seeding plans...");
+  
+  // A. STARTER PLAN
+  const starterPlan = await prisma.plan.upsert({
+    where: { key: "STARTER_MONTHLY" },
+    update: {},
+    create: {
+      key: "STARTER_MONTHLY",
+      name: "Starter Pack",
+      shortDescription: "Ideal for small single-store pharmacies",
+      description: ["Basic Inventory", "Billing", "1 Branch Only", "Limited Support"],
+      price: 999,
+      billingCycle: "MONTHLY",
+      durationDays: 30,
+      maxStaff: 2,
+      maxBranches: 1,
+      storageLimit: 512,
+      isPopular: false,
+      badgeText: "Budget Friendly",
+      status: 1,
+    }
+  });
+
+  // B. PROFESSIONAL PLAN
+  const proPlan = await prisma.plan.upsert({
+    where: { key: "PRO_MONTHLY" },
+    update: {},
+    create: {
+      key: "PRO_MONTHLY",
+      name: "Growth Plan",
+      shortDescription: "Best for growing pharmacy chains",
+      description: ["Advanced Inventory", "Rack System", "GST Reports", "Up to 5 Branches"],
+      price: 2499,
+      billingCycle: "MONTHLY",
+      durationDays: 30,
+      maxStaff: 10,
+      maxBranches: 5,
+      storageLimit: 2048,
+      isPopular: true,
+      badgeText: "Most Popular",
+      status: 1,
+      advancedFeatures: {
+        apiAccess: true,
+        prioritySupport: true
+      },
+      priceBreakdown: {
+        base: 2117,
+        gst: 382
+      }
+    }
+  });
+
+  // C. ENTERPRISE PLAN
+  const enterprisePlan = await prisma.plan.upsert({
+    where: { key: "ENTERPRISE_YEARLY" },
+    update: {},
+    create: {
+      key: "ENTERPRISE_YEARLY",
+      name: "Enterprise Solution",
+      shortDescription: "Full-scale solution for large enterprises",
+      description: ["Everything in Pro", "White Labeling", "Dedicated Manager", "Unlimited Branches"],
+      price: 25000,
+      billingCycle: "YEARLY",
+      durationDays: 365,
+      maxStaff: 100,
+      maxBranches: 100,
+      storageLimit: 10240,
+      isPopular: false,
+      badgeText: "Best Value",
+      status: 1,
+      advancedFeatures: {
+        apiAccess: true,
+        whiteLabeling: true,
+        prioritySupport: true,
+        dedicatedAccountManager: true
+      }
+    }
+  });
+
+  // 4. Link Features to Plans
+  const planFeatureLinks = [
+    // Starter Features
+    { planId: starterPlan.id, featureKey: "inventory" },
+    { planId: starterPlan.id, featureKey: "billing" },
+    
+    // Pro Features (Starter + More)
+    { planId: proPlan.id, featureKey: "inventory" },
+    { planId: proPlan.id, featureKey: "billing" },
+    { planId: proPlan.id, featureKey: "rack_system" },
+    { planId: proPlan.id, featureKey: "gst_ledger" },
+    { planId: proPlan.id, featureKey: "analytics" },
+    
+    // Enterprise Features (All)
+    { planId: enterprisePlan.id, featureKey: "inventory" },
+    { planId: enterprisePlan.id, featureKey: "billing" },
+    { planId: enterprisePlan.id, featureKey: "rack_system" },
+    { planId: enterprisePlan.id, featureKey: "gst_ledger" },
+    { planId: enterprisePlan.id, featureKey: "analytics" },
+    { planId: enterprisePlan.id, featureKey: "whatsapp_alerts" },
+    { planId: enterprisePlan.id, featureKey: "white_labeling" },
+    { planId: enterprisePlan.id, featureKey: "api_access" },
+  ];
+
+  for (const link of planFeatureLinks) {
+    const feature = seededFeatures.find(f => f.key === link.featureKey);
+    if (feature) {
+      await prisma.planFeature.upsert({
+        where: { planId_featureId: { planId: link.planId, featureId: feature.id } },
+        update: {},
+        create: { planId: link.planId, featureId: feature.id }
+      });
+    }
+  }
+
+  // 5. Seed Permissions
   const permissionsData = [
     { key: "users.create", module: "Users" },
     { key: "users.view", module: "Users" },
@@ -46,7 +184,7 @@ async function main() {
     ),
   );
 
-  // 3. Seed Workflows
+  // 6. Seed Workflows
   console.log("Seeding workflows...");
   const adminWorkflow = await prisma.workflow.upsert({
     where: { key: "admin_workflow" },
@@ -111,7 +249,7 @@ async function main() {
     ),
   );
 
-  // 4. Seed Roles
+  // 7. Seed Roles
   console.log("Seeding roles...");
   const superAdminRole = await prisma.role.upsert({
     where: { key: "super_admin" },
@@ -146,7 +284,7 @@ async function main() {
     },
   });
 
-  // 5. Create Platform User (Super Admin)
+  // 8. Create Platform User (Super Admin)
   console.log("Creating super admin user...");
   const hashedPassword = await bcrypt.hash("SuperAdmin@123", 12);
   const superAdminUser = await prisma.user.upsert({
@@ -167,7 +305,7 @@ async function main() {
         userId_roleId_scopeId: {
           userId: superAdminUser.id,
           roleId: superAdminRole.id,
-          scopeId: "global_scope", // Specific string or null for global. Using null is cleaner if schema allows.
+          scopeId: "global_scope",
         },
       },
       update: {},
@@ -175,20 +313,17 @@ async function main() {
         userId: superAdminUser.id,
         roleId: superAdminRole.id,
         scopeType: "global",
-        // scopeId remains null for global roles
       },
     })
-    .catch(() => {
-      // If we use null in unique constraint, we might need a different approach.
-      // However, our schema allows null scopeId in the unique constraint [userId, roleId, scopeId].
-    });
+    .catch(() => {});
 
-  // 6. Create Example Organization and Branch
+  // 9. Create Example Organization and Branch
   console.log("Creating example organization...");
   const org = await prisma.organization.create({
     data: {
       name: "HealthCare Pharmacy Solutions",
       status: 1,
+      planId: proPlan.id, // Linking to Pro Plan
       branches: {
         create: [
           { name: "Downtown Branch", status: 1 },
@@ -201,7 +336,7 @@ async function main() {
 
   const mainBranch = org.branches[0];
 
-  // 7. Create Branch Admin User
+  // 10. Create Branch Admin User
   console.log("Creating branch admin user...");
   const branchAdminUser = await prisma.user.upsert({
     where: { email: "admin@healthcare.com" },
