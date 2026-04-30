@@ -9,8 +9,10 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Link } from "react-router"
 import { cn } from "@/lib/utils"
-
+import { Eye, EyeOff } from "lucide-react"
+import { useState } from "react"
 export default function LoginPage() {
+  const [showPassword, setShowPassword] = useState(false)
   const {
     register,
     handleSubmit,
@@ -91,129 +93,180 @@ export default function LoginPage() {
         .delay-800 { animation-delay: 800ms; }
       `}</style>
 
-      <div className="flex min-h-screen w-full bg-background font-sans selection:bg-primary/10 selection:text-primary overflow-hidden">
-
+      <div className="flex min-h-screen w-full overflow-hidden bg-background font-sans selection:bg-primary/10 selection:text-primary">
         {/* Left Column - Branding / Visual */}
-        <div className="hidden lg:flex w-1/2 bg-gradient-to-br from-slate-900 via-indigo-950 to-indigo-900 p-12 flex-col justify-between relative overflow-hidden">
-
-          <div className="absolute top-0 left-0 w-full h-full opacity-20 pointer-events-none">
-            <div className="absolute -top-[10%] -left-[10%] w-[60%] h-[60%] rounded-full bg-indigo-500 mix-blend-screen blur-[100px] animate-blob" />
-            <div className="absolute top-[40%] -right-[10%] w-[70%] h-[70%] rounded-full bg-violet-600 mix-blend-screen blur-[100px] animate-blob" style={{ animationDelay: '2s' }} />
+        <div className="relative hidden w-1/2 flex-col justify-between overflow-hidden bg-gradient-to-br from-slate-900 via-indigo-950 to-indigo-900 p-12 lg:flex">
+          <div className="pointer-events-none absolute top-0 left-0 h-full w-full opacity-20">
+            <div className="animate-blob absolute -top-[10%] -left-[10%] h-[60%] w-[60%] rounded-full bg-indigo-500 mix-blend-screen blur-[100px]" />
+            <div
+              className="animate-blob absolute top-[40%] -right-[10%] h-[70%] w-[70%] rounded-full bg-violet-600 mix-blend-screen blur-[100px]"
+              style={{ animationDelay: "2s" }}
+            />
           </div>
 
           <div className="relative z-10">
-            <div className="flex items-center gap-3 text-white mb-20 animate-drop-in-center">
-              <div className="bg-gradient-to-br from-indigo-500 to-violet-600 p-2.5 rounded-xl shadow-lg shadow-indigo-500/30">
-                <Pill className="w-6 h-6 text-white" />
+            <div className="animate-drop-in-center mb-20 flex items-center gap-3 text-white">
+              <div className="rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 p-2.5 shadow-lg shadow-indigo-500/30">
+                <Pill className="h-6 w-6 text-white" />
               </div>
-              <span className="text-2xl font-bold tracking-tight">PharmaAdmin</span>
+              <span className="text-2xl font-bold tracking-tight">
+                PharmaAdmin
+              </span>
             </div>
 
-            <div className="space-y-6 max-w-lg">
-              <h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white to-indigo-200 leading-[1.15] tracking-tight animate-shatter-top-left delay-100">
+            <div className="max-w-lg space-y-6">
+              <h1 className="animate-shatter-top-left bg-gradient-to-r from-white to-indigo-200 bg-clip-text text-5xl leading-[1.15] font-extrabold tracking-tight text-transparent delay-100">
                 Welcome back to your pharmacy dashboard.
               </h1>
-              <p className="text-lg text-indigo-200/80 leading-relaxed font-light animate-shatter-bottom-left delay-200">
-                Sign in to manage your inventory, track sales, and oversee staff operations from your secure workspace.
+              <p className="animate-shatter-bottom-left text-lg leading-relaxed font-light text-indigo-200/80 delay-200">
+                Sign in to manage your inventory, track sales, and oversee staff
+                operations from your secure workspace.
               </p>
             </div>
           </div>
 
-          <div className="relative z-10 grid grid-cols-2 gap-6 mt-12">
-            <div className="flex flex-col gap-3 p-5 rounded-2xl bg-white/[0.03] border border-white/[0.05] backdrop-blur-md transition-colors hover:bg-white/[0.05] animate-shatter-bottom-left delay-300 [&>div]:animate-float">
-              <div className="bg-indigo-500/20 w-fit p-2 rounded-lg">
-                <Activity className="w-5 h-5 text-indigo-300" />
+          <div className="relative z-10 mt-12 grid grid-cols-2 gap-6">
+            <div className="animate-shatter-bottom-left [&>div]:animate-float flex flex-col gap-3 rounded-2xl border border-white/[0.05] bg-white/[0.03] p-5 backdrop-blur-md transition-colors delay-300 hover:bg-white/[0.05]">
+              <div className="w-fit rounded-lg bg-indigo-500/20 p-2">
+                <Activity className="h-5 w-5 text-indigo-300" />
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-white mb-1">Performance Tracking</h3>
-                <p className="text-xs text-indigo-300/80 leading-relaxed">Detailed insights into your daily sales and order volume.</p>
+                <h3 className="mb-1 text-sm font-semibold text-white">
+                  Performance Tracking
+                </h3>
+                <p className="text-xs leading-relaxed text-indigo-300/80">
+                  Detailed insights into your daily sales and order volume.
+                </p>
               </div>
             </div>
-            <div className="flex flex-col gap-3 p-5 rounded-2xl bg-white/[0.03] border border-white/[0.05] backdrop-blur-md transition-colors hover:bg-white/[0.05] animate-shatter-bottom-right delay-400 [&>div]:animate-float">
-              <div className="bg-violet-500/20 w-fit p-2 rounded-lg">
-                <ShieldCheck className="w-5 h-5 text-violet-300" />
+            <div className="animate-shatter-bottom-right [&>div]:animate-float flex flex-col gap-3 rounded-2xl border border-white/[0.05] bg-white/[0.03] p-5 backdrop-blur-md transition-colors delay-400 hover:bg-white/[0.05]">
+              <div className="w-fit rounded-lg bg-violet-500/20 p-2">
+                <ShieldCheck className="h-5 w-5 text-violet-300" />
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-white mb-1">Secure Session</h3>
-                <p className="text-xs text-indigo-300/80 leading-relaxed">Encrypted authentication to keep your data safe.</p>
+                <h3 className="mb-1 text-sm font-semibold text-white">
+                  Secure Session
+                </h3>
+                <p className="text-xs leading-relaxed text-indigo-300/80">
+                  Encrypted authentication to keep your data safe.
+                </p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Right Column - Form */}
-        <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 relative bg-background">
-
-          <div className="absolute top-0 right-0 -z-10 w-full h-full opacity-50 pointer-events-none">
-            <div className="absolute top-[-10%] right-[-5%] w-[40%] h-[40%] rounded-full bg-primary/5 blur-[100px]" />
+        <div className="relative flex w-full items-center justify-center bg-background p-6 sm:p-12 lg:w-1/2">
+          <div className="pointer-events-none absolute top-0 right-0 -z-10 h-full w-full opacity-50">
+            <div className="absolute top-[-10%] right-[-5%] h-[40%] w-[40%] rounded-full bg-primary/5 blur-[100px]" />
           </div>
 
           <div className="w-full max-w-[420px] space-y-8">
-
             <div className="space-y-3 text-center lg:text-left">
-              <div className="lg:hidden flex justify-center mb-8 animate-drop-in-center">
-                <div className="bg-gradient-to-br from-indigo-50 to-violet-50 dark:from-indigo-950/20 dark:to-violet-950/20 p-4 rounded-2xl shadow-sm border border-border">
-                  <Lock className="w-8 h-8 text-primary" />
+              <div className="animate-drop-in-center mb-8 flex justify-center lg:hidden">
+                <div className="rounded-2xl border border-border bg-gradient-to-br from-indigo-50 to-violet-50 p-4 shadow-sm dark:from-indigo-950/20 dark:to-violet-950/20">
+                  <Lock className="h-8 w-8 text-primary" />
                 </div>
               </div>
-              <h2 className="text-3xl font-extrabold tracking-tight text-foreground animate-shatter-top-right delay-150">
+              <h2 className="animate-shatter-top-right text-3xl font-extrabold tracking-tight text-foreground delay-150">
                 Sign in to PharmaAdmin
               </h2>
-              <p className="text-muted-foreground text-sm animate-shatter-top-left delay-200">
+              <p className="animate-shatter-top-left text-sm text-muted-foreground delay-200">
                 Enter your credentials to access your dashboard.
               </p>
             </div>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-
-              <div className="space-y-2 animate-shatter-top-right delay-300">
+              <div className="animate-shatter-top-right space-y-2 delay-300">
                 <Label htmlFor="email">Work Email</Label>
                 <Input
                   id="email"
                   type="email"
                   placeholder="john@pharmacy.com"
-                  className={cn("h-12 rounded-xl bg-muted/30 border-border focus:bg-background", errors.email && "border-destructive/50 bg-destructive/5")}
+                  className={cn(
+                    "h-12 rounded-xl border-border bg-muted/30 focus:bg-background",
+                    errors.email && "border-destructive/50 bg-destructive/5"
+                  )}
                   {...register("email")}
                 />
                 {errors.email && (
-                  <p className="text-xs font-medium text-destructive mt-1">
+                  <p className="mt-1 text-xs font-medium text-destructive">
                     {errors.email.message}
                   </p>
                 )}
               </div>
 
-              <div className="space-y-2 animate-shatter-top-left delay-400">
+              <div className="animate-shatter-top-left space-y-2 delay-400">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password">Password</Label>
-                  <a href="#" className="text-xs font-medium text-primary hover:opacity-80">
+                  <a
+                    href="#"
+                    className="text-xs font-medium text-primary hover:opacity-80"
+                  >
                     Forgot password?
                   </a>
                 </div>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  className={cn("h-12 rounded-xl bg-muted/30 border-border focus:bg-background", errors.password && "border-destructive/50 bg-destructive/5")}
-                  {...register("password")}
-                />
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    className={cn(
+                      "h-12 rounded-xl border-border bg-muted/30 pr-10 focus:bg-background",
+                      errors.password &&
+                        "border-destructive/50 bg-destructive/5"
+                    )}
+                    {...register("password")}
+                  />
+
+                  {/* Eye Button */}
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground hover:text-primary"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
+                  </button>
+                </div>
+
                 {errors.password && (
-                  <p className="text-xs font-medium text-destructive mt-1">
+                  <p className="mt-1 text-xs font-medium text-destructive">
                     {errors.password.message}
                   </p>
                 )}
               </div>
 
-              <div className="pt-2 animate-drop-in-center delay-600">
+              <div className="animate-drop-in-center pt-2 delay-600">
                 <Button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full h-12 rounded-xl font-bold bg-primary text-primary-foreground hover:opacity-90 shadow-md hover:shadow-xl hover:shadow-primary/20 transition-all duration-300 active:scale-[0.98]"
+                  className="h-12 w-full rounded-xl bg-primary font-bold text-primary-foreground shadow-md transition-all duration-300 hover:opacity-90 hover:shadow-xl hover:shadow-primary/20 active:scale-[0.98]"
                 >
                   {isSubmitting ? (
                     <span className="flex items-center gap-2">
-                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-primary-foreground" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      <svg
+                        className="mr-2 -ml-1 h-4 w-4 animate-spin text-primary-foreground"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
                       </svg>
                       Signing in...
                     </span>
@@ -224,11 +277,11 @@ export default function LoginPage() {
               </div>
             </form>
 
-            <p className="text-center text-sm text-muted-foreground font-medium animate-shatter-bottom-right delay-700">
+            <p className="animate-shatter-bottom-right text-center text-sm font-medium text-muted-foreground delay-700">
               Don't have an account?{" "}
               <Link
                 to="/admin/register"
-                className="text-primary hover:underline transition-colors font-bold"
+                className="font-bold text-primary transition-colors hover:underline"
               >
                 Create an account
               </Link>
