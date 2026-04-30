@@ -24,7 +24,13 @@ export class HsnService {
   }
 
   static async deleteHsn(id: string) {
-    await this.getHsnById(id);
+    const hsn = await this.getHsnById(id);
+    if (hsn.hsnMappings && hsn.hsnMappings.length > 0) {
+      throw new ErrorHandler(
+        "Cannot delete HSN code because it has active tax mappings. Please remove the mappings first.",
+        400
+      );
+    }
     return HsnRepository.delete(id);
   }
 }

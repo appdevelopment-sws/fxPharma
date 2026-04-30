@@ -81,7 +81,7 @@ router.post("/", isAuthenticated, validate(createTaxSchema), TaxController.creat
 /**
  * @swagger
  * /taxes/{id}:
- *   patch:
+ *   put:
  *     security:
  *       - bearerAuth: []
  *     summary: Update a tax rule
@@ -106,7 +106,7 @@ router.post("/", isAuthenticated, validate(createTaxSchema), TaxController.creat
  *       200:
  *         description: Tax rule updated
  */
-router.patch("/:id", validate(updateTaxSchema), isAuthenticated, TaxController.update);
+router.put("/:id", validate(updateTaxSchema), isAuthenticated, TaxController.update);
 
 /**
  * @swagger

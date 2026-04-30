@@ -21,3 +21,7 @@ export const createPlanSchema = z.object({
 });
 
 export const updatePlanSchema = createPlanSchema.partial();
+
+export const updatePlanStatusSchema = z.object({
+  status: z.number().int().min(0).max(1),
+});

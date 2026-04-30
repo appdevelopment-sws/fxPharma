@@ -27,7 +27,7 @@ export type GetTaxesResponse = {
   }
 }
 
-const BASE_URL = "/tax-settings" // Generic placeholder, adjust if backend path differs
+const BASE_URL = "/taxes" // Generic placeholder, adjust if backend path differs
 
 const TaxApi = {
   getTaxes: async (params?: any): Promise<GetTaxesResponse> => {
@@ -36,12 +36,12 @@ const TaxApi = {
     try {
       const res = await api.get<any>(BASE_URL, { params })
       return {
-        data: res.data?.items ?? [],
+        data: res.data ?? [],
         meta: {
-          total: res.data?.pagination?.total ?? 0,
-          page: res.data?.pagination?.page ?? params?.page ?? 1,
-          limit: res.data?.pagination?.limit ?? params?.limit ?? 10,
-          pages: res.data?.pagination?.totalPages ?? 1,
+          total: res.data?.length ?? 0,
+          page: 1,
+          limit: 10,
+          pages: 1,
         },
       }
     } catch (e) {
@@ -105,8 +105,8 @@ export type HsnMappingFormValues = {
   effectiveTo?: string
 }
 
-const HSN_BASE_URL = "/hsn-codes"
-const MAPPING_BASE_URL = "/hsn-tax-mappings"
+const HSN_BASE_URL = "/hsn"
+const MAPPING_BASE_URL = "/hsn-mappings"
 
 export const HsnApi = {
   getHsnCodes: async (
