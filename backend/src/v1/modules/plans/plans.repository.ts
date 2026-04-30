@@ -2,18 +2,25 @@ import { prisma } from "@/lib/prisma.js";
 import { Prisma } from "@prisma/client";
 
 export class PlansRepository {
-  static async findAll(filters: any = {}) {
-    return prisma.plan.findMany({
-      where: filters,
-      include: {
-        features: {
-          include: {
-            feature: true,
+  static async findAll(filters: any = {}, skip?: number, take?: number) {
+    const [data, total] = await Promise.all([
+      prisma.plan.findMany({
+        where: filters,
+        include: {
+          features: {
+            include: {
+              feature: true,
+            },
           },
         },
-      },
-      orderBy: { createdAt: "desc" },
-    });
+        orderBy: { createdAt: "desc" },
+        ...(skip !== undefined && { skip }),
+        ...(take !== undefined && { take }),
+      }),
+      prisma.plan.count({ where: filters }),
+    ]);
+
+    return { data, total };
   }
 
   static async findById(id: string) {
