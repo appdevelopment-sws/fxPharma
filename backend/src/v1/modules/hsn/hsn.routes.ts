@@ -80,7 +80,7 @@ router.post("/", isAuthenticated, validate(createHsnSchema), HsnController.creat
 /**
  * @swagger
  * /hsn/{id}:
- *   patch:
+ *   put:
  *     security:
  *       - bearerAuth: []
  *     summary: Update an HSN code
@@ -105,7 +105,7 @@ router.post("/", isAuthenticated, validate(createHsnSchema), HsnController.creat
  *       200:
  *         description: HSN code updated
  */
-router.patch("/:id", isAuthenticated, validate(updateHsnSchema), HsnController.update);
+router.put("/:id", isAuthenticated, validate(updateHsnSchema), HsnController.update);
 
 /**
  * @swagger

@@ -104,10 +104,10 @@ const TaxSettings = () => {
         render: (row) => `${row.rate}%`,
       },
       {
-        key: "type",
+        key: "taxType",
         header: "Type",
         render: (row) => (
-          <span className="capitalize">{row.type.toLowerCase()}</span>
+          <span className="capitalize">{row.taxType?.toLowerCase() || "-"}</span>
         ),
       },
       {
@@ -195,7 +195,7 @@ const TaxSettings = () => {
           currentPage={filter.page || 1}
           lastPage={taxesData?.meta?.pages || 1}
           pageSize={filter.perPage || 10}
-          totalRecords={taxesData?.meta?.total || 0}
+          totalRecords={taxesData?.data?.length || 0}
           isLoading={isLoadingTaxes}
           onPageChange={(page) => handleFilterChange({ page })}
           onPageSizeChange={(perPage) =>
