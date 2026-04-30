@@ -24,12 +24,12 @@ model Feature {
 }
 
 model Plan {
-  id               String       @id @default(cuid())
-  key              String       @unique // e.g., "BASIC_MONTHLY"
+  id               String  @id @default(cuid())
+  key              String  @unique // e.g., "BASIC_MONTHLY"
   name             String
-  shortDescription String?      @map("short_description")
+  shortDescription String? @map("short_description")
   description      Json? // Array of strings (points)
-  
+
   price          Decimal      @default(0.0)
   currency       String       @default("INR")
   billingCycle   BillingCycle @default(MONTHLY) @map("billing_cycle")
@@ -37,8 +37,8 @@ model Plan {
   priceBreakdown Json?        @map("price_breakdown") // Base, Tax, etc.
 
   // Limits
-  maxStaff    Int @default(1) @map("max_staff")
-  maxBranches Int @default(1) @map("max_branches")
+  maxStaff     Int @default(1) @map("max_staff")
+  maxBranches  Int @default(1) @map("max_branches")
   storageLimit Int @default(1024) @map("storage_limit") // In MB
 
   // Feature Toggles (JSON for flexible advanced features)
@@ -128,8 +128,6 @@ model Branch {
   userRoles       UserRole[]
   userWorkflows   UserWorkflow[]
   userPermissions UserPermission[]
-
-  taxes Tax[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -298,27 +296,43 @@ model UserPermission {
   @@unique([userId, permissionId, scopeId])
 }
 
-//////////////////////////////////////////////////////
-// 5. SETTINGS & CONFIGURATION
-//////////////////////////////////////////////////////
-
-enum TaxType {
-  EXCLUSIVE
-  INCLUSIVE
-}
-
-model Tax {
-  id       String  @id @default(cuid())
-  name     String
-  rate     Float   @default(0)
-  type     TaxType @default(EXCLUSIVE)
-  status   Int     @default(1) // 1=Active, 0=Inactive
-
-  branchId String?
-  branch   Branch? @relation(fields: [branchId], references: [id], onDelete: Cascade)
-
+model tax {
+  id        String   @id @default(cuid())
+  name      String
+  rate      Float
+  taxType   TaxType  @default(Exclusive) @map("tax_type")
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([branchId])
+  hsnmappings hsnmapping[]
+}
+
+enum TaxType {
+  Exclusive
+  Inclusive
+}
+
+model hsn {
+  id          String   @id @default(cuid())
+  hsncode     String
+  description String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  hsnmappings hsnmapping[]
+}
+
+model hsnmapping {
+  id        String   @id @default(cuid())
+  hsnid     String
+  taxid     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  hsn hsn @relation(fields: [hsnid], references: [id], onDelete: Cascade)
+  tax tax @relation(fields: [taxid], references: [id], onDelete: Cascade)
+
+  @@unique([hsnid, taxid])
 }

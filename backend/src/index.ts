@@ -12,7 +12,7 @@ import swaggerUi from "swagger-ui-express";
 import authRoutes from "./v1/modules/auth/auth.routes.js";
 // import masterProductRoutes from "./v1/modules/masterProduct/masterProduct.route.js";
 // import organizationRoutes from "./v1/modules/organization/organization.routes.js";
-import demoRoutes from "./v1/modules/demo/demo.routes.js";
+
 import planRoutes from "./v1/modules/plans/plans.routes.js";
 import featureRoutes from "./v1/modules/features/features.routes.js";
 import demoRoutes from "./v1/modules/demo/demo.routes.js";
