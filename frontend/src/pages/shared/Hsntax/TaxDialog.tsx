@@ -76,7 +76,14 @@ export default function TaxDialog({
         onSubmit={(event) => {
           event.preventDefault()
           handleSubmit(async (values) => {
-            await onSubmit(values)
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { type, ...rest } = values
+            await onSubmit({
+              ...rest,
+              rate: Number(values.rate),
+              // @ts-ignore
+              taxType: values.type === "EXCLUSIVE" ? "Exclusive" : "Inclusive"
+            })
           })()
         }}
       >
