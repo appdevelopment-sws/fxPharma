@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma.js";
+import * as taxHsnRepository from "./taxhsn.repository.js";
 
 /**
  * --- Tax Services ---
@@ -10,28 +10,15 @@ export const createTax = async (data: {
   taxType: "Exclusive" | "Inclusive";
   isActive?: boolean;
 }) => {
-  return prisma.tax.create({
-    data,
-  });
+  return taxHsnRepository.createTax(data);
 };
 
 export const getAllTaxes = async () => {
-  return prisma.tax.findMany({
-    orderBy: { createdAt: "desc" },
-  });
+  return taxHsnRepository.findTaxes();
 };
 
 export const getTaxById = async (id: string) => {
-  return prisma.tax.findUnique({
-    where: { id },
-    include: {
-      hsnmappings: {
-        include: {
-          hsn: true,
-        },
-      },
-    },
-  });
+  return taxHsnRepository.findTaxById(id);
 };
 
 export const updateTax = async (
@@ -43,16 +30,11 @@ export const updateTax = async (
     isActive: boolean;
   }>
 ) => {
-  return prisma.tax.update({
-    where: { id },
-    data,
-  });
+  return taxHsnRepository.updateTax(id, data);
 };
 
 export const deleteTax = async (id: string) => {
-  return prisma.tax.delete({
-    where: { id },
-  });
+  return taxHsnRepository.deleteTax(id);
 };
 
 /**
@@ -63,20 +45,21 @@ export const createHSN = async (data: {
   hsncode: string;
   description: string;
   isActive?: boolean;
-  taxIds?: string[]; // Optional: provide tax mappings during creation
+  taxIds?: string[];
 }) => {
-  return prisma.$transaction(async (tx) => {
+  const { taxIds, ...hsnData } = data;
+
+  return taxHsnRepository.withTransaction(async (tx) => {
     const hsn = await tx.hsn.create({
       data: {
-        hsncode: data.hsncode,
-        description: data.description,
-        isActive: data.isActive ?? true,
+        ...hsnData,
+        isActive: hsnData.isActive ?? true,
       },
     });
 
-    if (data.taxIds && data.taxIds.length > 0) {
+    if (taxIds && taxIds.length > 0) {
       await tx.hsnmapping.createMany({
-        data: data.taxIds.map((taxid) => ({
+        data: taxIds.map((taxid) => ({
           hsnid: hsn.id,
           taxid: taxid,
         })),
@@ -95,29 +78,11 @@ export const createHSN = async (data: {
 };
 
 export const getAllHSNs = async () => {
-  return prisma.hsn.findMany({
-    include: {
-      hsnmappings: {
-        include: {
-          tax: true,
-        },
-      },
-    },
-    orderBy: { createdAt: "desc" },
-  });
+  return taxHsnRepository.findHSNs();
 };
 
 export const getHSNById = async (id: string) => {
-  return prisma.hsn.findUnique({
-    where: { id },
-    include: {
-      hsnmappings: {
-        include: {
-          tax: true,
-        },
-      },
-    },
-  });
+  return taxHsnRepository.findHSNById(id);
 };
 
 export const updateHSN = async (
@@ -126,24 +91,22 @@ export const updateHSN = async (
     hsncode: string;
     description: string;
     isActive: boolean;
-    taxIds: string[]; // If provided, it will sync the mappings
+    taxIds: string[];
   }>
 ) => {
   const { taxIds, ...hsnData } = data;
 
-  return prisma.$transaction(async (tx) => {
+  return taxHsnRepository.withTransaction(async (tx) => {
     const hsn = await tx.hsn.update({
       where: { id },
       data: hsnData,
     });
 
     if (taxIds) {
-      // Delete old mappings
       await tx.hsnmapping.deleteMany({
         where: { hsnid: id },
       });
 
-      // Add new mappings
       if (taxIds.length > 0) {
         await tx.hsnmapping.createMany({
           data: taxIds.map((taxId) => ({
@@ -166,31 +129,17 @@ export const updateHSN = async (
 };
 
 export const deleteHSN = async (id: string) => {
-  return prisma.hsn.delete({
-    where: { id },
-  });
+  return taxHsnRepository.deleteHSN(id);
 };
 
 /**
- * --- Mapping Services (Standalone) ---
+ * --- Mapping Services ---
  */
 
 export const assignTaxToHSN = async (hsnid: string, taxid: string) => {
-  return prisma.hsnmapping.create({
-    data: {
-      hsnid,
-      taxid,
-    },
-  });
+  return taxHsnRepository.createHSNMapping(hsnid, taxid);
 };
 
 export const removeTaxFromHSN = async (hsnid: string, taxid: string) => {
-  return prisma.hsnmapping.delete({
-    where: {
-      hsnid_taxid: {
-        hsnid,
-        taxid,
-      },
-    },
-  });
+  return taxHsnRepository.deleteHSNMapping(hsnid, taxid);
 };
