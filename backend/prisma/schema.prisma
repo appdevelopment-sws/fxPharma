@@ -296,7 +296,7 @@ model UserPermission {
   @@unique([userId, permissionId, scopeId])
 }
 
-model tax {
+model Tax {
   id        String   @id @default(cuid())
   name      String
   rate      Float
@@ -305,7 +305,7 @@ model tax {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  hsnmappings hsnmapping[]
+  hsnMappings HsnMapping[]
 }
 
 enum TaxType {
@@ -313,7 +313,7 @@ enum TaxType {
   Inclusive
 }
 
-model hsn {
+model Hsn {
   id          String   @id @default(cuid())
   hsncode     String
   description String
@@ -321,18 +321,18 @@ model hsn {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  hsnmappings hsnmapping[]
+  hsnMappings HsnMapping[]
 }
 
-model hsnmapping {
+model HsnMapping {
   id        String   @id @default(cuid())
   hsnid     String
   taxid     String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  hsn hsn @relation(fields: [hsnid], references: [id], onDelete: Cascade)
-  tax tax @relation(fields: [taxid], references: [id], onDelete: Cascade)
+  hsn Hsn @relation(fields: [hsnid], references: [id], onDelete: Cascade)
+  tax Tax @relation(fields: [taxid], references: [id], onDelete: Cascade)
 
   @@unique([hsnid, taxid])
 }

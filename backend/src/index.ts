@@ -16,7 +16,9 @@ import authRoutes from "./v1/modules/auth/auth.routes.js";
 import planRoutes from "./v1/modules/plans/plans.routes.js";
 import featureRoutes from "./v1/modules/features/features.routes.js";
 import demoRoutes from "./v1/modules/demo/demo.routes.js";
-import taxHsnRoutes from "./v1/modules/taxhsn/taxhsn.routes.js";
+import taxRoutes from "./v1/modules/tax/tax.routes.js";
+import hsnRoutes from "./v1/modules/hsn/hsn.routes.js";
+import hsnMappingRoutes from "./v1/modules/hsnmapping/hsnmapping.routes.js";
 
 import { authLimiter, generalLimiter } from "./helpers/rateLimit.js";
 import { swaggerSpec } from "./config/swagger.config.js";
@@ -62,7 +64,10 @@ protectedRouter.use(tenantMiddleware as any);
 protectedRouter.use("/demo", generalLimiter, demoRoutes);
 protectedRouter.use("/plans", generalLimiter, planRoutes);
 protectedRouter.use("/features", generalLimiter, featureRoutes);
-protectedRouter.use("/tax-hsn", taxHsnRoutes);
+protectedRouter.use("/taxes", generalLimiter, taxRoutes);
+protectedRouter.use("/hsn", generalLimiter, hsnRoutes);
+protectedRouter.use("/hsn-mappings", generalLimiter, hsnMappingRoutes);
+
 
 app.use("/api/v1", protectedRouter);
 
