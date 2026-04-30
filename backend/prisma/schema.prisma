@@ -71,8 +71,6 @@ model Branch {
   userWorkflows   UserWorkflow[]
   userPermissions UserPermission[]
 
-  taxes Tax[]
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -238,29 +236,4 @@ model UserPermission {
   branchId   String?
 
   @@unique([userId, permissionId, scopeId])
-}
-
-//////////////////////////////////////////////////////
-// 5. SETTINGS & CONFIGURATION
-//////////////////////////////////////////////////////
-
-enum TaxType {
-  EXCLUSIVE
-  INCLUSIVE
-}
-
-model Tax {
-  id       String  @id @default(cuid())
-  name     String
-  rate     Float   @default(0)
-  type     TaxType @default(EXCLUSIVE)
-  status   Int     @default(1) // 1=Active, 0=Inactive
-
-  branchId String?
-  branch   Branch? @relation(fields: [branchId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([branchId])
 }
