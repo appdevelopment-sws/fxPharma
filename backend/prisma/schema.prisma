@@ -48,12 +48,6 @@ model Organization {
   branches Branch[]
   features OrganizationFeature[]
 
-  // Shared Master Data Scoped to Org
-  masterProducts MasterProduct[]
-  companies      Company[]
-  hsnCodes       HsnCode[]
-  suppliers      Supplier[]
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -71,11 +65,6 @@ model Branch {
   name    String
   address String?
   status  Int     @default(1)
-
-  // Scoped Operations
-  inventory      Inventory[]
-  sales          Sale[]
-  purchaseOrders PurchaseOrder[]
 
   // Assignments scoped to this branch
   userRoles       UserRole[]
@@ -111,9 +100,6 @@ model User {
   roles       UserRole[]
   workflows   UserWorkflow[]
   permissions UserPermission[]
-
-  // Records created by user
-  sales Sale[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -252,171 +238,3 @@ model UserPermission {
   @@unique([userId, permissionId, scopeId])
 }
 
-//////////////////////////////////////////////////////
-// 5. ORGANIZATION MASTER DATA (SHARED ACROSS BRANCHES)
-//////////////////////////////////////////////////////
-
-model MasterProduct {
-  id             String       @id @default(cuid())
-  organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-
-  name        String
-  genericName String? @map("generic_name")
-  brandName   String? @map("brand_name")
-  barcode     String?
-
-  companyId String?
-  company   Company? @relation(fields: [companyId], references: [id])
-
-  productTypeId String?
-  productType   ProductType? @relation(fields: [productTypeId], references: [id])
-
-  hsnCodeId String?
-  hsnCode   HsnCode? @relation(fields: [hsnCodeId], references: [id])
-
-  inventory Inventory[]
-  saleItems SaleItem[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([organizationId])
-  @@index([barcode])
-}
-
-model Company {
-  id             String       @id @default(cuid())
-  organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-
-  name   String
-  status String @default("ACTIVE") // ACTIVE, INACTIVE
-
-  products MasterProduct[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model ProductType {
-  id       String          @id @default(cuid())
-  name     String          @unique // Tablet, Syrup, etc.
-  products MasterProduct[]
-}
-
-model HsnCode {
-  id             String       @id @default(cuid())
-  organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-
-  code       String
-  gstPercent Decimal @default(18.0) @map("gst_percent")
-
-  products MasterProduct[]
-
-  @@unique([organizationId, code])
-}
-
-model Supplier {
-  id             String       @id @default(cuid())
-  organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-
-  name          String
-  contactPerson String? @map("contact_person")
-  mobile        String?
-  gstin         String?
-
-  purchaseOrders PurchaseOrder[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-//////////////////////////////////////////////////////
-// 6. BRANCH OPERATIONS (INVENTORY & SALES)
-//////////////////////////////////////////////////////
-
-model Inventory {
-  id       String @id @default(cuid())
-  branchId String
-  branch   Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
-
-  masterProductId String
-  masterProduct   MasterProduct @relation(fields: [masterProductId], references: [id], onDelete: Cascade)
-
-  batchNumber String   @map("batch_number")
-  expiryDate  DateTime @map("expiry_date")
-
-  purchasePrice Decimal @map("purchase_price")
-  mrp           Decimal
-  salePrice     Decimal @map("sale_price")
-
-  stockQuantity Int @default(0) @map("stock_quantity")
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([branchId])
-  @@index([masterProductId])
-}
-
-model Sale {
-  id       String @id @default(cuid())
-  branchId String
-  branch   Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
-
-  userId String // Created by
-  user   User   @relation(fields: [userId], references: [id])
-
-  customerName   String? @map("customer_name")
-  customerMobile String? @map("customer_mobile")
-
-  totalAmount    Decimal @map("total_amount")
-  taxAmount      Decimal @map("tax_amount")
-  discountAmount Decimal @default(0) @map("discount_amount")
-  payableAmount  Decimal @map("payable_amount")
-
-  paymentMethod String @default("CASH") // CASH, UPI, CARD
-  status        String @default("COMPLETED") // COMPLETED, RETURNED, CANCELLED
-
-  items SaleItem[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([branchId])
-}
-
-model SaleItem {
-  id     String @id @default(cuid())
-  saleId String
-  sale   Sale   @relation(fields: [saleId], references: [id], onDelete: Cascade)
-
-  masterProductId String
-  masterProduct   MasterProduct @relation(fields: [masterProductId], references: [id])
-
-  batchNumber String? @map("batch_number")
-  quantity    Int
-  unitPrice   Decimal @map("unit_price")
-  taxAmount   Decimal @map("tax_amount")
-  totalAmount Decimal @map("total_amount")
-
-  createdAt DateTime @default(now())
-}
-
-model PurchaseOrder {
-  id       String @id @default(cuid())
-  branchId String
-  branch   Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
-
-  supplierId String
-  supplier   Supplier @relation(fields: [supplierId], references: [id])
-
-  status      String  @default("PENDING") // PENDING, RECEIVED, CANCELLED
-  totalAmount Decimal @map("total_amount")
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
