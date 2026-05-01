@@ -12,6 +12,7 @@ import { useDisclosure } from "@/hooks/useDisclosure"
 import useSearchFilter from "@/hooks/useSearchFilter"
 
 import { queryKeys } from "@/lib/queryKeys"
+import { CategoryApi } from "@/services/attributesApi"
 import { INITIAL_CATEGORY_FILTERS } from "@/constants/page/super-admin/category"
 import CategoryDialog from "@/components/dialog/categoryDialog"
 
@@ -25,11 +26,11 @@ const Categories = () => {
 
   const { data, isLoading } = useQuery({
     queryKey: queryKeys.categories.list(filter),
-    // queryFn: () => CategoryApi.getCategories(filter),
+    queryFn: () => CategoryApi.getCategories(filter),
   })
 
   const deleteMutation = useMutation({
-    // mutationFn: (id: number) => CategoryApi.deleteCategory(id),
+    mutationFn: (id: number) => CategoryApi.deleteCategory(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.categories.all })
       deleteDisclosure.onClose()

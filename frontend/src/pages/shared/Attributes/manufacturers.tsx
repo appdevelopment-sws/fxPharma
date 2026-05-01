@@ -12,6 +12,7 @@ import { useDisclosure } from "@/hooks/useDisclosure"
 import useSearchFilter from "@/hooks/useSearchFilter"
 
 import { queryKeys } from "@/lib/queryKeys"
+import { ManufacturerApi } from "@/services/attributesApi"
 import { INITIAL_MANUFACTURER_FILTERS } from "@/constants/page/super-admin/manufracturer"
 import ManufacturerDialog from "@/components/dialog/ManufacturerDialog"
 
@@ -25,11 +26,11 @@ const Manufacturers = () => {
 
   const { data, isLoading } = useQuery({
     queryKey: queryKeys.manufacturers.list(filter),
-    // queryFn: () => ManufacturerApi.getManufacturers(filter),
+    queryFn: () => ManufacturerApi.getManufacturers(filter),
   })
 
   const deleteMutation = useMutation({
-    // mutationFn: (id: number) => ManufacturerApi.deleteManufacturer(id),
+    mutationFn: (id: number) => ManufacturerApi.deleteManufacturer(id),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.manufacturers.all,

@@ -7,6 +7,7 @@ import { FormField, FormSelectField } from "@/components/ui/form-fields"
 import { Button } from "@/components/ui/button"
 
 import { queryKeys } from "@/lib/queryKeys"
+import { ManufacturerApi } from "@/services/attributesApi"
 import { MANUFACTURER_FORM_INITIAL_DATA } from "@/constants/page/super-admin/manufracturer"
 
 interface Props {

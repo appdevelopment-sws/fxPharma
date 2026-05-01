@@ -12,13 +12,25 @@ export class ManufacturerRepository {
       prisma.manufacturer.count({ where: filters }),
     ]);
 
-    return { data, total };
+    const mappedData = data.map((item: any) => ({
+      ...item,
+      status: item.isActive ? "ACTIVE" : "INACTIVE",
+    }));
+
+    return { data: mappedData, total };
   }
 
   static async findById(id: string) {
-    return prisma.manufacturer.findUnique({
+    const item: any = await prisma.manufacturer.findUnique({
       where: { id },
     });
+
+    if (!item) return null;
+
+    return {
+      ...item,
+      status: item.isActive ? "ACTIVE" : "INACTIVE",
+    };
   }
 
   static async findByName(name: string) {
@@ -28,15 +40,23 @@ export class ManufacturerRepository {
   }
 
   static async create(data: any) {
+    const { status, ...rest } = data;
     return prisma.manufacturer.create({
-      data,
+      data: {
+        ...rest,
+        isActive: status === "ACTIVE",
+      },
     });
   }
 
   static async update(id: string, data: any) {
+    const { status, ...rest } = data;
     return prisma.manufacturer.update({
       where: { id },
-      data,
+      data: {
+        ...rest,
+        ...(status !== undefined && { isActive: status === "ACTIVE" }),
+      },
     });
   }
 

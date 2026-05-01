@@ -12,13 +12,27 @@ export class UnitsRepository {
       prisma.unit.count({ where: filters }),
     ]);
 
-    return { data, total };
+    const mappedData = data.map((item: any) => ({
+      ...item,
+      status: item.isActive ? "ACTIVE" : "INACTIVE",
+      short_name: item.shortName,
+    }));
+
+    return { data: mappedData, total };
   }
 
   static async findById(id: string) {
-    return prisma.unit.findUnique({
+    const item: any = await prisma.unit.findUnique({
       where: { id },
     });
+
+    if (!item) return null;
+
+    return {
+      ...item,
+      status: item.isActive ? "ACTIVE" : "INACTIVE",
+      short_name: item.shortName,
+    };
   }
 
   static async findByName(name: string) {
@@ -28,15 +42,25 @@ export class UnitsRepository {
   }
 
   static async create(data: any) {
+    const { short_name, status, ...rest } = data;
     return prisma.unit.create({
-      data,
+      data: {
+        ...rest,
+        shortName: short_name || null,
+        isActive: status === "ACTIVE",
+      },
     });
   }
 
   static async update(id: string, data: any) {
+    const { short_name, status, ...rest } = data;
     return prisma.unit.update({
       where: { id },
-      data,
+      data: {
+        ...rest,
+        ...(short_name !== undefined && { shortName: short_name || null }),
+        ...(status !== undefined && { isActive: status === "ACTIVE" }),
+      },
     });
   }
 
