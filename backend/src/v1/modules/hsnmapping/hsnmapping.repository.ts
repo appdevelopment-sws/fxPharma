@@ -43,6 +43,13 @@ export class HsnMappingRepository {
     });
   }
 
+  static async update(id: string, data: any) {
+    return prisma.hsnMapping.update({
+      where: { id },
+      data,
+    });
+  }
+
   static async delete(id: string) {
     return prisma.hsnMapping.delete({
       where: { id },

@@ -3,10 +3,11 @@ import { api } from "./api"
 export type TaxType = "INCLUSIVE" | "EXCLUSIVE"
 
 export type TaxRate = {
-  id: number
+  id: string
   name: string
   rate: number
-  type: TaxType
+  taxType: TaxType
+  isActive: boolean
   createdAt?: string
   updatedAt?: string
 }
@@ -14,7 +15,8 @@ export type TaxRate = {
 export type TaxFormValues = {
   name: string
   rate: number
-  type: TaxType
+  taxType: TaxType
+  isActive?: boolean
 }
 
 export type GetTaxesResponse = {
@@ -23,37 +25,18 @@ export type GetTaxesResponse = {
     total: number
     page: number
     limit: number
-    pages: number
+    totalPages: number
   }
 }
 
-const BASE_URL = "/taxes" // Generic placeholder, adjust if backend path differs
+const BASE_URL = "/taxes"
 
 const TaxApi = {
   getTaxes: async (params?: any): Promise<GetTaxesResponse> => {
-    // In a real app, this would call the API.
-    // For now, I'll return mock data if the API isn't ready, but standardizing on the real pattern.
-    try {
-      const res = await api.get<any>(BASE_URL, { params })
-      return {
-        data: res.data ?? [],
-        meta: {
-          total: res.data?.length ?? 0,
-          page: 1,
-          limit: 10,
-          pages: 1,
-        },
-      }
-    } catch (e) {
-      console.warn("Tax API failed, returning mock data for development", e)
-      return {
-        data: [
-          { id: 1, name: "GST 5%", rate: 5, type: "EXCLUSIVE" },
-          { id: 2, name: "GST 12%", rate: 12, type: "EXCLUSIVE" },
-          { id: 3, name: "GST 18%", rate: 18, type: "EXCLUSIVE" },
-        ],
-        meta: { total: 3, page: 1, limit: 10, pages: 1 },
-      }
+    const res = await api.get<any>(BASE_URL, { params })
+    return {
+      data: res.data ?? [],
+      meta: res.meta,
     }
   },
 
@@ -63,45 +46,51 @@ const TaxApi = {
   },
 
   updateTax: async (
-    id: number,
+    id: string,
     data: TaxFormValues
   ): Promise<{ data: TaxRate }> => {
     const res = await api.put<any>(`${BASE_URL}/${id}`, data)
     return { data: res.data }
   },
 
-  deleteTax: async (id: number): Promise<{ success: boolean }> => {
+  deleteTax: async (id: string): Promise<{ success: boolean }> => {
     return api.delete(`${BASE_URL}/${id}`)
   },
 }
 
 export type HsnCode = {
-  id: number
-  code: string
+  code: any
+  id: string
+  hsncode: string
   description?: string
+  isActive: boolean
   createdAt?: string
   updatedAt?: string
 }
 
 export type HsnFormValues = {
-  code: string
+  hsncode: string
   description?: string
+  isActive?: boolean
 }
 
 export type HsnMapping = {
-  id: number
-  hsnId: number
-  taxId: number
-  effectiveFrom: string
-  effectiveTo?: string
-  hsnCode?: HsnCode
-  taxRate?: TaxRate
+  hsnId(hsnId: any): unknown
+  taxId(taxId: any): unknown
+  effectiveFrom: any
+  effectiveTo: any
+  createdAt: Date
+  id: string
+  hsnid: string
+  taxid: string
+  hsn?: HsnCode
+  tax?: TaxRate
 }
 
 export type HsnMappingFormValues = {
   hsnId: string
   taxId: string
-  effectiveFrom: string
+  effectiveFrom?: string
   effectiveTo?: string
 }
 
@@ -112,61 +101,49 @@ export const HsnApi = {
   getHsnCodes: async (
     params?: any
   ): Promise<{ data: HsnCode[]; meta?: any }> => {
-    console.log("Fetching HSN codes with params:", params)
-    try {
-      const res = await api.get<any>(HSN_BASE_URL, { params })
-      return {
-        data: res.data?.items ?? [],
-        meta: res.data?.pagination ?? {
-          total: 0,
-          page: 1,
-          limit: 10,
-          pages: 1,
-        },
-      }
-    } catch (e) {
-      return {
-        data: [
-          { id: 1, code: "3004", description: "Medicaments" },
-          { id: 2, code: "3006", description: "Pharmaceutical goods" },
-        ],
-        meta: { total: 2, page: 1, limit: 10, pages: 1 },
-      }
+    const res = await api.get<any>(HSN_BASE_URL, { params })
+    return {
+      data: res.data ?? [],
+      meta: res.meta,
     }
   },
 
   createHsn: async (data: HsnFormValues) => api.post(HSN_BASE_URL, data),
-  updateHsn: async (id: number, data: HsnFormValues) =>
+
+  updateHsn: async (id: string, data: HsnFormValues) =>
     api.put(`${HSN_BASE_URL}/${id}`, data),
-  deleteHsn: async (id: number) => api.delete(`${HSN_BASE_URL}/${id}`),
+
+  deleteHsn: async (id: string) => api.delete(`${HSN_BASE_URL}/${id}`),
 
   getMappings: async (
     params?: any
   ): Promise<{ data: HsnMapping[]; meta?: any }> => {
-    try {
-      const res = await api.get<any>(MAPPING_BASE_URL, { params })
-      return {
-        data: res.data?.items ?? [],
-        meta: res.data?.pagination ?? {
-          total: 0,
-          page: 1,
-          limit: 10,
-          pages: 1,
-        },
-      }
-    } catch (e) {
-      return {
-        data: [],
-        meta: { total: 0, page: 1, limit: 10, pages: 1 },
-      }
+    const res = await api.get<any>(MAPPING_BASE_URL, { params })
+    return {
+      data: res.data ?? [],
+      meta: res.meta,
     }
   },
 
-  createMapping: async (data: HsnMappingFormValues) =>
-    api.post(MAPPING_BASE_URL, data),
-  updateMapping: async (id: number, data: HsnMappingFormValues) =>
-    api.put(`${MAPPING_BASE_URL}/${id}`, data),
-  deleteMapping: async (id: number) => api.delete(`${MAPPING_BASE_URL}/${id}`),
+  createMapping: async (values: HsnMappingFormValues) => {
+    // Map frontend names to backend names
+    const data = {
+      hsnid: values.hsnId,
+      taxid: values.taxId,
+    }
+    return api.post(MAPPING_BASE_URL, data)
+  },
+
+  updateMapping: async (id: string | number, values: HsnMappingFormValues) => {
+    const data = {
+      hsnid: values.hsnId,
+      taxid: values.taxId,
+    }
+    return api.put(`${MAPPING_BASE_URL}/${id}`, data)
+  },
+
+  deleteMapping: async (id: string | number) =>
+    api.delete(`${MAPPING_BASE_URL}/${id}`),
 }
 
 export default TaxApi

@@ -54,12 +54,12 @@ export default function HsnMappingDialog({
     if (open) {
       if (mapping) {
         reset({
-          hsnId: String(mapping.hsnId),
-          taxId: String(mapping.taxId),
-          effectiveFrom: mapping.effectiveFrom.split("T")[0],
-          effectiveTo: mapping.effectiveTo
-            ? mapping.effectiveTo.split("T")[0]
-            : "",
+          hsnId: String(mapping.hsnid),
+          taxId: String(mapping.taxid),
+          effectiveFrom: mapping.createdAt
+            ? new Date(mapping.createdAt).toISOString().split("T")[0]
+            : new Date().toISOString().split("T")[0],
+          effectiveTo: "",
         })
       } else {
         reset(DEFAULT_VALUES)
@@ -86,7 +86,7 @@ export default function HsnMappingDialog({
   const hsnOptions = React.useMemo(
     () =>
       (hsnCodes?.data || []).map((h) => ({
-        label: h.code,
+        label: h.hsncode,
         value: String(h.id),
       })),
     [hsnCodes]
