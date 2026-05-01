@@ -2,10 +2,13 @@ import { Request, Response } from "express";
 import { HsnService } from "./hsn.service.js";
 import { catchAsync } from "../../../utils/catchAsync.js";
 
+import { paginate } from "../../../utils/pagination.js";
+
 export class HsnController {
   static getAll = catchAsync(async (req: Request, res: Response) => {
-    const hsns = await HsnService.getAllHsns();
-    res.json({ success: true, data: hsns });
+    await paginate(res, req.query, (skip, take, search) =>
+      HsnService.getAllHsns(search, skip, take)
+    );
   });
 
   static getById = catchAsync(async (req: Request, res: Response) => {

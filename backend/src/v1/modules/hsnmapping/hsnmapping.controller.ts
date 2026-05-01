@@ -2,10 +2,13 @@ import { Request, Response } from "express";
 import { HsnMappingService } from "./hsnmapping.service.js";
 import { catchAsync } from "../../../utils/catchAsync.js";
 
+import { paginate } from "../../../utils/pagination.js";
+
 export class HsnMappingController {
   static getAll = catchAsync(async (req: Request, res: Response) => {
-    const mappings = await HsnMappingService.getAllMappings();
-    res.json({ success: true, data: mappings });
+    await paginate(res, req.query, (skip, take, search) =>
+      HsnMappingService.getAllMappings(search, skip, take)
+    );
   });
 
   static getById = catchAsync(async (req: Request, res: Response) => {

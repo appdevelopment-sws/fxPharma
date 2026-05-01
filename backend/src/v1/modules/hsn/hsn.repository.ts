@@ -1,15 +1,23 @@
 import { prisma } from "@/lib/prisma.js";
 
 export class HsnRepository {
-  static async findAll() {
-    return prisma.hsn.findMany({
-      orderBy: { createdAt: "desc" },
-      include: {
-        hsnMappings: {
-          include: { tax: true },
+  static async findAll(filters: any = {}, skip?: number, take?: number) {
+    const [data, total] = await Promise.all([
+      prisma.hsn.findMany({
+        where: filters,
+        orderBy: { createdAt: "desc" },
+        include: {
+          hsnMappings: {
+            include: { tax: true },
+          },
         },
-      },
-    });
+        ...(skip !== undefined && { skip }),
+        ...(take !== undefined && { take }),
+      }),
+      prisma.hsn.count({ where: filters }),
+    ]);
+
+    return { data, total };
   }
 
   static async findById(id: string) {

@@ -1,9 +1,12 @@
 import ErrorHandler from "../../../utils/ErrorHandler.js";
 import { HsnMappingRepository } from "./hsnmapping.repository.js";
 
+import { buildSearchFilter } from "../../../utils/prisma.js";
+
 export class HsnMappingService {
-  static async getAllMappings() {
-    return HsnMappingRepository.findAll();
+  static async getAllMappings(search?: string, skip?: number, take?: number) {
+    const where = buildSearchFilter(search, []); // No direct searchable fields
+    return HsnMappingRepository.findAll(where, skip, take);
   }
 
   static async getMappingById(id: string) {
