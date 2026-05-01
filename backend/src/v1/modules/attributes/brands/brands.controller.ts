@@ -16,6 +16,7 @@ export class BrandsController {
     });
 
     static create = catchAsync(async (req: Request, res: Response) => {
+        console.log("Create Brand Request Body:", JSON.stringify(req.body, null, 2));
         const brand = await BrandsService.createBrand(req.body);
         res.status(201).json({ success: true, data: brand });
     });
