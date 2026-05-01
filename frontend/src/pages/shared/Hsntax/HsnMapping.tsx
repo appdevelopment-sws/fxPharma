@@ -105,27 +105,24 @@ const HsnMappingPage = () => {
       {
         key: "hsn",
         header: "HSN Code",
-        render: (row) => row.hsnCode?.code || `HSN #${row.hsnId}`,
+        render: (row) => row.hsn?.hsncode || `HSN #${row.hsnid}`,
       },
       {
         key: "tax",
         header: "Tax Rule",
         render: (row) =>
-          row.taxRate
-            ? `${row.taxRate.name} (${row.taxRate.rate}%)`
-            : `Tax #${row.taxId}`,
+          row.tax
+            ? `${row.tax.name} (${row.tax.rate}%)`
+            : `Tax #${row.taxid}`,
       },
       {
         key: "effective",
-        header: "Effective Period",
+        header: "Created At",
         render: (row) => (
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <Calendar className="size-3" />
             <span>
-              {format(new Date(row.effectiveFrom), "dd MMM yyyy")}
-              {row.effectiveTo
-                ? ` — ${format(new Date(row.effectiveTo), "dd MMM yyyy")}`
-                : " — Present"}
+              {format(new Date(row.createdAt || new Date()), "dd MMM yyyy")}
             </span>
           </div>
         ),
@@ -215,7 +212,7 @@ const HsnMappingPage = () => {
           data={mappingData?.data || []}
           rowKey="id"
           currentPage={filter.page || 1}
-          lastPage={mappingData?.meta?.pages || 1}
+          lastPage={mappingData?.meta?.totalPages || 1}
           pageSize={filter.perPage || 10}
           totalRecords={mappingData?.meta?.total || 0}
           isLoading={isLoadingMapping}

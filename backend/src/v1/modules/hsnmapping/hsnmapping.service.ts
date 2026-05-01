@@ -21,6 +21,11 @@ export class HsnMappingService {
     return HsnMappingRepository.create(data);
   }
 
+  static async updateMapping(id: string, data: { hsnid: string; taxid: string }) {
+    await this.getMappingById(id);
+    return HsnMappingRepository.update(id, data);
+  }
+
   static async deleteMapping(id: string) {
     await this.getMappingById(id);
     return HsnMappingRepository.delete(id);

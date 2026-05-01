@@ -21,6 +21,11 @@ export class HsnMappingController {
     res.status(201).json({ success: true, data: mapping });
   });
 
+  static update = catchAsync(async (req: Request, res: Response) => {
+    const mapping = await HsnMappingService.updateMapping(req.params.id as string, req.body);
+    res.json({ success: true, data: mapping });
+  });
+
   static delete = catchAsync(async (req: Request, res: Response) => {
     await HsnMappingService.deleteMapping(req.params.id as string);
     res.json({ success: true, message: "Mapping deleted successfully" });
