@@ -12,13 +12,25 @@ export class BrandsRepository {
       prisma.brand.count({ where: filters }),
     ]);
 
-    return { data, total };
+    const mappedData = data.map((item: any) => ({
+      ...item,
+      status: item.isActive ? "ACTIVE" : "INACTIVE",
+    }));
+
+    return { data: mappedData, total };
   }
 
   static async findById(id: string) {
-    return prisma.brand.findUnique({
+    const item: any = await prisma.brand.findUnique({
       where: { id },
     });
+
+    if (!item) return null;
+
+    return {
+      ...item,
+      status: item.isActive ? "ACTIVE" : "INACTIVE",
+    };
   }
 
   static async findByName(name: string) {
@@ -28,15 +40,23 @@ export class BrandsRepository {
   }
 
   static async create(data: any) {
+    const { status, ...rest } = data;
     return prisma.brand.create({
-      data,
+      data: {
+        ...rest,
+        isActive: status === "ACTIVE",
+      },
     });
   }
 
   static async update(id: string, data: any) {
+    const { status, ...rest } = data;
     return prisma.brand.update({
       where: { id },
-      data,
+      data: {
+        ...rest,
+        ...(status !== undefined && { isActive: status === "ACTIVE" }),
+      },
     });
   }
 

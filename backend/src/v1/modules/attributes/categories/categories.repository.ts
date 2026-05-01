@@ -16,17 +16,31 @@ export class CategoriesRepository {
       prisma.category.count({ where: filters }),
     ]);
 
-    return { data, total };
+    const mappedData = data.map((item: any) => ({
+      ...item,
+      status: item.isActive ? "ACTIVE" : "INACTIVE",
+      parent_id: item.parentId,
+    }));
+
+    return { data: mappedData, total };
   }
 
   static async findById(id: string) {
-    return prisma.category.findUnique({
+    const item: any = await prisma.category.findUnique({
       where: { id },
       include: {
         parent: true,
         children: true,
       },
     });
+
+    if (!item) return null;
+
+    return {
+      ...item,
+      status: item.isActive ? "ACTIVE" : "INACTIVE",
+      parent_id: item.parentId,
+    };
   }
 
   static async findByName(name: string) {
@@ -36,15 +50,25 @@ export class CategoriesRepository {
   }
 
   static async create(data: any) {
+    const { parent_id, status, ...rest } = data;
     return prisma.category.create({
-      data,
+      data: {
+        ...rest,
+        parentId: parent_id || null,
+        isActive: status === "ACTIVE",
+      },
     });
   }
 
   static async update(id: string, data: any) {
+    const { parent_id, status, ...rest } = data;
     return prisma.category.update({
       where: { id },
-      data,
+      data: {
+        ...rest,
+        ...(parent_id !== undefined && { parentId: parent_id || null }),
+        ...(status !== undefined && { isActive: status === "ACTIVE" }),
+      },
     });
   }
 

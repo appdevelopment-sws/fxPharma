@@ -12,6 +12,7 @@ import { useDisclosure } from "@/hooks/useDisclosure"
 import useSearchFilter from "@/hooks/useSearchFilter"
 
 import { queryKeys } from "@/lib/queryKeys"
+import { UnitApi } from "@/services/attributesApi"
 import { INITIAL_UNIT_FILTERS } from "@/constants/page/super-admin/unit"
 import UnitDialog from "@/components/dialog/UnitDialog"
 
@@ -25,11 +26,11 @@ const Units = () => {
 
   const { data, isLoading } = useQuery({
     queryKey: queryKeys.units.list(filter),
-    // queryFn: () => UnitApi.getUnits(filter),
+    queryFn: () => UnitApi.getUnits(filter),
   })
 
   const deleteMutation = useMutation({
-    // mutationFn: (id: number) => UnitApi.deleteUnit(id),
+    mutationFn: (id: number) => UnitApi.deleteUnit(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.units.all })
       deleteDisclosure.onClose()

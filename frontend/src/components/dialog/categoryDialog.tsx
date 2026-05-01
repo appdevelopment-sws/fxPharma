@@ -7,6 +7,7 @@ import { FormField, FormSelectField } from "@/components/ui/form-fields"
 import { Button } from "@/components/ui/button"
 
 import { queryKeys } from "@/lib/queryKeys"
+import { CategoryApi } from "@/services/attributesApi"
 import { CATEGORY_FORM_INITIAL_DATA } from "@/constants/page/super-admin/category"
 
 interface Props {
@@ -26,7 +27,7 @@ export default function CategoryDialog({ open, onClose, category }: Props) {
 
   const { data: categories } = useQuery({
     queryKey: queryKeys.categories.all,
-    // queryFn: () => CategoryApi.getCategories({}),
+    queryFn: () => CategoryApi.getCategories({}),
     enabled: open,
   })
 
