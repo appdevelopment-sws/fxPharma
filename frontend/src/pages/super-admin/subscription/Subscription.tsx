@@ -22,7 +22,7 @@ import { Button } from "@/components/ui/button"
 import { useDisclosure } from "@/hooks/useDisclosure"
 import useSearchFilter from "@/hooks/useSearchFilter"
 import { queryKeys } from "@/lib/queryKeys"
-import ProductApi, { type MasterProduct } from "@/services/masterProductApi"
+import SubscriptionApi, { type Plan } from "@/services/subscriptionApi"
 
 import {
   INITIAL_SUBSCRIPTION_FILTERS,
@@ -35,31 +35,31 @@ import ExportSubscriptionModal from "@/components/shared/exportSubscriptionData"
 
 export default function ManageSubscriptionPage() {
   const queryClient = useQueryClient()
-  const drawerDisclosure = useDisclosure<any>()
-  const deleteDisclosure = useDisclosure<any>()
+  const drawerDisclosure = useDisclosure<Plan>()
+  const deleteDisclosure = useDisclosure<Plan>()
   const bulkDisclosure = useDisclosure<any>()
   const { filter, handleFilter } = useSearchFilter(INITIAL_SUBSCRIPTION_FILTERS)
 
-  const { data: productsData, isLoading: isLoadingProducts } = useQuery({
-    queryKey: queryKeys.masterProducts.list(filter),
-    queryFn: () => ProductApi.getMasterProducts(filter),
+  const { data: plansData, isLoading: isLoadingPlans } = useQuery({
+    queryKey: queryKeys.plans.list(filter),
+    queryFn: () => SubscriptionApi.getPlans(filter),
   })
 
-  const deleteProductMutation = useMutation({
-    mutationFn: (id: number) => ProductApi.deleteProduct(id),
+  const deletePlanMutation = useMutation({
+    mutationFn: (id: string) => SubscriptionApi.deletePlan(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.masterProducts.all })
+      queryClient.invalidateQueries({ queryKey: queryKeys.plans.all })
       deleteDisclosure.onClose()
-      toast.success("Master product deleted successfully")
+      toast.success("Subscription plan deleted successfully")
     },
   })
 
   const handleOpen = (
-    product: any = null,
+    plan: any = null,
     mode: "create" | "edit" | "view" = "create"
   ) => {
     drawerDisclosure.onOpen(
-      product ? { ...product, id: product.id, viewMode: mode === "view" } : null
+      plan ? { ...plan, id: plan.id, viewMode: mode === "view" } : null
     )
   }
   const handleBulkOpen = () => {
@@ -119,8 +119,8 @@ export default function ManageSubscriptionPage() {
           MANAGE_SUBSCRIPTION_COLUMNS.find((c) => c.key === "status")?.label ||
           "Status",
         render: (row) => (
-          <Badge variant={row.status === "ACTIVE" ? "success" : "secondary"}>
-            {row.status}
+          <Badge variant={row.status === 1 ? "success" : "secondary"}>
+            {row.status === 1 ? "ACTIVE" : "INACTIVE"}
           </Badge>
         ),
       },
@@ -174,12 +174,12 @@ export default function ManageSubscriptionPage() {
       <ConfirmDialog
         open={deleteDisclosure.isOpen}
         onOpenChange={deleteDisclosure.onClose}
-        title="Delete Master Product"
+        title="Delete Subscription Plan"
         description={`Are you sure you want to delete "${deleteDisclosure.data?.name}"? This action cannot be undone.`}
         onConfirm={() =>
-          deleteProductMutation.mutate(deleteDisclosure.data?.id)
+          deletePlanMutation.mutate(deleteDisclosure.data?.id!)
         }
-        isLoading={deleteProductMutation.isPending}
+        isLoading={deletePlanMutation.isPending}
         confirmText="delete"
         variant="danger"
         confirmationKeyword="DELETE"
@@ -256,19 +256,19 @@ Businesses"
 
           <DataTable
             columns={columns}
-            data={productsData?.data || []}
+            data={plansData?.data || []}
             rowKey="id"
             currentPage={filter.page || 1}
             lastPage={
-              productsData?.meta?.pages ||
+              plansData?.meta?.totalPages ||
               Math.ceil(
-                (productsData?.meta?.total || 0) / (filter.perPage || 10)
+                (plansData?.meta?.total || 0) / (filter.perPage || 10)
               ) ||
               1
             }
             pageSize={filter.perPage || 10}
-            totalRecords={productsData?.meta?.total || 0}
-            isLoading={isLoadingProducts}
+            totalRecords={plansData?.meta?.total || 0}
+            isLoading={isLoadingPlans}
             onPageChange={(page) => handleFilterChange({ page })}
             onPageSizeChange={(perPage) =>
               handleFilterChange({ perPage, page: 1 })
