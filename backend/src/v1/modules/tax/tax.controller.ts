@@ -2,10 +2,13 @@ import { Request, Response } from "express";
 import { TaxService } from "./tax.service.js";
 import { catchAsync } from "../../../utils/catchAsync.js";
 
+import { paginate } from "../../../utils/pagination.js";
+
 export class TaxController {
   static getAll = catchAsync(async (req: Request, res: Response) => {
-    const taxes = await TaxService.getAllTaxes();
-    res.json({ success: true, data: taxes });
+    await paginate(res, req.query, (skip, take, search) =>
+      TaxService.getAllTaxes(search, skip, take)
+    );
   });
 
   static getById = catchAsync(async (req: Request, res: Response) => {
