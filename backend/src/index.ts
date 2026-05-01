@@ -23,6 +23,7 @@ import brandRoutes from "./v1/modules/attributes/brands/brands.routes.js";
 import categoryRoutes from "./v1/modules/attributes/categories/categories.routes.js";
 import manufacturerRoutes from "./v1/modules/attributes/manufacturer/manufacturer.routes.js";
 import unitRoutes from "./v1/modules/attributes/units/units.routes.js";
+import storelistRoutes from "./v1/modules/storelist/storelist.routes.js";
 
 import { authLimiter, generalLimiter } from "./helpers/rateLimit.js";
 import { swaggerSpec } from "./config/swagger.config.js";
@@ -75,6 +76,7 @@ protectedRouter.use("/attributes/brands", generalLimiter, brandRoutes);
 protectedRouter.use("/attributes/categories", generalLimiter, categoryRoutes);
 protectedRouter.use("/attributes/manufacturers", generalLimiter, manufacturerRoutes);
 protectedRouter.use("/attributes/units", generalLimiter, unitRoutes);
+protectedRouter.use("/storelist", generalLimiter, storelistRoutes);
 
 
 app.use("/api/v1", protectedRouter);
