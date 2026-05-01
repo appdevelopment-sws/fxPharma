@@ -42,25 +42,47 @@ export class StoreListRepository {
   }
 
   static async create(data: any) {
-    const { status, ...rest } = data;
+    const { status, planId, ...rest } = data;
+
+    // Validate planId existence
+    let validPlanId = null;
+    if (planId) {
+      const plan = await prisma.plan.findUnique({ where: { id: planId } });
+      if (plan) validPlanId = planId;
+    }
+
     return prisma.storeList.create({
       data: {
         ...rest,
-        isActive: status === "ACTIVE",
-        status: status === "ACTIVE",
+        planId: validPlanId,
+        isActive: status === true,
+        status: status === true,
       },
     });
   }
 
   static async update(id: string, data: any) {
-    const { status, ...rest } = data;
+    const { status, planId, ...rest } = data;
+
+    // Validate planId existence
+    let validPlanId = undefined;
+    if (planId !== undefined) {
+      if (planId === null || planId === "") {
+        validPlanId = null;
+      } else {
+        const plan = await prisma.plan.findUnique({ where: { id: planId } });
+        validPlanId = plan ? planId : null;
+      }
+    }
+
     return prisma.storeList.update({
       where: { id },
       data: {
         ...rest,
+        ...(validPlanId !== undefined && { planId: validPlanId }),
         ...(status !== undefined && { 
-          isActive: status === "ACTIVE",
-          status: status === "ACTIVE"
+          isActive: status === true,
+          status: status === true
         }),
       },
     });

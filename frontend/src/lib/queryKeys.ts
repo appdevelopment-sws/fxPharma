@@ -74,4 +74,14 @@ export const queryKeys = {
     stats: () => [...queryKeys.invoices.all, "stats"] as const,
     detail: (id: string) => [...queryKeys.invoices.all, id] as const,
   },
+  storeList: {
+    all: ["storeList"] as const,
+    list: (filters?: any) => [...queryKeys.storeList.all, filters] as const,
+    detail: (id: string) => [...queryKeys.storeList.all, id] as const,
+  },
+  plans: {
+    all: ["plans"] as const,
+    list: (filters?: any) => [...queryKeys.plans.all, filters] as const,
+    detail: (id: string) => [...queryKeys.plans.all, id] as const,
+  },
 }
