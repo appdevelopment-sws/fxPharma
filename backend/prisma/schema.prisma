@@ -53,7 +53,6 @@ model Plan {
   // Relations
   features      PlanFeature[]
   organizations Organization[]
-  storeLists    StoreList[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -96,13 +95,46 @@ model OrganizationFeature {
 //////////////////////////////////////////////////////
 
 model Organization {
-  id     String           @id @default(cuid())
-  name   String
-  status Int              @default(1) // 1=Active, 0=Inactive
-  type   OrganizationType @default(PHARMACY)
+  id          String  @id @default(cuid())
+  storeName   String  @map("store_name")
+  description String?
+  category    String?
+  logo        String?
+
+  //status
+  status OrganizationStatus @default(ACTIVE)
+
+  // Owner Details
+  // ownerFirstName String @map("owner_first_name")
+  // ownerLastName  String @map("owner_last_name")
+  // ownerEmail     String @map("owner_email")
+  // ownerPhone     String @map("owner_phone")
+
+  // // Credentials & Licenses
+  // loginEmail String  @map("login_email")
+  // password   String
+  gstNo     String? @map("gst_no")
+  licenseNo String? @map("license_no")
+
+  // Address & Location
+  streetAddress String @map("street_address")
+  city          String
+  state         String @map("state_province")
+  zipCode       String @map("zip_code")
+  country       String
+
+  // Regional Settings
+  timezone String?
+  currency String? @default("INR")
+
+  type OrganizationType @default(PHARMACY)
 
   branches Branch[]
   features OrganizationFeature[]
+
+  // Owner Relation
+  ownerId String? @map("owner_id")
+  owner   User?   @relation("OrganizationOwner", fields: [ownerId], references: [id])
 
   planId String?
   plan   Plan?   @relation(fields: [planId], references: [id])
@@ -114,6 +146,13 @@ model Organization {
 enum OrganizationType {
   PHARMACY
   WHOLESALE
+}
+
+enum OrganizationStatus {
+  ACTIVE
+  INACTIVE
+  PENDING
+  BLOCK
 }
 
 model Branch {
@@ -141,13 +180,15 @@ model Branch {
 //////////////////////////////////////////////////////
 
 model User {
-  id       String  @id @default(cuid())
-  name     String
-  email    String  @unique
-  password String // Hashed password
-  mobile   String?
-  regNo    String? @unique @map("reg_no")
-  status   Int     @default(1) // 1=Active, 0=Inactive
+  id        String  @id @default(cuid())
+  firstName String? @map("first_name")
+  lastName  String? @map("last_name")
+  name      String?
+  email     String  @unique
+  password  String // Hashed password
+  mobile    String? @unique
+  regNo     String? @unique @map("reg_no")
+  status    Int     @default(1) // 1=Active, 0=Inactive
 
   // 2FA (Fortify-style)
   twoFactorSecret      String?   @map("two_factor_secret")
@@ -159,6 +200,9 @@ model User {
   roles       UserRole[]
   workflows   UserWorkflow[]
   permissions UserPermission[]
+
+  // Organizations owned by this user
+  ownedOrganizations Organization[] @relation("OrganizationOwner")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -381,48 +425,4 @@ model Unit {
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-}
-
-model StoreList {
-  id          String  @id @default(cuid())
-  storeName   String  @map("store_name")
-  description String?
-  category    String?
-  logo        String?
-
-  //status
-  status Boolean @default(true)
-
-  // Owner Details
-  ownerFirstName String @map("owner_first_name")
-  ownerLastName  String @map("owner_last_name")
-  ownerEmail     String @map("owner_email")
-  ownerPhone     String @map("owner_phone")
-
-  // Credentials & Licenses
-  loginEmail String  @map("login_email")
-  password   String
-  gstNo      String? @map("gst_no")
-  licenseNo  String? @map("license_no")
-
-  // Address & Location
-  streetAddress String @map("street_address")
-  city          String
-  state         String @map("state_province")
-  zipCode       String @map("zip_code")
-  country       String
-
-  // Regional Settings
-  timezone String?
-  currency String? @default("INR")
-
-  // Relation to Plan
-  planId String? @map("plan_id")
-  plan   Plan?   @relation(fields: [planId], references: [id])
-
-  isActive  Boolean  @default(true) @map("is_active")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("store_lists")
 }
