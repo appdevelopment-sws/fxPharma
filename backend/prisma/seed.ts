@@ -45,7 +45,7 @@ async function main() {
 
   // 3. Seed Plans (Starter, Professional, Enterprise)
   console.log("Seeding plans...");
-  
+
   // A. STARTER PLAN
   const starterPlan = await prisma.plan.upsert({
     where: { key: "STARTER_MONTHLY" },
@@ -128,14 +128,14 @@ async function main() {
     // Starter Features
     { planId: starterPlan.id, featureKey: "inventory" },
     { planId: starterPlan.id, featureKey: "billing" },
-    
+
     // Pro Features (Starter + More)
     { planId: proPlan.id, featureKey: "inventory" },
     { planId: proPlan.id, featureKey: "billing" },
     { planId: proPlan.id, featureKey: "rack_system" },
     { planId: proPlan.id, featureKey: "gst_ledger" },
     { planId: proPlan.id, featureKey: "analytics" },
-    
+
     // Enterprise Features (All)
     { planId: enterprisePlan.id, featureKey: "inventory" },
     { planId: enterprisePlan.id, featureKey: "billing" },
@@ -292,7 +292,8 @@ async function main() {
     update: { password: hashedPassword },
     create: {
       email: "superadmin@platform.com",
-      name: "Platform Super Admin",
+      firstName: "Platform",
+      lastName: "Super Admin",
       password: hashedPassword,
       status: 1,
     },
@@ -315,14 +316,24 @@ async function main() {
         scopeType: "global",
       },
     })
-    .catch(() => {});
+    .catch(() => { });
 
   // 9. Create Example Organization and Branch
   console.log("Creating example organization...");
   const org = await prisma.organization.create({
     data: {
-      name: "HealthCare Pharmacy Solutions",
-      status: 1,
+      status: "ACTIVE",
+      storeName: "HealthCare Pharmacy Solutions",
+      streetAddress: "123 Main St",
+      city: "New York",
+      state: "NY",
+      zipCode: "10001",
+      country: "USA",
+
+
+
+      ownerId: superAdminUser.id,
+
       planId: proPlan.id, // Linking to Pro Plan
       branches: {
         create: [
@@ -343,7 +354,8 @@ async function main() {
     update: { password: hashedPassword },
     create: {
       email: "admin@healthcare.com",
-      name: "Healthcare Admin",
+      firstName: "Healthcare Admin",
+      lastName: " Admin",
       password: hashedPassword,
       status: 1,
     },

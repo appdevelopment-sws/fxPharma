@@ -79,3 +79,18 @@ To stop the running containers, run
 ```bash
 docker compose down
 ```
+migrate the database
+
+```bash
+docker compose exec backend npx prisma migrate deploy  
+```
+
+```bash
+docker compose exec backend npx prisma migrate dev --name remove_store_lists
+```
+
+
+visualize the database:
+```bash
+npx prisma studio --url="postgresql://postgrespharmacyuser:supersecretpassword@localhost:5432/pharmacydawadukaandb"
+```
