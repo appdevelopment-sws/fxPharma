@@ -41,7 +41,7 @@ const HsnList = () => {
   })
 
   const updateHsnMutation = useMutation({
-    mutationFn: ({ id, values }: { id: number; values: HsnFormValues }) =>
+    mutationFn: ({ id, values }: { id: string; values: HsnFormValues }) =>
       HsnApi.updateHsn(id, values),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.hsnCodes.all })
@@ -51,7 +51,7 @@ const HsnList = () => {
   })
 
   const deleteHsnMutation = useMutation({
-    mutationFn: (id: number) => HsnApi.deleteHsn(id),
+    mutationFn: (id: string) => HsnApi.deleteHsn(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.hsnCodes.all })
       deleteDisclosure.onClose()
@@ -93,9 +93,9 @@ const HsnList = () => {
         },
       },
       {
-        key: "code",
+        key: "hsncode",
         header: "HSN Code",
-        accessor: "code",
+        accessor: "hsncode",
       },
       {
         key: "description",
@@ -154,7 +154,7 @@ const HsnList = () => {
         open={deleteDisclosure.isOpen}
         onOpenChange={deleteDisclosure.onClose}
         title="Delete HSN Code"
-        description={`Are you sure you want to delete HSN code "${deleteDisclosure.data?.code}"?`}
+        description={`Are you sure you want to delete HSN code "${deleteDisclosure.data?.hsncode}"?`}
         onConfirm={() => deleteHsnMutation.mutate(deleteDisclosure.data!.id)}
         isLoading={deleteHsnMutation.isPending}
         confirmText="delete"

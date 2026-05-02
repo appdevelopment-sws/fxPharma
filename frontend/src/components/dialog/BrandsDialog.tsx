@@ -9,7 +9,7 @@ import {
   FormFileUpload,
 } from "@/components/ui/form-fields"
 import { queryKeys } from "@/lib/queryKeys"
-// import BrandApi from "@/services/brandApi"
+import BrandApi from "@/services/attributesApi"
 import sectionHeader from "../sectionHeader"
 
 import { BRAND_FORM_INITIAL_DATA } from "@/constants/page/super-admin/brands"
@@ -66,8 +66,29 @@ export default function BrandDrawer({
     },
   })
 
-  const onSubmit: SubmitHandler<any> = (data) => {
-    mutation.mutate(data)
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.readAsDataURL(file)
+      reader.onload = () => resolve(reader.result as string)
+      reader.onerror = (error) => reject(error)
+    })
+  }
+
+  const onSubmit: SubmitHandler<any> = async (data) => {
+    try {
+      const payload = { ...data }
+      if (payload.logo && typeof payload.logo === "object") {
+        // More robust check for File object
+        const isFile = payload.logo instanceof File || (payload.logo.name && payload.logo.size)
+        if (isFile) {
+          payload.logo = await fileToBase64(payload.logo)
+        }
+      }
+      mutation.mutate(payload)
+    } catch (error) {
+      console.error("Error converting file:", error)
+    }
   }
 
   return (

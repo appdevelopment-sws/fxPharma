@@ -76,6 +76,38 @@ router.post("/", isAuthenticated, validate(createHsnMappingSchema), HsnMappingCo
 /**
  * @swagger
  * /hsn-mappings/{id}:
+ *   put:
+ *     security:
+ *       - bearerAuth: []
+ *     summary: Update an HSN-Tax mapping
+ *     tags: [HSN Mapping]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - hsnid
+ *               - taxid
+ *             properties:
+ *               hsnid: { type: string }
+ *               taxid: { type: string }
+ *     responses:
+ *       200:
+ *         description: Mapping updated
+ */
+router.put("/:id", isAuthenticated, validate(createHsnMappingSchema), HsnMappingController.update);
+
+/**
+ * @swagger
+ * /hsn-mappings/{id}:
  *   delete:
  *     security:
  *       - bearerAuth: []

@@ -1,9 +1,12 @@
 import ErrorHandler from "../../../utils/ErrorHandler.js";
 import { TaxRepository } from "./tax.repository.js";
 
+import { buildSearchFilter } from "../../../utils/prisma.js";
+
 export class TaxService {
-  static async getAllTaxes() {
-    return TaxRepository.findAll();
+  static async getAllTaxes(search?: string, skip?: number, take?: number) {
+    const where = buildSearchFilter(search, ["name"]);
+    return TaxRepository.findAll(where, skip, take);
   }
 
   static async getTaxById(id: string) {

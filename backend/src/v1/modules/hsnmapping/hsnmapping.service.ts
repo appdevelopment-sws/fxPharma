@@ -1,9 +1,12 @@
 import ErrorHandler from "../../../utils/ErrorHandler.js";
 import { HsnMappingRepository } from "./hsnmapping.repository.js";
 
+import { buildSearchFilter } from "../../../utils/prisma.js";
+
 export class HsnMappingService {
-  static async getAllMappings() {
-    return HsnMappingRepository.findAll();
+  static async getAllMappings(search?: string, skip?: number, take?: number) {
+    const where = buildSearchFilter(search, []); // No direct searchable fields
+    return HsnMappingRepository.findAll(where, skip, take);
   }
 
   static async getMappingById(id: string) {
@@ -16,6 +19,11 @@ export class HsnMappingService {
     const existing = await HsnMappingRepository.findByHsnAndTax(data.hsnid, data.taxid);
     if (existing) throw new ErrorHandler("This HSN-Tax mapping already exists", 400);
     return HsnMappingRepository.create(data);
+  }
+
+  static async updateMapping(id: string, data: { hsnid: string; taxid: string }) {
+    await this.getMappingById(id);
+    return HsnMappingRepository.update(id, data);
   }
 
   static async deleteMapping(id: string) {

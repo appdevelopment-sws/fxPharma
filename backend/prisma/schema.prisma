@@ -53,6 +53,7 @@ model Plan {
   // Relations
   features      PlanFeature[]
   organizations Organization[]
+  storeLists    StoreList[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -335,4 +336,93 @@ model HsnMapping {
   tax Tax @relation(fields: [taxid], references: [id], onDelete: Cascade)
 
   @@unique([hsnid, taxid])
+}
+
+model Brand {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  logo        String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Category {
+  id          String  @id @default(cuid())
+  name        String
+  description String?
+  isActive    Boolean @default(true)
+
+  // Self-relation for hierarchy
+  parentId String?
+  parent   Category?  @relation("CategoryToCategory", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryToCategory")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Manufacturer {
+  id        String   @id @default(cuid())
+  name      String
+  email     String?
+  phone     String?
+  address   String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Unit {
+  id        String   @id @default(cuid())
+  name      String
+  shortName String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model StoreList {
+  id          String  @id @default(cuid())
+  storeName   String  @map("store_name")
+  description String?
+  category    String?
+  logo        String?
+
+  //status
+  status Boolean @default(true)
+
+  // Owner Details
+  ownerFirstName String @map("owner_first_name")
+  ownerLastName  String @map("owner_last_name")
+  ownerEmail     String @map("owner_email")
+  ownerPhone     String @map("owner_phone")
+
+  // Credentials & Licenses
+  loginEmail String  @map("login_email")
+  password   String
+  gstNo      String? @map("gst_no")
+  licenseNo  String? @map("license_no")
+
+  // Address & Location
+  streetAddress String @map("street_address")
+  city          String
+  state         String @map("state_province")
+  zipCode       String @map("zip_code")
+  country       String
+
+  // Regional Settings
+  timezone String?
+  currency String? @default("INR")
+
+  // Relation to Plan
+  planId String? @map("plan_id")
+  plan   Plan?   @relation(fields: [planId], references: [id])
+
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("store_lists")
 }

@@ -5,12 +5,6 @@ import {
   Pencil,
   Eye,
   Trash2,
-  Download,
-  ShieldAlert,
-  Layers,
-  Network,
-  Cpu,
-  Boxes,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -22,7 +16,7 @@ import { Button } from "@/components/ui/button"
 import { useDisclosure } from "@/hooks/useDisclosure"
 import useSearchFilter from "@/hooks/useSearchFilter"
 import { queryKeys } from "@/lib/queryKeys"
-import ProductApi, { type MasterProduct } from "@/services/masterProductApi"
+import StoreListApi, { type Store } from "@/services/storelistApi"
 
 import {
   INITIAL_STORE_FILTERS,
@@ -33,35 +27,31 @@ import AddStoreListDialog from "@/components/dialog/AddStoreListDialog"
 
 export default function ManageSubscriptionPage() {
   const queryClient = useQueryClient()
-  const drawerDisclosure = useDisclosure<any>()
-  const deleteDisclosure = useDisclosure<any>()
-  const bulkDisclosure = useDisclosure<any>()
+  const drawerDisclosure = useDisclosure<Store>()
+  const deleteDisclosure = useDisclosure<Store>()
   const { filter, handleFilter } = useSearchFilter(INITIAL_STORE_FILTERS)
 
-  const { data: productsData, isLoading: isLoadingProducts } = useQuery({
-    queryKey: queryKeys.masterProducts.list(filter),
-    queryFn: () => ProductApi.getMasterProducts(filter),
+  const { data: storesData, isLoading: isLoadingStores } = useQuery({
+    queryKey: queryKeys.storeList.list(filter),
+    queryFn: () => StoreListApi.getStores(filter),
   })
 
-  const deleteProductMutation = useMutation({
-    mutationFn: (id: number) => ProductApi.deleteProduct(id),
+  const deleteStoreMutation = useMutation({
+    mutationFn: (id: string) => StoreListApi.deleteStore(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.masterProducts.all })
+      queryClient.invalidateQueries({ queryKey: queryKeys.storeList.all })
       deleteDisclosure.onClose()
-      toast.success("Master product deleted successfully")
+      toast.success("Store deleted successfully")
     },
   })
 
   const handleOpen = (
-    product: any = null,
+    store: any = null,
     mode: "create" | "edit" | "view" = "create"
   ) => {
     drawerDisclosure.onOpen(
-      product ? { ...product, id: product.id, viewMode: mode === "view" } : null
+      store ? { ...store, id: store.id, viewMode: mode === "view" } : null
     )
-  }
-  const handleBulkOpen = () => {
-    bulkDisclosure.onOpen(null)
   }
   const handleFilterChange = useCallback(
     (updates: Record<string, any>) => {
@@ -93,7 +83,7 @@ export default function ManageSubscriptionPage() {
       {
         key: "owner",
         header: STORE_COLUMNS.find((c) => c.key === "owner")?.label || "Owner",
-        accessor: "owner",
+        render: (row) => `${row.first_name} ${row.last_name}`,
       },
 
       {
@@ -101,7 +91,7 @@ export default function ManageSubscriptionPage() {
         header:
           STORE_COLUMNS.find((c) => c.key === "plan")?.label ||
           "Subscription Plan",
-        accessor: "plan",
+        render: (row) => row.plan?.name || "N/A",
       },
 
       {
@@ -174,12 +164,12 @@ export default function ManageSubscriptionPage() {
       <ConfirmDialog
         open={deleteDisclosure.isOpen}
         onOpenChange={deleteDisclosure.onClose}
-        title="Delete Master Product"
-        description={`Are you sure you want to delete "${deleteDisclosure.data?.name}"? This action cannot be undone.`}
+        title="Delete Store"
+        description={`Are you sure you want to delete "${deleteDisclosure.data?.store_name}"? This action cannot be undone.`}
         onConfirm={() =>
-          deleteProductMutation.mutate(deleteDisclosure.data?.id)
+          deleteStoreMutation.mutate(deleteDisclosure.data?.id!)
         }
-        isLoading={deleteProductMutation.isPending}
+        isLoading={deleteStoreMutation.isPending}
         confirmText="delete"
         variant="danger"
         confirmationKeyword="DELETE"
@@ -192,7 +182,7 @@ export default function ManageSubscriptionPage() {
           <div className="flex items-center justify-center gap-x-3">
             <Button type="button" onClick={() => handleOpen(null, "create")}>
               <Plus className="mr-2 size-4" />
-              Create New Plan
+              Create New Store
             </Button>
           </div>
         }
@@ -223,25 +213,25 @@ export default function ManageSubscriptionPage() {
 
           <DataTable
             columns={columns}
-            data={productsData?.data || []}
+            data={storesData?.data || []}
             rowKey="id"
             currentPage={filter.page || 1}
             lastPage={
-              productsData?.meta?.pages ||
+              storesData?.meta?.page ||
               Math.ceil(
-                (productsData?.meta?.total || 0) / (filter.perPage || 10)
+                (storesData?.meta?.total || 0) / (filter.perPage || 10)
               ) ||
               1
             }
             pageSize={filter.perPage || 10}
-            totalRecords={productsData?.meta?.total || 0}
-            isLoading={isLoadingProducts}
+            totalRecords={storesData?.meta?.total || 0}
+            isLoading={isLoadingStores}
             onPageChange={(page) => handleFilterChange({ page })}
             onPageSizeChange={(perPage) =>
               handleFilterChange({ perPage, page: 1 })
             }
-            emptyTitle="No subscriptions found"
-            emptyDescription="Create a subscription or adjust the filters to see matching records."
+            emptyTitle="No stores found"
+            emptyDescription="Create a store or adjust the filters to see matching records."
           />
         </div>
       </SectionCard>

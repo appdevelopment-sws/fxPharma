@@ -1,6 +1,6 @@
 import { useEffect } from "react"
 import { useForm, type SubmitHandler } from "react-hook-form"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query"
 
 import { Button } from "@/components/ui/button"
 import { FormContainer } from "@/components/formContainer"
@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/form-fields"
 
 import sectionHeader from "../sectionHeader"
-
 import {
   STORE_FORM_INITIAL_DATA,
   STORE_VISIBILITY_OPTIONS,
@@ -20,6 +19,11 @@ import {
   STORE_CATEGORY_OPTIONS,
   STORE_SUBSCRIPTION_OPTIONS,
 } from "@/constants/page/super-admin/store"
+
+import StoreListApi from "@/services/storelistApi"
+import SubscriptionApi from "@/services/subscriptionApi"
+import { queryKeys } from "@/lib/queryKeys"
+import { toast } from "sonner"
 
 interface ManageStoreDialogProps {
   open: boolean
@@ -53,23 +57,61 @@ export default function ManageStoreDialog({
         reset(STORE_FORM_INITIAL_DATA)
       }
     }
-  }, [open, store, reset])
+  }, [open, store, reset, isEditMode, isViewMode])
 
   const queryClient = useQueryClient()
 
+  const { data: plansData } = useQuery({
+    queryKey: queryKeys.plans.all,
+    queryFn: () => SubscriptionApi.getPlans(),
+  })
+
+  const plans = plansData?.data || []
+
   const handleMutation = useMutation({
-    mutationFn: async (data: any) => data,
+    mutationFn: async (data: any) => {
+      if (isEditMode) {
+        return StoreListApi.updateStore(store.id, data)
+      }
+      return StoreListApi.createStore(data)
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["stores"],
+        queryKey: queryKeys.storeList.all,
       })
+      toast.success(`Store ${isEditMode ? "updated" : "created"} successfully`)
       reset()
       onClose(false)
     },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || "Something went wrong")
+    },
   })
 
-  const onSubmit: SubmitHandler<any> = (data) => {
-    handleMutation.mutate(data)
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.readAsDataURL(file)
+      reader.onload = () => resolve(reader.result as string)
+      reader.onerror = (error) => reject(error)
+    })
+  }
+
+  const onSubmit: SubmitHandler<any> = async (data) => {
+    try {
+      const payload = { ...data }
+      if (payload.store_logo && typeof payload.store_logo === "object") {
+        const isFile =
+          payload.store_logo instanceof File ||
+          (payload.store_logo.name && payload.store_logo.size)
+        if (isFile) {
+          payload.store_logo = await fileToBase64(payload.store_logo)
+        }
+      }
+      handleMutation.mutate(payload)
+    } catch (error) {
+      console.error("Error converting file:", error)
+    }
   }
 
   return (
@@ -306,38 +348,43 @@ export default function ManageStoreDialog({
             {sectionHeader("06", "Subscription Plan")}
 
             <div className="space-y-3">
-              {STORE_SUBSCRIPTION_OPTIONS.map((plan) => (
-                <div
-                  key={plan.id}
-                  onClick={() =>
-                    !isViewMode && setValue("subscription_plan_id", plan.id)
-                  }
-                  className={`cursor-pointer rounded-xl border p-4 transition ${
-                    selectedPlan === plan.id
+              {plans.length === 0 ? (
+                <p className="text-center text-sm text-muted-foreground py-4">
+                  No subscription plans available.
+                </p>
+              ) : (
+                plans.map((plan: any) => (
+                  <div
+                    key={plan.id}
+                    onClick={() =>
+                      !isViewMode && setValue("subscription_plan_id", plan.id)
+                    }
+                    className={`cursor-pointer rounded-xl border p-4 transition ${selectedPlan === plan.id
                       ? "border-primary bg-primary/5"
                       : "border-border"
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-medium">{plan.name}</h4>
-                      <p className="text-xs text-muted-foreground">
-                        {plan.users}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {plan.stores}
-                      </p>
-                    </div>
+                      }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="font-medium">{plan.name}</h4>
+                        <p className="text-xs text-muted-foreground">
+                          {plan.max_staff_users} Staff Users
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {plan.max_stores} Stores
+                        </p>
+                      </div>
 
-                    <div className="text-right">
-                      <p className="font-semibold">{plan.price}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {plan.billing}
-                      </p>
+                      <div className="text-right">
+                        <p className="font-semibold">₹{plan.price}</p>
+                        <p className="text-xs text-muted-foreground uppercase">
+                          /{plan.billing_type}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
 

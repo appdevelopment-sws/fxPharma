@@ -9,13 +9,16 @@ import {
   FormSwitch,
 } from "@/components/ui/form-fields"
 import sectionHeader from "../sectionHeader"
-
 import {
   MANAGE_SUBSCRIPTION_FORM_INITIAL_DATA,
   BILLING_TYPE_OPTIONS,
   STATUS_OPTIONS,
   BADGE_OPTIONS,
 } from "@/constants/page/super-admin/manage-subscription"
+
+import SubscriptionApi from "@/services/subscriptionApi"
+import { queryKeys } from "@/lib/queryKeys"
+import { toast } from "sonner"
 
 interface ManageSubscriptionDialogProps {
   open: boolean
@@ -47,18 +50,27 @@ export default function ManageSubscriptionDialog({
         reset(MANAGE_SUBSCRIPTION_FORM_INITIAL_DATA)
       }
     }
-  }, [open, plan, reset])
+  }, [open, plan, reset, isEditMode, isViewMode])
 
   const queryClient = useQueryClient()
 
   const handleMutation = useMutation({
-    mutationFn: async (data: any) => data,
+    mutationFn: async (data: any) => {
+      if (isEditMode) {
+        return SubscriptionApi.updatePlan(plan.id, data)
+      }
+      return SubscriptionApi.createPlan(data)
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["manage-subscription"],
+        queryKey: queryKeys.plans.all,
       })
+      toast.success(`Plan ${isEditMode ? "updated" : "created"} successfully`)
       onClose(false)
       reset()
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || "Something went wrong")
     },
   })
 

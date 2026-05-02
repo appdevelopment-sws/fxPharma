@@ -11,7 +11,7 @@ import { ConfirmDialog } from "@/components/confirmDialog"
 import { useDisclosure } from "@/hooks/useDisclosure"
 import useSearchFilter from "@/hooks/useSearchFilter"
 
-// import BrandApi, { type Brand } from "@/services/brandApi"
+import BrandApi, { type Brand } from "@/services/attributesApi"
 import { queryKeys } from "@/lib/queryKeys"
 
 import {
@@ -30,11 +30,11 @@ const Brands = () => {
 
   const { data, isLoading } = useQuery({
     queryKey: queryKeys.brands.list(filter),
-    // queryFn: () => BrandApi.getBrands(filter),
+    queryFn: () => BrandApi.getBrands(filter),
   })
 
   const deleteMutation = useMutation({
-    // mutationFn: (id: number) => BrandApi.deleteBrand(id),
+    mutationFn: (id: number) => BrandApi.deleteBrand(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.brands.all })
       deleteDisclosure.onClose()
@@ -102,11 +102,10 @@ const Brands = () => {
         header: "Status",
         render: (row) => (
           <span
-            className={`rounded-md px-2 py-1 text-xs font-medium ${
-              row.status === "ACTIVE"
+            className={`rounded-md px-2 py-1 text-xs font-medium ${row.status === "ACTIVE"
                 ? "bg-green-100 text-green-700"
                 : "bg-red-100 text-red-600"
-            }`}
+              }`}
           >
             {row.status}
           </span>
@@ -195,7 +194,7 @@ const Brands = () => {
             data={data?.data || []}
             rowKey="id"
             currentPage={filter.page || 1}
-            lastPage={data?.meta?.pages || 1}
+            lastPage={data?.meta?.page || 1}
             pageSize={filter.perPage || 10}
             totalRecords={data?.meta?.total || 0}
             isLoading={isLoading}

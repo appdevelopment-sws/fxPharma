@@ -14,7 +14,7 @@ type Props = {
 }
 
 const DEFAULT_VALUES: HsnFormValues = {
-  code: "",
+  hsncode: "",
   description: "",
 }
 
@@ -33,7 +33,7 @@ export default function HsnDialog({
     if (open) {
       if (hsn) {
         reset({
-          code: hsn.code,
+          hsncode: hsn.hsncode,
           description: hsn.description || "",
         })
       } else {
@@ -80,7 +80,7 @@ export default function HsnDialog({
       >
         <FormField
           control={control}
-          name="code"
+          name="hsncode"
           label="HSN Code"
           placeholder="3004"
           required

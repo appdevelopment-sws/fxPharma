@@ -1,9 +1,12 @@
 import ErrorHandler from "../../../utils/ErrorHandler.js";
 import { HsnRepository } from "./hsn.repository.js";
 
+import { buildSearchFilter } from "../../../utils/prisma.js";
+
 export class HsnService {
-  static async getAllHsns() {
-    return HsnRepository.findAll();
+  static async getAllHsns(search?: string, skip?: number, take?: number) {
+    const where = buildSearchFilter(search, ["hsncode", "description"]);
+    return HsnRepository.findAll(where, skip, take);
   }
 
   static async getHsnById(id: string) {

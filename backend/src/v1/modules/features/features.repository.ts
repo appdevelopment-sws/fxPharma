@@ -1,10 +1,18 @@
 import { prisma } from "@/lib/prisma.js";
 
 export class FeaturesRepository {
-  static async findAll() {
-    return prisma.feature.findMany({
-      orderBy: { createdAt: "desc" },
-    });
+  static async findAll(where: any = {}, skip?: number, take?: number) {
+    const [data, total] = await Promise.all([
+      prisma.feature.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        ...(skip !== undefined && { skip }),
+        ...(take !== undefined && { take }),
+      }),
+      prisma.feature.count({ where }),
+    ]);
+
+    return { data, total };
   }
 
   static async findById(id: string) {
