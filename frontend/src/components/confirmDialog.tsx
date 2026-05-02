@@ -82,7 +82,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
             disabled={!isMatch || isLoading}
             className={
               variant === "danger"
-                ? "text-destructive-foreground bg-destructive hover:bg-destructive/90"
+                ? "bg-red-600 text-white hover:bg-red-700"
                 : ""
             }
           >

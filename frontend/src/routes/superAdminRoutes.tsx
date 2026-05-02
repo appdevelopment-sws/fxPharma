@@ -20,6 +20,7 @@ import Units from "@/pages/shared/Attributes/units"
 import ManageSubscriptionPage from "@/pages/super-admin/subscription/Subscription"
 
 import AttributesPage from "@/pages/shared/Attributes/AttributesPage"
+import FeatureManagementPage from "@/pages/super-admin/features/featureManagementPage"
 
 export const SuperAdminRoutes = () => {
   return (
@@ -39,6 +40,7 @@ export const SuperAdminRoutes = () => {
           <Route path="mapping" element={<HsnMapping />} />
         </Route>
         <Route path="subscription" element={<ManageSubscriptionPage />} />
+        <Route path="features-management" element={<FeatureManagementPage />} />
         <Route path="profile" element={<SuperAdminProfilePage />} />
         <Route path="master-products" element={<SuperAdminProductsNewPage />} />
         <Route path="hsn" element={<HsnPage />} />
