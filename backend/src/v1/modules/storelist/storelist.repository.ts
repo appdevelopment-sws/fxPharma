@@ -58,6 +58,7 @@ export class StoreListRepository {
         isActive: status === true,
         status: status === true,
       },
+      include: { plan: true },
     });
   }
 
@@ -85,6 +86,7 @@ export class StoreListRepository {
           status: status === true
         }),
       },
+      include: { plan: true },
     });
   }
 

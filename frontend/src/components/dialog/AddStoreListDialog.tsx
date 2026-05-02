@@ -1,6 +1,6 @@
 import { useEffect } from "react"
 import { useForm, type SubmitHandler } from "react-hook-form"
-import { useQuery, useuseQuery, Mutation, useQueryClient, useMutation } from "@tanstack/react-query"
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query"
 
 import { Button } from "@/components/ui/button"
 import { FormContainer } from "@/components/formContainer"
@@ -360,8 +360,8 @@ export default function ManageStoreDialog({
                       !isViewMode && setValue("subscription_plan_id", plan.id)
                     }
                     className={`cursor-pointer rounded-xl border p-4 transition ${selectedPlan === plan.id
-                        ? "border-primary bg-primary/5"
-                        : "border-border"
+                      ? "border-primary bg-primary/5"
+                      : "border-border"
                       }`}
                   >
                     <div className="flex items-center justify-between">
