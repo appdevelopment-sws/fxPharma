@@ -22,6 +22,11 @@ export type Store = {
   timezone?: string | null
   currency?: string | null
   subscription_plan_id?: string | null
+  plan?: {
+    id: string
+    name: string
+    [key: string]: any
+  } | null
   isActive: boolean
   createdAt?: string
   updatedAt?: string
@@ -114,6 +119,7 @@ const mapApiToStore = (data: any): Store => {
     timezone: data.timezone,
     currency: data.currency,
     subscription_plan_id: data.planId,
+    plan: data.plan,
     isActive: data.isActive,
     createdAt: data.createdAt,
     updatedAt: data.updatedAt,

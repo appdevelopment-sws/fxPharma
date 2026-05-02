@@ -5,12 +5,6 @@ import {
   Pencil,
   Eye,
   Trash2,
-  Download,
-  ShieldAlert,
-  Layers,
-  Network,
-  Cpu,
-  Boxes,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -59,9 +53,6 @@ export default function ManageSubscriptionPage() {
       store ? { ...store, id: store.id, viewMode: mode === "view" } : null
     )
   }
-  const handleBulkOpen = () => {
-    useDisclosure.onOpen(null)
-  }
   const handleFilterChange = useCallback(
     (updates: Record<string, any>) => {
       handleFilter({ ...updates, page: 1 })
@@ -92,7 +83,7 @@ export default function ManageSubscriptionPage() {
       {
         key: "owner",
         header: STORE_COLUMNS.find((c) => c.key === "owner")?.label || "Owner",
-        accessor: "owner",
+        render: (row) => `${row.first_name} ${row.last_name}`,
       },
 
       {
@@ -100,7 +91,7 @@ export default function ManageSubscriptionPage() {
         header:
           STORE_COLUMNS.find((c) => c.key === "plan")?.label ||
           "Subscription Plan",
-        accessor: "plan",
+        render: (row) => row.plan?.name || "N/A",
       },
 
       {
@@ -226,7 +217,7 @@ export default function ManageSubscriptionPage() {
             rowKey="id"
             currentPage={filter.page || 1}
             lastPage={
-              storesData?.meta?.pages ||
+              storesData?.meta?.page ||
               Math.ceil(
                 (storesData?.meta?.total || 0) / (filter.perPage || 10)
               ) ||
