@@ -81,7 +81,7 @@ export class StoreListRepository {
       data: {
         ...rest,
         ...(validPlanId !== undefined && { planId: validPlanId }),
-        ...(status !== undefined && { 
+        ...(status !== undefined && {
           isActive: status === true,
           status: status === true
         }),
