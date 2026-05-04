@@ -16,7 +16,6 @@ const adapter = new PrismaPg({ connectionString });
 
 // Models that are scoped to an Organization
 const orgScopedModels = new Set([
-  "MasterProduct", 
   "Company", 
   "HsnCode", 
   "Supplier", 

@@ -67,7 +67,7 @@ export default function MasterProductsPage() {
           MASTER_PRODUCT_COLUMNS.find((c) => c.key === "serial")?.label || "#",
         render: (_, index) => {
           const currentPage = filter.page || 1
-          const perPage = filter.perPage || 10
+          const perPage = filter.limit || 10
           return (currentPage - 1) * perPage + index + 1
         },
       },
@@ -83,28 +83,28 @@ export default function MasterProductsPage() {
         header:
           MASTER_PRODUCT_COLUMNS.find((c) => c.key === "salt")?.label ||
           "Salt Composition",
-        accessor: "salt",
+        render: (row) => row.salt || "-",
       },
       {
         key: "company",
         header:
           MASTER_PRODUCT_COLUMNS.find((c) => c.key === "company")?.label ||
-          "Company Id",
-        accessor: "company_id", // Just primitive rendering since references are removed
+          "Manufacturer",
+        render: (row) => row.manufacturer?.name || "-",
       },
       {
         key: "product_type",
         header:
           MASTER_PRODUCT_COLUMNS.find((c) => c.key === "product_type")?.label ||
-          "Type Id",
-        accessor: "product_type_id",
+          "Type",
+        accessor: "categoryType",
       },
       {
         key: "hsn",
         header:
           MASTER_PRODUCT_COLUMNS.find((c) => c.key === "hsn")?.label ||
-          "HSN Code Id",
-        accessor: "hsnCodeId",
+          "HSN Code",
+        render: (row) => row.hsn?.hsncode || "-",
       },
       {
         key: "action",
@@ -141,7 +141,7 @@ export default function MasterProductsPage() {
         ),
       },
     ]
-  }, [filter.page, filter.perPage, deleteDisclosure])
+  }, [filter.page, filter.limit, deleteDisclosure])
 
   return (
     <div className="space-y-6">
@@ -188,9 +188,6 @@ export default function MasterProductsPage() {
           <FilterBar
             values={{
               search: filter.search || "",
-              companyId: filter.companyId || "",
-              productTypeId: filter.productTypeId || "",
-              hsnCodeId: filter.hsnCodeId || "",
             }}
             onChange={handleFilterChange}
           >
@@ -214,19 +211,17 @@ export default function MasterProductsPage() {
             rowKey="id"
             currentPage={filter.page || 1}
             lastPage={
-              productsData?.meta?.pages ||
+              productsData?.meta?.totalPages ||
               Math.ceil(
-                (productsData?.meta?.total || 0) / (filter.perPage || 10)
+                (productsData?.meta?.total || 0) / (filter.limit || 10)
               ) ||
               1
             }
-            pageSize={filter.perPage || 10}
+            pageSize={filter.limit || 10}
             totalRecords={productsData?.meta?.total || 0}
             isLoading={isLoadingProducts}
             onPageChange={(page) => handleFilterChange({ page })}
-            onPageSizeChange={(perPage) =>
-              handleFilterChange({ perPage, page: 1 })
-            }
+            onPageSizeChange={(limit) => handleFilterChange({ limit, page: 1 })}
             emptyTitle="No master products found"
             emptyDescription="Create a master product or adjust the filters to see matching records."
           />

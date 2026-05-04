@@ -27,6 +27,7 @@ export type Plan = {
   suppliers: boolean
   analytics: boolean
   prescriptions: boolean
+  featureIds: string[]
   createdAt?: string
   updatedAt?: string
 }
@@ -54,6 +55,7 @@ export type PlanFormValues = {
   is_popular?: boolean
   badge_text?: string | null
   status?: "ACTIVE" | "INACTIVE" | "ARCHIVED"
+  featureIds?: string[]
 }
 
 export type GetPlansResponse = {
@@ -82,26 +84,15 @@ const mapFormToApi = (data: PlanFormValues) => {
     isPopular: data.is_popular,
     badgeText: data.badge_text,
     status: data.status === "ACTIVE" ? 1 : 0,
-    advancedFeatures: {
-      apiAccess: data.api_access,
-      whiteLabeling: data.white_labeling,
-      prioritySupport: data.priority_support,
-      modules: {
-        inventory: data.inventory,
-        billingPos: data.billing_pos,
-        staffManagement: data.staff_management,
-        suppliers: data.suppliers,
-        analytics: data.analytics,
-        prescriptions: data.prescriptions,
-      },
-    },
+
+    featureIds: data.featureIds || [],
   }
 }
 
 const mapApiToPlan = (data: any): Plan => {
   const adv = data.advancedFeatures || {}
   const mods = adv.modules || {}
-  
+
   // Format for the table accessors in Subscription.tsx
   const plan = {
     id: data.id,
@@ -128,16 +119,17 @@ const mapApiToPlan = (data: any): Plan => {
     suppliers: !!mods.suppliers,
     analytics: !!mods.analytics,
     prescriptions: !!mods.prescriptions,
+    featureIds: (data.features || []).map((f: any) => f.featureId),
     createdAt: data.createdAt,
     updatedAt: data.updatedAt,
-    
+
     // Virtual fields for Subscription.tsx table accessors
     plan_details: data.name,
     pricing: `₹${Number(data.price).toLocaleString()}/${data.billingCycle}`,
     usage_limits: `${data.maxStaff} Users, ${data.maxBranches} Stores`,
-    subscribers: 0
+    subscribers: 0,
   }
-  
+
   return plan as any
 }
 

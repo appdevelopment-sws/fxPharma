@@ -45,7 +45,7 @@ export class StoreListService {
       currency: data.currency,
       planId: data.planId,
     };
-
+    console.log("passwordHash", data.password);
     return StoreListRepository.createStoreWithUser({
       user: {
         firstName: data.ownerFirstName,

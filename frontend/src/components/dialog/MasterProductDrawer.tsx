@@ -87,17 +87,6 @@ export default function MasterProductDialog({
     open
   )
 
-  const salt = useSearchSelect(
-    ["salts"],
-    async (search) =>
-      [
-        { label: "PARACETAMOL", value: "paracetamol" },
-        { label: "IBUPROFEN", value: "ibuprofen" },
-        { label: "AMOXICILLIN", value: "amoxicillin" },
-      ].filter((opt) => opt.label.toLowerCase().includes(search.toLowerCase())),
-    (data) => data,
-    open
-  )
 
   const { handleSubmit, control, reset, watch, setValue } = useForm({
     defaultValues: MASTER_PRODUCT_FORM_INITIAL_DATA,
@@ -119,7 +108,7 @@ export default function MasterProductDialog({
           category_id: product?.category_id || "",
           brand_id: product?.brand_id || "",
           manufacturer_id: product?.manufacturer_id || "",
-          salt_id: product?.salt_id || "",
+          salt: product?.salt || "",
           category_type: product?.category_type || "TAB",
           status: product?.status || "CONTINUE",
           hsn_code_id: String(product?.hsnCodeId || ""),
@@ -256,14 +245,11 @@ export default function MasterProductDialog({
               loading={manufacturer.loading}
               readOnly={isViewMode}
             />
-            <FormSearchSelect
+            <FormField
               control={control}
-              name="salt_id"
+              name="salt"
               label="SALT COMPOSITION"
-              placeholder="Search Salt..."
-              options={salt.options}
-              onSearch={salt.onSearch}
-              loading={salt.loading}
+              placeholder="e.g. Paracetamol 500mg"
               readOnly={isViewMode}
             />
 

@@ -56,6 +56,7 @@ export const MANAGE_SUBSCRIPTION_FORM_INITIAL_DATA = {
   is_popular: false,
   badge_text: "",
   status: "ACTIVE",
+  featureIds: [],
 }
 
 export const BILLING_TYPE_OPTIONS = [

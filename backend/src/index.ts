@@ -10,7 +10,7 @@ import compression from "compression";
 import swaggerUi from "swagger-ui-express";
 
 import authRoutes from "./v1/modules/auth/auth.routes.js";
-// import masterProductRoutes from "./v1/modules/masterProduct/masterProduct.route.js";
+import masterProductRoutes from "./v1/modules/masterProducts/masterProduct.routes.js";
 // import organizationRoutes from "./v1/modules/organization/organization.routes.js";
 
 import planRoutes from "./v1/modules/plans/plans.routes.js";
@@ -64,7 +64,7 @@ const protectedRouter = Router();
 protectedRouter.use(isAuthenticated as any);
 protectedRouter.use(tenantMiddleware as any);
 
-// protectedRouter.use("/master-products", generalLimiter, masterProductRoutes);
+protectedRouter.use("/master-products", generalLimiter, masterProductRoutes);
 // protectedRouter.use("/organizations", generalLimiter, organizationRoutes);
 protectedRouter.use("/demo", generalLimiter, demoRoutes);
 protectedRouter.use("/plans", generalLimiter, planRoutes);

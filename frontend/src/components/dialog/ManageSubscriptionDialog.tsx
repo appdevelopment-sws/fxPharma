@@ -1,6 +1,6 @@
 import { useEffect } from "react"
 import { useForm, type SubmitHandler } from "react-hook-form"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Button } from "@/components/ui/button"
 import { FormContainer } from "@/components/formContainer"
 import {
@@ -17,8 +17,12 @@ import {
 } from "@/constants/page/super-admin/manage-subscription"
 
 import SubscriptionApi from "@/services/subscriptionApi"
+import FeaturesApi from "@/services/featuresApi"
 import { queryKeys } from "@/lib/queryKeys"
 import { toast } from "sonner"
+import { Controller } from "react-hook-form"
+import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
 
 interface ManageSubscriptionDialogProps {
   open: boolean
@@ -51,6 +55,12 @@ export default function ManageSubscriptionDialog({
       }
     }
   }, [open, plan, reset, isEditMode, isViewMode])
+
+  const { data: featuresData } = useQuery({
+    queryKey: queryKeys.features.all,
+    queryFn: () => FeaturesApi.getFeatures({ limit: 100 }),
+    enabled: open,
+  })
 
   const queryClient = useQueryClient()
 
@@ -211,7 +221,7 @@ export default function ManageSubscriptionDialog({
         </div>
 
         {/* ADVANCED */}
-        <div className="rounded-xl border p-6">
+        {/* <div className="rounded-xl border p-6">
           {sectionHeader("04", "ADVANCED FEATURES")}
 
           <div className="space-y-4">
@@ -239,50 +249,64 @@ export default function ManageSubscriptionDialog({
               disabled={isViewMode}
             />
           </div>
-        </div>
+        </div> */}
 
         {/* CORE MODULES */}
         <div className="rounded-xl border p-6">
-          {sectionHeader("05", "CORE MODULES")}
+          {sectionHeader("05", "FEATURES & MODULES")}
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <FormSwitch
-              control={control}
-              name="inventory"
-              label="Inventory"
-              disabled={isViewMode}
-            />
-            <FormSwitch
-              control={control}
-              name="billing_pos"
-              label="Billing & POS"
-              disabled={isViewMode}
-            />
-            <FormSwitch
-              control={control}
-              name="staff_management"
-              label="Staff Mgt"
-              disabled={isViewMode}
-            />
-            <FormSwitch
-              control={control}
-              name="suppliers"
-              label="Suppliers"
-              disabled={isViewMode}
-            />
-            <FormSwitch
-              control={control}
-              name="analytics"
-              label="Analytics"
-              disabled={isViewMode}
-            />
-            <FormSwitch
-              control={control}
-              name="prescriptions"
-              label="Prescriptions"
-              disabled={isViewMode}
-            />
-          </div>
+          <Controller
+            control={control}
+            name="featureIds"
+            render={({ field }) => (
+              <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
+                {(featuresData?.data || []).map((feature: any) => {
+                  const isChecked = (field.value || []).includes(feature.id)
+                  return (
+                    <div
+                      key={feature.id}
+                      className="flex items-center justify-between rounded-lg border p-2.5 px-3 shadow-sm transition-colors hover:bg-muted/10"
+                    >
+                      <div className="space-y-0.5">
+                        <Label
+                          className="cursor-pointer text-sm font-semibold"
+                          onClick={() => {
+                            if (isViewMode) return
+                            const newValue = isChecked
+                              ? field.value.filter(
+                                  (id: string) => id !== feature.id
+                                )
+                              : [...(field.value || []), feature.id]
+                            field.onChange(newValue)
+                          }}
+                        >
+                          {feature.name}
+                        </Label>
+                        {feature.module && (
+                          <p className="text-[10px] font-medium tracking-wider text-muted-foreground/70 uppercase">
+                            {feature.module}
+                          </p>
+                        )}
+                      </div>
+                      <Switch
+                        checked={isChecked}
+                        onCheckedChange={(checked) => {
+                          const newValue = checked
+                            ? [...(field.value || []), feature.id]
+                            : (field.value || []).filter(
+                                (id: string) => id !== feature.id
+                              )
+                          field.onChange(newValue)
+                        }}
+                        disabled={isViewMode}
+                        className="scale-90"
+                      />
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          />
         </div>
 
         {/* STATUS */}
