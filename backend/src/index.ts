@@ -24,6 +24,7 @@ import categoryRoutes from "./v1/modules/attributes/categories/categories.routes
 import manufacturerRoutes from "./v1/modules/attributes/manufacturer/manufacturer.routes.js";
 import unitRoutes from "./v1/modules/attributes/units/units.routes.js";
 import storelistRoutes from "./v1/modules/storelist/storelist.routes.js";
+import supplierRoutes from "./v1/modules/suppliers/suppliers.routes.js";
 import uploadRoutes from "./v1/modules/upload/upload.routes.js";
 import path from "path";
 
@@ -85,6 +86,7 @@ protectedRouter.use(
 );
 protectedRouter.use("/attributes/units", generalLimiter, unitRoutes);
 protectedRouter.use("/storelist", generalLimiter, storelistRoutes);
+protectedRouter.use("/suppliers", generalLimiter, supplierRoutes);
 protectedRouter.use("/upload", generalLimiter, uploadRoutes);
 
 app.use("/api/v1", protectedRouter);

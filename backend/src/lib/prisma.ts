@@ -1,9 +1,9 @@
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
-import { 
-  getOrganizationId, 
-  getBranchId, 
-  shouldBypassTenant 
+import {
+  getOrganizationId,
+  getBranchId,
+  shouldBypassTenant,
 } from "./tenantContext.js";
 
 const connectionString = process.env.DATABASE_URL;
@@ -16,18 +16,19 @@ const adapter = new PrismaPg({ connectionString });
 
 // Models that are scoped to an Organization
 const orgScopedModels = new Set([
-  "Company", 
-  "HsnCode", 
-  "Supplier", 
-  "Branch"
+  "MasterProduct",
+  "Company",
+  "HsnCode",
+  "Supplier",
+  "Branch",
 ]);
 
 // Models that are scoped to a Branch
 const branchScopedModels = new Set([
-  "Inventory", 
-  "Sale", 
+  "Inventory",
+  "Sale",
   "PurchaseOrder",
-  "SaleItem"
+  "SaleItem",
 ]);
 
 const rootPrisma = new PrismaClient({ adapter });
@@ -53,15 +54,19 @@ export const prisma = rootPrisma.$extends({
 
         // Validation
         if (isOrgScoped && !orgId) {
-          throw new Error(`Missing Organization context for ${model}.${operation}`);
+          throw new Error(
+            `Missing Organization context for ${model}.${operation}. Please ensure 'x-organization-id' header is present or use runWithoutTenantScope() for internal operations.`,
+          );
         }
         if (isBranchScoped && !branchId) {
-          throw new Error(`Missing Branch context for ${model}.${operation}`);
+          throw new Error(
+            `Missing Branch context for ${model}.${operation}. Please ensure 'x-branch-id' header is present.`,
+          );
         }
 
         const mutableArgs = { ...(args ?? {}) } as Record<string, any>;
-        const tenantFilter = isOrgScoped 
-          ? { organizationId: orgId } 
+        const tenantFilter = isOrgScoped
+          ? { organizationId: orgId }
           : { branchId: branchId };
 
         switch (operation) {
@@ -89,7 +94,7 @@ export const prisma = rootPrisma.$extends({
             if (Array.isArray(mutableArgs.data)) {
               mutableArgs.data = mutableArgs.data.map((item: any) => ({
                 ...item,
-                ...tenantFilter
+                ...tenantFilter,
               }));
             } else {
               mutableArgs.data = { ...mutableArgs.data, ...tenantFilter };

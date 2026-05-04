@@ -26,10 +26,12 @@ export class StoreListService {
   }
 
   static async createStore(data: any) {
-    const passwordHash = await bcrypt.hash(data.password, 12);
+    const loginEmail = data.loginEmail.trim().toLowerCase();
+    const password = data.password.trim();
+    const passwordHash = await bcrypt.hash(password, 12);
 
     const organizationData = {
-      storeName: data.storeName,
+      storeName: data.storeName.trim(),
       description: data.description,
       category: data.category,
       logo: data.logo,
@@ -48,11 +50,11 @@ export class StoreListService {
     console.log("passwordHash", data.password);
     return StoreListRepository.createStoreWithUser({
       user: {
-        firstName: data.ownerFirstName,
-        lastName: data.ownerLastName,
-        email: data.loginEmail,
+        firstName: data.ownerFirstName.trim(),
+        lastName: data.ownerLastName.trim(),
+        email: loginEmail,
         passwordHash,
-        mobile: data.ownerPhone,
+        mobile: data.ownerPhone.trim(),
       },
       organization: organizationData,
     });

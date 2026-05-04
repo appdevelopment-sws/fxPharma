@@ -85,12 +85,3 @@ migrate the database
 docker compose exec backend npx prisma migrate deploy  
 ```
 
-```bash
-docker compose exec backend npx prisma migrate dev --name remove_store_lists
-```
-
-
-visualize the database:
-```bash
-npx prisma studio --url="postgresql://postgrespharmacyuser:supersecretpassword@localhost:5432/pharmacydawadukaandb"
-```
