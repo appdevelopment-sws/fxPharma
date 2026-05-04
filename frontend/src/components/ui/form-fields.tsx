@@ -32,6 +32,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import { getImageUrl } from "@/lib/utils"
 /**
  * Reusable form field components for react-hook-form
  * Use these components in any form to standardize field rendering
@@ -598,7 +599,7 @@ export function FormFileUpload<T extends FieldValues>({
         // Generate preview URL if it's a file and an image
         const previewUrl = React.useMemo(() => {
           if (!value) return null
-          if (typeof value === "string") return value
+          if (typeof value === "string") return getImageUrl(value)
           if ((value as any) instanceof File && isImage) {
             return URL.createObjectURL(value as File)
           }

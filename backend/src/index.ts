@@ -24,6 +24,8 @@ import categoryRoutes from "./v1/modules/attributes/categories/categories.routes
 import manufacturerRoutes from "./v1/modules/attributes/manufacturer/manufacturer.routes.js";
 import unitRoutes from "./v1/modules/attributes/units/units.routes.js";
 import storelistRoutes from "./v1/modules/storelist/storelist.routes.js";
+import uploadRoutes from "./v1/modules/upload/upload.routes.js";
+import path from "path";
 
 import { authLimiter, generalLimiter } from "./helpers/rateLimit.js";
 import { swaggerSpec } from "./config/swagger.config.js";
@@ -36,9 +38,11 @@ const app = express();
 const allowedOrigins = [process.env.CLIENT_URL || ""].filter(Boolean);
 
 app.set("trust proxy", 1);
-app.use(helmet({
-  contentSecurityPolicy: false,
-}));
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+  }),
+);
 app.use(compression());
 app.use(express.json({ limit: "1mb" }));
 app.use(cookieParser());
@@ -74,12 +78,17 @@ protectedRouter.use("/hsn", generalLimiter, hsnRoutes);
 protectedRouter.use("/hsn-mappings", generalLimiter, hsnMappingRoutes);
 protectedRouter.use("/attributes/brands", generalLimiter, brandRoutes);
 protectedRouter.use("/attributes/categories", generalLimiter, categoryRoutes);
-protectedRouter.use("/attributes/manufacturers", generalLimiter, manufacturerRoutes);
+protectedRouter.use(
+  "/attributes/manufacturers",
+  generalLimiter,
+  manufacturerRoutes,
+);
 protectedRouter.use("/attributes/units", generalLimiter, unitRoutes);
 protectedRouter.use("/storelist", generalLimiter, storelistRoutes);
-
+protectedRouter.use("/upload", generalLimiter, uploadRoutes);
 
 app.use("/api/v1", protectedRouter);
+app.use("/uploads", express.static(path.join(process.cwd(), "src/uploads")));
 
 app.get("/", (_req: Request, res: Response) => {
   res.json("hello from backend");

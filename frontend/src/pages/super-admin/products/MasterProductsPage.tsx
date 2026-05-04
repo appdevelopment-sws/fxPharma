@@ -1,7 +1,8 @@
 import { useCallback, useMemo } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { Plus, Pencil, Eye, Trash2, Download } from "lucide-react"
+import { Plus, Pencil, Eye, Trash2, Download, ImageIcon } from "lucide-react"
 import { toast } from "sonner"
+import { getImageUrl } from "@/lib/utils"
 
 import { ConfirmDialog } from "@/components/confirmDialog"
 import DataTable, { type DataTableColumn } from "@/components/data-table"
@@ -76,7 +77,22 @@ export default function MasterProductsPage() {
         header:
           MASTER_PRODUCT_COLUMNS.find((c) => c.key === "name")?.label ||
           "Product",
-        accessor: "name",
+        render: (row) => (
+          <div className="flex items-center gap-3">
+            <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-muted">
+              {row.imageUrl ? (
+                <img
+                  src={getImageUrl(row.imageUrl)}
+                  alt={row.name}
+                  className="h-full w-full object-contain"
+                />
+              ) : (
+                <ImageIcon className="size-5 text-muted-foreground/50" />
+              )}
+            </div>
+            <span className="font-medium">{row.name}</span>
+          </div>
+        ),
       },
       {
         key: "salt",

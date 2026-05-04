@@ -2,8 +2,10 @@ import { useEffect, useRef, useState } from "react"
 import { useForm, type SubmitHandler, useFieldArray } from "react-hook-form"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Plus, Trash2, Upload, Camera, ImageIcon } from "lucide-react"
+import { toast } from "sonner"
 import { queryKeys } from "@/lib/queryKeys"
 import ProductApi from "@/services/masterProductApi"
+import { uploadApi } from "@/services/uploadApi"
 import { useSearchSelect } from "@/hooks/useSearchSelect"
 import { FormContainer } from "@/components/formContainer"
 import {
@@ -15,6 +17,11 @@ import {
 } from "@/components/ui/form-fields"
 import { Button } from "@/components/ui/button"
 import { HsnApi } from "@/services/taxApi"
+import BrandApi, {
+  CategoryApi,
+  ManufacturerApi,
+  UnitApi,
+} from "@/services/attributesApi"
 import {
   MASTER_PRODUCT_FORM_INITIAL_DATA,
   INDUSTRY_SEGMENT_OPTIONS,
@@ -45,7 +52,7 @@ export default function MasterProductDialog({
     (search) => HsnApi.getHsnCodes({ search }),
     (data) =>
       (data?.data || []).map((hsn: any) => ({
-        label: `${hsn.code} - ${hsn.description || ""}`,
+        label: `${hsn.hsncode} - ${hsn.description || ""}`,
         value: String(hsn.id),
       })),
     open
@@ -53,45 +60,54 @@ export default function MasterProductDialog({
 
   const category = useSearchSelect(
     ["categories"],
-    async (search) =>
-      [
-        { label: "Analgesics", value: "analgesics" },
-        { label: "Antibiotics", value: "antibiotics" },
-        { label: "Antiseptics", value: "antiseptics" },
-      ].filter((opt) => opt.label.toLowerCase().includes(search.toLowerCase())),
-    (data) => data,
+    (search) => CategoryApi.getCategories({ search }),
+    (data) =>
+      (data?.data || []).map((cat: any) => ({
+        label: cat.name,
+        value: String(cat.id),
+      })),
     open
   )
 
   const brand = useSearchSelect(
     ["brands"],
-    async (search) =>
-      [
-        { label: "Cipla", value: "cipla" },
-        { label: "Sun Pharma", value: "sun_pharma" },
-        { label: "GSK", value: "gsk" },
-      ].filter((opt) => opt.label.toLowerCase().includes(search.toLowerCase())),
-    (data) => data,
+    (search) => BrandApi.getBrands({ search }),
+    (data) =>
+      (data?.data || []).map((b: any) => ({
+        label: b.name,
+        value: String(b.id),
+      })),
     open
   )
 
   const manufacturer = useSearchSelect(
     ["manufacturers"],
-    async (search) =>
-      [
-        { label: "Pfizer Inc.", value: "pfizer" },
-        { label: "Novartis AG", value: "novartis" },
-        { label: "Bayer AG", value: "bayer" },
-      ].filter((opt) => opt.label.toLowerCase().includes(search.toLowerCase())),
-    (data) => data,
+    (search) => ManufacturerApi.getManufacturers({ search }),
+    (data) =>
+      (data?.data || []).map((m: any) => ({
+        label: m.name,
+        value: String(m.id),
+      })),
     open
   )
 
+  const categoryType = useSearchSelect(
+    ["units"],
+    (search) => UnitApi.getUnits({ search }),
+    (data) =>
+      (data?.data || []).map((u: any) => ({
+        label: u.name,
+        value: u.shortName || u.name,
+      })),
+    open
+  )
 
   const { handleSubmit, control, reset, watch, setValue } = useForm({
     defaultValues: MASTER_PRODUCT_FORM_INITIAL_DATA,
     mode: "onChange",
   })
+
+  const [isUploading, setIsUploading] = useState(false)
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -142,7 +158,27 @@ export default function MasterProductDialog({
   })
 
   const onSubmit: SubmitHandler<any> = async (data) => {
-    handleMutation.mutate(data)
+    let imageUrl = data.image_url
+
+    if (imageUrl instanceof File) {
+      try {
+        setIsUploading(true)
+        const uploadRes = await uploadApi.uploadImage(imageUrl)
+        imageUrl = uploadRes.data?.url || uploadRes.url
+      } catch (error) {
+        console.error("Failed to upload image:", error)
+        toast.error("Failed to upload product image.")
+        setIsUploading(false)
+        return
+      } finally {
+        setIsUploading(false)
+      }
+    }
+
+    handleMutation.mutate({
+      ...data,
+      image_url: imageUrl,
+    })
   }
 
   return (
@@ -171,7 +207,7 @@ export default function MasterProductDialog({
             type="button"
             variant="outline"
             onClick={() => onClose(false)}
-            disabled={handleMutation.isPending}
+            disabled={handleMutation.isPending || isUploading}
           >
             {isViewMode ? "Close" : "Cancel"}
           </Button>
@@ -179,13 +215,15 @@ export default function MasterProductDialog({
             <Button
               type="submit"
               form="master-product-dialog-form"
-              disabled={handleMutation.isPending}
+              disabled={handleMutation.isPending || isUploading}
             >
-              {handleMutation.isPending
-                ? "Saving..."
-                : isEditMode
-                  ? "Update Product"
-                  : "Save Product"}
+              {isUploading
+                ? "Uploading..."
+                : handleMutation.isPending
+                  ? "Saving..."
+                  : isEditMode
+                    ? "Update Product"
+                    : "Save Product"}
             </Button>
           )}
         </div>
@@ -254,11 +292,14 @@ export default function MasterProductDialog({
             />
 
             <div className="grid grid-cols-2 gap-4">
-              <FormSelectField
+              <FormSearchSelect
                 control={control}
                 name="category_type"
                 label="CATEGORY TYPE"
-                options={CATEGORY_TYPE_OPTIONS}
+                placeholder="Search Type..."
+                options={categoryType.options}
+                onSearch={categoryType.onSearch}
+                loading={categoryType.loading}
                 readOnly={isViewMode}
               />
               <FormSelectField
