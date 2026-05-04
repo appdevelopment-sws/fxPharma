@@ -1,5 +1,6 @@
 import { rootPrisma } from "@/lib/prisma.js";
 import { Prisma } from "@prisma/client";
+import ErrorHandler from "../../../utils/ErrorHandler.js";
 
 export class StoreListRepository {
   static async findAll(
@@ -43,9 +44,18 @@ export class StoreListRepository {
       mobile: string;
     };
     organization: any;
+    permissions?: string[];
   }) {
     return rootPrisma.$transaction(async (tx) => {
       console.log("passwordHash", data.user.passwordHash);
+      const existingUser = await tx.user.findFirst({
+        where: { email: data.user.email },
+      });
+
+      if (existingUser) {
+        throw new ErrorHandler("Email is already in use", 400);
+      }
+
       // 1. Create User
       const user = await tx.user.create({
         data: {
@@ -86,8 +96,9 @@ export class StoreListRepository {
           data: {
             userId: user.id,
             roleId: branchAdminRole.id,
-            scopeType: "organization",
-            scopeId: organization.id,
+            scopeType: "branch",
+            scopeId: branch.id,
+            branchId: branch.id,
           },
         });
       }
@@ -104,8 +115,35 @@ export class StoreListRepository {
             workflowId: adminWorkflow.id,
             scopeType: "branch",
             scopeId: branch.id,
+            branchId: branch.id,
           },
         });
+      }
+
+      // 6. Assign explicit permissions selected during store creation
+      const selectedPermissions = Array.from(
+        new Set((data.permissions ?? []).filter(Boolean))
+      );
+
+      if (selectedPermissions.length > 0) {
+        const permissionRecords = await tx.permission.findMany({
+          where: { key: { in: selectedPermissions } },
+        });
+
+        await Promise.all(
+          permissionRecords.map((permission) =>
+            tx.userPermission.create({
+              data: {
+                userId: user.id,
+                permissionId: permission.id,
+                granted: true,
+                scopeType: "branch",
+                scopeId: branch.id,
+                branchId: branch.id,
+              },
+            })
+          )
+        );
       }
 
       return organization;
@@ -116,6 +154,16 @@ export class StoreListRepository {
     return rootPrisma.$transaction(async (tx) => {
       const store = await tx.organization.findUnique({ where: { id } });
       if (!store) throw new Error("Store not found");
+
+      if (data.loginEmail) {
+        const existingUser = await tx.user.findFirst({
+          where: { email: data.loginEmail },
+        });
+
+        if (existingUser && existingUser.id !== store.ownerId) {
+          throw new ErrorHandler("Email is already in use", 400);
+        }
+      }
 
       // Update Organization
       const updatedOrganization = await tx.organization.update({

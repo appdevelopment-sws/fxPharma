@@ -11,7 +11,7 @@ export class StoreListController {
   });
 
   static getById = catchAsync(async (req: Request, res: Response) => {
-    const store = await StoreListService.getStoreById(req.params.id);
+    const store = await StoreListService.getStoreById(String(req.params.id));
     res.json({ success: true, data: store });
   });
 
@@ -21,12 +21,15 @@ export class StoreListController {
   });
 
   static update = catchAsync(async (req: Request, res: Response) => {
-    const store = await StoreListService.updateStore(req.params.id, req.body);
+    const store = await StoreListService.updateStore(
+      String(req.params.id),
+      req.body,
+    );
     res.json({ success: true, data: store });
   });
 
   static delete = catchAsync(async (req: Request, res: Response) => {
-    await StoreListService.deleteStore(req.params.id);
+    await StoreListService.deleteStore(String(req.params.id));
     res.json({ success: true, message: "Store deleted successfully" });
   });
 }

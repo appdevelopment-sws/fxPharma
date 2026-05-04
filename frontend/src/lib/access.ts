@@ -32,6 +32,13 @@ export const permissionLabels: Record<PermissionName, string> = {
   [PERMISSIONS.MASTER_PRODUCT_DELETE]: "Delete master products",
 }
 
+export const permissionOptions = (
+  Object.entries(permissionLabels) as [PermissionName, string][]
+).map(([value, label]) => ({
+  value,
+  label,
+}))
+
 export const superAdminPermissionLabels: Record<PermissionName, string> = {
   [PERMISSIONS.USER_CREATE]: "Provision tenant administrators",
   [PERMISSIONS.USER_READ]: "Review tenant users and platform scope",

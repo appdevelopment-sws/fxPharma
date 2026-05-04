@@ -15,7 +15,7 @@ if (!connectionString) {
 const adapter = new PrismaPg({ connectionString });
 
 // Models that are scoped to an Organization
-const orgScopedModels = new Set([
+const orgScopedModels = new Set<string>([
   // "Supplier",
   "Branch",
   "OrganizationFeature",
@@ -23,7 +23,7 @@ const orgScopedModels = new Set([
 ]);
 
 // Models that are scoped to a Branch
-const branchScopedModels = new Set([
+const branchScopedModels = new Set<string>([
   // Add models here as they are implemented in schema.prisma with branchId
 ]);
 

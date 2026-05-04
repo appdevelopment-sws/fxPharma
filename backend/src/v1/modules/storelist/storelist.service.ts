@@ -29,6 +29,7 @@ export class StoreListService {
     const loginEmail = data.loginEmail.trim().toLowerCase();
     const password = data.password.trim();
     const passwordHash = await bcrypt.hash(password, 12);
+    const permissions = Array.isArray(data.permissions) ? data.permissions : [];
 
     const organizationData = {
       storeName: data.storeName.trim(),
@@ -57,6 +58,7 @@ export class StoreListService {
         mobile: data.ownerPhone.trim(),
       },
       organization: organizationData,
+      permissions,
     });
   }
 
