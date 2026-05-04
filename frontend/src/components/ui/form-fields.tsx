@@ -666,6 +666,35 @@ export function FormFileUpload<T extends FieldValues>({
                       </div>
                     )}
                   </>
+                ) : disabled ? (
+                  <div className="flex h-full w-full flex-col items-center justify-center gap-3 p-4 text-center">
+                    <FileIcon className="size-8 text-primary" />
+                    <div className="space-y-1">
+                      <span className="block max-w-[240px] truncate text-sm font-medium text-foreground">
+                        {typeof value === "string"
+                          ? value.split("/").pop()
+                          : (value as File).name}
+                      </span>
+                      <p className="text-xs text-muted-foreground">
+                        Uploaded document
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        const url =
+                          typeof value === "string" ? getImageUrl(value) : null
+                        if (url) {
+                          window.open(url, "_blank", "noopener,noreferrer")
+                        }
+                      }}
+                    >
+                      View Document
+                    </Button>
+                  </div>
                 ) : (
                   <div className="flex flex-col items-center justify-center space-y-2 p-4 text-center">
                     <FileIcon className="size-8 text-primary" />
