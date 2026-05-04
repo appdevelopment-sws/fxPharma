@@ -55,13 +55,11 @@ export const prisma = rootPrisma.$extends({
         // Validation
         if (isOrgScoped && !orgId) {
           throw new Error(
-            `Missing Organization context for ${model}.${operation}. Please ensure 'x-organization-id' header is present or use runWithoutTenantScope() for internal operations.`,
+            `Missing Organization context for ${model}.${operation}`,
           );
         }
         if (isBranchScoped && !branchId) {
-          throw new Error(
-            `Missing Branch context for ${model}.${operation}. Please ensure 'x-branch-id' header is present.`,
-          );
+          throw new Error(`Missing Branch context for ${model}.${operation}`);
         }
 
         const mutableArgs = { ...(args ?? {}) } as Record<string, any>;
