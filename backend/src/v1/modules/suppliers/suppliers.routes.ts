@@ -1,7 +1,10 @@
 import { Router } from "express";
 import { SuppliersController } from "./suppliers.controller.js";
 import { validate } from "@/middlewares/validate.js";
-import { createSupplierSchema, updateSupplierSchema } from "./suppliers.validation.js";
+import {
+  createSupplierSchema,
+  updateSupplierSchema,
+} from "./suppliers.validation.js";
 import { isAuthenticated } from "@/middlewares/isAuthenticated.js";
 
 const router = Router();
@@ -93,7 +96,12 @@ router.get("/:id", isAuthenticated, SuppliersController.getById);
  *       201:
  *         description: Supplier created
  */
-router.post("/", isAuthenticated, validate(createSupplierSchema), SuppliersController.create);
+router.post(
+  "/",
+  isAuthenticated,
+  validate(createSupplierSchema),
+  SuppliersController.create,
+);
 
 /**
  * @swagger
@@ -131,7 +139,12 @@ router.post("/", isAuthenticated, validate(createSupplierSchema), SuppliersContr
  *       200:
  *         description: Supplier updated
  */
-router.put("/:id", isAuthenticated, validate(updateSupplierSchema), SuppliersController.update);
+router.put(
+  "/:id",
+  isAuthenticated,
+  validate(updateSupplierSchema),
+  SuppliersController.update,
+);
 
 /**
  * @swagger
