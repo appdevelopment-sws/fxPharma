@@ -275,20 +275,19 @@ export default function ManageStoreDialog({
             </div>
           </div>
 
-          {!isEditMode && !isViewMode && (
-            <div className="rounded-xl border p-6">
-              {sectionHeader("04", "Owner Permissions")}
+          <div className="rounded-xl border p-6">
+            {sectionHeader("04", "Owner Permissions")}
 
-              <PermissionMultiSelectField
-                control={control}
-                name="permissions"
-                label="Grant Permissions"
-                description="Choose which actions the first store owner can access when they sign in."
-                options={permissionOptions}
-                selectAllLabel="Select all permissions"
-              />
-            </div>
-          )}
+            <PermissionMultiSelectField
+              control={control}
+              name="permissions"
+              label="Grant Permissions"
+              description="Choose which actions the first store owner can access when they sign in."
+              options={permissionOptions}
+              selectAllLabel="Select all permissions"
+              readOnly={isViewMode}
+            />
+          </div>
 
           {/* ADDRESS */}
           <div className="rounded-xl border p-6">

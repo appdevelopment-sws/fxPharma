@@ -14,7 +14,15 @@ export class StoreListRepository {
         skip,
         take,
         include: {
-          owner: true,
+          owner: {
+            include: {
+              permissions: {
+                include: {
+                  permission: true,
+                },
+              },
+            },
+          },
           plan: true,
         },
         orderBy: { createdAt: "desc" },
@@ -29,7 +37,15 @@ export class StoreListRepository {
     return rootPrisma.organization.findUnique({
       where: { id },
       include: {
-        owner: true,
+        owner: {
+          include: {
+            permissions: {
+              include: {
+                permission: true,
+              },
+            },
+          },
+        },
         plan: true,
       },
     });
@@ -208,6 +224,49 @@ export class StoreListRepository {
             email: data.loginEmail,
           },
         });
+      }
+
+      if (store.ownerId) {
+        const permissionsToApply = (data.permissions ?? []) as string[];
+        const selectedPermissions = Array.from(
+          new Set(permissionsToApply.filter((permission: string) => Boolean(permission)))
+        );
+        const ownerId = store.ownerId;
+
+        const branch = await tx.branch.findFirst({
+          where: { organizationId: id },
+        });
+
+        if (branch) {
+          await tx.userPermission.deleteMany({
+            where: {
+              userId: ownerId,
+              scopeType: "branch",
+              scopeId: branch.id,
+            },
+          });
+
+          if (selectedPermissions.length > 0) {
+            const permissionRecords = await tx.permission.findMany({
+              where: { key: { in: selectedPermissions } },
+            });
+
+            await Promise.all(
+              permissionRecords.map((permission) =>
+                tx.userPermission.create({
+                  data: {
+                    userId: ownerId,
+                    permissionId: permission.id,
+                    granted: true,
+                    scopeType: "branch",
+                    scopeId: branch.id,
+                    branchId: branch.id,
+                  },
+                })
+              )
+            );
+          }
+        }
       }
 
       return updatedOrganization;
