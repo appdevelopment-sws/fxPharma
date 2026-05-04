@@ -18,6 +18,11 @@ export const queryKeys = {
     detail: (id: string) => [...queryKeys.masterProducts.all, id] as const,
     references: () => [...queryKeys.masterProducts.all, "references"] as const,
   },
+  inventory: {
+    all: ["inventory"] as const,
+    list: (filters?: any) => [...queryKeys.inventory.all, filters] as const,
+    detail: (id: string) => [...queryKeys.inventory.all, id] as const,
+  },
   taxes: {
     all: ["taxes"] as const,
     list: (filters?: any) => [...queryKeys.taxes.all, filters] as const,

@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button"
 import { useDisclosure } from "@/hooks/useDisclosure"
 import useSearchFilter from "@/hooks/useSearchFilter"
 import { queryKeys } from "@/lib/queryKeys"
-import ProductApi from "@/services/masterProductApi"
+import InventoryApi from "@/services/inventoryApi"
 
 import {
   INITIAL_MEDICINE_STOCK_FILTERS,
@@ -31,17 +31,17 @@ export default function AllInventoryPage() {
     INITIAL_MEDICINE_STOCK_FILTERS
   )
 
-  const { data: productsData, isLoading: isLoadingProducts } = useQuery({
-    queryKey: queryKeys.masterProducts.list(filter),
-    queryFn: () => ProductApi.getMasterProducts(filter),
+  const { data: inventoryData, isLoading: isLoadingInventory } = useQuery({
+    queryKey: queryKeys.inventory.list(filter),
+    queryFn: () => InventoryApi.getAll(filter),
   })
 
   const deleteProductMutation = useMutation({
-    mutationFn: (id: number) => ProductApi.deleteProduct(id),
+    mutationFn: (id: string) => InventoryApi.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.masterProducts.all })
+      queryClient.invalidateQueries({ queryKey: queryKeys.inventory.all })
       deleteDisclosure.onClose()
-      toast.success("Master product deleted successfully")
+      toast.success("Inventory item deleted successfully")
     },
   })
 
@@ -85,7 +85,16 @@ export default function AllInventoryPage() {
         header:
           MEDICINE_STOCK_COLUMNS.find((c) => c.key === "medicine_salt")
             ?.label || "Medicine & Salt",
-        accessor: "medicine_salt",
+        render: (row) =>
+          [row.name, row.saltComposition].filter(Boolean).join(" / ") || "-",
+      },
+
+      {
+        key: "manufacturer",
+        header:
+          MEDICINE_STOCK_COLUMNS.find((c) => c.key === "manufacturer")?.label ||
+          "Manufacturer",
+        accessor: "manufacturer",
       },
 
       {
@@ -97,19 +106,11 @@ export default function AllInventoryPage() {
       },
 
       {
-        key: "total_stock",
+        key: "status",
         header:
-          MEDICINE_STOCK_COLUMNS.find((c) => c.key === "total_stock")?.label ||
-          "Total Stock",
-        accessor: "total_stock",
-      },
-
-      {
-        key: "batches",
-        header:
-          MEDICINE_STOCK_COLUMNS.find((c) => c.key === "batches")?.label ||
-          "Batches",
-        accessor: "batches",
+          MEDICINE_STOCK_COLUMNS.find((c) => c.key === "status")?.label ||
+          "Status",
+        accessor: "status",
       },
 
       {
@@ -169,7 +170,7 @@ export default function AllInventoryPage() {
       <ConfirmDialog
         open={deleteDisclosure.isOpen}
         onOpenChange={deleteDisclosure.onClose}
-        title="Delete Master Product"
+        title="Delete Inventory Item"
         description={`Are you sure you want to delete "${deleteDisclosure.data?.name}"? This action cannot be undone.`}
         onConfirm={() =>
           deleteProductMutation.mutate(deleteDisclosure.data?.id)
@@ -236,25 +237,25 @@ export default function AllInventoryPage() {
 
           <DataTable
             columns={columns}
-            data={productsData?.data || []}
+            data={inventoryData?.data || []}
             rowKey="id"
             currentPage={filter.page || 1}
             lastPage={
-              productsData?.meta?.pages ||
+              inventoryData?.meta?.totalPages ||
               Math.ceil(
-                (productsData?.meta?.total || 0) / (filter.perPage || 10)
+                (inventoryData?.meta?.total || 0) / (filter.perPage || 10)
               ) ||
               1
             }
             pageSize={filter.perPage || 10}
-            totalRecords={productsData?.meta?.total || 0}
-            isLoading={isLoadingProducts}
+            totalRecords={inventoryData?.meta?.total || 0}
+            isLoading={isLoadingInventory}
             onPageChange={(page) => handleFilterChange({ page })}
             onPageSizeChange={(perPage) =>
               handleFilterChange({ perPage, page: 1 })
             }
-            emptyTitle="No subscriptions found"
-            emptyDescription="Create a subscription or adjust the filters to see matching records."
+            emptyTitle="No inventory found"
+            emptyDescription="Create an inventory item or adjust the filters to see matching records."
           />
         </div>
       </SectionCard>

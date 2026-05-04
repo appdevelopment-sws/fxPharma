@@ -23,7 +23,7 @@ import { Button } from "@/components/ui/button"
 import { useDisclosure } from "@/hooks/useDisclosure"
 import useSearchFilter from "@/hooks/useSearchFilter"
 import { queryKeys } from "@/lib/queryKeys"
-import ProductApi, { type MasterProduct } from "@/services/masterProductApi"
+import InventoryApi from "@/services/inventoryApi"
 
 import {
     INITIAL_MEDICINE_STOCK_FILTERS,
@@ -45,17 +45,17 @@ export default function ImportInventoryPage() {
         INITIAL_MEDICINE_STOCK_FILTERS
     )
 
-    const { data: productsData, isLoading: isLoadingProducts } = useQuery({
-        queryKey: queryKeys.masterProducts.list(filter),
-        queryFn: () => ProductApi.getMasterProducts(filter),
+    const { data: inventoryData, isLoading: isLoadingInventory } = useQuery({
+        queryKey: queryKeys.inventory.list(filter),
+        queryFn: () => InventoryApi.getAll(filter),
     })
 
     const deleteProductMutation = useMutation({
-        mutationFn: (id: number) => ProductApi.deleteProduct(id),
+        mutationFn: (id: string) => InventoryApi.delete(id),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: queryKeys.masterProducts.all })
+            queryClient.invalidateQueries({ queryKey: queryKeys.inventory.all })
             deleteDisclosure.onClose()
-            toast.success("Master product deleted successfully")
+            toast.success("Inventory item deleted successfully")
         },
     })
 
@@ -100,7 +100,10 @@ export default function ImportInventoryPage() {
                     MEDICINE_IMPORT_COLUMNS.find(
                         (c) => c.key === "medicine_details"
                     )?.label || "Medicine Details",
-                accessor: "medicine_details",
+                render: (row) =>
+                    [row.name, row.saltComposition].filter(Boolean).join(" / ") ||
+                    row.name ||
+                    "-",
             },
 
             {
@@ -190,7 +193,7 @@ export default function ImportInventoryPage() {
             <ConfirmDialog
                 open={deleteDisclosure.isOpen}
                 onOpenChange={deleteDisclosure.onClose}
-                title="Delete Master Product"
+                title="Delete Inventory Item"
                 description={`Are you sure you want to delete "${deleteDisclosure.data?.name}"? This action cannot be undone.`}
                 onConfirm={() =>
                     deleteProductMutation.mutate(deleteDisclosure.data?.id)
@@ -239,19 +242,19 @@ export default function ImportInventoryPage() {
 
                     <DataTable
                         columns={columns}
-                        data={productsData?.data || []}
+                        data={inventoryData?.data || []}
                         rowKey="id"
                         currentPage={filter.page || 1}
                         lastPage={
-                            productsData?.meta?.pages ||
+                            inventoryData?.meta?.totalPages ||
                             Math.ceil(
-                                (productsData?.meta?.total || 0) / (filter.perPage || 10)
+                                (inventoryData?.meta?.total || 0) / (filter.perPage || 10)
                             ) ||
                             1
                         }
                         pageSize={filter.perPage || 10}
-                        totalRecords={productsData?.meta?.total || 0}
-                        isLoading={isLoadingProducts}
+                        totalRecords={inventoryData?.meta?.total || 0}
+                        isLoading={isLoadingInventory}
                         onPageChange={(page) => handleFilterChange({ page })}
                         onPageSizeChange={(perPage) =>
                             handleFilterChange({ perPage, page: 1 })
