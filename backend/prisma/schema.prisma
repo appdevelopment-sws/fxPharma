@@ -132,6 +132,7 @@ model Organization {
   branches  Branch[]
   features  OrganizationFeature[]
   suppliers Supplier[]
+  inventory Inventory[]
 
   // Owner Relation
   ownerId String? @map("owner_id")
@@ -170,6 +171,7 @@ model Branch {
   userRoles       UserRole[]
   userWorkflows   UserWorkflow[]
   userPermissions UserPermission[]
+  inventory       Inventory[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -519,4 +521,82 @@ model MasterProductBarcode {
 
 
   @@index([value])
+}
+
+
+model Inventory {
+  id              String  @id @default(cuid())
+  organizationId  String  @map("organization_id")
+  branchId        String? @map("branch_id")
+  
+  // 01 Product Identification
+  name            String
+  status          InventoryStatus @default(CONTINUE)
+  manufacturer    String?
+  saltComposition String?  @map("salt_composition")
+  category        String?  @default("TAB")
+
+  // 02 Classification & Units
+  packing         String?
+  unit1st         String?  @map("unit_1st")
+  unit2nd         String?  @map("unit_2nd")
+  hsnCode         String?  @map("hsn_code")
+  itemType        String?  @default("NORMAL") @map("item_type")
+  colorType       String?  @default("NORMAL") @map("color_type")
+  decimal         String?  @default("No")
+  type            String?  @default("NORMAL")
+
+  // 03 Pricing & Taxation
+  localTax        String?  @default("Taxable") @map("local_tax")
+  centralTax      String?  @default("Taxable") @map("central_tax")
+  sgst            Decimal? @default(0.0)
+  cgst            Decimal? @default(0.0)
+  igst            Decimal? @default(0.0)
+  mrp             Decimal? @default(0.0)
+  purchaseRate    Decimal? @default(0.0) @map("purchase_rate")
+  costPerUnit     Decimal? @default(0.0) @map("cost_per_unit")
+  rateA           Decimal? @default(0.0) @map("rate_a")
+  rateB           Decimal? @default(0.0) @map("rate_b")
+  rateC           Decimal? @default(0.0) @map("rate_c")
+  cer             Decimal? @default(0.0)
+
+  // 04 Inventory Thresholds
+  minQty          Int?     @default(0) @map("min_qty")
+  maxQty          Int?     @default(0) @map("max_qty")
+  reorderQty      Int?     @default(0) @map("reorder_qty")
+  daysLimit       Int?     @default(0) @map("days_limit")
+  convStri        Decimal? @default(0.0) @map("conv_stri")
+  convCas         Decimal? @default(0.0) @map("conv_cas")
+
+  // 05 Discounts & Margins
+  volumeDiscount  Decimal? @default(0.0) @map("volume_discount")
+  itemDiscount    Decimal? @default(0.0) @map("item_discount")
+  maxDiscount     Decimal? @default(0.0) @map("max_discount")
+  minMargin       Decimal? @default(0.0) @map("min_margin")
+  specialDiscount Decimal? @default(0.0) @map("special_discount")
+  purchaseDiscount Decimal? @default(0.0) @map("purchase_discount")
+
+  // 06 Regulatory & Product Flags
+  isNarcotic      Boolean  @default(false) @map("is_narcotic")
+  isScheduleH     Boolean  @default(false) @map("is_schedule_h")
+  isScheduleH1    Boolean  @default(false) @map("is_schedule_h1")
+  hideProduct     Boolean  @default(false) @map("hide_product")
+  negativeStock   Boolean  @default(false) @map("negative_stock")
+  editRates       Boolean  @default(true)  @map("edit_rates")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  branch       Branch?      @relation(fields: [branchId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId])
+  @@index([branchId])
+  @@index([name])
+}
+
+enum InventoryStatus {
+  CONTINUE
+  DISCONTINUE
 }
