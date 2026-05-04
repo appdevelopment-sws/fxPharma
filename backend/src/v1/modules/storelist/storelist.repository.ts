@@ -2,7 +2,11 @@ import { rootPrisma } from "@/lib/prisma.js";
 import { Prisma } from "@prisma/client";
 
 export class StoreListRepository {
-  static async findAll(where: Prisma.OrganizationWhereInput = {}, skip?: number, take?: number) {
+  static async findAll(
+    where: Prisma.OrganizationWhereInput = {},
+    skip?: number,
+    take?: number,
+  ) {
     const [data, total] = await Promise.all([
       rootPrisma.organization.findMany({
         where,
@@ -41,6 +45,7 @@ export class StoreListRepository {
     organization: any;
   }) {
     return rootPrisma.$transaction(async (tx) => {
+      console.log("passwordHash", data.user.passwordHash);
       // 1. Create User
       const user = await tx.user.create({
         data: {
@@ -135,15 +140,22 @@ export class StoreListRepository {
       });
 
       // Update User (Owner)
-      if (store.ownerId && (data.ownerFirstName || data.ownerLastName || data.ownerPhone || data.loginEmail)) {
+      if (
+        store.ownerId &&
+        (data.ownerFirstName ||
+          data.ownerLastName ||
+          data.ownerPhone ||
+          data.loginEmail)
+      ) {
         await tx.user.update({
           where: { id: store.ownerId },
           data: {
             firstName: data.ownerFirstName,
             lastName: data.ownerLastName,
-            name: (data.ownerFirstName || data.ownerLastName)
-              ? `${data.ownerFirstName || ""} ${data.ownerLastName || ""}`.trim()
-              : undefined,
+            name:
+              data.ownerFirstName || data.ownerLastName
+                ? `${data.ownerFirstName || ""} ${data.ownerLastName || ""}`.trim()
+                : undefined,
             mobile: data.ownerPhone,
             email: data.loginEmail,
           },

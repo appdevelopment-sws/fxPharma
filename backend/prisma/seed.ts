@@ -39,8 +39,8 @@ async function main() {
         where: { key: f.key },
         update: { name: f.name, module: f.module },
         create: f,
-      })
-    )
+      }),
+    ),
   );
 
   // 3. Seed Plans (Starter, Professional, Enterprise)
@@ -54,7 +54,12 @@ async function main() {
       key: "STARTER_MONTHLY",
       name: "Starter Pack",
       shortDescription: "Ideal for small single-store pharmacies",
-      description: ["Basic Inventory", "Billing", "1 Branch Only", "Limited Support"],
+      description: [
+        "Basic Inventory",
+        "Billing",
+        "1 Branch Only",
+        "Limited Support",
+      ],
       price: 999,
       billingCycle: "MONTHLY",
       durationDays: 30,
@@ -64,7 +69,7 @@ async function main() {
       isPopular: false,
       badgeText: "Budget Friendly",
       status: 1,
-    }
+    },
   });
 
   // B. PROFESSIONAL PLAN
@@ -75,7 +80,12 @@ async function main() {
       key: "PRO_MONTHLY",
       name: "Growth Plan",
       shortDescription: "Best for growing pharmacy chains",
-      description: ["Advanced Inventory", "Rack System", "GST Reports", "Up to 5 Branches"],
+      description: [
+        "Advanced Inventory",
+        "Rack System",
+        "GST Reports",
+        "Up to 5 Branches",
+      ],
       price: 2499,
       billingCycle: "MONTHLY",
       durationDays: 30,
@@ -87,13 +97,13 @@ async function main() {
       status: 1,
       advancedFeatures: {
         apiAccess: true,
-        prioritySupport: true
+        prioritySupport: true,
       },
       priceBreakdown: {
         base: 2117,
-        gst: 382
-      }
-    }
+        gst: 382,
+      },
+    },
   });
 
   // C. ENTERPRISE PLAN
@@ -104,7 +114,12 @@ async function main() {
       key: "ENTERPRISE_YEARLY",
       name: "Enterprise Solution",
       shortDescription: "Full-scale solution for large enterprises",
-      description: ["Everything in Pro", "White Labeling", "Dedicated Manager", "Unlimited Branches"],
+      description: [
+        "Everything in Pro",
+        "White Labeling",
+        "Dedicated Manager",
+        "Unlimited Branches",
+      ],
       price: 25000,
       billingCycle: "YEARLY",
       durationDays: 365,
@@ -118,9 +133,9 @@ async function main() {
         apiAccess: true,
         whiteLabeling: true,
         prioritySupport: true,
-        dedicatedAccountManager: true
-      }
-    }
+        dedicatedAccountManager: true,
+      },
+    },
   });
 
   // 4. Link Features to Plans
@@ -148,12 +163,14 @@ async function main() {
   ];
 
   for (const link of planFeatureLinks) {
-    const feature = seededFeatures.find(f => f.key === link.featureKey);
+    const feature = seededFeatures.find((f) => f.key === link.featureKey);
     if (feature) {
       await prisma.planFeature.upsert({
-        where: { planId_featureId: { planId: link.planId, featureId: feature.id } },
+        where: {
+          planId_featureId: { planId: link.planId, featureId: feature.id },
+        },
         update: {},
-        create: { planId: link.planId, featureId: feature.id }
+        create: { planId: link.planId, featureId: feature.id },
       });
     }
   }
@@ -316,7 +333,7 @@ async function main() {
         scopeType: "global",
       },
     })
-    .catch(() => { });
+    .catch(() => {});
 
   // 9. Create Example Organization and Branch
   console.log("Creating example organization...");
@@ -329,8 +346,6 @@ async function main() {
       state: "NY",
       zipCode: "10001",
       country: "USA",
-
-
 
       ownerId: superAdminUser.id,
 

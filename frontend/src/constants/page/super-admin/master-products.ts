@@ -7,11 +7,8 @@ export const MASTER_PRODUCT_BREADCRUMBS = [
 
 export const INITIAL_PRODUCT_FILTERS = {
   page: 1,
-  perPage: 10,
+  limit: 10,
   search: "",
-  companyId: "",
-  productTypeId: "",
-  hsnCodeId: "",
 }
 
 export const MASTER_PRODUCT_COLUMNS = [
@@ -30,7 +27,7 @@ export const MASTER_PRODUCT_FORM_INITIAL_DATA = {
   category_id: "",
   brand_id: "",
   manufacturer_id: "",
-  salt_id: "",
+  salt: "",
   category_type: "TAB",
   status: "CONTINUE",
   hsn_code_id: "",

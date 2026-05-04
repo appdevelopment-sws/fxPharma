@@ -12,7 +12,7 @@ const AttributesPage = () => {
   const currentTab = location.pathname.split("/").pop() || "brands"
 
   return (
-    <div className="p-6">
+    <div className="">
       <SectionCard
         title="Attributes Management"
         description="Manage your product attributes like brands, categories, manufacturers, and units."

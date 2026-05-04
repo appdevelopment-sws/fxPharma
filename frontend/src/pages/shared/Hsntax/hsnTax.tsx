@@ -12,7 +12,7 @@ const TaxHsnPage = () => {
   const currentTab = location.pathname.split("/").pop() || "tax"
 
   return (
-    <div className="p-6">
+    <div className="">
       <SectionCard
         title="Tax & HSN Management"
         description="Manage your tax rates, HSN codes, and mappings here."

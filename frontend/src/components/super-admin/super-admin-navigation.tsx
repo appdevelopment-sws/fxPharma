@@ -1,11 +1,13 @@
 import {
   Barcode,
+  Blocks,
   Box,
   Building2,
   LayoutDashboard,
   Percent,
   PercentSquare,
   ShieldCheck,
+  Square,
   Store,
   SubscriptIcon,
   UserCog,
@@ -19,6 +21,7 @@ import {
   type SidebarNavigationGroup,
 } from "@/components/navigation/sidebar-navigation"
 import { PERMISSIONS, ROLES, superAdminPermissionLabels } from "@/lib/access"
+import { Checkbox } from "../ui/checkbox"
 
 export const superAdminNavigationGroups: SidebarNavigationGroup[] = [
   {
@@ -119,6 +122,18 @@ export const superAdminNavigationGroups: SidebarNavigationGroup[] = [
         to: "/super-admin/subscription",
         description: "Manage subscription plans and billing cycles",
         icon: SubscriptIcon,
+        roles: [ROLES.SUPER_ADMIN],
+      },
+    ],
+  },
+  {
+    title: "Features",
+    items: [
+      {
+        title: "Features ",
+        to: "/super-admin/features-management",
+        description: "Manage subscription plans and billing cycles",
+        icon: Blocks,
         roles: [ROLES.SUPER_ADMIN],
       },
     ],

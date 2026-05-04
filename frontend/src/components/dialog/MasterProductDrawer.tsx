@@ -2,8 +2,10 @@ import { useEffect, useRef, useState } from "react"
 import { useForm, type SubmitHandler, useFieldArray } from "react-hook-form"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Plus, Trash2, Upload, Camera, ImageIcon } from "lucide-react"
+import { toast } from "sonner"
 import { queryKeys } from "@/lib/queryKeys"
 import ProductApi from "@/services/masterProductApi"
+import { uploadApi } from "@/services/uploadApi"
 import { useSearchSelect } from "@/hooks/useSearchSelect"
 import { FormContainer } from "@/components/formContainer"
 import {
@@ -15,6 +17,11 @@ import {
 } from "@/components/ui/form-fields"
 import { Button } from "@/components/ui/button"
 import { HsnApi } from "@/services/taxApi"
+import BrandApi, {
+  CategoryApi,
+  ManufacturerApi,
+  UnitApi,
+} from "@/services/attributesApi"
 import {
   MASTER_PRODUCT_FORM_INITIAL_DATA,
   INDUSTRY_SEGMENT_OPTIONS,
@@ -45,7 +52,7 @@ export default function MasterProductDialog({
     (search) => HsnApi.getHsnCodes({ search }),
     (data) =>
       (data?.data || []).map((hsn: any) => ({
-        label: `${hsn.code} - ${hsn.description || ""}`,
+        label: `${hsn.hsncode} - ${hsn.description || ""}`,
         value: String(hsn.id),
       })),
     open
@@ -53,49 +60,45 @@ export default function MasterProductDialog({
 
   const category = useSearchSelect(
     ["categories"],
-    async (search) =>
-      [
-        { label: "Analgesics", value: "analgesics" },
-        { label: "Antibiotics", value: "antibiotics" },
-        { label: "Antiseptics", value: "antiseptics" },
-      ].filter((opt) => opt.label.toLowerCase().includes(search.toLowerCase())),
-    (data) => data,
+    (search) => CategoryApi.getCategories({ search }),
+    (data) =>
+      (data?.data || []).map((cat: any) => ({
+        label: cat.name,
+        value: String(cat.id),
+      })),
     open
   )
 
   const brand = useSearchSelect(
     ["brands"],
-    async (search) =>
-      [
-        { label: "Cipla", value: "cipla" },
-        { label: "Sun Pharma", value: "sun_pharma" },
-        { label: "GSK", value: "gsk" },
-      ].filter((opt) => opt.label.toLowerCase().includes(search.toLowerCase())),
-    (data) => data,
+    (search) => BrandApi.getBrands({ search }),
+    (data) =>
+      (data?.data || []).map((b: any) => ({
+        label: b.name,
+        value: String(b.id),
+      })),
     open
   )
 
   const manufacturer = useSearchSelect(
     ["manufacturers"],
-    async (search) =>
-      [
-        { label: "Pfizer Inc.", value: "pfizer" },
-        { label: "Novartis AG", value: "novartis" },
-        { label: "Bayer AG", value: "bayer" },
-      ].filter((opt) => opt.label.toLowerCase().includes(search.toLowerCase())),
-    (data) => data,
+    (search) => ManufacturerApi.getManufacturers({ search }),
+    (data) =>
+      (data?.data || []).map((m: any) => ({
+        label: m.name,
+        value: String(m.id),
+      })),
     open
   )
 
-  const salt = useSearchSelect(
-    ["salts"],
-    async (search) =>
-      [
-        { label: "PARACETAMOL", value: "paracetamol" },
-        { label: "IBUPROFEN", value: "ibuprofen" },
-        { label: "AMOXICILLIN", value: "amoxicillin" },
-      ].filter((opt) => opt.label.toLowerCase().includes(search.toLowerCase())),
-    (data) => data,
+  const categoryType = useSearchSelect(
+    ["units"],
+    (search) => UnitApi.getUnits({ search }),
+    (data) =>
+      (data?.data || []).map((u: any) => ({
+        label: u.name,
+        value: u.shortName || u.name,
+      })),
     open
   )
 
@@ -103,6 +106,8 @@ export default function MasterProductDialog({
     defaultValues: MASTER_PRODUCT_FORM_INITIAL_DATA,
     mode: "onChange",
   })
+
+  const [isUploading, setIsUploading] = useState(false)
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -115,20 +120,22 @@ export default function MasterProductDialog({
         reset({
           ...MASTER_PRODUCT_FORM_INITIAL_DATA,
           name: product?.name || "",
-          industry_segment: product?.industry_segment || "1",
-          category_id: product?.category_id || "",
-          brand_id: product?.brand_id || "",
-          manufacturer_id: product?.manufacturer_id || "",
-          salt_id: product?.salt_id || "",
-          category_type: product?.category_type || "TAB",
+          industry_segment: product?.industrySegment || product?.industry_segment || "1",
+          category_id: product?.categoryId || product?.category_id || "",
+          brand_id: product?.brandId || product?.brand_id || "",
+          manufacturer_id: product?.manufacturerId || product?.manufacturer_id || "",
+          salt: product?.salt || "",
+          category_type: product?.categoryType || product?.category_type || "TAB",
           status: product?.status || "CONTINUE",
-          hsn_code_id: String(product?.hsnCodeId || ""),
-          color_type: product?.color_type || "NORMAL",
-          is_narcotic: !!product?.is_narcotic,
-          is_schedule_h: !!product?.is_schedule_h,
-          is_schedule_h1: !!product?.is_schedule_h1,
-          barcodes: product?.barcodes || [{ value: "" }],
-          image_url: product?.image_url || null,
+          hsn_code_id: String(product?.hsnId || product?.hsn_code_id || ""),
+          color_type: product?.colorType || product?.color_type || "NORMAL",
+          is_narcotic: !!(product?.isNarcotic ?? product?.is_narcotic),
+          is_schedule_h: !!(product?.isScheduleH ?? product?.is_schedule_h),
+          is_schedule_h1: !!(product?.isScheduleH1 ?? product?.is_schedule_h1),
+          barcodes: product?.barcodes?.length 
+            ? product.barcodes.map((b: any) => ({ value: b.value }))
+            : [{ value: "" }],
+          image_url: product?.imageUrl || product?.image_url || null,
         })
       } else {
         reset(MASTER_PRODUCT_FORM_INITIAL_DATA)
@@ -153,7 +160,27 @@ export default function MasterProductDialog({
   })
 
   const onSubmit: SubmitHandler<any> = async (data) => {
-    handleMutation.mutate(data)
+    let imageUrl = data.image_url
+
+    if (imageUrl instanceof File) {
+      try {
+        setIsUploading(true)
+        const uploadRes = await uploadApi.uploadImage(imageUrl)
+        imageUrl = uploadRes.data?.url || uploadRes.url
+      } catch (error) {
+        console.error("Failed to upload image:", error)
+        toast.error("Failed to upload product image.")
+        setIsUploading(false)
+        return
+      } finally {
+        setIsUploading(false)
+      }
+    }
+
+    handleMutation.mutate({
+      ...data,
+      image_url: imageUrl,
+    })
   }
 
   return (
@@ -182,7 +209,7 @@ export default function MasterProductDialog({
             type="button"
             variant="outline"
             onClick={() => onClose(false)}
-            disabled={handleMutation.isPending}
+            disabled={handleMutation.isPending || isUploading}
           >
             {isViewMode ? "Close" : "Cancel"}
           </Button>
@@ -190,13 +217,15 @@ export default function MasterProductDialog({
             <Button
               type="submit"
               form="master-product-dialog-form"
-              disabled={handleMutation.isPending}
+              disabled={handleMutation.isPending || isUploading}
             >
-              {handleMutation.isPending
-                ? "Saving..."
-                : isEditMode
-                  ? "Update Product"
-                  : "Save Product"}
+              {isUploading
+                ? "Uploading..."
+                : handleMutation.isPending
+                  ? "Saving..."
+                  : isEditMode
+                    ? "Update Product"
+                    : "Save Product"}
             </Button>
           )}
         </div>
@@ -256,23 +285,23 @@ export default function MasterProductDialog({
               loading={manufacturer.loading}
               readOnly={isViewMode}
             />
-            <FormSearchSelect
+            <FormField
               control={control}
-              name="salt_id"
+              name="salt"
               label="SALT COMPOSITION"
-              placeholder="Search Salt..."
-              options={salt.options}
-              onSearch={salt.onSearch}
-              loading={salt.loading}
+              placeholder="e.g. Paracetamol 500mg"
               readOnly={isViewMode}
             />
 
             <div className="grid grid-cols-2 gap-4">
-              <FormSelectField
+              <FormSearchSelect
                 control={control}
                 name="category_type"
                 label="CATEGORY TYPE"
-                options={CATEGORY_TYPE_OPTIONS}
+                placeholder="Search Type..."
+                options={categoryType.options}
+                onSearch={categoryType.onSearch}
+                loading={categoryType.loading}
                 readOnly={isViewMode}
               />
               <FormSelectField

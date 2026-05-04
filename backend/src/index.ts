@@ -10,7 +10,7 @@ import compression from "compression";
 import swaggerUi from "swagger-ui-express";
 
 import authRoutes from "./v1/modules/auth/auth.routes.js";
-// import masterProductRoutes from "./v1/modules/masterProduct/masterProduct.route.js";
+import masterProductRoutes from "./v1/modules/masterProducts/masterProduct.routes.js";
 // import organizationRoutes from "./v1/modules/organization/organization.routes.js";
 
 import planRoutes from "./v1/modules/plans/plans.routes.js";
@@ -25,6 +25,8 @@ import manufacturerRoutes from "./v1/modules/attributes/manufacturer/manufacture
 import unitRoutes from "./v1/modules/attributes/units/units.routes.js";
 import storelistRoutes from "./v1/modules/storelist/storelist.routes.js";
 import supplierRoutes from "./v1/modules/suppliers/suppliers.routes.js";
+import uploadRoutes from "./v1/modules/upload/upload.routes.js";
+import path from "path";
 
 import { authLimiter, generalLimiter } from "./helpers/rateLimit.js";
 import { swaggerSpec } from "./config/swagger.config.js";
@@ -37,9 +39,11 @@ const app = express();
 const allowedOrigins = [process.env.CLIENT_URL || ""].filter(Boolean);
 
 app.set("trust proxy", 1);
-app.use(helmet({
-  contentSecurityPolicy: false,
-}));
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+  }),
+);
 app.use(compression());
 app.use(express.json({ limit: "1mb" }));
 app.use(cookieParser());
@@ -65,7 +69,7 @@ const protectedRouter = Router();
 protectedRouter.use(isAuthenticated as any);
 protectedRouter.use(tenantMiddleware as any);
 
-// protectedRouter.use("/master-products", generalLimiter, masterProductRoutes);
+protectedRouter.use("/master-products", generalLimiter, masterProductRoutes);
 // protectedRouter.use("/organizations", generalLimiter, organizationRoutes);
 protectedRouter.use("/demo", generalLimiter, demoRoutes);
 protectedRouter.use("/plans", generalLimiter, planRoutes);
@@ -75,13 +79,18 @@ protectedRouter.use("/hsn", generalLimiter, hsnRoutes);
 protectedRouter.use("/hsn-mappings", generalLimiter, hsnMappingRoutes);
 protectedRouter.use("/attributes/brands", generalLimiter, brandRoutes);
 protectedRouter.use("/attributes/categories", generalLimiter, categoryRoutes);
-protectedRouter.use("/attributes/manufacturers", generalLimiter, manufacturerRoutes);
+protectedRouter.use(
+  "/attributes/manufacturers",
+  generalLimiter,
+  manufacturerRoutes,
+);
 protectedRouter.use("/attributes/units", generalLimiter, unitRoutes);
 protectedRouter.use("/storelist", generalLimiter, storelistRoutes);
 protectedRouter.use("/suppliers", generalLimiter, supplierRoutes);
-
+protectedRouter.use("/upload", generalLimiter, uploadRoutes);
 
 app.use("/api/v1", protectedRouter);
+app.use("/uploads", express.static(path.join(process.cwd(), "src/uploads")));
 
 app.get("/", (_req: Request, res: Response) => {
   res.json("hello from backend");

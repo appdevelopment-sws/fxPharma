@@ -142,6 +142,7 @@ model Organization {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
 }
 
 enum OrganizationType {
@@ -368,6 +369,7 @@ model Hsn {
   updatedAt   DateTime @updatedAt
 
   hsnMappings HsnMapping[]
+  masterProducts MasterProduct[]
 }
 
 model HsnMapping {
@@ -391,6 +393,7 @@ model Brand {
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  masterProducts MasterProduct[]
 }
 
 model Category {
@@ -406,6 +409,7 @@ model Category {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  masterProducts MasterProduct[]
 }
 
 model Manufacturer {
@@ -417,6 +421,8 @@ model Manufacturer {
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  masterProducts MasterProduct[]
 }
 
 model Unit {
@@ -454,4 +460,63 @@ model Supplier {
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@index([organizationId])
+}
+
+model Salt {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model MasterProduct {
+  id              String  @id @default(cuid())
+  name            String
+  industrySegment String? @default("1") @map("industry_segment")
+  imageUrl        String? @map("image_url")
+
+  categoryId String?   @map("category_id")
+  category   Category? @relation(fields: [categoryId], references: [id])
+
+  brandId String? @map("brand_id")
+  brand   Brand?  @relation(fields: [brandId], references: [id])
+
+  manufacturerId String?       @map("manufacturer_id")
+  manufacturer   Manufacturer? @relation(fields: [manufacturerId], references: [id])
+
+  salt String?
+
+  hsnId String? @map("hsn_id")
+  hsn   Hsn?    @relation(fields: [hsnId], references: [id])
+
+  categoryType String? @default("TAB") @map("category_type")
+  status       String? @default("CONTINUE")
+  colorType    String? @default("NORMAL") @map("color_type")
+
+  isNarcotic   Boolean @default(false) @map("is_narcotic")
+  isScheduleH  Boolean @default(false) @map("is_schedule_h")
+  isScheduleH1 Boolean @default(false) @map("is_schedule_h1")
+
+  barcodes MasterProductBarcode[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+
+  @@index([name])
+}
+
+model MasterProductBarcode {
+  id              String        @id @default(cuid())
+  value           String        @unique
+  masterProductId String        @map("master_product_id")
+  masterProduct   MasterProduct @relation(fields: [masterProductId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+
+  @@index([value])
 }
