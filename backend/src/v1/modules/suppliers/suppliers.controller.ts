@@ -6,14 +6,18 @@ import { paginate } from "../../../utils/pagination.js";
 export class SuppliersController {
   static getAll = catchAsync(async (req: Request, res: Response) => {
     await paginate(res, req.query, (skip, take, search) =>
-      SuppliersService.getAllSuppliers(search, skip, take)
+      SuppliersService.getAllSuppliers(search, skip, take),
     );
   });
 
   static getById = catchAsync(async (req: Request, res: Response) => {
-    const supplier = await SuppliersService.getSupplierById(req.params.id as string);
+    const supplier = await SuppliersService.getSupplierById(
+      req.params.id as string,
+    );
     if (!supplier) {
-      return res.status(404).json({ success: false, message: "Supplier not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Supplier not found" });
     }
     res.json({ success: true, data: supplier });
   });
@@ -24,7 +28,10 @@ export class SuppliersController {
   });
 
   static update = catchAsync(async (req: Request, res: Response) => {
-    const supplier = await SuppliersService.updateSupplier(req.params.id as string, req.body);
+    const supplier = await SuppliersService.updateSupplier(
+      req.params.id as string,
+      req.body,
+    );
     res.json({ success: true, data: supplier });
   });
 

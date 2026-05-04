@@ -105,7 +105,9 @@ export class AuthRepository {
       });
 
       if (!branchAdminRole) {
-        throw new Error("Default system roles not found. Please run seed first.");
+        throw new Error(
+          "Default system roles not found. Please run seed first.",
+        );
       }
 
       const adminWorkflow = await tx.workflow.findFirst({
@@ -152,9 +154,7 @@ export class AuthRepository {
     });
   }
 
-  static async withRootTransaction<T>(
-    callback: (tx: DbClient) => Promise<T>,
-  ) {
+  static async withRootTransaction<T>(callback: (tx: DbClient) => Promise<T>) {
     return rootPrisma.$transaction((tx) => callback(tx));
   }
 }
