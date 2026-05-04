@@ -9,6 +9,7 @@ import {
   FormSelectField,
   FormFileUpload,
 } from "@/components/ui/form-fields"
+import { PermissionMultiSelectField } from "@/components/ui/permission-multi-select"
 
 import sectionHeader from "../sectionHeader"
 import {
@@ -19,6 +20,7 @@ import {
   STORE_CATEGORY_OPTIONS,
   STORE_SUBSCRIPTION_OPTIONS,
 } from "@/constants/page/super-admin/store"
+import { permissionOptions } from "@/lib/access"
 
 import StoreListApi from "@/services/storelistApi"
 import SubscriptionApi from "@/services/subscriptionApi"
@@ -273,9 +275,24 @@ export default function ManageStoreDialog({
             </div>
           </div>
 
+          {!isEditMode && !isViewMode && (
+            <div className="rounded-xl border p-6">
+              {sectionHeader("04", "Owner Permissions")}
+
+              <PermissionMultiSelectField
+                control={control}
+                name="permissions"
+                label="Grant Permissions"
+                description="Choose which actions the first store owner can access when they sign in."
+                options={permissionOptions}
+                selectAllLabel="Select all permissions"
+              />
+            </div>
+          )}
+
           {/* ADDRESS */}
           <div className="rounded-xl border p-6">
-            {sectionHeader("04", "Address & Location")}
+            {sectionHeader("05", "Address & Location")}
 
             <div className="grid gap-5">
               <FormField
@@ -332,7 +349,7 @@ export default function ManageStoreDialog({
         <div className="space-y-6">
           {/* STATUS */}
           <div className="rounded-xl border p-6">
-            {sectionHeader("05", "Status")}
+            {sectionHeader("06", "Status")}
 
             <FormSelectField
               control={control}
@@ -345,7 +362,7 @@ export default function ManageStoreDialog({
 
           {/* PLAN */}
           <div className="rounded-xl border p-6">
-            {sectionHeader("06", "Subscription Plan")}
+            {sectionHeader("07", "Subscription Plan")}
 
             <div className="space-y-3">
               {plans.length === 0 ? (
@@ -390,7 +407,7 @@ export default function ManageStoreDialog({
 
           {/* REGIONAL */}
           <div className="rounded-xl border p-6">
-            {sectionHeader("07", "Regional Settings")}
+            {sectionHeader("08", "Regional Settings")}
 
             <div className="space-y-5">
               <FormSelectField

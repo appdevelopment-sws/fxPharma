@@ -1,4 +1,5 @@
 import { api } from "./api"
+import type { PermissionName } from "@/lib/access"
 
 export type Store = {
   id: string
@@ -55,6 +56,7 @@ export type StoreFormValues = {
   currency?: string | null
   subscription_plan_id?: string | null
   isActive?: boolean
+  permissions?: PermissionName[]
 }
 
 export type GetStoresResponse = {
@@ -93,6 +95,7 @@ const mapFormToApi = (data: StoreFormValues) => {
     currency: data.currency,
     planId: data.subscription_plan_id,
     isActive: data.isActive,
+    permissions: data.permissions ?? [],
   }
 }
 

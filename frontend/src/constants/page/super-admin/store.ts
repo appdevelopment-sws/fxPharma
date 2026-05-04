@@ -46,6 +46,7 @@ export const STORE_FORM_INITIAL_DATA = {
 
   timezone: "EST",
   currency: "USD",
+  permissions: [] as string[],
 
   street_address: "",
   city: "",

@@ -23,6 +23,7 @@ export const createStoreSchema = z.object({
   timezone: z.string().optional(),
   currency: z.string().optional(),
   planId: z.string().optional(),
+  permissions: z.array(z.string()).default([]),
 });
 
 export const updateStoreSchema = createStoreSchema.partial();

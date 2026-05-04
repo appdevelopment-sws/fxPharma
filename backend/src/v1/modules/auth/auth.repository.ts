@@ -87,8 +87,20 @@ export class AuthRepository {
 
       const organization = await tx.organization.create({
         data: {
-          name: data.organization.name,
-          status: 1,
+          storeName: data.organization.name,
+          description: null,
+          category: "PHARMACY",
+          logo: null,
+          status: "ACTIVE",
+          gstNo: null,
+          licenseNo: null,
+          streetAddress: "Not provided",
+          city: "Not provided",
+          state: "Not provided",
+          zipCode: "000000",
+          country: "Not provided",
+          timezone: null,
+          currency: "INR",
         },
       });
 
@@ -127,8 +139,9 @@ export class AuthRepository {
         data: {
           userId: user.id,
           roleId: branchAdminRole.id,
-          scopeType: "organization",
-          scopeId: organization.id,
+          scopeType: "branch",
+          scopeId: branch.id,
+          branchId: branch.id,
         },
       });
 
@@ -139,6 +152,7 @@ export class AuthRepository {
             workflowId: adminWorkflow.id,
             scopeType: "branch",
             scopeId: branch.id,
+            branchId: branch.id,
           },
         });
       }
