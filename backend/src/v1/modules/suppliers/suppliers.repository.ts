@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma.js";
 
 export class SuppliersRepository {
   static async findAll(filters: any = {}, skip?: number, take?: number) {
+    console.log("[SuppliersRepository] findAll called");
     const [data, total] = await Promise.all([
       prisma.supplier.findMany({
         where: filters,

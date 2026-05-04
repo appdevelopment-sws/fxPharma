@@ -1,30 +1,31 @@
 import { api } from "./api"
 
 export type SupplierFormValues = {
-  company_name: string
-  gstin: string
-  address: string
-  contact_person: string
+  companyName: string
+  gstNumber: string
+  officeAddress: string
+  contactPersonName: string
   email: string
   phone: string
-  whatsapp: string
-  is_preferred: boolean
-  auto_generate_po: boolean
-  registration_docs?: string | null
+  whatsappNumber: string
+  isPreferred: boolean
+  autoGeneratePO: boolean
+  registrationDocuments?: string | null
 }
 
 export type Supplier = {
-  id: number
-  company_name: string
-  gstin: string
-  address: string
-  contact_person: string
+  id: string
+  companyName: string
+  gstNumber: string
+  officeAddress: string
+  contactPersonName: string
   email: string
   phone: string
-  whatsapp: string
-  is_preferred: boolean
-  auto_generate_po: boolean
-  registration_docs?: string | null
+  whatsappNumber: string
+  isPreferred: boolean
+  autoGeneratePO: boolean
+  registrationDocuments?: string | null
+  isActive?: boolean
   createdAt?: string
   updatedAt?: string
 }
@@ -41,21 +42,18 @@ export type GetSuppliersResponse = {
 
 type RawGetSuppliersResponse = {
   success: boolean
-  data?: {
-    items?: Supplier[]
-    pagination?: {
-      total?: number
-      page?: number
-      limit?: number
-      totalPages?: number
-    }
+  data: Supplier[]
+  meta: {
+    total: number
+    page: number
+    limit: number
+    totalPages: number
   }
-  message?: string
 }
 
 type RawSupplierResponse = {
   success: boolean
-  data?: Supplier
+  data: Supplier
   message?: string
 }
 
@@ -68,26 +66,26 @@ const SupplierApi = {
     })
 
     return {
-      data: res.data?.items ?? [],
+      data: res.data ?? [],
       meta: {
-        total: res.data?.pagination?.total ?? 0,
-        page: res.data?.pagination?.page ?? params?.page ?? 1,
-        limit: res.data?.pagination?.limit ?? params?.limit ?? 10,
-        pages: res.data?.pagination?.totalPages ?? 1,
+        total: res.data?.meta?.total ?? 0,
+        page: res.data?.meta?.page ?? params?.page ?? 1,
+        limit: res.data?.meta?.limit ?? params?.limit ?? 10,
+        pages: res.data?.meta?.totalPages ?? 1,
       },
     }
   },
 
   getSupplier: async (id: string | number): Promise<{ data: Supplier }> => {
     const res = await api.get<RawSupplierResponse>(`${BASE_URL}/${id}`)
-    return { data: res.data! }
+    return { data: res.data }
   },
 
   createSupplier: async (
     data: SupplierFormValues
   ): Promise<{ data: Supplier }> => {
     const res = await api.post<RawSupplierResponse>(BASE_URL, data)
-    return { data: res.data! }
+    return { data: res.data }
   },
 
   updateSupplier: async (
@@ -95,13 +93,29 @@ const SupplierApi = {
     data: SupplierFormValues
   ): Promise<{ data: Supplier }> => {
     const res = await api.put<RawSupplierResponse>(`${BASE_URL}/${id}`, data)
-    return { data: res.data! }
+    return { data: res.data }
   },
 
   deleteSupplier: async (
     id: string | number
   ): Promise<{ success: boolean }> => {
-    return api.delete(`${BASE_URL}/${id}`)
+    const res = await api.delete(`${BASE_URL}/${id}`)
+    return res
+  },
+
+  uploadFile: async (file: File): Promise<string> => {
+    const formData = new FormData()
+    formData.append("file", file)
+    const res = await api.post<{ success: boolean; data: { path: string } }>(
+      "/upload/single",
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    )
+    return res.data.path
   },
 }
 

@@ -1,6 +1,7 @@
 import { useEffect } from "react"
 import { useForm, type SubmitHandler } from "react-hook-form"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { toast } from "sonner"
 import { queryKeys } from "@/lib/queryKeys"
 import SupplierApi, { type SupplierFormValues } from "@/services/supplierApi"
 import { FormContainer } from "@/components/formContainer"
@@ -28,8 +29,13 @@ export default function SupplierDrawer({
   const isEditMode = !!supplier?.id
   const supplierId = supplier?.id
 
-  const { handleSubmit, control, reset } = useForm<SupplierFormValues>({
-    defaultValues: SUPPLIER_FORM_INITIAL_DATA,
+  const {
+    handleSubmit,
+    control,
+    reset,
+    formState: { isSubmitting, errors },
+  } = useForm<SupplierFormValues & { isActive?: boolean }>({
+    defaultValues: { ...SUPPLIER_FORM_INITIAL_DATA, isActive: true },
     mode: "onChange",
   })
 
@@ -37,19 +43,20 @@ export default function SupplierDrawer({
     if (open) {
       if (isEditMode || isViewMode) {
         reset({
-          company_name: supplier?.company_name || "",
-          gstin: supplier?.gstin || "",
-          address: supplier?.address || "",
-          contact_person: supplier?.contact_person || "",
+          companyName: supplier?.companyName || "",
+          gstNumber: supplier?.gstNumber || "",
+          officeAddress: supplier?.officeAddress || "",
+          contactPersonName: supplier?.contactPersonName || "",
           email: supplier?.email || "",
           phone: supplier?.phone || "",
-          whatsapp: supplier?.whatsapp || "",
-          is_preferred: !!supplier?.is_preferred,
-          auto_generate_po: !!supplier?.auto_generate_po,
-          registration_docs: supplier?.registration_docs || null,
+          whatsappNumber: supplier?.whatsappNumber || "",
+          isPreferred: !!supplier?.isPreferred,
+          autoGeneratePO: !!supplier?.autoGeneratePO,
+          registrationDocuments: supplier?.registrationDocuments || null,
+          isActive: supplier?.isActive ?? true,
         })
       } else {
-        reset(SUPPLIER_FORM_INITIAL_DATA)
+        reset({ ...SUPPLIER_FORM_INITIAL_DATA, isActive: true })
       }
     }
   }, [open, supplier, reset, isEditMode, isViewMode])
@@ -57,20 +64,38 @@ export default function SupplierDrawer({
   const queryClient = useQueryClient()
 
   const handleMutation = useMutation({
-    mutationFn: (submitData: SupplierFormValues) =>
-      isEditMode
+    mutationFn: async (submitData: SupplierFormValues & { isActive?: boolean }) => {
+      // Handle file upload if a new file is selected
+      if (
+        submitData.registrationDocuments &&
+        submitData.registrationDocuments instanceof File
+      ) {
+        const filePath = await SupplierApi.uploadFile(
+          submitData.registrationDocuments as File
+        )
+        submitData.registrationDocuments = filePath
+      }
+
+      return isEditMode
         ? SupplierApi.updateSupplier(supplierId, submitData)
-        : SupplierApi.createSupplier(submitData),
+        : SupplierApi.createSupplier(submitData)
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.suppliers.all,
       })
+      toast.success(
+        `Supplier ${isEditMode ? "updated" : "created"} successfully`
+      )
       reset()
       onClose(false)
     },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || "Something went wrong")
+    },
   })
 
-  const onSubmit: SubmitHandler<SupplierFormValues> = async (data) => {
+  const onSubmit: SubmitHandler<SupplierFormValues & { isActive?: boolean }> = async (data) => {
     handleMutation.mutate(data)
   }
 
@@ -100,7 +125,7 @@ export default function SupplierDrawer({
             type="button"
             variant="outline"
             onClick={() => onClose(false)}
-            disabled={handleMutation.isPending}
+            disabled={handleMutation.isPending || isSubmitting}
           >
             {isViewMode ? "Close" : "Cancel"}
           </Button>
@@ -108,9 +133,9 @@ export default function SupplierDrawer({
             <Button
               type="submit"
               form="supplier-dialog-form"
-              disabled={handleMutation.isPending}
+              disabled={handleMutation.isPending || isSubmitting}
             >
-              {handleMutation.isPending
+              {handleMutation.isPending || isSubmitting
                 ? "Saving..."
                 : isEditMode
                   ? "Update Supplier"
@@ -131,37 +156,41 @@ export default function SupplierDrawer({
           <div className="grid gap-6 sm:grid-cols-2">
             <FormField
               control={control}
-              name="company_name"
+              name="companyName"
               label="COMPANY NAME"
               placeholder="e.g. Sws"
               required
               readOnly={isViewMode}
+              error={errors.companyName?.message}
             />
             <FormField
               control={control}
-              name="gstin"
+              name="gstNumber"
               label="GST NUMBER"
               placeholder="e.g. 27AAAAA0000A1Z5"
               required
               readOnly={isViewMode}
+              error={errors.gstNumber?.message}
             />
             <div className="sm:col-span-2">
               <FormField
                 control={control}
-                name="address"
+                name="officeAddress"
                 label="OFFICE ADDRESS"
                 placeholder="Full registered address..."
                 required
                 readOnly={isViewMode}
+                error={errors.officeAddress?.message}
               />
             </div>
             <FormFileUpload
               control={control}
-              name="registration_docs"
+              name="registrationDocuments"
               label="REGISTRATION DOCUMENTS (OPTIONAL)"
               accept=".pdf,.jpg,.png"
               maxSizeText="PDF, PNG, JPG up to 5MB"
               disabled={isViewMode}
+              error={errors.registrationDocuments?.message as string}
             />
           </div>
         </div>
@@ -172,11 +201,12 @@ export default function SupplierDrawer({
           <div className="grid gap-6 sm:grid-cols-2">
             <FormField
               control={control}
-              name="contact_person"
+              name="contactPersonName"
               label="CONTACT PERSON NAME"
               placeholder="e.g. John Doe"
               required
               readOnly={isViewMode}
+              error={errors.contactPersonName?.message}
             />
             <FormField
               control={control}
@@ -185,6 +215,7 @@ export default function SupplierDrawer({
               placeholder="e.g. contact@company.com"
               required
               readOnly={isViewMode}
+              error={errors.email?.message}
             />
             <FormField
               control={control}
@@ -193,14 +224,16 @@ export default function SupplierDrawer({
               placeholder="e.g. +91 1234567890"
               required
               readOnly={isViewMode}
+              error={errors.phone?.message}
             />
             <FormField
               control={control}
-              name="whatsapp"
+              name="whatsappNumber"
               label="WHATSAPP NUMBER"
               placeholder="e.g. +91 1234567890"
               required
               readOnly={isViewMode}
+              error={errors.whatsappNumber?.message}
             />
           </div>
         </div>
@@ -211,16 +244,23 @@ export default function SupplierDrawer({
           <div className="grid gap-6 sm:grid-cols-2">
             <FormSwitch
               control={control}
-              name="is_preferred"
+              name="isPreferred"
               label="Mark as Preferred Supplier"
               description="Prioritize this supplier for inventory restocking"
               disabled={isViewMode}
             />
             <FormSwitch
               control={control}
-              name="auto_generate_po"
+              name="autoGeneratePO"
               label="Auto Generate Purchase Order"
               description="Automatically create POs when stock is low"
+              disabled={isViewMode}
+            />
+            <FormSwitch
+              control={control}
+              name="isActive"
+              label="Status"
+              description={isEditMode ? "Toggle supplier active/inactive status" : "Set initial status"}
               disabled={isViewMode}
             />
           </div>

@@ -1,10 +1,10 @@
 export const SUPPLIER_COLUMNS = [
   { key: "serial", label: "#" },
-  { key: "company_name", label: "Company Name" },
-  { key: "gstin", label: "GST Number" },
-  { key: "contact_person", label: "Contact Person" },
+  { key: "companyName", label: "Company Name" },
+  { key: "gstNumber", label: "GST Number" },
+  { key: "contactPersonName", label: "Contact Person" },
   { key: "phone", label: "Phone" },
-  { key: "is_preferred", label: "Preferred" },
+  { key: "isPreferred", label: "Preferred" },
   { key: "action", label: "Actions" },
 ]
 
@@ -15,14 +15,14 @@ export const INITIAL_SUPPLIER_FILTERS = {
 }
 
 export const SUPPLIER_FORM_INITIAL_DATA = {
-  company_name: "",
-  gstin: "",
-  address: "",
-  contact_person: "",
+  companyName: "",
+  gstNumber: "",
+  officeAddress: "",
+  contactPersonName: "",
   email: "",
   phone: "",
-  whatsapp: "",
-  is_preferred: false,
-  auto_generate_po: false,
-  registration_docs: null,
+  whatsappNumber: "",
+  isPreferred: false,
+  autoGeneratePO: false,
+  registrationDocuments: null,
 }
