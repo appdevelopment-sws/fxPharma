@@ -7,8 +7,12 @@ const CustomApi = axios.create({
 
 CustomApi.interceptors.request.use((config) => {
   const branchId = localStorage.getItem("activeBranchId")
+  const orgId = localStorage.getItem("activeOrganizationId")
   if (branchId) {
     config.headers["x-branch-id"] = branchId
+  }
+  if (orgId) {
+    config.headers["x-organization-id"] = orgId
   }
   return config
 })

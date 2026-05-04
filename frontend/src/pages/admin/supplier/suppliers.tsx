@@ -32,11 +32,14 @@ export default function Suppliers() {
   })
 
   const deleteSupplierMutation = useMutation({
-    mutationFn: (id: number) => SupplierApi.deleteSupplier(id),
+    mutationFn: (id: string) => SupplierApi.deleteSupplier(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.suppliers.all })
       deleteDisclosure.onClose()
       toast.success("Supplier deleted successfully")
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || "Failed to delete supplier")
     },
   })
 
@@ -70,25 +73,25 @@ export default function Suppliers() {
         },
       },
       {
-        key: "company_name",
+        key: "companyName",
         header:
-          SUPPLIER_COLUMNS.find((c) => c.key === "company_name")?.label ||
+          SUPPLIER_COLUMNS.find((c) => c.key === "companyName")?.label ||
           "Company Name",
-        accessor: "company_name",
+        accessor: "companyName",
       },
       {
-        key: "gstin",
+        key: "gstNumber",
         header:
-          SUPPLIER_COLUMNS.find((c) => c.key === "gstin")?.label ||
+          SUPPLIER_COLUMNS.find((c) => c.key === "gstNumber")?.label ||
           "GST Number",
-        accessor: "gstin",
+        accessor: "gstNumber",
       },
       {
-        key: "contact_person",
+        key: "contactPersonName",
         header:
-          SUPPLIER_COLUMNS.find((c) => c.key === "contact_person")?.label ||
+          SUPPLIER_COLUMNS.find((c) => c.key === "contactPersonName")?.label ||
           "Contact Person",
-        accessor: "contact_person",
+        accessor: "contactPersonName",
       },
       {
         key: "phone",
@@ -97,14 +100,14 @@ export default function Suppliers() {
         accessor: "phone",
       },
       {
-        key: "is_preferred",
+        key: "isPreferred",
         header:
-          SUPPLIER_COLUMNS.find((c) => c.key === "is_preferred")?.label ||
+          SUPPLIER_COLUMNS.find((c) => c.key === "isPreferred")?.label ||
           "Preferred",
         render: (row) => (
           <StatusBadge
-            status={row.is_preferred ? "Yes" : "No"}
-            variant={row.is_preferred ? "success" : "default"}
+            status={row.isPreferred ? "Yes" : "No"}
+            variant={row.isPreferred ? "success" : "default"}
           />
         ),
       },
@@ -155,7 +158,7 @@ export default function Suppliers() {
         open={deleteDisclosure.isOpen}
         onOpenChange={deleteDisclosure.onClose}
         title="Delete Supplier"
-        description={`Are you sure you want to delete "${deleteDisclosure.data?.company_name}"? This action cannot be undone.`}
+        description={`Are you sure you want to delete "${deleteDisclosure.data?.companyName}"? This action cannot be undone.`}
         onConfirm={() =>
           deleteSupplierMutation.mutate(deleteDisclosure.data?.id)
         }

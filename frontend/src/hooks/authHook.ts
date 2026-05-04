@@ -27,14 +27,28 @@ export function useLogin() {
     mutationFn: AuthApi.login,
 
     onSuccess: async (response) => {
-      // 1. If user has memberships, set the first one as active branch
+      // Prefer a real branch membership for tenant-scoped requests.
       const user = response?.data
-      const firstBranchId = user?.memberships?.find(
-        (m: any) => m.scopeId
-      )?.scopeId
+      const activeBranchMembership = user?.memberships?.find(
+        (m: any) => m.scopeType === "branch" && m.scopeId
+      )
+      const activeOrganizationMembership = user?.memberships?.find(
+        (m: any) => m.scopeType === "organization" && m.scopeId
+      )
 
-      if (firstBranchId) {
-        localStorage.setItem("activeBranchId", firstBranchId)
+      if (activeBranchMembership?.scopeId) {
+        localStorage.setItem("activeBranchId", activeBranchMembership.scopeId)
+      } else {
+        localStorage.removeItem("activeBranchId")
+      }
+
+      if (activeOrganizationMembership?.scopeId) {
+        localStorage.setItem(
+          "activeOrganizationId",
+          activeOrganizationMembership.scopeId
+        )
+      } else {
+        localStorage.removeItem("activeOrganizationId")
       }
 
       await queryClient.invalidateQueries({
