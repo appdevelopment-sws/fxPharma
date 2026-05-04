@@ -120,20 +120,22 @@ export default function MasterProductDialog({
         reset({
           ...MASTER_PRODUCT_FORM_INITIAL_DATA,
           name: product?.name || "",
-          industry_segment: product?.industry_segment || "1",
-          category_id: product?.category_id || "",
-          brand_id: product?.brand_id || "",
-          manufacturer_id: product?.manufacturer_id || "",
+          industry_segment: product?.industrySegment || product?.industry_segment || "1",
+          category_id: product?.categoryId || product?.category_id || "",
+          brand_id: product?.brandId || product?.brand_id || "",
+          manufacturer_id: product?.manufacturerId || product?.manufacturer_id || "",
           salt: product?.salt || "",
-          category_type: product?.category_type || "TAB",
+          category_type: product?.categoryType || product?.category_type || "TAB",
           status: product?.status || "CONTINUE",
-          hsn_code_id: String(product?.hsnCodeId || ""),
-          color_type: product?.color_type || "NORMAL",
-          is_narcotic: !!product?.is_narcotic,
-          is_schedule_h: !!product?.is_schedule_h,
-          is_schedule_h1: !!product?.is_schedule_h1,
-          barcodes: product?.barcodes || [{ value: "" }],
-          image_url: product?.image_url || null,
+          hsn_code_id: String(product?.hsnId || product?.hsn_code_id || ""),
+          color_type: product?.colorType || product?.color_type || "NORMAL",
+          is_narcotic: !!(product?.isNarcotic ?? product?.is_narcotic),
+          is_schedule_h: !!(product?.isScheduleH ?? product?.is_schedule_h),
+          is_schedule_h1: !!(product?.isScheduleH1 ?? product?.is_schedule_h1),
+          barcodes: product?.barcodes?.length 
+            ? product.barcodes.map((b: any) => ({ value: b.value }))
+            : [{ value: "" }],
+          image_url: product?.imageUrl || product?.image_url || null,
         })
       } else {
         reset(MASTER_PRODUCT_FORM_INITIAL_DATA)
