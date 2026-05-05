@@ -40,24 +40,44 @@ export class BrandsRepository {
   }
 
   static async create(data: any) {
-    const { status, ...rest } = data;
-    return prisma.brand.create({
-      data: {
-        ...rest,
-        isActive: status === "ACTIVE",
-      },
+    const { status, isActive, ...rest } = data;
+    const createData: any = { ...rest };
+
+    if (status !== undefined) {
+      createData.isActive = status === "ACTIVE";
+    } else if (isActive !== undefined) {
+      createData.isActive = isActive;
+    }
+
+    const item: any = await prisma.brand.create({
+      data: createData,
     });
+
+    return {
+      ...item,
+      status: item.isActive ? "ACTIVE" : "INACTIVE",
+    };
   }
 
   static async update(id: string, data: any) {
-    const { status, ...rest } = data;
-    return prisma.brand.update({
+    const { status, isActive, ...rest } = data;
+    const updateData: any = { ...rest };
+
+    if (status !== undefined) {
+      updateData.isActive = status === "ACTIVE";
+    } else if (isActive !== undefined) {
+      updateData.isActive = isActive;
+    }
+
+    const item: any = await prisma.brand.update({
       where: { id },
-      data: {
-        ...rest,
-        ...(status !== undefined && { isActive: status === "ACTIVE" }),
-      },
+      data: updateData,
     });
+
+    return {
+      ...item,
+      status: item.isActive ? "ACTIVE" : "INACTIVE",
+    };
   }
 
   static async delete(id: string) {
