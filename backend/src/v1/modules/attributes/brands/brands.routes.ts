@@ -70,7 +70,7 @@ router.get("/:id", isAuthenticated, BrandsController.getById);
  *               name: { type: string }
  *               description: { type: string }
  *               logo: { type: string }
- *               isActive: { type: boolean }
+ *               status: { type: string, enum: [ACTIVE, INACTIVE] }
  *     responses:
  *       201:
  *         description: Brand created
@@ -121,9 +121,9 @@ router.put("/:id", isAuthenticated, validate(updateBrandSchema), BrandsControlle
  *         application/json:
  *           schema:
  *             type: object
- *             required: [isActive]
+ *             required: [status]
  *             properties:
- *               isActive: { type: boolean }
+ *               status: { type: string, enum: [ACTIVE, INACTIVE] }
  *     responses:
  *       200:
  *         description: Status updated

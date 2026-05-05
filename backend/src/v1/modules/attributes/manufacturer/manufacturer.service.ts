@@ -30,8 +30,8 @@ export class ManufacturerService {
     return ManufacturerRepository.delete(id);
   }
 
-  static async updateManufacturerStatus(id: string, isActive: boolean) {
+  static async updateManufacturerStatus(id: string, status: any) {
     await this.getManufacturerById(id);
-    return ManufacturerRepository.update(id, { isActive });
+    return ManufacturerRepository.update(id, { status });
   }
 }

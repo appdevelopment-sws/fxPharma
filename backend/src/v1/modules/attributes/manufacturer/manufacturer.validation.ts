@@ -5,7 +5,7 @@ export const createManufacturerSchema = z.object({
   email: z.string().email().optional().nullable(),
   phone: z.string().optional().nullable(),
   address: z.string().optional().nullable(),
-  isActive: z.boolean().optional(),
+  status: z.enum(["ACTIVE", "INACTIVE"]).optional(),
 });
 
 export const updateManufacturerSchema = createManufacturerSchema.partial();

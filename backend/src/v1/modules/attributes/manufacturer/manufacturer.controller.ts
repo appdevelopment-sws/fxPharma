@@ -31,7 +31,7 @@ export class ManufacturerController {
   });
 
   static updateStatus = catchAsync(async (req: Request, res: Response) => {
-    const manufacturer = await ManufacturerService.updateManufacturerStatus(req.params.id as string, req.body.isActive);
+    const manufacturer = await ManufacturerService.updateManufacturerStatus(req.params.id as string, req.body.status);
     res.json({ success: true, data: manufacturer });
   });
 }

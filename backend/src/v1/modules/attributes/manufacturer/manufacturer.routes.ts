@@ -71,7 +71,7 @@ router.get("/:id", isAuthenticated, ManufacturerController.getById);
  *               email: { type: string }
  *               phone: { type: string }
  *               address: { type: string }
- *               isActive: { type: boolean }
+ *               status: { type: string, enum: [ACTIVE, INACTIVE] }
  *     responses:
  *       201:
  *         description: Manufacturer created
@@ -122,9 +122,9 @@ router.put("/:id", isAuthenticated, validate(updateManufacturerSchema), Manufact
  *         application/json:
  *           schema:
  *             type: object
- *             required: [isActive]
+ *             required: [status]
  *             properties:
- *               isActive: { type: boolean }
+ *               status: { type: string, enum: [ACTIVE, INACTIVE] }
  *     responses:
  *       200:
  *         description: Status updated

@@ -16,7 +16,6 @@ export class BrandsController {
     });
 
     static create = catchAsync(async (req: Request, res: Response) => {
-        console.log("Create Brand Request Body:", JSON.stringify(req.body, null, 2));
         const brand = await BrandsService.createBrand(req.body);
         res.status(201).json({ success: true, data: brand });
     });
@@ -32,7 +31,7 @@ export class BrandsController {
     });
 
     static updateStatus = catchAsync(async (req: Request, res: Response) => {
-        const brand = await BrandsService.updateBrandStatus(req.params.id as string, req.body.isActive);
+        const brand = await BrandsService.updateBrandStatus(req.params.id as string, req.body.status);
         res.json({ success: true, data: brand });
     });
 }

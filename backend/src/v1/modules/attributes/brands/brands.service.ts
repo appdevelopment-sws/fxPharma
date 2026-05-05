@@ -30,8 +30,8 @@ export class BrandsService {
         return BrandsRepository.delete(id);
     }
 
-    static async updateBrandStatus(id: string, isActive: boolean) {
+    static async updateBrandStatus(id: string, status: any) {
         await this.getBrandById(id);
-        return BrandsRepository.update(id, { isActive });
+        return BrandsRepository.update(id, { status });
     }
 }

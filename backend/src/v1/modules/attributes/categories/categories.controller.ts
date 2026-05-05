@@ -31,7 +31,7 @@ export class CategoriesController {
     });
 
     static updateStatus = catchAsync(async (req: Request, res: Response) => {
-        const category = await CategoriesService.updateCategoryStatus(req.params.id as string, req.body.isActive);
+        const category = await CategoriesService.updateCategoryStatus(req.params.id as string, req.body.status);
         res.json({ success: true, data: category });
     });
 }
