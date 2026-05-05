@@ -28,6 +28,7 @@ export type Store = {
     name: string
     [key: string]: any
   } | null
+  permissions?: string[]
   isActive: boolean
   createdAt?: string
   updatedAt?: string
@@ -123,6 +124,11 @@ const mapApiToStore = (data: any): Store => {
     currency: data.currency,
     subscription_plan_id: data.planId,
     plan: data.plan,
+    permissions:
+      data.owner?.permissions
+        ?.filter((permission: any) => permission.granted)
+        .map((permission: any) => permission.permission?.key)
+        .filter(Boolean) ?? [],
     isActive: data.isActive,
     createdAt: data.createdAt,
     updatedAt: data.updatedAt,

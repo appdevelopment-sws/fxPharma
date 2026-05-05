@@ -18,6 +18,11 @@ export const queryKeys = {
     detail: (id: string) => [...queryKeys.masterProducts.all, id] as const,
     references: () => [...queryKeys.masterProducts.all, "references"] as const,
   },
+  inventory: {
+    all: ["inventory"] as const,
+    list: (filters?: any) => [...queryKeys.inventory.all, filters] as const,
+    detail: (id: string) => [...queryKeys.inventory.all, id] as const,
+  },
   taxes: {
     all: ["taxes"] as const,
     list: (filters?: any) => [...queryKeys.taxes.all, filters] as const,
@@ -78,6 +83,16 @@ export const queryKeys = {
     all: ["storeList"] as const,
     list: (filters?: any) => [...queryKeys.storeList.all, filters] as const,
     detail: (id: string) => [...queryKeys.storeList.all, id] as const,
+  },
+  compounding: {
+    all: ["compounding"] as const,
+    list: (filters?: any) => [...queryKeys.compounding.all, filters] as const,
+    detail: (id: string) => [...queryKeys.compounding.all, id] as const,
+  },
+  transfers: {
+    all: ["transfers"] as const,
+    list: (filters?: any) => [...queryKeys.transfers.all, filters] as const,
+    detail: (id: string) => [...queryKeys.transfers.all, id] as const,
   },
   plans: {
     all: ["plans"] as const,

@@ -10,12 +10,14 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute"
 import PublicOnlyRoute from "@/components/auth/PublicOnlyRoute"
 import { PERMISSIONS, ROLES } from "@/lib/access"
 import AllInventory from "@/pages/admin/inventory/AllInventory"
+import AllCompound from "@/pages/admin/compound/AllCompound"
 import Orders from "@/pages/admin/orders/Orders"
 import Suppliers from "@/pages/admin/supplier/suppliers"
 import ReturnsPage from "@/pages/admin/returns/ReturnsPage"
 import RecentInvoicesPage from "@/pages/admin/invoices/RecentInvoicesPage"
 import POS from "@/pages/admin/sales/pos"
-import ImportInventory from "@/pages/admin/inventory/ImportInventory"
+import ImportInventory from "@/pages/admin/InterStoreTransfer/ImportInventory"
+import AllInterStoreTransfer from "@/pages/admin/InterStoreTransfer/AllInterStoreTransfer"
 import DailyTransactionReport from "@/pages/admin/reports/DailyTransactionReport"
 import ExpiryReports from "@/pages/admin/reports/ExpiryReports"
 
@@ -37,7 +39,9 @@ export const AdminRoutes = () => {
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="profile" element={<AdminProfilePage />} />
           <Route path="all-inventory" element={<AllInventory />} />
+          <Route path="all-compound" element={<AllCompound />} />
           <Route path="import-inventory" element={<ImportInventory />} />
+          <Route path="inter-store-transfer" element={<AllInterStoreTransfer />} />
           <Route path="orders" element={<Orders />} />
           <Route path="suppliers" element={<Suppliers />} />
           <Route path="returns" element={<ReturnsPage />} />

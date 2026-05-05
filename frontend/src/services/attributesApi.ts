@@ -174,9 +174,7 @@ export const CategoryApi = {
 }
 
 export const ManufacturerApi = {
-  getManufacturers: async (
-    params?: any
-  ): Promise<GetManufacturersResponse> => {
+  getManufacturers: async (params?: any): Promise<GetManufacturersResponse> => {
     const res = await api.get<any>(MANUFACTURER_BASE_URL, { params })
     return {
       data: res.data ?? [],

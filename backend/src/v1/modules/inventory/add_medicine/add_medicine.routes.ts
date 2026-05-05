@@ -6,6 +6,7 @@ import {
   updateInventorySchema,
 } from "./add_medicine.validation.js";
 import { isAuthenticated } from "@/middlewares/isAuthenticated.js";
+import { attachTenant } from "@/middlewares/tenant.js";
 
 const router = Router();
 
@@ -33,7 +34,7 @@ const router = Router();
  *       200:
  *         description: List of inventory items
  */
-router.get("/", isAuthenticated, InventoryController.getAll);
+router.get("/", isAuthenticated, attachTenant, InventoryController.getAll);
 
 /**
  * @swagger

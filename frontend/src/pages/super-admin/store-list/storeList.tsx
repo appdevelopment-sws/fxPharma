@@ -1,11 +1,6 @@
 import { useCallback, useMemo } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import {
-  Plus,
-  Pencil,
-  Eye,
-  Trash2,
-} from "lucide-react"
+import { Plus, Pencil, Eye, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
 import { ConfirmDialog } from "@/components/confirmDialog"
@@ -24,6 +19,7 @@ import {
 } from "@/constants/page/super-admin/store"
 import { Badge } from "@/components/ui/badge"
 import AddStoreListDialog from "@/components/dialog/AddStoreListDialog"
+import { StatusBadge } from "@/components/ui/badge-status"
 
 export default function ManageSubscriptionPage() {
   const queryClient = useQueryClient()
@@ -104,19 +100,7 @@ export default function ManageSubscriptionPage() {
         key: "status",
         header:
           STORE_COLUMNS.find((c) => c.key === "status")?.label || "Status",
-        render: (row) => (
-          <Badge
-            variant={
-              row.status === "ACTIVE"
-                ? "success"
-                : row.status === "INACTIVE"
-                  ? "secondary"
-                  : "danger"
-            }
-          >
-            {row.status}
-          </Badge>
-        ),
+        render: (row) => <StatusBadge status={row.status} />,
       },
 
       {
@@ -166,9 +150,7 @@ export default function ManageSubscriptionPage() {
         onOpenChange={deleteDisclosure.onClose}
         title="Delete Store"
         description={`Are you sure you want to delete "${deleteDisclosure.data?.store_name}"? This action cannot be undone.`}
-        onConfirm={() =>
-          deleteStoreMutation.mutate(deleteDisclosure.data?.id!)
-        }
+        onConfirm={() => deleteStoreMutation.mutate(deleteDisclosure.data?.id!)}
         isLoading={deleteStoreMutation.isPending}
         confirmText="delete"
         variant="danger"

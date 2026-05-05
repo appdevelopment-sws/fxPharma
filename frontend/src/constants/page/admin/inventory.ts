@@ -16,9 +16,9 @@ export const INITIAL_MEDICINE_STOCK_FILTERS = {
 export const MEDICINE_STOCK_COLUMNS = [
   { key: "serial", label: "#" },
   { key: "medicine_salt", label: "Medicine & Salt" },
+  { key: "manufacturer", label: "Manufacturer" },
   { key: "category", label: "Category" },
-  { key: "total_stock", label: "Total Stock" },
-  { key: "batches", label: "Batches" },
+  { key: "status", label: "Status" },
   { key: "action", label: "Actions" },
 ]
 
