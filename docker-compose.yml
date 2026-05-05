@@ -28,7 +28,6 @@ services:
       - "5173:5173"
     depends_on:
       - backend
-    mem_limit: 256m
 
   db:
     image: postgres:15

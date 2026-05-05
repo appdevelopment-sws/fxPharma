@@ -15,7 +15,7 @@ export default defineConfig({
     watch: {
       usePolling: true,
     },
-    host: true, // important for docker
+    host: true,
     port: 5173,
     proxy: {
       "/api": {
