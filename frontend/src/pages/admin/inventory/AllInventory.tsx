@@ -155,7 +155,7 @@ export default function AllInventoryPage() {
         onClose={drawerDisclosure.onClose}
         product={drawerDisclosure.data}
       />
-      <NewCompoundDialog
+      {/* <NewCompoundDialog
         open={compoundDisclosure.isOpen}
         onClose={compoundDisclosure.onClose}
         compound={compoundDisclosure.data}
@@ -165,7 +165,7 @@ export default function AllInventoryPage() {
         open={interstoreTransferDisclosure.isOpen}
         onClose={interstoreTransferDisclosure.onClose}
         product={interstoreTransferDisclosure.data}
-      />
+      /> */}
 
       <ConfirmDialog
         open={deleteDisclosure.isOpen}
@@ -191,7 +191,7 @@ export default function AllInventoryPage() {
               Add Medicine
             </Button>
 
-            <Button
+            {/* <Button
               type="button"
               variant="outline"
               onClick={() => handleCompoundOpen()}
@@ -207,7 +207,7 @@ export default function AllInventoryPage() {
             >
               <Plus className="mr-2 size-4" />
               Inter Store Transfer
-            </Button>
+            </Button> */}
           </div>
         }
       >
