@@ -5,8 +5,9 @@ export class MasterProductService {
     search: string = "",
     skip: number = 0,
     take: number = 10,
+    status?: string,
   ) {
-    return MasterProductRepository.getAll(search, skip, take);
+    return MasterProductRepository.getAll(search, skip, take, status);
   }
 
   static async getProductById(id: string) {

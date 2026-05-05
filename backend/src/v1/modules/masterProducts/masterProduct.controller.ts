@@ -4,13 +4,23 @@ import { catchAsync } from "../../../utils/catchAsync.js";
 import {
   getPaginationOptions,
   formatPaginatedResponse,
-  paginate,
 } from "../../../utils/pagination.js";
 
 export class MasterProductController {
   static getAll = catchAsync(async (req: Request, res: Response) => {
-    await paginate(res, req.query, (skip, take, search) =>
-      MasterProductService.getAllProducts(search, skip, take),
+    const { skip, take, page, limit } = getPaginationOptions(req.query);
+    const search = (req.query.search as string) || "";
+    const status = (req.query.status as string) || "";
+
+    const { data, total } = await MasterProductService.getAllProducts(
+      search,
+      skip,
+      take,
+      status || undefined,
+    );
+
+    return res.json(
+      formatPaginatedResponse(data, total, { skip, take, page, limit }),
     );
   });
 

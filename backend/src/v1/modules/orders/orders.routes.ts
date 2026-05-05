@@ -3,6 +3,7 @@ import { OrdersController } from "./orders.controller.js";
 import { validate } from "@/middlewares/validate.js";
 import { createOrderSchema, updateOrderSchema } from "./orders.validation.js";
 import { isAuthenticated } from "@/middlewares/isAuthenticated.js";
+import { attachTenant } from "@/middlewares/tenant.js";
 
 const router = Router();
 
@@ -25,7 +26,7 @@ const router = Router();
  *       200:
  *         description: Success
  */
-router.get("/", isAuthenticated, OrdersController.getAll);
+router.get("/", isAuthenticated, attachTenant, OrdersController.getAll);
 
 /**
  * @swagger
