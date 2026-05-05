@@ -396,7 +396,7 @@ model Brand {
   name        String
   description String?
   logo        String?
-  isActive    Boolean  @default(true)
+  status      BrandStatus @default(ACTIVE)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   masterProducts MasterProduct[]
@@ -406,7 +406,7 @@ model Category {
   id          String  @id @default(cuid())
   name        String
   description String?
-  isActive    Boolean @default(true)
+  status      CategoryStatus @default(ACTIVE)
 
   // Self-relation for hierarchy
   parentId String?
@@ -424,7 +424,7 @@ model Manufacturer {
   email     String?
   phone     String?
   address   String?
-  isActive  Boolean  @default(true)
+  status    ManufacturerStatus @default(ACTIVE)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -435,9 +435,28 @@ model Unit {
   id        String   @id @default(cuid())
   name      String
   shortName String?
-  isActive  Boolean  @default(true)
+  status    UnitStatus @default(ACTIVE)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+enum UnitStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum CategoryStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum BrandStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum ManufacturerStatus {
+  ACTIVE
+  INACTIVE
 }
 
 model Supplier {
@@ -708,3 +727,5 @@ enum OrderStatus {
   COMPLETED
   CANCELLED
 }
+
+

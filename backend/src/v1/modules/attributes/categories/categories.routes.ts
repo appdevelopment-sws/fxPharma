@@ -69,7 +69,7 @@ router.get("/:id", isAuthenticated, CategoriesController.getById);
  *             properties:
  *               name: { type: string }
  *               description: { type: string }
- *               isActive: { type: boolean }
+ *               status: { type: string, enum: [ACTIVE, INACTIVE] }
  *               parentId: { type: string }
  *     responses:
  *       201:
@@ -121,9 +121,9 @@ router.put("/:id", isAuthenticated, validate(updateCategorySchema), CategoriesCo
  *         application/json:
  *           schema:
  *             type: object
- *             required: [isActive]
+ *             required: [status]
  *             properties:
- *               isActive: { type: boolean }
+ *               status: { type: string, enum: [ACTIVE, INACTIVE] }
  *     responses:
  *       200:
  *         description: Status updated

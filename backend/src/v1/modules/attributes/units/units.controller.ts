@@ -31,7 +31,7 @@ export class UnitsController {
   });
 
   static updateStatus = catchAsync(async (req: Request, res: Response) => {
-    const unit = await UnitsService.updateUnitStatus(req.params.id as string, req.body.isActive);
+    const unit = await UnitsService.updateUnitStatus(req.params.id as string, req.body.status);
     res.json({ success: true, data: unit });
   });
 }

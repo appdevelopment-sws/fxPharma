@@ -12,25 +12,13 @@ export class BrandsRepository {
       prisma.brand.count({ where: filters }),
     ]);
 
-    const mappedData = data.map((item: any) => ({
-      ...item,
-      status: item.isActive ? "ACTIVE" : "INACTIVE",
-    }));
-
-    return { data: mappedData, total };
+    return { data, total };
   }
 
   static async findById(id: string) {
-    const item: any = await prisma.brand.findUnique({
+    return prisma.brand.findUnique({
       where: { id },
     });
-
-    if (!item) return null;
-
-    return {
-      ...item,
-      status: item.isActive ? "ACTIVE" : "INACTIVE",
-    };
   }
 
   static async findByName(name: string) {
@@ -40,44 +28,17 @@ export class BrandsRepository {
   }
 
   static async create(data: any) {
-    const { status, isActive, ...rest } = data;
-    const createData: any = { ...rest };
-
-    if (status !== undefined) {
-      createData.isActive = status === "ACTIVE";
-    } else if (isActive !== undefined) {
-      createData.isActive = isActive;
-    }
-
-    const item: any = await prisma.brand.create({
-      data: createData,
+    return prisma.brand.create({
+      data,
     });
-
-    return {
-      ...item,
-      status: item.isActive ? "ACTIVE" : "INACTIVE",
-    };
   }
 
   static async update(id: string, data: any) {
-    const { status, isActive, ...rest } = data;
-    const updateData: any = { ...rest };
-
-    if (status !== undefined) {
-      updateData.isActive = status === "ACTIVE";
-    } else if (isActive !== undefined) {
-      updateData.isActive = isActive;
-    }
-
-    const item: any = await prisma.brand.update({
+    const { id: _id, createdAt: _c, updatedAt: _u, ...rest } = data;
+    return prisma.brand.update({
       where: { id },
-      data: updateData,
+      data: rest,
     });
-
-    return {
-      ...item,
-      status: item.isActive ? "ACTIVE" : "INACTIVE",
-    };
   }
 
   static async delete(id: string) {

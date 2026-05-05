@@ -28,13 +28,16 @@ export class CategoriesService {
   static async deleteCategory(id: string) {
     const category = await this.getCategoryById(id);
     if (category.children && category.children.length > 0) {
-      throw new ErrorHandler("Cannot delete category because it has sub-categories", 400);
+      throw new ErrorHandler(
+        "Cannot delete category because it has sub-categories",
+        400,
+      );
     }
     return CategoriesRepository.delete(id);
   }
 
-  static async updateCategoryStatus(id: string, isActive: boolean) {
+  static async updateCategoryStatus(id: string, status: any) {
     await this.getCategoryById(id);
-    return CategoriesRepository.update(id, { isActive });
+    return CategoriesRepository.update(id, { status });
   }
 }

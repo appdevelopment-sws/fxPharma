@@ -69,7 +69,7 @@ router.get("/:id", isAuthenticated, UnitsController.getById);
  *             properties:
  *               name: { type: string }
  *               shortName: { type: string }
- *               isActive: { type: boolean }
+ *               status: { type: string, enum: [ACTIVE, INACTIVE] }
  *     responses:
  *       201:
  *         description: Unit created
@@ -120,9 +120,9 @@ router.put("/:id", isAuthenticated, validate(updateUnitSchema), UnitsController.
  *         application/json:
  *           schema:
  *             type: object
- *             required: [isActive]
+ *             required: [status]
  *             properties:
- *               isActive: { type: boolean }
+ *               status: { type: string, enum: [ACTIVE, INACTIVE] }
  *     responses:
  *       200:
  *         description: Status updated
