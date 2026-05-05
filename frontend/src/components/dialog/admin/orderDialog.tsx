@@ -29,6 +29,10 @@ import {
     RECENT_ORDERS,
 } from "@/constants/page/admin/order"
 
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { toast } from "sonner"
+import { ordersApi } from "@/services/ordersApi"
+
 interface OrderDialogProps {
     open: boolean
     onClose: (open: boolean) => void
@@ -40,33 +44,76 @@ export default function OrderDialog({
     onClose,
     order,
 }: OrderDialogProps) {
-    const [selectedItems, setSelectedItems] = useState<any[]>([
-        { id: 1, name: "Dolo 650mg", description: "Paracetamol • Micro Labs", qty: 250, unit: "strips" },
-        { id: 2, name: "Cetirizine 10mg", description: "Anti-allergic • Cipla", qty: 100, unit: "strips" },
-    ])
+    const isEditMode = !!order?.id
+    const isViewMode = !!order?.viewMode
+    const queryClient = useQueryClient()
 
-    const [selectedSupplier, setSelectedSupplier] = useState("apollo_distributors")
+    const [selectedItems, setSelectedItems] = useState<any[]>([])
+    const [selectedSupplier, setSelectedSupplier] = useState("")
 
-    const { control } = useForm({
+    const { control, reset, handleSubmit } = useForm({
         defaultValues: {
-            supplier: "apollo_distributors",
+            supplierId: "",
             status: "DRAFT",
         }
     })
 
-    const updateQty = (id: number, delta: number) => {
+    useEffect(() => {
+        if (open) {
+            if (order) {
+                setSelectedItems(order.items || [])
+                setSelectedSupplier(order.supplierId || "")
+                reset({
+                    supplierId: order.supplierId,
+                    status: order.status,
+                })
+            } else {
+                setSelectedItems([])
+                setSelectedSupplier("")
+                reset({
+                    supplierId: "",
+                    status: "DRAFT",
+                })
+            }
+        }
+    }, [open, order, reset])
+
+    const saveMutation = useMutation({
+        mutationFn: (data: any) => {
+            const payload = {
+                ...data,
+                supplierId: selectedSupplier,
+                items: selectedItems,
+            }
+            return isEditMode ? ordersApi.update(order.id, payload) : ordersApi.create(payload)
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: queryKeys.orders.all })
+            toast.success(isEditMode ? "Order updated" : "Order created")
+            onClose(false)
+        },
+        onError: () => {
+            toast.error("Failed to save order")
+        }
+    })
+
+    const onSubmit = (data: any) => {
+        saveMutation.mutate(data)
+    }
+
+    const updateQty = (id: any, delta: number) => {
         setSelectedItems(prev => prev.map(item =>
-            item.id === id ? { ...item, qty: Math.max(1, item.qty + delta) } : item
+            (item.id === id || item.tempId === id) ? { ...item, qty: Math.max(1, (Number(item.qty) || 0) + delta) } : item
         ))
     }
 
-    const removeItem = (id: number) => {
-        setSelectedItems(prev => prev.filter(item => item.id !== id))
+    const removeItem = (id: any) => {
+        setSelectedItems(prev => prev.filter(item => item.id !== id && item.tempId !== id))
     }
 
     const addItem = (name: string, description: string = "") => {
         const newItem = {
-            id: Date.now(),
+            tempId: Date.now(),
             name,
             description,
             qty: 1,
@@ -80,11 +127,25 @@ export default function OrderDialog({
             variant="modal"
             open={open}
             onOpenChange={(isOpen) => onClose(isOpen)}
-            title="Create New Order"
+            title={isEditMode ? "Edit Order" : "Create New Order"}
             size="full"
-            footer={null} // Custom footer inside
+            footer={
+                <div className="flex justify-end gap-3">
+                    <Button variant="outline" onClick={() => onClose(false)}>
+                        {isViewMode ? "Close" : "Cancel"}
+                    </Button>
+                    {!isViewMode && (
+                        <Button 
+                            onClick={handleSubmit(onSubmit)}
+                            disabled={saveMutation.isPending}
+                        >
+                            {saveMutation.isPending ? "Saving..." : isEditMode ? "Update Order" : "Save Order"}
+                        </Button>
+                    )}
+                </div>
+            }
         >
-            <div className="grid h-full grid-cols-1 gap-8 p-1 xl:grid-cols-3">
+            <form onSubmit={handleSubmit(onSubmit)} className="grid h-full grid-cols-1 gap-8 p-1 xl:grid-cols-3">
                 {/* Left Column: Order Items & Suggestions */}
                 <div className="space-y-8 xl:col-span-2">
                     {/* Order Items Section */}
@@ -334,16 +395,16 @@ export default function OrderDialog({
                         </div>
 
                         <div className="mt-8 space-y-3">
-                            <Button className="h-14 w-full rounded-2xl bg-emerald-500 text-base font-bold shadow-lg shadow-emerald-500/20 hover:bg-emerald-600 active:scale-[0.98]">
+                            <Button type="button" className="h-14 w-full rounded-2xl bg-emerald-500 text-base font-bold shadow-lg shadow-emerald-500/20 hover:bg-emerald-600 active:scale-[0.98]">
                                 <MessageCircle className="mr-3 size-6" /> Send Order via WhatsApp
                             </Button>
-                            <Button className="h-14 w-full rounded-2xl bg-cyan-400 text-base font-bold shadow-lg shadow-cyan-400/20 hover:bg-cyan-500 active:scale-[0.98]">
+                            <Button type="button" className="h-14 w-full rounded-2xl bg-cyan-400 text-base font-bold shadow-lg shadow-cyan-400/20 hover:bg-cyan-500 active:scale-[0.98]">
                                 <Mail className="mr-3 size-6" /> Send Order via Email
                             </Button>
                         </div>
                     </div>
                 </div>
-            </div>
+            </form>
         </FormContainer>
     )
 }

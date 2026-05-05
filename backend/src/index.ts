@@ -91,7 +91,7 @@ protectedRouter.use("/attributes/units", generalLimiter, unitRoutes);
 protectedRouter.use("/storelist", generalLimiter, storelistRoutes);
 protectedRouter.use("/suppliers", generalLimiter, supplierRoutes);
 protectedRouter.use("/inventory/add-medicine", generalLimiter, inventoryRoutes);
-protectedRouter.use("/inventory/new-compound", generalLimiter, newCompoundRoutes);
+protectedRouter.use("/compound", generalLimiter, newCompoundRoutes);
 protectedRouter.use("/orders", generalLimiter, orderRoutes);
 protectedRouter.use("/upload", generalLimiter, uploadRoutes);
 

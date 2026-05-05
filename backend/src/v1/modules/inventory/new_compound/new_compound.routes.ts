@@ -6,6 +6,7 @@ import {
   updateCompoundSchema,
 } from "./new_compound.validation.js";
 import { isAuthenticated } from "@/middlewares/isAuthenticated.js";
+import { attachTenant } from "@/middlewares/tenant.js";
 
 const router = Router();
 
@@ -28,7 +29,7 @@ const router = Router();
  *       200:
  *         description: List of compounds
  */
-router.get("/", isAuthenticated, NewCompoundController.getAll);
+router.get("/", isAuthenticated, attachTenant, NewCompoundController.getAll);
 
 /**
  * @swagger
