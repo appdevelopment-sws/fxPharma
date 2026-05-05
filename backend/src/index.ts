@@ -26,6 +26,8 @@ import unitRoutes from "./v1/modules/attributes/units/units.routes.js";
 import storelistRoutes from "./v1/modules/storelist/storelist.routes.js";
 import supplierRoutes from "./v1/modules/suppliers/suppliers.routes.js";
 import inventoryRoutes from "./v1/modules/inventory/add_medicine/add_medicine.routes.js";
+import newCompoundRoutes from "./v1/modules/inventory/new_compound/new_compound.routes.js";
+import orderRoutes from "./v1/modules/orders/orders.routes.js";
 import uploadRoutes from "./v1/modules/upload/upload.routes.js";
 import path from "path";
 
@@ -89,6 +91,8 @@ protectedRouter.use("/attributes/units", generalLimiter, unitRoutes);
 protectedRouter.use("/storelist", generalLimiter, storelistRoutes);
 protectedRouter.use("/suppliers", generalLimiter, supplierRoutes);
 protectedRouter.use("/inventory/add-medicine", generalLimiter, inventoryRoutes);
+protectedRouter.use("/inventory/new-compound", generalLimiter, newCompoundRoutes);
+protectedRouter.use("/orders", generalLimiter, orderRoutes);
 protectedRouter.use("/upload", generalLimiter, uploadRoutes);
 
 app.use("/api/v1", protectedRouter);
