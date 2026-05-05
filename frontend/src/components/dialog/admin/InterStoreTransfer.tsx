@@ -19,6 +19,15 @@ import {
   STOCK_TRANSFER_FORM_INITIAL_DATA,
 } from "@/constants/page/admin/interstoretransfer"
 
+import { transferApi } from "@/services/transferApi"
+import { toast } from "sonner"
+
+interface InterStoreTransferDialogProps {
+  open: boolean
+  onClose: (open: boolean) => void
+  transfer?: any | null
+}
+
 export default function InterStoreTransferDialog({
   open,
   onClose,
@@ -54,13 +63,26 @@ export default function InterStoreTransferDialog({
   const queryClient = useQueryClient()
 
   const handleMutation = useMutation({
-    mutationFn: async (data: any) => data,
+    mutationFn: async (data: any) => {
+      if (isEditMode) {
+        return transferApi.update(transfer.id, data)
+      }
+      return transferApi.create(data)
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["stock-transfer"],
+        queryKey: ["transfers"],
       })
+      toast.success(
+        isEditMode
+          ? "Transfer updated successfully"
+          : "Transfer created successfully"
+      )
       reset()
       onClose(false)
+    },
+    onError: () => {
+      toast.error("Failed to save transfer")
     },
   })
 

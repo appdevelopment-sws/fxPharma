@@ -22,6 +22,9 @@ import {
   INGREDIENT_TYPE_OPTIONS,
 } from "@/constants/page/admin/newcompound"
 
+import { compoundingApi } from "@/services/compoundingApi"
+import { toast } from "sonner"
+
 interface CompoundingDialogProps {
   open: boolean
   onClose: (open: boolean) => void
@@ -62,13 +65,26 @@ export default function CompoundingDialog({
   const queryClient = useQueryClient()
 
   const handleMutation = useMutation({
-    mutationFn: async (data: any) => data,
+    mutationFn: async (data: any) => {
+      if (isEditMode) {
+        return compoundingApi.update(compound.id, data)
+      }
+      return compoundingApi.create(data)
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["compounding"],
       })
+      toast.success(
+        isEditMode
+          ? "Compound updated successfully"
+          : "Compound created successfully"
+      )
       reset()
       onClose(false)
+    },
+    onError: () => {
+      toast.error("Failed to save compound")
     },
   })
 

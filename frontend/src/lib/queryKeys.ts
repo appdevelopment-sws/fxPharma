@@ -84,6 +84,16 @@ export const queryKeys = {
     list: (filters?: any) => [...queryKeys.storeList.all, filters] as const,
     detail: (id: string) => [...queryKeys.storeList.all, id] as const,
   },
+  compounding: {
+    all: ["compounding"] as const,
+    list: (filters?: any) => [...queryKeys.compounding.all, filters] as const,
+    detail: (id: string) => [...queryKeys.compounding.all, id] as const,
+  },
+  transfers: {
+    all: ["transfers"] as const,
+    list: (filters?: any) => [...queryKeys.transfers.all, filters] as const,
+    detail: (id: string) => [...queryKeys.transfers.all, id] as const,
+  },
   plans: {
     all: ["plans"] as const,
     list: (filters?: any) => [...queryKeys.plans.all, filters] as const,

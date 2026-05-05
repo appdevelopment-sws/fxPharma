@@ -53,9 +53,21 @@ export const adminNavigationGroups: SidebarNavigationGroup[] = [
             icon: Box,
           },
           {
+            title: "All Compound",
+            to: "/admin/all-compound",
+            description: "Manage Prescription Compounding",
+            icon: BriefcaseMedical,
+          },
+          {
             title: "Import Inventory",
             to: "/admin/import-inventory",
             description: "Import Inventory from csv/excel file.",
+            icon: Box,
+          },
+          {
+            title: "Inter Store Transfer",
+            to: "/admin/inter-store-transfer",
+            description: "Manage stock transfers between stores",
             icon: Box,
           },
           // {
