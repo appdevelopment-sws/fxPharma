@@ -134,6 +134,7 @@ model Organization {
   suppliers Supplier[]
   inventory Inventory[]
   newCompounds NewCompound[]
+  orders       Order[]
 
   // Owner Relation
   ownerId String? @map("owner_id")
@@ -174,6 +175,7 @@ model Branch {
   userPermissions UserPermission[]
   inventory       Inventory[]
   newCompounds    NewCompound[]
+  orders          Order[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -462,6 +464,7 @@ model Supplier {
 
   // Relations
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  orders       Order[]
 
   @@index([organizationId])
 }
@@ -658,4 +661,50 @@ model NewCompoundIngredient {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@index([compoundId])
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  organizationId  String      @map("organization_id")
+  branchId        String?     @map("branch_id")
+  
+  supplierId      String?     @map("supplier_id")
+  supplier        Supplier?   @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  
+  status          OrderStatus @default(DRAFT)
+  
+  items           OrderItem[]
+  
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  branch          Branch?      @relation(fields: [branchId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId])
+  @@index([branchId])
+}
+
+model OrderItem {
+  id          String   @id @default(cuid())
+  orderId     String   @map("order_id")
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  name        String
+  description String?
+  qty         Int      @default(1)
+  unit        String?
+  
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([orderId])
+}
+
+enum OrderStatus {
+  DRAFT
+  SENT
+  PENDING
+  COMPLETED
+  CANCELLED
 }
