@@ -20,6 +20,7 @@ const orgScopedModels = new Set<string>([
   "Branch",
   "OrganizationFeature",
   "Supplier",
+  "NewCompound",
 ]);
 
 // Models that are scoped to a Branch
