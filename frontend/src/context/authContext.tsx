@@ -2,15 +2,16 @@ import {
   createContext,
   useContext,
   useState,
-  useEffect,
   type PropsWithChildren,
 } from "react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import AuthApi from "@/services/authApi"
 import { queryKeys } from "@/lib/queryKeys"
-import { ROLES, type PermissionName, type RoleName } from "@/lib/access"
 
 export type AuthUser = {
+  [x: string]: any
+  tenant: any
+  tenantId: string
   id: string
   name: string
   email: string
