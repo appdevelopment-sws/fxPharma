@@ -20,6 +20,7 @@ import ImportInventory from "@/pages/admin/InterStoreTransfer/ImportInventory"
 import AllInterStoreTransfer from "@/pages/admin/InterStoreTransfer/AllInterStoreTransfer"
 import DailyTransactionReport from "@/pages/admin/reports/DailyTransactionReport"
 import ExpiryReports from "@/pages/admin/reports/ExpiryReports"
+import Branch from "@/pages/admin/Branch/Branch"
 
 export const AdminRoutes = () => {
   return (
@@ -41,12 +42,17 @@ export const AdminRoutes = () => {
           <Route path="all-inventory" element={<AllInventory />} />
           <Route path="all-compound" element={<AllCompound />} />
           <Route path="import-inventory" element={<ImportInventory />} />
-          <Route path="inter-store-transfer" element={<AllInterStoreTransfer />} />
+          <Route
+            path="inter-store-transfer"
+            element={<AllInterStoreTransfer />}
+          />
           <Route path="orders" element={<Orders />} />
           <Route path="suppliers" element={<Suppliers />} />
           <Route path="returns" element={<ReturnsPage />} />
           <Route path="invoices" element={<RecentInvoicesPage />} />
           <Route path="pos" element={<POS />} />
+          <Route path="branch" element={<Branch />} />
+
           <Route
             element={
               <ProtectedRoute allowedPermissions={[PERMISSIONS.USER_READ]} />
