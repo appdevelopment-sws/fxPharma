@@ -31,7 +31,7 @@ export class HsnService {
     if (hsn.hsnMappings && hsn.hsnMappings.length > 0) {
       throw new ErrorHandler(
         "Cannot delete HSN code because it has active tax mappings. Please remove the mappings first.",
-        400
+        400,
       );
     }
     return HsnRepository.delete(id);

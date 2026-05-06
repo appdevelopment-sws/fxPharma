@@ -70,12 +70,17 @@ router.get("/:id", isAuthenticated, BrandsController.getById);
  *               name: { type: string }
  *               description: { type: string }
  *               logo: { type: string }
- *               isActive: { type: boolean }
+ *               status: { type: string, enum: [ACTIVE, INACTIVE] }
  *     responses:
  *       201:
  *         description: Brand created
  */
-router.post("/", isAuthenticated, validate(createBrandSchema), BrandsController.create);
+router.post(
+  "/",
+  isAuthenticated,
+  validate(createBrandSchema),
+  BrandsController.create,
+);
 
 /**
  * @swagger
@@ -100,7 +105,12 @@ router.post("/", isAuthenticated, validate(createBrandSchema), BrandsController.
  *       200:
  *         description: Brand updated
  */
-router.put("/:id", isAuthenticated, validate(updateBrandSchema), BrandsController.update);
+router.put(
+  "/:id",
+  isAuthenticated,
+  validate(updateBrandSchema),
+  BrandsController.update,
+);
 
 /**
  * @swagger
@@ -121,9 +131,9 @@ router.put("/:id", isAuthenticated, validate(updateBrandSchema), BrandsControlle
  *         application/json:
  *           schema:
  *             type: object
- *             required: [isActive]
+ *             required: [status]
  *             properties:
- *               isActive: { type: boolean }
+ *               status: { type: string, enum: [ACTIVE, INACTIVE] }
  *     responses:
  *       200:
  *         description: Status updated

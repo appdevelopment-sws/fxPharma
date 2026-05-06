@@ -16,12 +16,19 @@ export class HsnMappingService {
   }
 
   static async createMapping(data: { hsnid: string; taxid: string }) {
-    const existing = await HsnMappingRepository.findByHsnAndTax(data.hsnid, data.taxid);
-    if (existing) throw new ErrorHandler("This HSN-Tax mapping already exists", 400);
+    const existing = await HsnMappingRepository.findByHsnAndTax(
+      data.hsnid,
+      data.taxid,
+    );
+    if (existing)
+      throw new ErrorHandler("This HSN-Tax mapping already exists", 400);
     return HsnMappingRepository.create(data);
   }
 
-  static async updateMapping(id: string, data: { hsnid: string; taxid: string }) {
+  static async updateMapping(
+    id: string,
+    data: { hsnid: string; taxid: string },
+  ) {
     await this.getMappingById(id);
     return HsnMappingRepository.update(id, data);
   }

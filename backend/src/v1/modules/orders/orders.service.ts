@@ -5,7 +5,9 @@ export class OrdersService {
     const filters: any = {};
     if (search) {
       filters.OR = [
-        { supplier: { companyName: { contains: search, mode: "insensitive" } } },
+        {
+          supplier: { companyName: { contains: search, mode: "insensitive" } },
+        },
         { status: { contains: search, mode: "insensitive" } },
       ];
     }

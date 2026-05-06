@@ -7,7 +7,7 @@ import { paginate } from "../../../utils/pagination.js";
 export class HsnController {
   static getAll = catchAsync(async (req: Request, res: Response) => {
     await paginate(res, req.query, (skip, take, search) =>
-      HsnService.getAllHsns(search, skip, take)
+      HsnService.getAllHsns(search, skip, take),
     );
   });
 

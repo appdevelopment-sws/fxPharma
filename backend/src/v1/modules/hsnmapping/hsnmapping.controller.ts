@@ -7,12 +7,14 @@ import { paginate } from "../../../utils/pagination.js";
 export class HsnMappingController {
   static getAll = catchAsync(async (req: Request, res: Response) => {
     await paginate(res, req.query, (skip, take, search) =>
-      HsnMappingService.getAllMappings(search, skip, take)
+      HsnMappingService.getAllMappings(search, skip, take),
     );
   });
 
   static getById = catchAsync(async (req: Request, res: Response) => {
-    const mapping = await HsnMappingService.getMappingById(req.params.id as string);
+    const mapping = await HsnMappingService.getMappingById(
+      req.params.id as string,
+    );
     res.json({ success: true, data: mapping });
   });
 
@@ -22,7 +24,10 @@ export class HsnMappingController {
   });
 
   static update = catchAsync(async (req: Request, res: Response) => {
-    const mapping = await HsnMappingService.updateMapping(req.params.id as string, req.body);
+    const mapping = await HsnMappingService.updateMapping(
+      req.params.id as string,
+      req.body,
+    );
     res.json({ success: true, data: mapping });
   });
 

@@ -76,7 +76,12 @@ router.get("/:id", isAuthenticated, TaxController.getById);
  *       201:
  *         description: Tax rule created
  */
-router.post("/", isAuthenticated, validate(createTaxSchema), TaxController.create);
+router.post(
+  "/",
+  isAuthenticated,
+  validate(createTaxSchema),
+  TaxController.create,
+);
 
 /**
  * @swagger
@@ -106,7 +111,12 @@ router.post("/", isAuthenticated, validate(createTaxSchema), TaxController.creat
  *       200:
  *         description: Tax rule updated
  */
-router.put("/:id", validate(updateTaxSchema), isAuthenticated, TaxController.update);
+router.put(
+  "/:id",
+  validate(updateTaxSchema),
+  isAuthenticated,
+  TaxController.update,
+);
 
 /**
  * @swagger

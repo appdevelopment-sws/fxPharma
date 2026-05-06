@@ -30,8 +30,8 @@ export class UnitsService {
     return UnitsRepository.delete(id);
   }
 
-  static async updateUnitStatus(id: string, isActive: boolean) {
+  static async updateUnitStatus(id: string, status: any) {
     await this.getUnitById(id);
-    return UnitsRepository.update(id, { isActive });
+    return UnitsRepository.update(id, { status });
   }
 }

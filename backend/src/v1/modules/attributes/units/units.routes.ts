@@ -69,12 +69,17 @@ router.get("/:id", isAuthenticated, UnitsController.getById);
  *             properties:
  *               name: { type: string }
  *               shortName: { type: string }
- *               isActive: { type: boolean }
+ *               status: { type: string, enum: [ACTIVE, INACTIVE] }
  *     responses:
  *       201:
  *         description: Unit created
  */
-router.post("/", isAuthenticated, validate(createUnitSchema), UnitsController.create);
+router.post(
+  "/",
+  isAuthenticated,
+  validate(createUnitSchema),
+  UnitsController.create,
+);
 
 /**
  * @swagger
@@ -99,7 +104,12 @@ router.post("/", isAuthenticated, validate(createUnitSchema), UnitsController.cr
  *       200:
  *         description: Unit updated
  */
-router.put("/:id", isAuthenticated, validate(updateUnitSchema), UnitsController.update);
+router.put(
+  "/:id",
+  isAuthenticated,
+  validate(updateUnitSchema),
+  UnitsController.update,
+);
 
 /**
  * @swagger
@@ -120,9 +130,9 @@ router.put("/:id", isAuthenticated, validate(updateUnitSchema), UnitsController.
  *         application/json:
  *           schema:
  *             type: object
- *             required: [isActive]
+ *             required: [status]
  *             properties:
- *               isActive: { type: boolean }
+ *               status: { type: string, enum: [ACTIVE, INACTIVE] }
  *     responses:
  *       200:
  *         description: Status updated

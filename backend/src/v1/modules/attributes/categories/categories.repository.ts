@@ -18,7 +18,6 @@ export class CategoriesRepository {
 
     const mappedData = data.map((item: any) => ({
       ...item,
-      status: item.isActive ? "ACTIVE" : "INACTIVE",
       parent_id: item.parentId,
     }));
 
@@ -38,7 +37,6 @@ export class CategoriesRepository {
 
     return {
       ...item,
-      status: item.isActive ? "ACTIVE" : "INACTIVE",
       parent_id: item.parentId,
     };
   }
@@ -50,39 +48,26 @@ export class CategoriesRepository {
   }
 
   static async create(data: any) {
-    const { parent_id, status, isActive, ...rest } = data;
-    const createData: any = { ...rest };
-
-    if (parent_id !== undefined) createData.parentId = parent_id || null;
-
-    if (status !== undefined) {
-      createData.isActive = status === "ACTIVE";
-    } else if (isActive !== undefined) {
-      createData.isActive = isActive;
-    }
-
+    const { parent_id, ...rest } = data;
     const item: any = await prisma.category.create({
-      data: createData,
+      data: {
+        ...rest,
+        parentId: parent_id || null,
+      },
     });
 
     return {
       ...item,
-      status: item.isActive ? "ACTIVE" : "INACTIVE",
       parent_id: item.parentId,
     };
   }
 
   static async update(id: string, data: any) {
-    const { parent_id, status, isActive, ...rest } = data;
+    const { id: _id, createdAt: _c, updatedAt: _u, parent_id, ...rest } = data;
+
     const updateData: any = { ...rest };
 
     if (parent_id !== undefined) updateData.parentId = parent_id || null;
-
-    if (status !== undefined) {
-      updateData.isActive = status === "ACTIVE";
-    } else if (isActive !== undefined) {
-      updateData.isActive = isActive;
-    }
 
     const item: any = await prisma.category.update({
       where: { id },
@@ -91,7 +76,6 @@ export class CategoriesRepository {
 
     return {
       ...item,
-      status: item.isActive ? "ACTIVE" : "INACTIVE",
       parent_id: item.parentId,
     };
   }

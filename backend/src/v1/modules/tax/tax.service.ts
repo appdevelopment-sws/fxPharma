@@ -29,7 +29,7 @@ export class TaxService {
     if (tax.hsnMappings && tax.hsnMappings.length > 0) {
       throw new ErrorHandler(
         "Cannot delete tax rule because it is linked to HSN codes. Please remove the mappings first.",
-        400
+        400,
       );
     }
     return TaxRepository.delete(id);

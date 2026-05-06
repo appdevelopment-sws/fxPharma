@@ -12,7 +12,7 @@ export class PermissionResolverService {
    */
   static async resolveEffectivePermissionKeys(
     userId: string,
-    scopeId?: string | null
+    scopeId?: string | null,
   ): Promise<string[]> {
     // 1. Fetch User with all assignments
     const user = await prisma.user.findUnique({
@@ -57,7 +57,7 @@ export class PermissionResolverService {
 
     // 2. Super Admin Bypass
     const isSuperAdmin = user.roles.some(
-      (ur) => ur.role.level >= 100 || ur.role.key === "super_admin"
+      (ur) => ur.role.level >= 100 || ur.role.key === "super_admin",
     );
 
     if (isSuperAdmin) {
@@ -73,24 +73,26 @@ export class PermissionResolverService {
     // 3. Filter assignments by scope
     // We include GLOBAL scope assignments and assignments matching the target scopeId
     const relevantRoles = user.roles.filter(
-      (ur) => ur.scopeType === "global" || ur.scopeId === scopeId
+      (ur) => ur.scopeType === "global" || ur.scopeId === scopeId,
     );
     const relevantWorkflows = user.workflows.filter(
-      (ur) => ur.scopeType === "global" || ur.scopeId === scopeId
+      (ur) => ur.scopeType === "global" || ur.scopeId === scopeId,
     );
     const relevantOverrides = user.permissions.filter(
-      (ur) => ur.scopeType === "global" || ur.scopeId === scopeId
+      (ur) => ur.scopeType === "global" || ur.scopeId === scopeId,
     );
 
     // 4. Collect from Roles
     for (const ur of relevantRoles) {
       // Direct Role Permissions
-      ur.role.permissions.forEach((rp) => permissionKeys.add(rp.permission.key));
-      
+      ur.role.permissions.forEach((rp) =>
+        permissionKeys.add(rp.permission.key),
+      );
+
       // Workflow Permissions inherited by Role
       ur.role.workflows.forEach((rw) => {
         rw.workflow.permissions.forEach((wp) =>
-          permissionKeys.add(wp.permission.key)
+          permissionKeys.add(wp.permission.key),
         );
       });
     }
@@ -98,7 +100,7 @@ export class PermissionResolverService {
     // 5. Collect from Direct User Workflows
     for (const uw of relevantWorkflows) {
       uw.workflow.permissions.forEach((wp) =>
-        permissionKeys.add(wp.permission.key)
+        permissionKeys.add(wp.permission.key),
       );
     }
 
@@ -122,9 +124,12 @@ export class PermissionResolverService {
   static async hasPermission(
     userId: string,
     permissionKey: string,
-    scopeId?: string | null
+    scopeId?: string | null,
   ): Promise<boolean> {
-    const permissions = await this.resolveEffectivePermissionKeys(userId, scopeId);
+    const permissions = await this.resolveEffectivePermissionKeys(
+      userId,
+      scopeId,
+    );
     return permissions.includes(permissionKey);
   }
 
@@ -133,7 +138,7 @@ export class PermissionResolverService {
    */
   static async resolveEffectiveRoleKeys(
     userId: string,
-    scopeId?: string | null
+    scopeId?: string | null,
   ): Promise<string[]> {
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -161,7 +166,7 @@ export class PermissionResolverService {
   static async hasRole(
     userId: string,
     roleKey: string,
-    scopeId?: string | null
+    scopeId?: string | null,
   ): Promise<boolean> {
     const roles = await this.resolveEffectiveRoleKeys(userId, scopeId);
     return roles.includes(roleKey);

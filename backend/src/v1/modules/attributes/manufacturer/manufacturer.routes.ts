@@ -1,7 +1,10 @@
 import { Router } from "express";
 import { ManufacturerController } from "./manufacturer.controller.js";
 import { validate } from "@/middlewares/validate.js";
-import { createManufacturerSchema, updateManufacturerSchema } from "./manufacturer.validation.js";
+import {
+  createManufacturerSchema,
+  updateManufacturerSchema,
+} from "./manufacturer.validation.js";
 import { isAuthenticated } from "@/middlewares/isAuthenticated.js";
 
 const router = Router();
@@ -71,12 +74,17 @@ router.get("/:id", isAuthenticated, ManufacturerController.getById);
  *               email: { type: string }
  *               phone: { type: string }
  *               address: { type: string }
- *               isActive: { type: boolean }
+ *               status: { type: string, enum: [ACTIVE, INACTIVE] }
  *     responses:
  *       201:
  *         description: Manufacturer created
  */
-router.post("/", isAuthenticated, validate(createManufacturerSchema), ManufacturerController.create);
+router.post(
+  "/",
+  isAuthenticated,
+  validate(createManufacturerSchema),
+  ManufacturerController.create,
+);
 
 /**
  * @swagger
@@ -101,7 +109,12 @@ router.post("/", isAuthenticated, validate(createManufacturerSchema), Manufactur
  *       200:
  *         description: Manufacturer updated
  */
-router.put("/:id", isAuthenticated, validate(updateManufacturerSchema), ManufacturerController.update);
+router.put(
+  "/:id",
+  isAuthenticated,
+  validate(updateManufacturerSchema),
+  ManufacturerController.update,
+);
 
 /**
  * @swagger
@@ -122,14 +135,18 @@ router.put("/:id", isAuthenticated, validate(updateManufacturerSchema), Manufact
  *         application/json:
  *           schema:
  *             type: object
- *             required: [isActive]
+ *             required: [status]
  *             properties:
- *               isActive: { type: boolean }
+ *               status: { type: string, enum: [ACTIVE, INACTIVE] }
  *     responses:
  *       200:
  *         description: Status updated
  */
-router.patch("/:id/status", isAuthenticated, ManufacturerController.updateStatus);
+router.patch(
+  "/:id/status",
+  isAuthenticated,
+  ManufacturerController.updateStatus,
+);
 
 /**
  * @swagger

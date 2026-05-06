@@ -33,7 +33,6 @@ export class MasterProductRepository {
     take: number = 10,
     status?: string,
   ) {
-
     const where: any = {
       AND: [
         status

@@ -6,7 +6,7 @@ import { paginate } from "../../../utils/pagination.js";
 export class StoreListController {
   static list = catchAsync(async (req: Request, res: Response) => {
     await paginate(res, req.query, (skip, take, search) =>
-      StoreListService.getStores({ search }, skip, take)
+      StoreListService.getStores({ search }, skip, take),
     );
   });
 

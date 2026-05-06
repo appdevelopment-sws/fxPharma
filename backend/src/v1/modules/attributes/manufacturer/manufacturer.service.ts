@@ -3,8 +3,17 @@ import { ManufacturerRepository } from "./manufacturer.repository.js";
 import { buildSearchFilter } from "../../../../utils/prisma.js";
 
 export class ManufacturerService {
-  static async getAllManufacturers(search?: string, skip?: number, take?: number) {
-    const where = buildSearchFilter(search, ["name", "email", "phone", "address"]);
+  static async getAllManufacturers(
+    search?: string,
+    skip?: number,
+    take?: number,
+  ) {
+    const where = buildSearchFilter(search, [
+      "name",
+      "email",
+      "phone",
+      "address",
+    ]);
     return ManufacturerRepository.findAll(where, skip, take);
   }
 
@@ -16,7 +25,8 @@ export class ManufacturerService {
 
   static async createManufacturer(data: any) {
     const existing = await ManufacturerRepository.findByName(data.name);
-    if (existing) throw new ErrorHandler("Manufacturer name already exists", 400);
+    if (existing)
+      throw new ErrorHandler("Manufacturer name already exists", 400);
     return ManufacturerRepository.create(data);
   }
 
@@ -30,8 +40,8 @@ export class ManufacturerService {
     return ManufacturerRepository.delete(id);
   }
 
-  static async updateManufacturerStatus(id: string, isActive: boolean) {
+  static async updateManufacturerStatus(id: string, status: any) {
     await this.getManufacturerById(id);
-    return ManufacturerRepository.update(id, { isActive });
+    return ManufacturerRepository.update(id, { status });
   }
 }

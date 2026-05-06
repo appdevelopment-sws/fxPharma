@@ -18,7 +18,7 @@ export class UploadController {
       const fileName = `${Date.now()}-${req.file.originalname.replace(/\s+/g, "-")}`;
       // Path to src/uploads
       const uploadDir = path.join(process.cwd(), "src/uploads");
-      
+
       if (!fs.existsSync(uploadDir)) {
         fs.mkdirSync(uploadDir, { recursive: true });
       }

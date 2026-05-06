@@ -1,7 +1,10 @@
 import { Router } from "express";
 import { FeaturesController } from "./features.controller.js";
 import { validate } from "@/middlewares/validate.js";
-import { createFeatureSchema, updateFeatureSchema } from "./features.validation.js";
+import {
+  createFeatureSchema,
+  updateFeatureSchema,
+} from "./features.validation.js";
 import { isAuthenticated } from "@/middlewares/isAuthenticated.js";
 
 const router = Router();
@@ -82,7 +85,12 @@ router.get("/:id", isAuthenticated, FeaturesController.getById);
  *       201:
  *         description: Feature created
  */
-router.post("/", isAuthenticated, validate(createFeatureSchema), FeaturesController.create);
+router.post(
+  "/",
+  isAuthenticated,
+  validate(createFeatureSchema),
+  FeaturesController.create,
+);
 
 /**
  * @swagger
@@ -108,7 +116,12 @@ router.post("/", isAuthenticated, validate(createFeatureSchema), FeaturesControl
  *       200:
  *         description: Feature updated
  */
-router.patch("/:id", isAuthenticated, validate(updateFeatureSchema), FeaturesController.update);
+router.patch(
+  "/:id",
+  isAuthenticated,
+  validate(updateFeatureSchema),
+  FeaturesController.update,
+);
 
 /**
  * @swagger

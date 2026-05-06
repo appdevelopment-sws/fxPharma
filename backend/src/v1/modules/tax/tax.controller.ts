@@ -7,7 +7,7 @@ import { paginate } from "../../../utils/pagination.js";
 export class TaxController {
   static getAll = catchAsync(async (req: Request, res: Response) => {
     await paginate(res, req.query, (skip, take, search) =>
-      TaxService.getAllTaxes(search, skip, take)
+      TaxService.getAllTaxes(search, skip, take),
     );
   });
 

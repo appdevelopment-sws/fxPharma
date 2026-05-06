@@ -138,7 +138,7 @@ export class StoreListRepository {
 
       // 6. Assign explicit permissions selected during store creation
       const selectedPermissions = Array.from(
-        new Set((data.permissions ?? []).filter(Boolean))
+        new Set((data.permissions ?? []).filter(Boolean)),
       );
 
       if (selectedPermissions.length > 0) {
@@ -157,8 +157,8 @@ export class StoreListRepository {
                 scopeId: branch.id,
                 branchId: branch.id,
               },
-            })
-          )
+            }),
+          ),
         );
       }
 
@@ -229,7 +229,11 @@ export class StoreListRepository {
       if (store.ownerId) {
         const permissionsToApply = (data.permissions ?? []) as string[];
         const selectedPermissions = Array.from(
-          new Set(permissionsToApply.filter((permission: string) => Boolean(permission)))
+          new Set(
+            permissionsToApply.filter((permission: string) =>
+              Boolean(permission),
+            ),
+          ),
         );
         const ownerId = store.ownerId;
 
@@ -262,8 +266,8 @@ export class StoreListRepository {
                     scopeId: branch.id,
                     branchId: branch.id,
                   },
-                })
-              )
+                }),
+              ),
             );
           }
         }
