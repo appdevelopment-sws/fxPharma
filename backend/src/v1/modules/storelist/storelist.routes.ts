@@ -1,7 +1,10 @@
 import { Router } from "express";
 import { StoreListController } from "./storelist.controller.js";
 import { validate } from "@/middlewares/validate.js";
-import { createStoreSchema, updateStoreSchema } from "./storelist.validation.js";
+import {
+  createStoreSchema,
+  updateStoreSchema,
+} from "./storelist.validation.js";
 
 const router = Router();
 

@@ -74,7 +74,12 @@ router.get("/:id", isAuthenticated, UnitsController.getById);
  *       201:
  *         description: Unit created
  */
-router.post("/", isAuthenticated, validate(createUnitSchema), UnitsController.create);
+router.post(
+  "/",
+  isAuthenticated,
+  validate(createUnitSchema),
+  UnitsController.create,
+);
 
 /**
  * @swagger
@@ -99,7 +104,12 @@ router.post("/", isAuthenticated, validate(createUnitSchema), UnitsController.cr
  *       200:
  *         description: Unit updated
  */
-router.put("/:id", isAuthenticated, validate(updateUnitSchema), UnitsController.update);
+router.put(
+  "/:id",
+  isAuthenticated,
+  validate(updateUnitSchema),
+  UnitsController.update,
+);
 
 /**
  * @swagger

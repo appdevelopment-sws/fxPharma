@@ -1,7 +1,11 @@
 import { Router } from "express";
 import { PlansController } from "./plans.controller.js";
 import { validate } from "@/middlewares/validate.js";
-import { createPlanSchema, updatePlanSchema, updatePlanStatusSchema } from "./plans.validation.js";
+import {
+  createPlanSchema,
+  updatePlanSchema,
+  updatePlanStatusSchema,
+} from "./plans.validation.js";
 import { isAuthenticated } from "@/middlewares/isAuthenticated.js";
 
 const router = Router();
@@ -100,7 +104,12 @@ router.get("/:id", isAuthenticated, PlansController.getById);
  *       201:
  *         description: Plan created
  */
-router.post("/", isAuthenticated, validate(createPlanSchema), PlansController.create);
+router.post(
+  "/",
+  isAuthenticated,
+  validate(createPlanSchema),
+  PlansController.create,
+);
 
 /**
  * @swagger
@@ -126,7 +135,12 @@ router.post("/", isAuthenticated, validate(createPlanSchema), PlansController.cr
  *       200:
  *         description: Plan updated
  */
-router.patch("/:id", isAuthenticated, validate(updatePlanSchema), PlansController.update);
+router.patch(
+  "/:id",
+  isAuthenticated,
+  validate(updatePlanSchema),
+  PlansController.update,
+);
 
 /**
  * @swagger
@@ -178,6 +192,11 @@ router.delete("/:id", isAuthenticated, PlansController.delete);
  *       200:
  *         description: Plan status updated
  */
-router.patch("/:id/status", isAuthenticated, validate(updatePlanStatusSchema), PlansController.updateStatus);
+router.patch(
+  "/:id/status",
+  isAuthenticated,
+  validate(updatePlanStatusSchema),
+  PlansController.updateStatus,
+);
 
 export default router;

@@ -5,9 +5,11 @@ import { paginate } from "../../../utils/pagination.js";
 
 export class PlansController {
   static getAll = catchAsync(async (req: Request, res: Response) => {
-    const status = req.query.status ? parseInt(req.query.status as string) : undefined;
+    const status = req.query.status
+      ? parseInt(req.query.status as string)
+      : undefined;
     await paginate(res, req.query, (skip, take, search) =>
-      PlansService.getAllPlans({ status, search }, skip, take)
+      PlansService.getAllPlans({ status, search }, skip, take),
     );
   });
 
@@ -22,7 +24,10 @@ export class PlansController {
   });
 
   static update = catchAsync(async (req: Request, res: Response) => {
-    const plan = await PlansService.updatePlan(req.params.id as string, req.body);
+    const plan = await PlansService.updatePlan(
+      req.params.id as string,
+      req.body,
+    );
     res.json({ success: true, data: plan });
   });
 
@@ -32,7 +37,10 @@ export class PlansController {
   });
 
   static updateStatus = catchAsync(async (req: Request, res: Response) => {
-    const plan = await PlansService.updatePlanStatus(req.params.id as string, req.body.status);
+    const plan = await PlansService.updatePlanStatus(
+      req.params.id as string,
+      req.body.status,
+    );
     res.json({ success: true, data: plan });
   });
 }

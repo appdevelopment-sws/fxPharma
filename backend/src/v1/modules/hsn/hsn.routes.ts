@@ -75,7 +75,12 @@ router.get("/:id", isAuthenticated, HsnController.getById);
  *       201:
  *         description: HSN code created
  */
-router.post("/", isAuthenticated, validate(createHsnSchema), HsnController.create);
+router.post(
+  "/",
+  isAuthenticated,
+  validate(createHsnSchema),
+  HsnController.create,
+);
 
 /**
  * @swagger
@@ -105,7 +110,12 @@ router.post("/", isAuthenticated, validate(createHsnSchema), HsnController.creat
  *       200:
  *         description: HSN code updated
  */
-router.put("/:id", isAuthenticated, validate(updateHsnSchema), HsnController.update);
+router.put(
+  "/:id",
+  isAuthenticated,
+  validate(updateHsnSchema),
+  HsnController.update,
+);
 
 /**
  * @swagger

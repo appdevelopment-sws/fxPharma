@@ -1,7 +1,10 @@
 import { Router } from "express";
 import { ManufacturerController } from "./manufacturer.controller.js";
 import { validate } from "@/middlewares/validate.js";
-import { createManufacturerSchema, updateManufacturerSchema } from "./manufacturer.validation.js";
+import {
+  createManufacturerSchema,
+  updateManufacturerSchema,
+} from "./manufacturer.validation.js";
 import { isAuthenticated } from "@/middlewares/isAuthenticated.js";
 
 const router = Router();
@@ -76,7 +79,12 @@ router.get("/:id", isAuthenticated, ManufacturerController.getById);
  *       201:
  *         description: Manufacturer created
  */
-router.post("/", isAuthenticated, validate(createManufacturerSchema), ManufacturerController.create);
+router.post(
+  "/",
+  isAuthenticated,
+  validate(createManufacturerSchema),
+  ManufacturerController.create,
+);
 
 /**
  * @swagger
@@ -101,7 +109,12 @@ router.post("/", isAuthenticated, validate(createManufacturerSchema), Manufactur
  *       200:
  *         description: Manufacturer updated
  */
-router.put("/:id", isAuthenticated, validate(updateManufacturerSchema), ManufacturerController.update);
+router.put(
+  "/:id",
+  isAuthenticated,
+  validate(updateManufacturerSchema),
+  ManufacturerController.update,
+);
 
 /**
  * @swagger
@@ -129,7 +142,11 @@ router.put("/:id", isAuthenticated, validate(updateManufacturerSchema), Manufact
  *       200:
  *         description: Status updated
  */
-router.patch("/:id/status", isAuthenticated, ManufacturerController.updateStatus);
+router.patch(
+  "/:id/status",
+  isAuthenticated,
+  ManufacturerController.updateStatus,
+);
 
 /**
  * @swagger

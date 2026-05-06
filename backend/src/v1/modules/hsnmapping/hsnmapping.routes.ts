@@ -71,7 +71,12 @@ router.get("/:id", isAuthenticated, HsnMappingController.getById);
  *       201:
  *         description: Mapping created
  */
-router.post("/", isAuthenticated, validate(createHsnMappingSchema), HsnMappingController.create);
+router.post(
+  "/",
+  isAuthenticated,
+  validate(createHsnMappingSchema),
+  HsnMappingController.create,
+);
 
 /**
  * @swagger
@@ -103,7 +108,12 @@ router.post("/", isAuthenticated, validate(createHsnMappingSchema), HsnMappingCo
  *       200:
  *         description: Mapping updated
  */
-router.put("/:id", isAuthenticated, validate(createHsnMappingSchema), HsnMappingController.update);
+router.put(
+  "/:id",
+  isAuthenticated,
+  validate(createHsnMappingSchema),
+  HsnMappingController.update,
+);
 
 /**
  * @swagger

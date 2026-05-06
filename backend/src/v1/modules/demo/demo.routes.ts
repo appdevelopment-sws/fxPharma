@@ -6,9 +6,9 @@ const router = Router();
 
 /**
  * DEMO ROUTE 1: View Branch Inventory
- * Logic: Checks for 'inventory.view' permission scoped to the Branch ID 
+ * Logic: Checks for 'inventory.view' permission scoped to the Branch ID
  * provided in 'x-branch-id' header.
- * 
+ *
  * Example Usage:
  * URL: GET /api/v1/demo/inventory
  * Header: x-branch-id: <id_of_downtown_branch>
@@ -29,7 +29,7 @@ router.get(
         ],
       },
     });
-  }
+  },
 );
 
 /**
@@ -52,12 +52,12 @@ router.get(
         },
       },
     });
-  }
+  },
 );
 
 /**
  * DEMO ROUTE 3: Direct Override Test
- * Logic: Checks for a permission that might be granted or revoked directly 
+ * Logic: Checks for a permission that might be granted or revoked directly
  * for a user, bypassing their role.
  */
 router.get(
@@ -67,9 +67,10 @@ router.get(
   (req: AuthRequest, res: Response) => {
     res.json({
       success: true,
-      message: "You have permission to perform a special user deletion operation.",
+      message:
+        "You have permission to perform a special user deletion operation.",
     });
-  }
+  },
 );
 
 export default router;
