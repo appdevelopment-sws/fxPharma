@@ -50,25 +50,17 @@ export class UnitsRepository {
 
     return {
       ...item,
-      short_name: item.shortName,
     };
   }
 
   static async update(id: string, data: any) {
-    const { id: _id, createdAt: _c, updatedAt: _u, short_name, ...rest } = data;
-
-    const updateData: any = { ...rest };
-
-    if (short_name !== undefined) updateData.shortName = short_name || null;
-
     const item: any = await prisma.unit.update({
       where: { id },
-      data: updateData,
+      data: data,
     });
 
     return {
       ...item,
-      short_name: item.shortName,
     };
   }
 

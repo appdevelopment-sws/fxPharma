@@ -41,7 +41,10 @@ export const AdminRoutes = () => {
           <Route path="all-inventory" element={<AllInventory />} />
           <Route path="all-compound" element={<AllCompound />} />
           <Route path="import-inventory" element={<ImportInventory />} />
-          <Route path="inter-store-transfer" element={<AllInterStoreTransfer />} />
+          <Route
+            path="inter-store-transfer"
+            element={<AllInterStoreTransfer />}
+          />
           <Route path="orders" element={<Orders />} />
           <Route path="suppliers" element={<Suppliers />} />
           <Route path="returns" element={<ReturnsPage />} />

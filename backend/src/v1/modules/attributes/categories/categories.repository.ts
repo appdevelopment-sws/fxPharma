@@ -76,7 +76,7 @@ export class CategoriesRepository {
 
     return {
       ...item,
-      parent_id: item.parentId,
+      // parent_id: item.parentId,
     };
   }
 

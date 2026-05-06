@@ -69,6 +69,7 @@ export const adminNavigationGroups: SidebarNavigationGroup[] = [
             to: "/admin/import-inventory",
             description: "Import Inventory from csv/excel file.",
             icon: Box,
+            permissions: [PERMISSIONS.IMPORT_INVENTORY],
           },
 
           // {
@@ -106,7 +107,52 @@ export const adminNavigationGroups: SidebarNavigationGroup[] = [
       },
     ],
   },
+  {
+    title: "Attributes",
+    items: [
+      {
+        title: "Brands",
+        description: "View, Search, and Filter Inventory across all Stores",
+        icon: ShieldCheck,
+        children: [
+          {
+            title: "All Inventory",
+            to: "/admin/all-inventory",
+            description: "View, Search, and Filter Inventory across all Stores",
+            icon: Box,
+          },
+          {
+            title: "All Compound",
+            to: "/admin/all-compound",
+            description: "Manage Prescription Compounding",
+            icon: BriefcaseMedical,
+          },
+          {
+            title: "Inter Store Transfer",
+            to: "/admin/inter-store-transfer",
+            description: "Manage stock transfers between stores",
+            icon: Box,
+          },
+          {
+            title: "Import Inventory",
+            to: "/admin/import-inventory",
+            description: "Import Inventory from csv/excel file.",
+            icon: Box,
+            permissions: [PERMISSIONS.IMPORT_INVENTORY],
+          },
 
+          // {
+          //   title: "Roles & Permissions",
+          //   to: "/super-admin/access",
+          //   description: "Platform access policy and super admin controls",
+          //   icon: ShieldCheck,
+          //   roles: ["Super Admin"],
+          //   // permissions: ["ROLE_MANAGE"],
+          // },
+        ],
+      },
+    ],
+  },
   {
     title: "Suppliers",
     items: [

@@ -37,7 +37,7 @@ export default function CategoryDialog({ open, onClose, category }: Props) {
         reset({
           ...CATEGORY_FORM_INITIAL_DATA,
           name: category?.name || "",
-          parent_id: category?.parent_id || "",
+          parentId: category?.parentId || "",
           description: category?.description || "",
           status: category?.status || "ACTIVE",
         })
@@ -109,7 +109,7 @@ export default function CategoryDialog({ open, onClose, category }: Props) {
 
         <FormSelectField
           control={control}
-          name="parent_id"
+          name="parentId"
           label="PARENT CATEGORY"
           options={[
             { label: "None (Top Level)", value: "" },

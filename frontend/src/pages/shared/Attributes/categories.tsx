@@ -34,7 +34,6 @@ const Categories = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.categories.all })
       deleteDisclosure.onClose()
-      toast.success("Category deleted successfully")
     },
   })
 

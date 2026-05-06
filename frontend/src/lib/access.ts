@@ -16,6 +16,7 @@ export const PERMISSIONS = {
   MASTER_PRODUCT_READ: "master-products.view",
   MASTER_PRODUCT_UPDATE: "master-products.edit",
   MASTER_PRODUCT_DELETE: "master-products.delete",
+  IMPORT_INVENTORY: "import-inventory.manage",
 } as const
 
 export type PermissionName = (typeof PERMISSIONS)[keyof typeof PERMISSIONS]
@@ -30,6 +31,7 @@ export const permissionLabels: Record<PermissionName, string> = {
   [PERMISSIONS.MASTER_PRODUCT_READ]: "View master products",
   [PERMISSIONS.MASTER_PRODUCT_UPDATE]: "Update master products",
   [PERMISSIONS.MASTER_PRODUCT_DELETE]: "Delete master products",
+  "import-inventory.manage": "",
 }
 
 export const permissionOptions = (
@@ -49,6 +51,7 @@ export const superAdminPermissionLabels: Record<PermissionName, string> = {
   [PERMISSIONS.MASTER_PRODUCT_READ]: "Review platform master products",
   [PERMISSIONS.MASTER_PRODUCT_UPDATE]: "Update platform master products",
   [PERMISSIONS.MASTER_PRODUCT_DELETE]: "Delete platform master products",
+  "import-inventory.manage": "",
 }
 
 export const userManagementCapabilities = [
