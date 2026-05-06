@@ -27,8 +27,11 @@ export class MasterProductRepository {
     return mapped;
   }
 
-  static async getAll(search: string = "", skip: number = 0, take: number = 10) {
-
+  static async getAll(
+    search: string = "",
+    skip: number = 0,
+    take: number = 10,
+  ) {
     const where: any = {
       AND: [
         search

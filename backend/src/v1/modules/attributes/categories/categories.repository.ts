@@ -63,14 +63,8 @@ export class CategoriesRepository {
   }
 
   static async update(id: string, data: any) {
-    const { 
-      id: _id, 
-      createdAt: _c, 
-      updatedAt: _u, 
-      parent_id, 
-      ...rest 
-    } = data;
-    
+    const { id: _id, createdAt: _c, updatedAt: _u, parent_id, ...rest } = data;
+
     const updateData: any = { ...rest };
 
     if (parent_id !== undefined) updateData.parentId = parent_id || null;

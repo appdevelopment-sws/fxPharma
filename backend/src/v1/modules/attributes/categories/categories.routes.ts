@@ -1,7 +1,10 @@
 import { Router } from "express";
 import { CategoriesController } from "./categories.controller.js";
 import { validate } from "@/middlewares/validate.js";
-import { createCategorySchema, updateCategorySchema } from "./categories.validation.js";
+import {
+  createCategorySchema,
+  updateCategorySchema,
+} from "./categories.validation.js";
 import { isAuthenticated } from "@/middlewares/isAuthenticated.js";
 
 const router = Router();
@@ -75,7 +78,12 @@ router.get("/:id", isAuthenticated, CategoriesController.getById);
  *       201:
  *         description: Category created
  */
-router.post("/", isAuthenticated, validate(createCategorySchema), CategoriesController.create);
+router.post(
+  "/",
+  isAuthenticated,
+  validate(createCategorySchema),
+  CategoriesController.create,
+);
 
 /**
  * @swagger
@@ -100,7 +108,12 @@ router.post("/", isAuthenticated, validate(createCategorySchema), CategoriesCont
  *       200:
  *         description: Category updated
  */
-router.put("/:id", isAuthenticated, validate(updateCategorySchema), CategoriesController.update);
+router.put(
+  "/:id",
+  isAuthenticated,
+  validate(updateCategorySchema),
+  CategoriesController.update,
+);
 
 /**
  * @swagger

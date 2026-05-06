@@ -6,12 +6,14 @@ import { paginate } from "../../../../utils/pagination.js";
 export class ManufacturerController {
   static getAll = catchAsync(async (req: Request, res: Response) => {
     await paginate(res, req.query, (skip, take, search) =>
-      ManufacturerService.getAllManufacturers(search, skip, take)
+      ManufacturerService.getAllManufacturers(search, skip, take),
     );
   });
 
   static getById = catchAsync(async (req: Request, res: Response) => {
-    const manufacturer = await ManufacturerService.getManufacturerById(req.params.id as string);
+    const manufacturer = await ManufacturerService.getManufacturerById(
+      req.params.id as string,
+    );
     res.json({ success: true, data: manufacturer });
   });
 
@@ -21,7 +23,10 @@ export class ManufacturerController {
   });
 
   static update = catchAsync(async (req: Request, res: Response) => {
-    const manufacturer = await ManufacturerService.updateManufacturer(req.params.id as string, req.body);
+    const manufacturer = await ManufacturerService.updateManufacturer(
+      req.params.id as string,
+      req.body,
+    );
     res.json({ success: true, data: manufacturer });
   });
 
@@ -31,7 +36,10 @@ export class ManufacturerController {
   });
 
   static updateStatus = catchAsync(async (req: Request, res: Response) => {
-    const manufacturer = await ManufacturerService.updateManufacturerStatus(req.params.id as string, req.body.status);
+    const manufacturer = await ManufacturerService.updateManufacturerStatus(
+      req.params.id as string,
+      req.body.status,
+    );
     res.json({ success: true, data: manufacturer });
   });
 }

@@ -6,7 +6,7 @@ import { paginate } from "../../../../utils/pagination.js";
 export class UnitsController {
   static getAll = catchAsync(async (req: Request, res: Response) => {
     await paginate(res, req.query, (skip, take, search) =>
-      UnitsService.getAllUnits(search, skip, take)
+      UnitsService.getAllUnits(search, skip, take),
     );
   });
 
@@ -21,7 +21,10 @@ export class UnitsController {
   });
 
   static update = catchAsync(async (req: Request, res: Response) => {
-    const unit = await UnitsService.updateUnit(req.params.id as string, req.body);
+    const unit = await UnitsService.updateUnit(
+      req.params.id as string,
+      req.body,
+    );
     res.json({ success: true, data: unit });
   });
 
@@ -31,7 +34,10 @@ export class UnitsController {
   });
 
   static updateStatus = catchAsync(async (req: Request, res: Response) => {
-    const unit = await UnitsService.updateUnitStatus(req.params.id as string, req.body.status);
+    const unit = await UnitsService.updateUnitStatus(
+      req.params.id as string,
+      req.body.status,
+    );
     res.json({ success: true, data: unit });
   });
 }

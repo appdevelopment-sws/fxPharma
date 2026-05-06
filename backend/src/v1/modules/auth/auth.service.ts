@@ -4,14 +4,17 @@ import { PermissionResolverService } from "../../services/PermissionResolverServ
 import ErrorHandler from "../../../utils/ErrorHandler.js";
 
 /**
- * AuthService handles business logic for user authentication, registration, 
+ * AuthService handles business logic for user authentication, registration,
  * and profile retrieval.
  */
 export class AuthService {
   /**
    * Formats the user record for API responses.
    */
-  static formatUserPayload(user: any, resolved?: { role: string; permissions: string[] }) {
+  static formatUserPayload(
+    user: any,
+    resolved?: { role: string; permissions: string[] },
+  ) {
     return {
       id: user.id,
       name: user.name,
@@ -39,16 +42,17 @@ export class AuthService {
   }) {
     const passwordHash = await bcrypt.hash(data.password, 12);
 
-    const { organization, branch, user } = await AuthRepository.createOrganizationWithAdmin({
-      organization: {
-        name: data.companyName.trim(),
-      },
-      adminUser: {
-        name: data.name.trim(),
-        email: data.email.trim().toLowerCase(),
-        passwordHash,
-      },
-    });
+    const { organization, branch, user } =
+      await AuthRepository.createOrganizationWithAdmin({
+        organization: {
+          name: data.companyName.trim(),
+        },
+        adminUser: {
+          name: data.name.trim(),
+          email: data.email.trim().toLowerCase(),
+          passwordHash,
+        },
+      });
 
     return {
       organization,
@@ -58,7 +62,9 @@ export class AuthService {
   }
 
   static async loginUser(email: string, password: string) {
-    const user = await AuthRepository.findUserForLogin(email.trim().toLowerCase());
+    const user = await AuthRepository.findUserForLogin(
+      email.trim().toLowerCase(),
+    );
 
     if (!user || user.status !== 1) {
       throw new ErrorHandler("Invalid credentials or account disabled", 401);
@@ -93,7 +99,8 @@ export class AuthService {
       PermissionResolverService.resolveEffectivePermissionKeys(id, branchId),
     ]);
 
-    const resolvedRole = roleKeys[0] || (user.roles.length > 0 ? "User" : "Unauthorized");
+    const resolvedRole =
+      roleKeys[0] || (user.roles.length > 0 ? "User" : "Unauthorized");
 
     return this.formatUserPayload(user, {
       role: resolvedRole,

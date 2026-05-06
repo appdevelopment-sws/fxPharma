@@ -5,9 +5,9 @@ export class OrdersRepository {
     const [data, total] = await Promise.all([
       prisma.order.findMany({
         where: filters,
-        include: { 
+        include: {
           items: true,
-          supplier: true 
+          supplier: true,
         },
         orderBy: { createdAt: "desc" },
         ...(skip !== undefined && { skip }),
@@ -22,9 +22,9 @@ export class OrdersRepository {
   static async findById(id: string) {
     return prisma.order.findUnique({
       where: { id },
-      include: { 
+      include: {
         items: true,
-        supplier: true 
+        supplier: true,
       },
     });
   }

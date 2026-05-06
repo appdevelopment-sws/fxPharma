@@ -75,7 +75,12 @@ router.get("/:id", isAuthenticated, BrandsController.getById);
  *       201:
  *         description: Brand created
  */
-router.post("/", isAuthenticated, validate(createBrandSchema), BrandsController.create);
+router.post(
+  "/",
+  isAuthenticated,
+  validate(createBrandSchema),
+  BrandsController.create,
+);
 
 /**
  * @swagger
@@ -100,7 +105,12 @@ router.post("/", isAuthenticated, validate(createBrandSchema), BrandsController.
  *       200:
  *         description: Brand updated
  */
-router.put("/:id", isAuthenticated, validate(updateBrandSchema), BrandsController.update);
+router.put(
+  "/:id",
+  isAuthenticated,
+  validate(updateBrandSchema),
+  BrandsController.update,
+);
 
 /**
  * @swagger
