@@ -9,9 +9,14 @@ import {
 import { useAuth } from "@/context/authContext"
 import { getPermissionSummary } from "@/components/admin/admin-navigation"
 import { permissionLabels } from "@/lib/access"
+import { useDisclosure } from "@/hooks/useDisclosure"
+import UserDialog from "@/components/dialog/admin/userDialog"
+import { Button } from "@/components/ui/button"
+import { Plus, Users } from "lucide-react"
 
 export default function AdminProfilePage() {
   const { user } = useAuth()
+  const userDisclosure = useDisclosure()
 
   if (!user) return null
 
@@ -93,6 +98,40 @@ export default function AdminProfilePage() {
           )}
         </CardContent>
       </Card>
+      <Card className="border-border/60 shadow-sm">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <div>
+            <CardTitle>User Management</CardTitle>
+            <CardDescription>
+              Quickly add new users to your workspace and assign them to
+              branches.
+            </CardDescription>
+          </div>
+          <Button onClick={() => userDisclosure.onOpen()}>
+            <Plus className="mr-2 size-4" />
+            Add User
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-4 rounded-xl border border-dashed border-border/60 p-8 text-center">
+            <div className="mx-auto flex flex-col items-center gap-2">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <Users className="size-6" />
+              </div>
+              <p className="text-sm font-medium">Manage your team</p>
+              <p className="text-xs text-muted-foreground">
+                You can add and manage workspace users here. Branch assignment
+                is required for all new users.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <UserDialog
+        open={userDisclosure.isOpen}
+        onClose={userDisclosure.onClose}
+      />
     </div>
   )
 }

@@ -77,6 +77,12 @@ export const adminNavigationGroups: SidebarNavigationGroup[] = [
             description: "Import Inventory from csv/excel file.",
             icon: Box,
           },
+          {
+            title: "Attributes",
+            to: "/admin/attributes",
+            description: "Attributes management for master products",
+            icon: Barcode,
+          },
 
           // {
           //   title: "Roles & Permissions",
