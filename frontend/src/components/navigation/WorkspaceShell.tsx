@@ -99,7 +99,7 @@ export function WorkspaceShell({
         />
 
         <main className="scrollbar-thin scrollbar-thumb-slate-200 flex-1 overflow-y-auto">
-          <div className="mx-auto h-full w-full p-4 sm:p-3 lg:p-4">
+          <div className={cn("mx-auto h-full w-full p-4 sm:p-3 lg:p-4", isCollapsed ? "lg:pl-8" : "lg:p-6")}>
             <Outlet />
           </div>
         </main>
