@@ -104,7 +104,7 @@ export class StoreListRepository {
 
       // 4. Assign Roles (Branch Admin)
       const branchAdminRole = await tx.role.findFirst({
-        where: { key: "branch_admin" },
+        where: { key: "organisation_admin" },
       });
 
       if (branchAdminRole) {
@@ -112,8 +112,8 @@ export class StoreListRepository {
           data: {
             userId: user.id,
             roleId: branchAdminRole.id,
-            scopeType: "branch",
-            scopeId: branch.id,
+            scopeType: "organization",
+            scopeId: organization.id,
             branchId: branch.id,
           },
         });

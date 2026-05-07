@@ -1,5 +1,6 @@
 export const ROLES = {
   STAFF: "staff",
+  ORGANISATION_ADMIN: "organisation_admin",
   BRANCH_ADMIN: "branch_admin",
   SUPER_ADMIN: "super_admin",
 } as const

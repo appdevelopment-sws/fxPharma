@@ -113,7 +113,7 @@ export class AuthRepository {
       });
 
       const branchAdminRole = await tx.role.findFirst({
-        where: { key: "branch_admin" },
+        where: { key: "organisation_admin" },
       });
 
       if (!branchAdminRole) {

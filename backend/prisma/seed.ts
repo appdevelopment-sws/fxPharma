@@ -278,7 +278,16 @@ async function main() {
       scopeType: "global",
     },
   });
-
+  const organisationAdminRole = await prisma.role.upsert({
+    where: { key: "organisation_admin" },
+    update: { level: 100, scopeType: "organisation" },
+    create: {
+      key: "organisation_admin",
+      name: "Organisation Admin",
+      level: 90,
+      scopeType: "organisation",
+    },
+  });
   const branchAdminRole = await prisma.role.upsert({
     where: { key: "branch_admin" },
     update: { level: 50, scopeType: "branch" },
@@ -381,7 +390,7 @@ async function main() {
     data: {
       userId: branchAdminUser.id,
       roleId: branchAdminRole.id,
-      scopeType: "branch",
+      scopeType: "organisation",
       scopeId: mainBranch.id,
     },
   });
@@ -391,7 +400,7 @@ async function main() {
     data: {
       userId: branchAdminUser.id,
       workflowId: staffWorkflow.id,
-      scopeType: "branch",
+      scopeType: "organisation",
       scopeId: org.branches[1].id,
     },
   });
