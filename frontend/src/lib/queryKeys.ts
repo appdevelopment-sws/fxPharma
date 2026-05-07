@@ -104,4 +104,9 @@ export const queryKeys = {
     list: (filters?: any) => [...queryKeys.features.all, filters] as const,
     detail: (id: string) => [...queryKeys.features.all, id] as const,
   },
+  branches: {
+    all: ["branches"] as const,
+    list: (filters?: any) => [...queryKeys.branches.all, filters] as const,
+    detail: (id: string) => [...queryKeys.branches.all, id] as const,
+  },
 }

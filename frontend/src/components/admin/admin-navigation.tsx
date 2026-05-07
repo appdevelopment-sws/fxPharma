@@ -10,6 +10,7 @@ import {
   RotateCcw,
   FileText,
   LineChart,
+  Building2,
 } from "lucide-react"
 import type { AuthUser } from "@/context/authContext"
 import {
@@ -35,6 +36,12 @@ export const adminNavigationGroups: SidebarNavigationGroup[] = [
         to: "/admin/profile",
         description: "Account details and tenant context",
         icon: UserCog,
+      },
+      {
+        title: "Branch",
+        to: "/admin/branch",
+        description: "Manage pharmacy branches",
+        icon: Building2,
       },
     ],
   },
@@ -70,6 +77,12 @@ export const adminNavigationGroups: SidebarNavigationGroup[] = [
             description: "Import Inventory from csv/excel file.",
             icon: Box,
             permissions: [PERMISSIONS.IMPORT_INVENTORY],
+          },
+          {
+            title: "Attributes",
+            to: "/admin/attributes",
+            description: "Attributes management for master products",
+            icon: Barcode,
           },
 
           // {

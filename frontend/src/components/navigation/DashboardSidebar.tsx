@@ -84,18 +84,18 @@ export function DashboardSidebar({
       {/* Navigation section */}
       <nav
         className={cn(
-          "scrollbar-thin flex-1 space-y-6 overflow-y-auto px-3 py-1",
+          "scrollbar-thin flex-1 space-y-8 overflow-y-auto px-3 py-4",
           isCollapsed ? "items-center" : ""
         )}
       >
         {navigationGroups.map((group) => (
-          <div key={group.title} className="m-0 my-1">
+          <div key={group.title} className={cn("m-0 my-1", isCollapsed && "my-6")}>
             {/* {!isCollapsed && (
               <p className="px-4 text-[10px] font-bold tracking-[0.2em] uppercase">
                 {group.title}
               </p>
             )} */}
-            <div className="space-y-1">
+            <div className={cn("space-y-1", isCollapsed && "space-y-4")}>
               {group.items.map((item) => (
                 <SidebarItem
                   key={item.to ?? item.title}
@@ -157,8 +157,8 @@ function SidebarItem({
   const isActive = isNavigationItemActive(item, activePath)
   const hasChildren = !!item.children?.length
   const baseStyles = cn(
-    "group flex w-full items-center rounded-sm transition-all duration-300 ease-out",
-    isCollapsed ? "mx-auto justify-center px-2" : "gap-x-2 px-3 py-2",
+    "group flex w-full items-center rounded-lg transition-all duration-300 ease-out",
+    isCollapsed ? "mx-auto justify-center p-3" : "gap-x-2 px-3 py-2",
     (isActive || isExpanded) && "bg-primary/10 text-primary" // 👈 apply bg to main item
   )
   if (hasChildren) {

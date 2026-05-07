@@ -20,6 +20,13 @@ import ImportInventory from "@/pages/admin/InterStoreTransfer/ImportInventory"
 import AllInterStoreTransfer from "@/pages/admin/InterStoreTransfer/AllInterStoreTransfer"
 import DailyTransactionReport from "@/pages/admin/reports/DailyTransactionReport"
 import ExpiryReports from "@/pages/admin/reports/ExpiryReports"
+import Branch from "@/pages/admin/Branch/Branch"
+
+import AttributesPage from "@/pages/shared/Attributes/AttributesPage"
+import Brands from "@/pages/shared/Attributes/brands"
+import Categories from "@/pages/shared/Attributes/categories"
+import Manufacturers from "@/pages/shared/Attributes/manufacturers"
+import Units from "@/pages/shared/Attributes/units"
 
 export const AdminRoutes = () => {
   return (
@@ -52,6 +59,15 @@ export const AdminRoutes = () => {
           <Route path="returns" element={<ReturnsPage />} />
           <Route path="invoices" element={<RecentInvoicesPage />} />
           <Route path="pos" element={<POS />} />
+          <Route path="branch" element={<Branch />} />
+          <Route path="attributes" element={<AttributesPage />}>
+            <Route index element={<Navigate to="brands" replace />} />
+            <Route path="brands" element={<Brands />} />
+            <Route path="categories" element={<Categories />} />
+            <Route path="manufacturers" element={<Manufacturers />} />
+            <Route path="units" element={<Units />} />
+          </Route>
+
           <Route
             element={
               <ProtectedRoute allowedPermissions={[PERMISSIONS.USER_READ]} />
