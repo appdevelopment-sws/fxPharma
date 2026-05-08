@@ -5,13 +5,31 @@ import {
   createStoreSchema,
   updateStoreSchema,
 } from "./storelist.validation.js";
+import { isAuthenticated } from "@/middlewares/isAuthenticated.js";
+import { attachTenant } from "@/middlewares/tenant.js";
 
 const router = Router();
 
-router.post("/", validate(createStoreSchema), StoreListController.create);
-router.get("/", StoreListController.list);
-router.get("/:id", StoreListController.getById);
-router.put("/:id", validate(updateStoreSchema), StoreListController.update);
-router.delete("/:id", StoreListController.delete);
+router.post(
+  "/",
+  validate(createStoreSchema),
+  attachTenant,
+  StoreListController.create,
+);
+router.get("/", isAuthenticated, attachTenant, StoreListController.list);
+router.get("/:id", isAuthenticated, attachTenant, StoreListController.getById);
+router.put(
+  "/:id",
+  validate(updateStoreSchema),
+  isAuthenticated,
+  attachTenant,
+  StoreListController.update,
+);
+router.delete(
+  "/:id",
+  isAuthenticated,
+  attachTenant,
+  StoreListController.delete,
+);
 
 export default router;

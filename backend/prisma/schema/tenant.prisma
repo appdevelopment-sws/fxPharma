@@ -1,0 +1,79 @@
+model Organization {
+  id          String  @id @default(cuid())
+  storeName   String  @map("store_name")
+  description String?
+  category    String?
+  logo        String?
+
+  //status
+  status OrganizationStatus @default(ACTIVE)
+
+  gstNo     String? @map("gst_no")
+  licenseNo String? @map("license_no")
+
+  // Address & Location
+  streetAddress String @map("street_address")
+  city          String
+  state         String @map("state_province")
+  zipCode       String @map("zip_code")
+  country       String
+
+  // Regional Settings
+  timezone String?
+  currency String? @default("INR")
+
+  type OrganizationType @default(PHARMACY)
+
+  branches  Branch[]
+  features  OrganizationFeature[]
+  suppliers Supplier[]
+  inventory Inventory[]
+  newCompounds NewCompound[]
+  orders       Order[]
+
+  // Owner Relation
+  ownerId String? @map("owner_id")
+  owner   User?   @relation("OrganizationOwner", fields: [ownerId], references: [id])
+
+  planId String?
+  plan   Plan?   @relation(fields: [planId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+}
+
+enum OrganizationType {
+  PHARMACY
+  WHOLESALE
+}
+
+enum OrganizationStatus {
+  ACTIVE
+  INACTIVE
+  PENDING
+  BLOCK
+}
+
+model Branch {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  name    String
+  address String?
+  status  Int     @default(1)
+
+  // Assignments scoped to this branch
+  userRoles       UserRole[]
+  userWorkflows   UserWorkflow[]
+  userPermissions UserPermission[]
+  inventory       Inventory[]
+  newCompounds    NewCompound[]
+  orders          Order[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([organizationId])
+}
