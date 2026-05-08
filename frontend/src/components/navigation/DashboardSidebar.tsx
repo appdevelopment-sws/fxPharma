@@ -52,9 +52,7 @@ export function DashboardSidebar({
   }, [activeParentKeys])
 
   const toggleExpandedItem = (title: string) => {
-    setExpandedItems((current) =>
-      current.includes(title) ? [] : [title]
-    )
+    setExpandedItems((current) => (current.includes(title) ? [] : [title]))
   }
 
   return (
@@ -89,7 +87,10 @@ export function DashboardSidebar({
         )}
       >
         {navigationGroups.map((group) => (
-          <div key={group.title} className={cn("m-0 my-1", isCollapsed && "my-6")}>
+          <div
+            key={group.title}
+            className={cn("m-0 my-1", isCollapsed && "my-6")}
+          >
             {/* {!isCollapsed && (
               <p className="px-4 text-[10px] font-bold tracking-[0.2em] uppercase">
                 {group.title}
