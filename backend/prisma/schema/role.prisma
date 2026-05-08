@@ -1,0 +1,49 @@
+model Role {
+  id              String    @id @default(cuid())
+
+  organizationId  String?
+  organization    Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  //////////////////////////////////////////////////////
+  // Example:
+  // SUPER_ADMIN
+  // ORG_ADMIN
+  // BRANCH_ADMIN
+  // PHARMACIST
+  // CASHIER
+  //////////////////////////////////////////////////////
+
+  name            String
+
+  key             String
+
+  description     String?
+
+  scope           RoleScope
+
+  isSystem        Boolean   @default(false)
+
+  createdAt       DateTime  @default(now())
+
+  //////////////////////////////////////////////////////
+  // RELATIONS
+  //////////////////////////////////////////////////////
+
+  permissions     RolePermission[]
+
+  members         OrganizationMember[]
+
+  //////////////////////////////////////////////////////
+  // Unique inside organization
+  //////////////////////////////////////////////////////
+
+  @@unique([organizationId, key])
+
+  @@index([organizationId])
+}
+
+enum RoleScope {
+  GLOBAL
+  ORGANIZATION
+  BRANCH
+}

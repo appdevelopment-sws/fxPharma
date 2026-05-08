@@ -1,0 +1,37 @@
+model User {
+  id            String      @id @default(cuid())
+
+  name          String
+  email         String      @unique
+  phone         String?
+
+  passwordHash  String
+
+  status        UserStatus  @default(ACTIVE)
+
+  emailVerified Boolean     @default(false)
+
+  lastLoginAt   DateTime?
+
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  //////////////////////////////////////////////////////
+  // RELATIONS
+  //////////////////////////////////////////////////////
+
+  organizations OrganizationMember[]
+
+  auditLogs     AuditLog[]
+
+  invitedMembers OrganizationMember[] @relation("MemberInvitedBy")
+
+  @@index([email])
+}
+
+enum UserStatus {
+  ACTIVE
+  INVITED
+  SUSPENDED
+  DISABLED
+}
