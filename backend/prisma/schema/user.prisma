@@ -16,11 +16,7 @@ model User {
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 
-  //////////////////////////////////////////////////////
-  // RELATIONS
-  //////////////////////////////////////////////////////
-
-  organizations OrganizationMember[]
+  organizations OrganizationMember[] @relation("UserOrganizations")
 
   auditLogs     AuditLog[]
 

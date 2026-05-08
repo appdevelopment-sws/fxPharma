@@ -2,10 +2,64 @@ import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { rootPrisma } from "@/lib/prisma.js";
+import { AuthRequest } from "@/middlewares/isAuthenticated.js";
 
 const JWT_SECRET = process.env.JWT_SECRET!;
 
 export class AuthController {
+  static async register(req: Request, res: Response) {
+    try {
+      const { email, password, name, phone } = req.body;
+
+      if (!email || !password || !name) {
+        return res.status(400).json({
+          success: false,
+          message: "Email, password, and name are required",
+        });
+      }
+
+      // Check if user already exists
+      const existingUser = await rootPrisma.user.findUnique({
+        where: { email },
+      });
+
+      if (existingUser) {
+        return res.status(400).json({
+          success: false,
+          message: "User with this email already exists",
+        });
+      }
+
+      // Hash password
+      const passwordHash = await bcrypt.hash(password, 10);
+
+      // Create user
+      const user = await rootPrisma.user.create({
+        data: {
+          email,
+          passwordHash,
+          name,
+          phone,
+        },
+      });
+
+      // Remove passwordHash from response
+      const { passwordHash: _, ...userWithoutPassword } = user;
+
+      return res.status(201).json({
+        success: true,
+        message: "User registered successfully",
+        user: userWithoutPassword,
+      });
+    } catch (error) {
+      console.error("Registration error:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Internal server error",
+      });
+    }
+  }
+
   //////////////////////////////////////////////////////
   // LOGIN
   //////////////////////////////////////////////////////
@@ -22,16 +76,18 @@ export class AuthController {
       }
 
       // Find user
-      const user = await rootPrisma.user.findFirst({
-        where: {
-          email,
-        },
+      const user = await rootPrisma.user.findUnique({
+        where: { email },
         include: {
-          memberships: {
+          organizations: {
             include: {
               organization: true,
-              branch: true,
               role: true,
+              branches: {
+                include: {
+                  branch: true,
+                },
+              },
             },
           },
         },
@@ -45,7 +101,7 @@ export class AuthController {
       }
 
       // Compare password
-      const isPasswordValid = await bcrypt.compare(password, user.password);
+      const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
 
       if (!isPasswordValid) {
         return res.status(401).json({
@@ -66,39 +122,51 @@ export class AuthController {
         },
       );
 
+      // Remove passwordHash from response
+      const { passwordHash: _, ...userWithoutPassword } = user;
+
       return res.json({
         success: true,
         token,
-        user,
+        user: userWithoutPassword,
       });
     } catch (error) {
-      console.error(error);
-
+      console.error("Login error:", error);
       return res.status(500).json({
         success: false,
         message: "Internal server error",
       });
     }
   }
-
   //////////////////////////////////////////////////////
   // GET CURRENT USER
   //////////////////////////////////////////////////////
 
-  static async getUser(req: Request, res: Response) {
+  static async getUser(req: AuthRequest, res: Response) {
     try {
       const authUser = req.user;
+
+      if (!authUser) {
+        return res.status(401).json({
+          success: false,
+          message: "Unauthorized",
+        });
+      }
 
       const user = await rootPrisma.user.findUnique({
         where: {
           id: authUser.id,
         },
         include: {
-          memberships: {
+          organizations: {
             include: {
               organization: true,
-              branch: true,
               role: true,
+              branches: {
+                include: {
+                  branch: true,
+                },
+              },
             },
           },
         },
@@ -111,13 +179,15 @@ export class AuthController {
         });
       }
 
+      // Remove passwordHash from response
+      const { passwordHash: _, ...userWithoutPassword } = user;
+
       return res.json({
         success: true,
-        user,
+        user: userWithoutPassword,
       });
     } catch (error) {
-      console.error(error);
-
+      console.error("Get user error:", error);
       return res.status(500).json({
         success: false,
         message: "Internal server error",

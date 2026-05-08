@@ -11,7 +11,7 @@ model OrganizationMember {
   //////////////////////////////////////////////////////
 
   userId          String
-  user            User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user            User @relation("UserOrganizations", fields: [userId], references: [id], onDelete: Cascade)
 
   //////////////////////////////////////////////////////
   // ORGANIZATION
