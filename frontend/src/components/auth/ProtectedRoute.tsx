@@ -14,8 +14,15 @@ export default function ProtectedRoute({
   permissionMatch = "all",
 }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading, user, hasPermission } = useAuth()
-  const location = useLocation()
 
+  const location = useLocation()
+  console.log("USER", user)
+  console.log("ROLES CONST", allowedRoles)
+
+  console.log(
+    "ORG ROLES",
+    user?.organizations?.map((o: any) => o.role?.key)
+  )
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">
@@ -27,11 +34,15 @@ export default function ProtectedRoute({
   if (!isAuthenticated) {
     return <Navigate to="/admin/login" replace state={{ from: location }} />
   }
+  if (allowedRoles && user) {
+    const hasRole = user.organizations?.some((org: any) =>
+      allowedRoles.includes(org.role?.key)
+    )
 
-  if (allowedRoles && user && !allowedRoles.includes(user.role)) {
-    return <Navigate to="/unauthorized" replace />
+    if (!hasRole) {
+      return <Navigate to="/unauthorized" replace />
+    }
   }
-
   if (allowedPermissions?.length) {
     const hasAccess =
       permissionMatch === "any"
