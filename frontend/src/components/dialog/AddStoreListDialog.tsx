@@ -46,6 +46,33 @@ export default function ManageStoreDialog({
   })
 
   const selectedPlan = watch("subscription_plan_id")
+  const selectedRoleKey = watch("role_key")
+
+  const { data: formMetaResponse } = useQuery({
+    queryKey: queryKeys.storeList.meta(),
+    queryFn: () => StoreListApi.getStoreFormMeta(),
+    enabled: open,
+  })
+
+  const roleOptions =
+    formMetaResponse?.data.roles.map((role) => ({
+      label: role.name,
+      value: role.key,
+    })) ?? []
+
+  const permissionOptions =
+    formMetaResponse?.data.permissions.map((permission) => ({
+      label: permission.name,
+      value: permission.key,
+      description: permission.description ?? undefined,
+    })) ?? []
+
+  const defaultRoleKey =
+    formMetaResponse?.data.defaultRoleKey || STORE_FORM_INITIAL_DATA.role_key
+
+  const selectedRole =
+    formMetaResponse?.data.roles.find((role) => role.key === selectedRoleKey) ??
+    formMetaResponse?.data.roles.find((role) => role.key === defaultRoleKey)
 
   useEffect(() => {
     if (open) {
@@ -53,12 +80,54 @@ export default function ManageStoreDialog({
         reset({
           ...STORE_FORM_INITIAL_DATA,
           ...store,
+          role_key: store?.role_key || store?.owner?.role?.key || defaultRoleKey,
+          permissions:
+            store?.permissions?.length
+              ? store.permissions
+              : store?.owner?.permissions
+                  ?.filter((permission: any) => permission.granted)
+                  .map((permission: any) => permission.permission?.key)
+                  .filter(Boolean) ?? [],
         })
       } else {
-        reset(STORE_FORM_INITIAL_DATA)
+        reset({
+          ...STORE_FORM_INITIAL_DATA,
+          role_key: defaultRoleKey,
+          permissions:
+            formMetaResponse?.data.roles
+              .find((role) => role.key === defaultRoleKey)
+              ?.permissions.map((permission) => permission.key) ?? [],
+        })
       }
     }
-  }, [open, store, reset, isEditMode, isViewMode])
+  }, [
+    open,
+    store,
+    reset,
+    isEditMode,
+    isViewMode,
+    defaultRoleKey,
+    formMetaResponse,
+  ])
+
+  useEffect(() => {
+    if (!open || isViewMode) return
+
+    const matchingRole = formMetaResponse?.data.roles.find(
+      (role) => role.key === selectedRoleKey
+    )
+
+    if (!matchingRole) return
+
+    setValue(
+      "permissions",
+      matchingRole.permissions.map((permission) => permission.key),
+      {
+        shouldDirty: true,
+        shouldTouch: true,
+      }
+    )
+  }, [open, isViewMode, selectedRoleKey, formMetaResponse, setValue])
 
   const queryClient = useQueryClient()
 
@@ -136,7 +205,11 @@ export default function ManageStoreDialog({
               form="store-form"
               disabled={handleMutation.isPending}
             >
-              {handleMutation.isPending ? "Saving..." : "Create Store"}
+              {handleMutation.isPending
+                ? "Saving..."
+                : isEditMode
+                  ? "Update Store"
+                  : "Create Store"}
             </Button>
           )}
         </div>
@@ -275,14 +348,34 @@ export default function ManageStoreDialog({
           </div>
 
           <div className="rounded-xl border p-6">
-            {sectionHeader("04", "Owner Permissions")}
+            {sectionHeader("04", "Role Assignment")}
+
+            <div className="space-y-4">
+              <FormSelectField
+                control={control}
+                name="role_key"
+                label="Initial Role"
+                options={roleOptions}
+                readOnly={isViewMode || roleOptions.length === 0}
+              />
+
+              <p className="text-sm text-muted-foreground">
+                {selectedRole
+                  ? `${selectedRole.name} currently grants ${selectedRole.permissions.length} permissions.`
+                  : "Select a role to auto-fill the permissions this store owner receives."}
+              </p>
+            </div>
+          </div>
+
+          <div className="rounded-xl border p-6">
+            {sectionHeader("05", "Owner Permissions")}
 
             <PermissionMultiSelectField
               control={control}
               name="permissions"
               label="Grant Permissions"
               description="Choose which actions the first store owner can access when they sign in."
-              options={[]}
+              options={permissionOptions}
               selectAllLabel="Select all permissions"
               readOnly={isViewMode}
             />
@@ -290,7 +383,7 @@ export default function ManageStoreDialog({
 
           {/* ADDRESS */}
           <div className="rounded-xl border p-6">
-            {sectionHeader("05", "Address & Location")}
+            {sectionHeader("06", "Address & Location")}
 
             <div className="grid gap-5">
               <FormField
@@ -347,7 +440,7 @@ export default function ManageStoreDialog({
         <div className="space-y-6">
           {/* STATUS */}
           <div className="rounded-xl border p-6">
-            {sectionHeader("06", "Status")}
+            {sectionHeader("07", "Status")}
 
             <FormSelectField
               control={control}
@@ -360,7 +453,7 @@ export default function ManageStoreDialog({
 
           {/* PLAN */}
           <div className="rounded-xl border p-6">
-            {sectionHeader("07", "Subscription Plan")}
+            {sectionHeader("08", "Subscription Plan")}
 
             <div className="space-y-3">
               {plans.length === 0 ? (
@@ -406,7 +499,7 @@ export default function ManageStoreDialog({
 
           {/* REGIONAL */}
           <div className="rounded-xl border p-6">
-            {sectionHeader("08", "Regional Settings")}
+            {sectionHeader("09", "Regional Settings")}
 
             <div className="space-y-5">
               <FormSelectField

@@ -83,6 +83,7 @@ export const queryKeys = {
     all: ["storeList"] as const,
     list: (filters?: any) => [...queryKeys.storeList.all, filters] as const,
     detail: (id: string) => [...queryKeys.storeList.all, id] as const,
+    meta: () => [...queryKeys.storeList.all, "meta"] as const,
   },
   compounding: {
     all: ["compounding"] as const,

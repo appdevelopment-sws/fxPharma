@@ -26,7 +26,7 @@ import categoryRoutes from "./v1/modules/attributes/categories/categories.routes
 import brandRoutes from "./v1/modules/attributes/brands/brands.routes.js";
 import unitRoutes from "./v1/modules/attributes/units/units.routes.js";
 import masterProductRoutes from "./v1/modules/masterProducts/masterProduct.routes.js";
-
+import StoreListRoutes from "./v1/modules/storelist/storelist.routes.js";
 const app = express();
 
 const allowedOrigins = [process.env.CLIENT_URL || ""].filter(Boolean);
@@ -77,7 +77,7 @@ app.use("/api/v1/attributes/manufacturers", generalLimiter, manufacturerRoutes);
 app.use("/api/v1/attributes/units", generalLimiter, unitRoutes);
 
 app.use("/api/v1/master-products", generalLimiter, masterProductRoutes);
-
+app.use("/api/v1/storelist", generalLimiter, StoreListRoutes);
 app.get("/", (_req: Request, res: Response) => {
   res.json("hello from backend");
 });
