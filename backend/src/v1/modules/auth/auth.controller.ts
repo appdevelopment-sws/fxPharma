@@ -83,7 +83,15 @@ export class AuthController {
           organizations: {
             include: {
               organization: true,
-              role: true,
+              role: {
+                include: {
+                  permissions: {
+                    include: {
+                      permission: true,
+                    },
+                  },
+                },
+              },
               branches: {
                 include: {
                   branch: true,
@@ -129,7 +137,7 @@ export class AuthController {
       return res.json({
         success: true,
         token,
-        user: userWithoutPassword,
+        data: userWithoutPassword,
       });
     } catch (error) {
       console.error("Login error:", error);

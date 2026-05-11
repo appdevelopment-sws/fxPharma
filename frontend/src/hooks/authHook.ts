@@ -26,37 +26,38 @@ export function useLogin() {
   return useMutation({
     mutationFn: AuthApi.login,
 
-    onSuccess: async (response) => {
-      // Prefer a real branch membership for tenant-scoped requests.
+    onSuccess: async (response: any) => {
       const user = response?.data
-      const activeBranchMembership = user?.memberships?.find(
-        (m: any) => m.scopeType === "branch" && m.scopeId
-      )
-      const activeOrganizationMembership = user?.memberships?.find(
-        (m: any) => m.scopeType === "organization" && m.scopeId
-      )
+      if (!user) return
 
-      if (activeBranchMembership?.scopeId) {
-        localStorage.setItem("activeBranchId", activeBranchMembership.scopeId)
+      // Set initial organization and branch context from first organization
+      const firstOrg = user.organizations?.[0]
+      const firstBranch = firstOrg?.branches?.[0]
+
+      if (firstOrg?.organizationId) {
+        localStorage.setItem("activeOrganizationId", firstOrg.organizationId)
+      }
+      
+      if (firstBranch?.branch?.id) {
+        localStorage.setItem("activeBranchId", firstBranch.branch.id)
       } else {
         localStorage.removeItem("activeBranchId")
       }
 
-      if (activeOrganizationMembership?.scopeId) {
-        localStorage.setItem(
-          "activeOrganizationId",
-          activeOrganizationMembership.scopeId
-        )
-      } else {
-        localStorage.removeItem("activeOrganizationId")
-      }
+      // Update query cache immediately for synchronous route switching
+      queryClient.setQueryData(queryKeys.auth.user(), response)
 
       await queryClient.invalidateQueries({
         queryKey: queryKeys.auth.user(),
       })
 
-      const isSuperAdmin = user?.memberships?.some((m: any) => m.level >= 100)
-      navigate(isSuperAdmin ? "/super-admin" : "/admin/dashboard")
+      // Resolve role and redirect
+      const roleKey = firstOrg?.role?.key
+      if (roleKey === "SUPER_ADMIN") {
+        navigate("/super-admin/dashboard")
+      } else {
+        navigate("/admin/dashboard")
+      }
     },
   })
 }
