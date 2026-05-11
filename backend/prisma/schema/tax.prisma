@@ -1,0 +1,42 @@
+
+model Tax {
+  id        String   @id @default(cuid())
+  name      String
+  rate      Float
+  taxType   TaxType  @default(Exclusive) @map("tax_type")
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  hsnMappings HsnMapping[]
+}
+
+enum TaxType {
+  Exclusive
+  Inclusive
+}
+
+model Hsn {
+  id          String   @id @default(cuid())
+  hsncode     String
+  description String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  hsnMappings HsnMapping[]
+  masterProducts MasterProduct[]
+}
+
+model HsnMapping {
+  id        String   @id @default(cuid())
+  hsnid     String
+  taxid     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  hsn Hsn @relation(fields: [hsnid], references: [id], onDelete: Cascade)
+  tax Tax @relation(fields: [taxid], references: [id], onDelete: Cascade)
+
+  @@unique([hsnid, taxid])
+}

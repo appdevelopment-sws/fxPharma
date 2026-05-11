@@ -1,0 +1,20 @@
+model Category {
+  id          String  @id @default(cuid())
+  name        String
+  description String?
+  status      CategoryStatus @default(ACTIVE)
+
+  // Self-relation for hierarchy
+  parentId String?
+  parent   Category?  @relation("CategoryToCategory", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryToCategory")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  masterProducts MasterProduct[]
+}
+
+enum CategoryStatus {
+  ACTIVE
+  INACTIVE
+}

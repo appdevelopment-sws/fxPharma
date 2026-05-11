@@ -14,11 +14,18 @@ import path from "path";
 
 import { authLimiter, generalLimiter } from "./helpers/rateLimit.js";
 import { swaggerSpec } from "./config/swagger.config.js";
-import { isAuthenticated } from "./middlewares/isAuthenticated.js";
 import { globalErrorHandler } from "./middlewares/errorHandler.js";
 import authRoutes from "./v1/modules/auth/auth.route.js";
 import featuresRoutes from "./v1/modules/features/features.routes.js";
 import plansRoutes from "./v1/modules/plans/plans.route.js";
+import taxRoutes from "./v1/modules/tax/tax.routes.js";
+import hsnRoutes from "./v1/modules/hsn/hsn.routes.js";
+import hsnMappingRoutes from "./v1/modules/hsnmapping/hsnmapping.routes.js";
+import manufacturerRoutes from "./v1/modules/attributes/manufacturer/manufacturer.routes.js";
+import categoryRoutes from "./v1/modules/attributes/categories/categories.routes.js";
+import brandRoutes from "./v1/modules/attributes/brands/brands.routes.js";
+import unitRoutes from "./v1/modules/attributes/units/units.routes.js";
+import masterProductRoutes from "./v1/modules/masterProducts/masterProduct.routes.js";
 
 const app = express();
 
@@ -60,6 +67,16 @@ app.use("/api/v1/auth", authLimiter, authRoutes);
 
 app.use("/api/v1/features", generalLimiter, featuresRoutes);
 app.use("/api/v1/plans", generalLimiter, plansRoutes);
+app.use("/api/v1/taxes", generalLimiter, taxRoutes);
+app.use("/api/v1/hsn", generalLimiter, hsnRoutes);
+app.use("/api/v1/hsn-mappings", generalLimiter, hsnMappingRoutes);
+
+app.use("/api/v1/attributes/brands", generalLimiter, brandRoutes);
+app.use("/api/v1/attributes/categories", generalLimiter, categoryRoutes);
+app.use("/api/v1/attributes/manufacturers", generalLimiter, manufacturerRoutes);
+app.use("/api/v1/attributes/units", generalLimiter, unitRoutes);
+
+app.use("/api/v1/master-products", generalLimiter, masterProductRoutes);
 
 app.get("/", (_req: Request, res: Response) => {
   res.json("hello from backend");

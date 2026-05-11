@@ -1,0 +1,19 @@
+
+
+model Manufacturer {
+  id        String   @id @default(cuid())
+  name      String
+  email     String?
+  phone     String?
+  address   String?
+  status    ManufacturerStatus @default(ACTIVE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  masterProducts MasterProduct[]
+}
+
+enum ManufacturerStatus {
+  ACTIVE
+  INACTIVE
+}
