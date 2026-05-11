@@ -17,6 +17,8 @@ import { swaggerSpec } from "./config/swagger.config.js";
 import { isAuthenticated } from "./middlewares/isAuthenticated.js";
 import { globalErrorHandler } from "./middlewares/errorHandler.js";
 import authRoutes from "./v1/modules/auth/auth.route.js";
+import featuresRoutes from "./v1/modules/features/features.routes.js";
+import plansRoutes from "./v1/modules/plans/plans.route.js";
 
 const app = express();
 
@@ -55,6 +57,10 @@ app.use("/api/v1", router);
 
 app.use("/uploads", express.static(path.join(process.cwd(), "src/uploads")));
 app.use("/api/v1/auth", authLimiter, authRoutes);
+
+app.use("/api/v1/features", generalLimiter, featuresRoutes);
+app.use("/api/v1/plans", generalLimiter, plansRoutes);
+
 app.get("/", (_req: Request, res: Response) => {
   res.json("hello from backend");
 });

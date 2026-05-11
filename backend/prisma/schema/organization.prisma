@@ -16,8 +16,12 @@ model Organization {
   branches    Branch[]
 
   members     OrganizationMember[]
+  features  OrganizationFeature[]
 
   roles       Role[]
+
+  planId String?
+  plan   Plan?   @relation(fields: [planId], references: [id])
 
   auditLogs   AuditLog[]
 
