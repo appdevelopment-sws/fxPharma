@@ -20,7 +20,6 @@ import {
   STORE_CATEGORY_OPTIONS,
   STORE_SUBSCRIPTION_OPTIONS,
 } from "@/constants/page/super-admin/store"
-import { permissionOptions } from "@/lib/access"
 
 import StoreListApi from "@/services/storelistApi"
 import SubscriptionApi from "@/services/subscriptionApi"
@@ -283,7 +282,7 @@ export default function ManageStoreDialog({
               name="permissions"
               label="Grant Permissions"
               description="Choose which actions the first store owner can access when they sign in."
-              options={permissionOptions}
+              options={[]}
               selectAllLabel="Select all permissions"
               readOnly={isViewMode}
             />
@@ -365,7 +364,7 @@ export default function ManageStoreDialog({
 
             <div className="space-y-3">
               {plans.length === 0 ? (
-                <p className="text-center text-sm text-muted-foreground py-4">
+                <p className="py-4 text-center text-sm text-muted-foreground">
                   No subscription plans available.
                 </p>
               ) : (
@@ -375,10 +374,11 @@ export default function ManageStoreDialog({
                     onClick={() =>
                       !isViewMode && setValue("subscription_plan_id", plan.id)
                     }
-                    className={`cursor-pointer rounded-xl border p-4 transition ${selectedPlan === plan.id
-                      ? "border-primary bg-primary/5"
-                      : "border-border"
-                      }`}
+                    className={`cursor-pointer rounded-xl border p-4 transition ${
+                      selectedPlan === plan.id
+                        ? "border-primary bg-primary/5"
+                        : "border-border"
+                    }`}
                   >
                     <div className="flex items-center justify-between">
                       <div>

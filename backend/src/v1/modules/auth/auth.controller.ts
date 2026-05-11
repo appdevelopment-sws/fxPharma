@@ -204,4 +204,24 @@ export class AuthController {
       });
     }
   }
+
+  //////////////////////////////////////////////////////
+  // LOGOUT
+  //////////////////////////////////////////////////////
+
+  static async logout(req: Request, res: Response) {
+    try {
+      res.clearCookie("accessToken");
+      return res.json({
+        success: true,
+        message: "Logged out successfully",
+      });
+    } catch (error) {
+      console.error("Logout error:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Internal server error",
+      });
+    }
+  }
 }

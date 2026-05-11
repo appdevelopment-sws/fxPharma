@@ -7,7 +7,6 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { useAuth } from "@/context/authContext"
-import { platformTenantCapabilities } from "@/lib/access"
 
 export default function SuperAdminTenantsPage() {
   const { user, hasPermission } = useAuth()
@@ -55,30 +54,6 @@ export default function SuperAdminTenantsPage() {
               Effective permissions for tenant-level platform actions.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
-            {platformTenantCapabilities.map((item) => (
-              <div
-                key={item.permission}
-                className="flex items-center justify-between rounded-xl border border-border/60 bg-background px-4 py-3"
-              >
-                <div>
-                  <p className="text-sm font-medium text-foreground">
-                    {item.label}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {item.permission}
-                  </p>
-                </div>
-                <Badge
-                  variant={
-                    hasPermission(item.permission) ? "default" : "outline"
-                  }
-                >
-                  {hasPermission(item.permission) ? "Granted" : "Not Granted"}
-                </Badge>
-              </div>
-            ))}
-          </CardContent>
         </Card>
       </div>
     </div>

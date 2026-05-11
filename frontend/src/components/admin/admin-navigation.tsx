@@ -19,7 +19,7 @@ import {
   isNavigationItemActive,
   type SidebarNavigationGroup,
 } from "@/components/navigation/sidebar-navigation"
-import { PERMISSIONS, ROLES, permissionLabels } from "@/lib/access"
+import { PERMISSIONS, ROLES } from "@/lib/access"
 
 export const adminNavigationGroups: SidebarNavigationGroup[] = [
   {
@@ -42,6 +42,7 @@ export const adminNavigationGroups: SidebarNavigationGroup[] = [
         to: "/admin/branch",
         description: "Manage pharmacy branches",
         icon: Building2,
+        permissions: [PERMISSIONS.BRANCH_VIEW],
       },
     ],
   },
@@ -49,204 +50,144 @@ export const adminNavigationGroups: SidebarNavigationGroup[] = [
     title: "Inventory",
     items: [
       {
-        title: "Inventory",
-        description: "View, Search, and Filter Inventory across all Stores",
-        icon: ShieldCheck,
+        title: "Stock Management",
+        description: "Manage inventory, compounds, and transfers",
+        icon: Box,
         children: [
           {
             title: "All Inventory",
             to: "/admin/all-inventory",
-            description: "View, Search, and Filter Inventory across all Stores",
+            description: "View and filter inventory across stores",
             icon: Box,
+            permissions: [PERMISSIONS.INVENTORY_VIEW],
           },
           {
             title: "All Compound",
             to: "/admin/all-compound",
-            description: "Manage Prescription Compounding",
+            description: "Manage prescription compounding",
             icon: BriefcaseMedical,
+            permissions: [PERMISSIONS.INVENTORY_VIEW],
           },
           {
             title: "Inter Store Transfer",
             to: "/admin/inter-store-transfer",
-            description: "Manage stock transfers between stores",
-            icon: Box,
+            description: "Stock transfers between stores",
+            icon: Barcode,
+            permissions: [PERMISSIONS.INVENTORY_MANAGE],
           },
           {
             title: "Import Inventory",
             to: "/admin/import-inventory",
-            description: "Import Inventory from csv/excel file.",
-            icon: Box,
-            permissions: [PERMISSIONS.IMPORT_INVENTORY],
+            description: "Import inventory from CSV/Excel",
+            icon: RotateCcw,
+            permissions: [PERMISSIONS.INVENTORY_MANAGE],
           },
           {
             title: "Attributes",
             to: "/admin/attributes",
-            description: "Attributes management for master products",
+            description: "Master product attributes",
             icon: Barcode,
+            permissions: [PERMISSIONS.MASTER_PRODUCT_VIEW],
           },
-
-          // {
-          //   title: "Roles & Permissions",
-          //   to: "/super-admin/access",
-          //   description: "Platform access policy and super admin controls",
-          //   icon: ShieldCheck,
-          //   roles: ["Super Admin"],
-          //   // permissions: ["ROLE_MANAGE"],
-          // },
         ],
       },
     ],
   },
   {
-    title: "Orders",
+    title: "Orders & Sales",
     items: [
       {
         title: "Orders",
         to: "/admin/orders",
-        description: "Order management system for pharmacies",
-        icon: LayoutDashboard,
+        description: "Order management system",
+        icon: FileText,
+        permissions: [PERMISSIONS.ORDER_VIEW],
+      },
+      {
+        title: "POS",
+        to: "/admin/pos",
+        description: "Point of Sale system",
+        icon: Barcode,
+        permissions: [PERMISSIONS.ORDER_CREATE],
       },
       {
         title: "Sales Returns",
         to: "/admin/returns",
-        description: "Manage customer returns and refunds",
+        description: "Customer returns and refunds",
         icon: RotateCcw,
+        permissions: [PERMISSIONS.ORDER_MANAGE],
       },
       {
         title: "Recent Invoices",
         to: "/admin/invoices",
-        description: "View and manage all sales transactions",
+        description: "Transaction history",
         icon: FileText,
+        permissions: [PERMISSIONS.ORDER_VIEW],
       },
     ],
   },
   {
-    title: "Attributes",
-    items: [
-      {
-        title: "Brands",
-        description: "View, Search, and Filter Inventory across all Stores",
-        icon: ShieldCheck,
-        children: [
-          {
-            title: "All Inventory",
-            to: "/admin/all-inventory",
-            description: "View, Search, and Filter Inventory across all Stores",
-            icon: Box,
-          },
-          {
-            title: "All Compound",
-            to: "/admin/all-compound",
-            description: "Manage Prescription Compounding",
-            icon: BriefcaseMedical,
-          },
-          {
-            title: "Inter Store Transfer",
-            to: "/admin/inter-store-transfer",
-            description: "Manage stock transfers between stores",
-            icon: Box,
-          },
-          {
-            title: "Import Inventory",
-            to: "/admin/import-inventory",
-            description: "Import Inventory from csv/excel file.",
-            icon: Box,
-            permissions: [PERMISSIONS.IMPORT_INVENTORY],
-          },
-
-          // {
-          //   title: "Roles & Permissions",
-          //   to: "/super-admin/access",
-          //   description: "Platform access policy and super admin controls",
-          //   icon: ShieldCheck,
-          //   roles: ["Super Admin"],
-          //   // permissions: ["ROLE_MANAGE"],
-          // },
-        ],
-      },
-    ],
-  },
-  {
-    title: "Suppliers",
+    title: "Procurement",
     items: [
       {
         title: "Suppliers",
         to: "/admin/suppliers",
-        description: "Supplier management system for pharmacies",
+        description: "Supplier management",
         icon: Users,
+        permissions: [PERMISSIONS.INVENTORY_MANAGE],
       },
     ],
   },
-  {
-    title: "Sales",
-    items: [
-      {
-        title: "POS",
-        to: "/admin/pos",
-        description: "Point of Sale system for pharmacies",
-        icon: Barcode,
-      },
-    ],
-  },
-
   {
     title: "Reports",
     items: [
       {
-        title: "Reports",
-        description: "Daily Transaction Report",
+        title: "Analytics",
+        description: "Reports and business intelligence",
         icon: LineChart,
         children: [
           {
-            title: "Daily Transaction Report",
+            title: "Daily Transactions",
             to: "/admin/reports/daily-transaction-report",
-            description: "Daily Transaction Report",
-            icon: Box,
+            description: "Daily transaction report",
+            icon: LineChart,
           },
           {
             title: "Expiry Reports",
             to: "/admin/reports/expiry-reports",
-            description: "Expiry Reports",
-            icon: Box,
+            description: "Identify expiring stock",
+            icon: RotateCcw,
           },
-          // {
-          //   title: "Roles & Permissions",
-          //   to: "/super-admin/access",
-          //   description: "Platform access policy and super admin controls",
-          //   icon: ShieldCheck,
-          //   roles: ["Super Admin"],
-          //   // permissions: ["ROLE_MANAGE"],
-          // },
         ],
       },
     ],
   },
-  // {
-  //   title: "Workspace",
-  //   items: [
-  //     {
-  //       title: "Access Control",
-  //       description: "Govern workspace members, roles, and permissions",
-  //       icon: BriefcaseMedical,
-  //       children: [
-  //         {
-  //           title: "Users",
-  //           to: "/admin/users",
-  //           description: "Tenant users directory and access control",
-  //           icon: Users,
-  //           permissions: [PERMISSIONS.USER_READ],
-  //         },
-  //         {
-  //           title: "Roles & Permissions",
-  //           to: "/admin/roles",
-  //           description: "Role governance and permission matrix",
-  //           icon: ShieldCheck,
-  //           permissions: [PERMISSIONS.ROLE_MANAGE],
-  //         },
-  //       ],
-  //     },
-  //   ],
-  // },
+  {
+    title: "Workspace",
+    items: [
+      {
+        title: "Access Control",
+        description: "Govern workspace members, roles, and permissions",
+        icon: ShieldCheck,
+        children: [
+          {
+            title: "Users",
+            to: "/admin/users",
+            description: "Tenant users directory",
+            icon: Users,
+            permissions: [PERMISSIONS.USER_VIEW],
+          },
+          {
+            title: "Roles & Permissions",
+            to: "/admin/roles",
+            description: "Role governance and permission matrix",
+            icon: ShieldCheck,
+            permissions: [PERMISSIONS.ROLE_MANAGE],
+          },
+        ],
+      },
+    ],
+  },
 ]
 
 export function getVisibleAdminNavigation(user: AuthUser | null) {
@@ -261,7 +202,7 @@ export function getPermissionSummary(user: AuthUser | null) {
 
   return user.permissions.map((permission) => ({
     permission,
-    label: permissionLabels[permission] ?? permission,
+    label: permission,
   }))
 }
 
