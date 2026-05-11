@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { rootPrisma } from "@/lib/prisma.js";
 import { AuthRequest } from "@/middlewares/isAuthenticated.js";
+import { sendToken } from "@/helpers/jwtToken.js";
 
 const JWT_SECRET = process.env.JWT_SECRET!;
 
@@ -124,7 +125,7 @@ export class AuthController {
 
       // Remove passwordHash from response
       const { passwordHash: _, ...userWithoutPassword } = user;
-
+      sendToken(user, res);
       return res.json({
         success: true,
         token,
@@ -184,7 +185,7 @@ export class AuthController {
 
       return res.json({
         success: true,
-        user: userWithoutPassword,
+        data: userWithoutPassword,
       });
     } catch (error) {
       console.error("Get user error:", error);
