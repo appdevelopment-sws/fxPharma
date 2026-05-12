@@ -77,7 +77,7 @@ export class UnitsController {
       throw new ErrorHandler("Unit name already exists", 400);
     }
 
-    const { short_name, ...rest } = req.body;
+    const { short_name, shortName, ...rest } = req.body;
 
     const unit: any = await rootPrisma.unit.create({
       data: {
