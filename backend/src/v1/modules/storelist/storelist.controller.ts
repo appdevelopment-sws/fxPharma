@@ -49,8 +49,9 @@ const slugify = (value: string) =>
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
 
-const getFirstValue = (value: string | string[] | undefined): string | undefined =>
-  Array.isArray(value) ? value[0] : value;
+const getFirstValue = (
+  value: string | string[] | undefined,
+): string | undefined => (Array.isArray(value) ? value[0] : value);
 
 const parseAddress = (address?: string | null): AddressPayload => {
   if (!address) return {};
@@ -87,7 +88,9 @@ const getRoleTemplates = async (): Promise<RoleMeta[]> => {
     key: role.key,
     name: role.name,
     description: role.description ?? null,
-    permissions: role.permissions.map((link) => toPermissionMeta(link.permission)),
+    permissions: role.permissions.map((link) =>
+      toPermissionMeta(link.permission),
+    ),
   }));
 };
 
@@ -111,12 +114,15 @@ const getStoreMeta = async (): Promise<StoreListMeta> => {
 
 const getRoleTemplateByKey = async (roleKey?: string | null) => {
   const meta = await getStoreMeta();
-  return meta.roles.find((role) => role.key === (roleKey || DEFAULT_ROLE_KEY)) ?? null;
+  return (
+    meta.roles.find((role) => role.key === (roleKey || DEFAULT_ROLE_KEY)) ??
+    null
+  );
 };
 
 const getPermissionKeys = async (
   roleKey?: string | null,
-  submittedPermissions: string[] = []
+  submittedPermissions: string[] = [],
 ) => {
   const roleTemplate = await getRoleTemplateByKey(roleKey);
   if (submittedPermissions.length > 0) return submittedPermissions;
@@ -146,7 +152,9 @@ const findMainBranch = (branches: any[]) =>
   branches.find((branch) => branch.isMainBranch) ?? branches[0] ?? null;
 
 const getOwnerMembership = (members: any[]) =>
-  members.find((member) => member.role?.key === DEFAULT_ROLE_KEY) ?? members[0] ?? null;
+  members.find((member) => member.role?.key === DEFAULT_ROLE_KEY) ??
+  members[0] ??
+  null;
 
 const mapOrganizationToStore = (organization: any) => {
   const mainBranch = findMainBranch(organization.branches ?? []);
@@ -154,10 +162,11 @@ const mapOrganizationToStore = (organization: any) => {
   const ownerMembership = getOwnerMembership(organization.members ?? []);
   const owner = ownerMembership?.user;
   const role = ownerMembership?.role;
-  const permissions = role?.permissions
-    ?.filter((item: any) => item.permission)
-    .map((item: any) => item.permission.key)
-    .filter(Boolean) ?? [];
+  const permissions =
+    role?.permissions
+      ?.filter((item: any) => item.permission)
+      .map((item: any) => item.permission.key)
+      .filter(Boolean) ?? [];
 
   return {
     id: organization.id,
@@ -165,10 +174,13 @@ const mapOrganizationToStore = (organization: any) => {
     description: organization.description ?? null,
     category: organization.category ?? null,
     logo: organization.logo ?? null,
-    status: organization.isActive ? ("ACTIVE" as StoreStatus) : ("INACTIVE" as StoreStatus),
+    status: organization.isActive
+      ? ("ACTIVE" as StoreStatus)
+      : ("INACTIVE" as StoreStatus),
     roleKey: role?.key ?? DEFAULT_ROLE_KEY,
     roleName: role?.name ?? null,
-    ownerFirstName: owner?.name?.split(" ")?.[0] ?? organization.ownerFirstName ?? "",
+    ownerFirstName:
+      owner?.name?.split(" ")?.[0] ?? organization.ownerFirstName ?? "",
     ownerLastName:
       owner?.name?.split(" ")?.slice(1).join(" ") ??
       organization.ownerLastName ??
@@ -244,12 +256,12 @@ const getOrganizationInclude = () =>
         },
       },
     },
-  } as const);
+  }) as const;
 
 const syncRolePermissions = async (
   tx: any,
   roleId: string,
-  permissionKeys: string[]
+  permissionKeys: string[],
 ) => {
   await tx.rolePermission.deleteMany({ where: { roleId } });
 
@@ -274,7 +286,7 @@ const ensureRole = async (
   organizationId: string,
   roleKey: string,
   roleName: string,
-  permissionKeys: string[]
+  permissionKeys: string[],
 ) => {
   const role = await tx.role.upsert({
     where: {
@@ -339,12 +351,14 @@ export class StoreListController {
             ]
               .filter(Boolean)
               .some((value) =>
-                String(value).toLowerCase().includes(normalizedSearch)
+                String(value).toLowerCase().includes(normalizedSearch),
               );
           })
         : organizations;
 
-      const data = filtered.slice(skip, skip + take).map(mapOrganizationToStore);
+      const data = filtered
+        .slice(skip, skip + take)
+        .map(mapOrganizationToStore);
 
       return { data, total: filtered.length };
     });
@@ -367,7 +381,8 @@ export class StoreListController {
   });
 
   static create = catchAsync(async (req: Request, res: Response) => {
-    const requestedRoleKey = getFirstValue(req.body.roleKey) || DEFAULT_ROLE_KEY;
+    const requestedRoleKey =
+      getFirstValue(req.body.roleKey) || DEFAULT_ROLE_KEY;
     const requestedPermissions = Array.isArray(req.body.permissions)
       ? req.body.permissions.filter(Boolean)
       : [];
@@ -375,13 +390,15 @@ export class StoreListController {
     const permissionKeys =
       requestedPermissions.length > 0
         ? requestedPermissions
-        : roleTemplate?.permissions.map((permission) => permission.key) ?? [];
+        : (roleTemplate?.permissions.map((permission) => permission.key) ?? []);
 
     const passwordHash = await bcrypt.hash(req.body.password, 10);
     const organizationSlug = await uniqueSlug(req.body.storeName);
     const displayRoleName =
       roleTemplate?.name ||
-      (requestedRoleKey === DEFAULT_ROLE_KEY ? "Organization Admin" : requestedRoleKey);
+      (requestedRoleKey === DEFAULT_ROLE_KEY
+        ? "Organization Admin"
+        : requestedRoleKey);
 
     const created = await rootPrisma.$transaction(async (tx) => {
       const organization = await tx.organization.create({
@@ -389,6 +406,9 @@ export class StoreListController {
           name: req.body.storeName,
           slug: organizationSlug,
           planId: req.body.planId ?? null,
+          isActive:
+            req.body.isActive ??
+            (req.body.status ? req.body.status === "ACTIVE" : true),
         },
       });
 
@@ -397,7 +417,7 @@ export class StoreListController {
         organization.id,
         requestedRoleKey,
         displayRoleName,
-        permissionKeys
+        permissionKeys,
       );
 
       const owner = await tx.user.create({
@@ -476,7 +496,8 @@ export class StoreListController {
       });
     }
 
-    const requestedRoleKey = getFirstValue(req.body.roleKey) || DEFAULT_ROLE_KEY;
+    const requestedRoleKey =
+      getFirstValue(req.body.roleKey) || DEFAULT_ROLE_KEY;
     const requestedPermissions = Array.isArray(req.body.permissions)
       ? req.body.permissions.filter(Boolean)
       : [];
@@ -484,7 +505,7 @@ export class StoreListController {
     const permissionKeys =
       requestedPermissions.length > 0
         ? requestedPermissions
-        : roleTemplate?.permissions.map((permission) => permission.key) ?? [];
+        : (roleTemplate?.permissions.map((permission) => permission.key) ?? []);
 
     const updated = await rootPrisma.$transaction(async (tx) => {
       const organization = await tx.organization.update({
@@ -493,7 +514,10 @@ export class StoreListController {
           name: req.body.storeName ?? existing.name,
           planId: req.body.planId ?? existing.planId,
           isActive:
-            req.body.isActive ?? (req.body.status ? req.body.status === "ACTIVE" : existing.isActive),
+            req.body.isActive ??
+            (req.body.status
+              ? req.body.status === "ACTIVE"
+              : existing.isActive),
         },
       });
 
@@ -502,8 +526,10 @@ export class StoreListController {
         organization.id,
         requestedRoleKey,
         roleTemplate?.name ||
-          (requestedRoleKey === DEFAULT_ROLE_KEY ? "Organization Admin" : requestedRoleKey),
-        permissionKeys
+          (requestedRoleKey === DEFAULT_ROLE_KEY
+            ? "Organization Admin"
+            : requestedRoleKey),
+        permissionKeys,
       );
 
       const ownerMembership = getOwnerMembership(existing.members ?? []);
@@ -512,10 +538,12 @@ export class StoreListController {
           where: { id: ownerMembership.userId },
           data: {
             name: buildOwnerName(
-              req.body.ownerFirstName ?? ownerMembership.user.name?.split(" ")?.[0] ?? "",
+              req.body.ownerFirstName ??
+                ownerMembership.user.name?.split(" ")?.[0] ??
+                "",
               req.body.ownerLastName ??
                 ownerMembership.user.name?.split(" ")?.slice(1).join(" ") ??
-                ""
+                "",
             ),
             email:
               req.body.ownerEmail ??
@@ -549,7 +577,9 @@ export class StoreListController {
         await tx.branch.update({
           where: { id: mainBranch.id },
           data: {
-            name: req.body.storeName ? `${req.body.storeName} Main Branch` : mainBranch.name,
+            name: req.body.storeName
+              ? `${req.body.storeName} Main Branch`
+              : mainBranch.name,
             address:
               req.body.streetAddress ||
               req.body.city ||
@@ -557,15 +587,31 @@ export class StoreListController {
               req.body.zipCode ||
               req.body.country
                 ? serializeAddress({
-                    streetAddress: req.body.streetAddress ?? parseAddress(mainBranch.address).streetAddress ?? "",
-                    city: req.body.city ?? parseAddress(mainBranch.address).city ?? "",
-                    state: req.body.state ?? parseAddress(mainBranch.address).state ?? "",
-                    zipCode: req.body.zipCode ?? parseAddress(mainBranch.address).zipCode ?? "",
-                    country: req.body.country ?? parseAddress(mainBranch.address).country ?? "",
+                    streetAddress:
+                      req.body.streetAddress ??
+                      parseAddress(mainBranch.address).streetAddress ??
+                      "",
+                    city:
+                      req.body.city ??
+                      parseAddress(mainBranch.address).city ??
+                      "",
+                    state:
+                      req.body.state ??
+                      parseAddress(mainBranch.address).state ??
+                      "",
+                    zipCode:
+                      req.body.zipCode ??
+                      parseAddress(mainBranch.address).zipCode ??
+                      "",
+                    country:
+                      req.body.country ??
+                      parseAddress(mainBranch.address).country ??
+                      "",
                   })
                 : mainBranch.address,
             phone: req.body.ownerPhone ?? mainBranch.phone,
-            email: req.body.ownerEmail ?? req.body.loginEmail ?? mainBranch.email,
+            email:
+              req.body.ownerEmail ?? req.body.loginEmail ?? mainBranch.email,
           },
         });
       }

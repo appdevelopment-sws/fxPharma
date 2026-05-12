@@ -80,6 +80,8 @@ export default function ManageStoreDialog({
         reset({
           ...STORE_FORM_INITIAL_DATA,
           ...store,
+          store_visibility: store?.status || store?.store_visibility || "ACTIVE",
+          subscription_plan_id: store?.subscription_plan_id || store?.plan?.id || "2",
           role_key: store?.role_key || store?.owner?.role?.key || defaultRoleKey,
           permissions:
             store?.permissions?.length
@@ -324,7 +326,7 @@ export default function ManageStoreDialog({
                 control={control}
                 name="password"
                 label="Password"
-                required={true}
+                required={!isEditMode}
                 placeholder="********"
                 readOnly={isViewMode}
               />
