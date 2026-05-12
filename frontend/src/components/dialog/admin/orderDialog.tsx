@@ -22,16 +22,16 @@ import {
 import { useForm } from "react-hook-form"
 
 import {
-    SUPPLIER_OPTIONS,
     UNIT_OPTIONS,
-    SUGGESTED_ORDER_ITEMS,
     SUPPLIER_ACCOUNT_SUMMARY,
-    RECENT_ORDERS,
 } from "@/constants/page/admin/order"
 
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 import { ordersApi } from "@/services/ordersApi"
+import SupplierApi from "@/services/supplierApi"
+import ProductApi from "@/services/masterProductApi"
+import { queryKeys } from "@/lib/queryKeys"
 
 interface OrderDialogProps {
     open: boolean
@@ -49,9 +49,39 @@ export default function OrderDialog({
     const queryClient = useQueryClient()
 
     const [selectedItems, setSelectedItems] = useState<any[]>([])
-    const [selectedSupplier, setSelectedSupplier] = useState("")
+    const [selectedSupplier, setSelectedSupplier] = useState<any>(null)
 
-    const { control, reset, handleSubmit } = useForm({
+    const { data: suppliersData, isLoading: isLoadingSuppliers } = useQuery({
+        queryKey: queryKeys.suppliers.all,
+        queryFn: () => SupplierApi.getSuppliers(),
+    })
+
+    const { data: productsData, isLoading: isLoadingProducts } = useQuery({
+        queryKey: ["master-products", "suggested"],
+        queryFn: () => ProductApi.getMasterProducts({ limit: 4 }),
+    })
+
+    const suppliers = suppliersData?.data || []
+    const suggestedProducts = productsData?.data || []
+    const [productSearch, setProductSearch] = useState("")
+
+    const { data: searchResultsData, isLoading: isSearchingProducts } = useQuery({
+        queryKey: ["master-products", "search", productSearch],
+        queryFn: () => ProductApi.getMasterProducts({ search: productSearch, limit: 5 }),
+        enabled: productSearch.length > 2,
+    })
+
+    const searchResults = searchResultsData?.data || []
+
+    const { data: recentOrdersData, isLoading: isLoadingRecentOrders } = useQuery({
+        queryKey: ["orders", "recent", selectedSupplier?.id],
+        queryFn: () => ordersApi.getAll({ search: selectedSupplier?.companyName, limit: 5 }),
+        enabled: !!selectedSupplier?.id,
+    })
+
+    const recentOrders = recentOrdersData?.data || []
+
+    const { control, reset, handleSubmit, setValue } = useForm({
         defaultValues: {
             supplierId: "",
             status: "DRAFT",
@@ -62,14 +92,14 @@ export default function OrderDialog({
         if (open) {
             if (order) {
                 setSelectedItems(order.items || [])
-                setSelectedSupplier(order.supplierId || "")
+                setSelectedSupplier(order.supplier || null)
                 reset({
                     supplierId: order.supplierId,
                     status: order.status,
                 })
             } else {
                 setSelectedItems([])
-                setSelectedSupplier("")
+                setSelectedSupplier(null)
                 reset({
                     supplierId: "",
                     status: "DRAFT",
@@ -82,7 +112,7 @@ export default function OrderDialog({
         mutationFn: (data: any) => {
             const payload = {
                 ...data,
-                supplierId: selectedSupplier,
+                supplierId: selectedSupplier?.id,
                 items: selectedItems,
             }
             return isEditMode ? ordersApi.update(order.id, payload) : ordersApi.create(payload)
@@ -165,7 +195,37 @@ export default function OrderDialog({
                             <Input
                                 className="h-12 pl-12 pr-4 text-base focus-visible:ring-primary/20"
                                 placeholder="Search existing medicines to add..."
+                                value={productSearch}
+                                onChange={(e) => setProductSearch(e.target.value)}
                             />
+                            {productSearch.length > 2 && (
+                                <div className="absolute left-0 right-0 top-full z-10 mt-2 rounded-xl border bg-card shadow-lg">
+                                    {isSearchingProducts ? (
+                                        <div className="p-4 text-sm text-muted-foreground">Searching...</div>
+                                    ) : searchResults.length === 0 ? (
+                                        <div className="p-4 text-sm text-muted-foreground">No medicines found.</div>
+                                    ) : (
+                                        <div className="max-h-60 overflow-y-auto p-2">
+                                            {searchResults.map((prod) => (
+                                                <div
+                                                    key={prod.id}
+                                                    className="flex cursor-pointer items-center justify-between rounded-lg p-3 hover:bg-primary/5"
+                                                    onClick={() => {
+                                                        addItem(prod.name, prod.category?.name || "")
+                                                        setProductSearch("")
+                                                    }}
+                                                >
+                                                    <div>
+                                                        <p className="font-bold">{prod.name}</p>
+                                                        <p className="text-xs text-muted-foreground">{prod.manufacturer?.name}</p>
+                                                    </div>
+                                                    <Plus className="size-4 text-primary" />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
 
                         <div className="space-y-4">
@@ -187,6 +247,7 @@ export default function OrderDialog({
                                         <div className="col-span-3 flex justify-center">
                                             <div className="flex items-center gap-1 rounded-xl border bg-background p-1 shadow-sm">
                                                 <Button
+                                                    type="button"
                                                     variant="ghost"
                                                     size="icon-sm"
                                                     onClick={() => updateQty(item.id, -1)}
@@ -201,6 +262,7 @@ export default function OrderDialog({
                                                     className="h-8 w-16 border-none text-center font-bold focus-visible:ring-0"
                                                 />
                                                 <Button
+                                                    type="button"
                                                     variant="ghost"
                                                     size="icon-sm"
                                                     onClick={() => updateQty(item.id, 1)}
@@ -225,6 +287,7 @@ export default function OrderDialog({
 
                                         <div className="col-span-1 flex justify-end">
                                             <Button
+                                                type="button"
                                                 variant="ghost"
                                                 size="icon-sm"
                                                 onClick={() => removeItem(item.id)}
@@ -249,20 +312,25 @@ export default function OrderDialog({
                         </div>
 
                         <div className="space-y-3">
-                            {SUGGESTED_ORDER_ITEMS.map((item, idx) => (
-                                <div key={idx} className="flex items-center justify-between rounded-xl border bg-card p-4 transition-all hover:border-purple-300">
+                            {isLoadingProducts ? (
+                                <p className="text-sm text-muted-foreground">Loading suggestions...</p>
+                            ) : suggestedProducts.length === 0 ? (
+                                <p className="text-sm text-muted-foreground">No suggestions available.</p>
+                            ) : suggestedProducts.map((item) => (
+                                <div key={item.id} className="flex items-center justify-between rounded-xl border bg-card p-4 transition-all hover:border-purple-300">
                                     <div className="flex items-center gap-4">
                                         <div className="space-y-1">
                                             <p className="font-bold">{item.name}</p>
                                             <div className="flex items-center gap-2">
-                                                <Badge variant="destructive" className="h-5 rounded-md px-2 text-[10px] font-bold uppercase tracking-wider">
-                                                    {item.status}
+                                                <Badge variant="outline" className="h-5 rounded-md px-2 text-[10px] font-bold uppercase tracking-wider">
+                                                    Stock Low
                                                 </Badge>
-                                                <p className="text-xs text-muted-foreground">{item.note}</p>
+                                                <p className="text-xs text-muted-foreground">{item.manufacturer?.name || "Manufacturer"}</p>
                                             </div>
                                         </div>
                                     </div>
                                     <Button
+                                        type="button"
                                         size="icon-sm"
                                         variant="outline"
                                         className="h-10 w-10 rounded-xl border-purple-200 text-purple-500 hover:bg-purple-500 hover:text-white"
@@ -290,11 +358,18 @@ export default function OrderDialog({
                         </div>
 
                         <div className="space-y-3">
-                            {SUPPLIER_OPTIONS.map((supplier) => (
+                            {isLoadingSuppliers ? (
+                                <p className="text-sm text-muted-foreground">Loading suppliers...</p>
+                            ) : suppliers.length === 0 ? (
+                                <p className="text-sm text-muted-foreground">No suppliers found.</p>
+                            ) : suppliers.map((supplier) => (
                                 <div
-                                    key={supplier.value}
-                                    onClick={() => setSelectedSupplier(supplier.value)}
-                                    className={`cursor-pointer rounded-2xl border-2 p-4 transition-all ${selectedSupplier === supplier.value
+                                    key={supplier.id}
+                                    onClick={() => {
+                                        setSelectedSupplier(supplier)
+                                        setValue("supplierId", supplier.id)
+                                    }}
+                                    className={`cursor-pointer rounded-2xl border-2 p-4 transition-all ${selectedSupplier?.id === supplier.id
                                         ? "border-primary bg-primary/5 ring-4 ring-primary/5"
                                         : "border-border hover:border-primary/30"
                                         }`}
@@ -302,8 +377,8 @@ export default function OrderDialog({
                                     <div className="flex items-center justify-between">
                                         <div>
                                             <div className="flex items-center gap-2">
-                                                <p className="font-bold">{supplier.label}</p>
-                                                {supplier.value === "apollo_distributors" && (
+                                                <p className="font-bold">{supplier.companyName}</p>
+                                                {supplier.isPreferred && (
                                                     <Badge variant="outline" className="h-5 rounded-md border-primary/30 bg-primary/10 px-2 text-[9px] font-bold uppercase tracking-wider text-primary">
                                                         Preferred
                                                     </Badge>
@@ -311,10 +386,10 @@ export default function OrderDialog({
                                             </div>
                                             <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
                                                 <Clock className="size-3" />
-                                                <span>Delivers in {supplier.value === "apollo_distributors" ? "24h" : "48h"}</span>
+                                                <span>Delivers in {supplier.isPreferred ? "24h" : "48h"}</span>
                                             </div>
                                         </div>
-                                        {selectedSupplier === supplier.value && (
+                                        {selectedSupplier?.id === supplier.id && (
                                             <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-white">
                                                 <CheckCircle2 className="size-4" />
                                             </div>
@@ -329,7 +404,7 @@ export default function OrderDialog({
                     <div className="rounded-2xl border bg-card p-6 shadow-sm">
                         <div className="mb-6 flex items-center gap-3 text-muted-foreground">
                             <Clock className="size-5" />
-                            <h3 className="font-bold">{SUPPLIER_ACCOUNT_SUMMARY.supplier} - Account Status</h3>
+                            <h3 className="font-bold">{selectedSupplier?.companyName || "Supplier"} - Account Status</h3>
                         </div>
 
                         <div className="space-y-4">
@@ -357,10 +432,14 @@ export default function OrderDialog({
                         <div className="mt-8 space-y-4">
                             <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Recent Orders</p>
                             <div className="space-y-2">
-                                {RECENT_ORDERS.map((order, idx) => (
+                                {isLoadingRecentOrders ? (
+                                    <p className="text-xs text-muted-foreground">Loading recent orders...</p>
+                                ) : recentOrders.length === 0 ? (
+                                    <p className="text-xs text-muted-foreground">No recent orders.</p>
+                                ) : recentOrders.map((order, idx) => (
                                     <div key={idx} className="flex items-center justify-between rounded-xl bg-muted/30 p-3 text-sm">
-                                        <span className="font-medium text-muted-foreground">{order.date}</span>
-                                        <span className="font-bold">${order.amount.toFixed(2)}</span>
+                                        <span className="font-medium text-muted-foreground">{new Date(order.createdAt).toLocaleDateString()}</span>
+                                        <span className="font-bold">Items: {order.items?.length || 0}</span>
                                         <Badge variant="outline" className="h-5 rounded-md border-emerald-200 bg-emerald-50 px-2 text-[9px] font-bold uppercase text-emerald-600">
                                             {order.status}
                                         </Badge>
@@ -379,11 +458,11 @@ export default function OrderDialog({
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">Supplier Email</span>
-                                <span className="font-bold">orders@apollo.dist</span>
+                                <span className="font-bold">{selectedSupplier?.email || "N/A"}</span>
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">Supplier Phone</span>
-                                <span className="font-bold">+1 987 654 3210</span>
+                                <span className="font-bold">{selectedSupplier?.phone || "N/A"}</span>
                             </div>
                         </div>
 
