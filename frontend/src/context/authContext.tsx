@@ -17,6 +17,7 @@ export type AuthUser = {
   email: string
   organizations: Array<{
     organizationId: string
+    status: string
     organization: {
       id: string
       name: string
@@ -67,9 +68,9 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 
 export function AuthProvider({ children }: PropsWithChildren) {
   const queryClient = useQueryClient()
-  const [activeOrganizationId, setActiveOrganizationId] = useState<string | null>(
-    localStorage.getItem("activeOrganizationId")
-  )
+  const [activeOrganizationId, setActiveOrganizationId] = useState<
+    string | null
+  >(localStorage.getItem("activeOrganizationId"))
   const [activeBranchId, setActiveBranchId] = useState<string | null>(
     localStorage.getItem("activeBranchId")
   )
@@ -88,14 +89,15 @@ export function AuthProvider({ children }: PropsWithChildren) {
     if (!rawUser) return null
 
     // Find active membership or default to the first one
-    const activeMembership = rawUser.organizations?.find(
-      (org: any) => org.organizationId === activeOrganizationId
-    ) || rawUser.organizations?.[0]
+    const activeMembership =
+      rawUser.organizations?.find(
+        (org: any) => org.organizationId === activeOrganizationId
+      ) || rawUser.organizations?.[0]
 
     // Flatten permission keys from the nested structure
-    const permissions = activeMembership?.role?.permissions?.map(
-      (p: any) => p.permission.key
-    ) || []
+    const permissions =
+      activeMembership?.role?.permissions?.map((p: any) => p.permission.key) ||
+      []
 
     return {
       ...rawUser,

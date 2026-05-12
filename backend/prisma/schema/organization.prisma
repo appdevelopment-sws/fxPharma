@@ -27,6 +27,10 @@ model Organization {
   auditLogs   AuditLog[]
   inventory Inventory[]
   newCompounds NewCompound[]
+  brands Brand[]
+  units Unit[]
+  categories Category[]
+  manufacturers Manufacturer[]
 
   @@index([slug])
 }

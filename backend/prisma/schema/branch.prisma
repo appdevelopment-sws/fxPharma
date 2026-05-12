@@ -35,6 +35,10 @@ model Branch {
   auditLogs       AuditLog[]
   inventory Inventory[]
   newCompounds NewCompound[]
+  brands Brand[]
+  units Unit[]
+  categories Category[]
+  manufacturers Manufacturer[]
   @@index([organizationId])
 
   @@unique([organizationId, code])

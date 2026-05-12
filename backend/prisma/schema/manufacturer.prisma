@@ -9,6 +9,11 @@ model Manufacturer {
   status    ManufacturerStatus @default(ACTIVE)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  organizationId        String   @map("organization_id")
+  branchId              String?  @map("branch_id")  
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  branch         Branch?      @relation(fields: [branchId], references: [id], onDelete: SetNull) 
 
   masterProducts MasterProduct[]
 }

@@ -4,16 +4,25 @@ import { paginate } from "../../../../utils/pagination.js";
 import ErrorHandler from "../../../../utils/ErrorHandler.js";
 import { buildSearchFilter } from "@/utils/buildSearchFilter.js";
 import { rootPrisma } from "@/lib/prisma.js";
+import { getRequestScope } from "@/helpers/requestScope.js";
 
 export class ManufacturerController {
   static getAll = catchAsync(async (req: Request, res: Response) => {
+    const { organizationId, branchId } = getRequestScope(req);
+
     await paginate(res, req.query, async (skip, take, search) => {
-      const where = buildSearchFilter(search, [
+      const searchFilter = buildSearchFilter(search, [
         "name",
         "email",
         "phone",
         "address",
       ]);
+
+      const where = {
+        ...searchFilter,
+        organizationId,
+        ...(branchId ? { branchId } : {}),
+      };
 
       const [data, total] = await Promise.all([
         rootPrisma.manufacturer.findMany({
@@ -30,8 +39,14 @@ export class ManufacturerController {
   });
 
   static getById = catchAsync(async (req: Request, res: Response) => {
-    const manufacturer = await rootPrisma.manufacturer.findUnique({
-      where: { id: req.params.id as string },
+    const { organizationId, branchId } = getRequestScope(req);
+
+    const manufacturer = await rootPrisma.manufacturer.findFirst({
+      where: {
+        id: req.params.id as string,
+        organizationId,
+        ...(branchId ? { branchId } : {}),
+      },
     });
 
     if (!manufacturer) {
@@ -45,8 +60,14 @@ export class ManufacturerController {
   });
 
   static create = catchAsync(async (req: Request, res: Response) => {
+    const { organizationId, branchId } = getRequestScope(req);
+
     const existing = await rootPrisma.manufacturer.findFirst({
-      where: { name: req.body.name },
+      where: {
+        name: req.body.name,
+        organizationId,
+        ...(branchId ? { branchId } : {}),
+      },
     });
 
     if (existing) {
@@ -54,7 +75,11 @@ export class ManufacturerController {
     }
 
     const manufacturer = await rootPrisma.manufacturer.create({
-      data: req.body,
+      data: {
+        ...req.body,
+        organizationId,
+        branchId,
+      },
     });
 
     res.status(201).json({
@@ -64,15 +89,28 @@ export class ManufacturerController {
   });
 
   static update = catchAsync(async (req: Request, res: Response) => {
-    const existing = await rootPrisma.manufacturer.findUnique({
-      where: { id: req.params.id as string },
+    const { organizationId, branchId } = getRequestScope(req);
+
+    const existing = await rootPrisma.manufacturer.findFirst({
+      where: {
+        id: req.params.id as string,
+        organizationId,
+        ...(branchId ? { branchId } : {}),
+      },
     });
 
     if (!existing) {
       throw new ErrorHandler("Manufacturer not found", 404);
     }
 
-    const { id, createdAt, updatedAt, ...data } = req.body;
+    const {
+      id,
+      createdAt,
+      updatedAt,
+      organizationId: orgId,
+      branchId: brId,
+      ...data
+    } = req.body;
 
     const manufacturer = await rootPrisma.manufacturer.update({
       where: { id: req.params.id as string },
@@ -86,8 +124,14 @@ export class ManufacturerController {
   });
 
   static delete = catchAsync(async (req: Request, res: Response) => {
-    const manufacturer = await rootPrisma.manufacturer.findUnique({
-      where: { id: req.params.id as string },
+    const { organizationId, branchId } = getRequestScope(req);
+
+    const manufacturer = await rootPrisma.manufacturer.findFirst({
+      where: {
+        id: req.params.id as string,
+        organizationId,
+        ...(branchId ? { branchId } : {}),
+      },
     });
 
     if (!manufacturer) {
@@ -105,8 +149,14 @@ export class ManufacturerController {
   });
 
   static updateStatus = catchAsync(async (req: Request, res: Response) => {
-    const manufacturer = await rootPrisma.manufacturer.findUnique({
-      where: { id: req.params.id as string },
+    const { organizationId, branchId } = getRequestScope(req);
+
+    const manufacturer = await rootPrisma.manufacturer.findFirst({
+      where: {
+        id: req.params.id as string,
+        organizationId,
+        ...(branchId ? { branchId } : {}),
+      },
     });
 
     if (!manufacturer) {
