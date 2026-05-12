@@ -51,7 +51,13 @@ export const AdminRoutes = () => {
           <Route path="returns" element={<ReturnsPage />} />
           <Route path="invoices" element={<RecentInvoicesPage />} />
           <Route path="pos" element={<POS />} />
-          <Route path="branch" element={<Branch />} />
+          <Route
+            element={
+              <ProtectedRoute allowedPermissions={[PERMISSIONS.BRANCH_VIEW]} />
+            }
+          >
+            <Route path="branch" element={<Branch />} />
+          </Route>
           <Route path="attributes" element={<AttributesPage />}>
             <Route index element={<Navigate to="brands" replace />} />
             <Route path="brands" element={<Brands />} />
