@@ -19,10 +19,11 @@ model Organization {
   features  OrganizationFeature[]
 
   roles       Role[]
+  orders       Order[]
 
   planId String?
   plan   Plan?   @relation(fields: [planId], references: [id])
-
+  suppliers   Supplier[]
   auditLogs   AuditLog[]
 
   @@index([slug])

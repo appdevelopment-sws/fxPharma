@@ -1,0 +1,30 @@
+model Supplier {
+  id                    String   @id @default(cuid())
+  organizationId        String   @map("organization_id")
+  branchId              String?  @map("branch_id")
+  companyName           String   @map("company_name")
+  gstNumber             String   @map("gst_number")
+  officeAddress         String   @map("office_address")
+  registrationDocuments String?  @map("registration_documents")
+
+  // Contact Details
+  contactPersonName     String   @map("contact_person_name")
+  email                 String   @map("email")
+  phone                 String   @map("phone")
+  whatsappNumber        String   @map("whatsapp_number")
+
+  // Preferences & Automation
+  isPreferred           Boolean  @default(false) @map("is_preferred")
+  autoGeneratePO        Boolean  @default(false) @map("auto_generate_po")
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  branch       Branch?     @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  orders       Order[]
+
+  @@index([organizationId])
+}

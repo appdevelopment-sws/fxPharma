@@ -29,9 +29,9 @@ model Branch {
   //////////////////////////////////////////////////////
   // RELATIONS
   //////////////////////////////////////////////////////
-
+  orders           Order[]
   members         MemberBranch[]
-
+  suppliers       Supplier[]
   auditLogs       AuditLog[]
 
   @@index([organizationId])
