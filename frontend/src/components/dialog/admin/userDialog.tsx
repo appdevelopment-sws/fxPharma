@@ -21,7 +21,7 @@ const INITIAL_DATA = {
   name: "",
   email: "",
   password: "",
-  role: ROLES.STAFF,
+  // role: ROLES.STAFF,
   branchId: "",
 }
 
@@ -62,9 +62,7 @@ export default function UserDialog({
       queryClient.invalidateQueries({
         queryKey: queryKeys.users.all,
       })
-      toast.success(
-        `User ${isEditMode ? "updated" : "created"} successfully`
-      )
+      toast.success(`User ${isEditMode ? "updated" : "created"} successfully`)
       reset()
       onClose(false)
     },
@@ -147,10 +145,12 @@ export default function UserDialog({
             control={control}
             name="role"
             label="ROLE"
-            options={[
-              { label: "Staff", value: ROLES.STAFF },
-              { label: "Branch Admin", value: ROLES.BRANCH_ADMIN },
-            ]}
+            options={
+              [
+                // { label: "Staff", value: ROLES.STAFF },
+                // { label: "Branch Admin", value: ROLES.BRANCH_ADMIN },
+              ]
+            }
             required
           />
           <FormSelectField
@@ -161,7 +161,9 @@ export default function UserDialog({
               label: b.branch_name,
               value: b.id,
             }))}
-            placeholder={isLoadingBranches ? "Loading branches..." : "Select Branch"}
+            placeholder={
+              isLoadingBranches ? "Loading branches..." : "Select Branch"
+            }
             required
           />
         </div>

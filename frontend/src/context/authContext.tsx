@@ -4,6 +4,7 @@ import {
   useState,
   useMemo,
   useEffect,
+  useLayoutEffect,
   type PropsWithChildren,
 } from "react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
@@ -16,10 +17,17 @@ export type AuthUser = {
   email: string
   organizations: Array<{
     organizationId: string
+    status: string
     organization: {
       id: string
       name: string
       slug: string
+      branches?: Array<{
+        id: string
+        name: string
+        code: string | null
+        isMainBranch?: boolean
+      }>
     }
     role: {
       key: string
@@ -60,9 +68,9 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 
 export function AuthProvider({ children }: PropsWithChildren) {
   const queryClient = useQueryClient()
-  const [activeOrganizationId, setActiveOrganizationId] = useState<string | null>(
-    localStorage.getItem("activeOrganizationId")
-  )
+  const [activeOrganizationId, setActiveOrganizationId] = useState<
+    string | null
+  >(localStorage.getItem("activeOrganizationId"))
   const [activeBranchId, setActiveBranchId] = useState<string | null>(
     localStorage.getItem("activeBranchId")
   )
@@ -81,14 +89,15 @@ export function AuthProvider({ children }: PropsWithChildren) {
     if (!rawUser) return null
 
     // Find active membership or default to the first one
-    const activeMembership = rawUser.organizations?.find(
-      (org: any) => org.organizationId === activeOrganizationId
-    ) || rawUser.organizations?.[0]
+    const activeMembership =
+      rawUser.organizations?.find(
+        (org: any) => org.organizationId === activeOrganizationId
+      ) || rawUser.organizations?.[0]
 
     // Flatten permission keys from the nested structure
-    const permissions = activeMembership?.role?.permissions?.map(
-      (p: any) => p.permission.key
-    ) || []
+    const permissions =
+      activeMembership?.role?.permissions?.map((p: any) => p.permission.key) ||
+      []
 
     return {
       ...rawUser,
@@ -125,6 +134,29 @@ export function AuthProvider({ children }: PropsWithChildren) {
       setActiveOrganizationId(firstOrgId)
     }
   }, [rawUser, activeOrganizationId])
+
+  // Set a default branch for the active organization if none is selected yet.
+  useLayoutEffect(() => {
+    if (!rawUser || !activeOrganizationId || activeBranchId) return
+
+    const activeMembership =
+      rawUser.organizations?.find(
+        (org: any) => org.organizationId === activeOrganizationId
+      ) || rawUser.organizations?.[0]
+
+    const organizationBranches = activeMembership?.organization?.branches ?? []
+    const mainBranch =
+      organizationBranches.find((branch: any) => branch.isMainBranch) ||
+      organizationBranches[0]
+
+    const firstBranchId =
+      activeMembership?.branches?.[0]?.branch?.id ?? mainBranch?.id ?? null
+
+    if (firstBranchId) {
+      localStorage.setItem("activeBranchId", firstBranchId)
+      setActiveBranchId(firstBranchId)
+    }
+  }, [rawUser, activeOrganizationId, activeBranchId])
 
   const value: AuthContextValue = {
     user,

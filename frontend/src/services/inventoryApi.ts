@@ -124,7 +124,9 @@ const InventoryApi = {
     return { data: res.data }
   },
 
-  create: async (data: InventoryFormValues): Promise<{ data: InventoryItem }> => {
+  create: async (
+    data: InventoryFormValues
+  ): Promise<{ data: InventoryItem }> => {
     const res = await api.post<any>(BASE_URL, data)
     return { data: res.data }
   },

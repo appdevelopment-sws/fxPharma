@@ -4,11 +4,20 @@ import { paginate } from "../../../../utils/pagination.js";
 import ErrorHandler from "../../../../utils/ErrorHandler.js";
 import { rootPrisma } from "@/lib/prisma.js";
 import { buildSearchFilter } from "@/utils/buildSearchFilter.js";
+import { getRequestScope } from "@/helpers/requestScope.js";
 
 export class UnitsController {
   static getAll = catchAsync(async (req: Request, res: Response) => {
+    const { organizationId, branchId } = getRequestScope(req);
+
     await paginate(res, req.query, async (skip, take, search) => {
-      const where = buildSearchFilter(search, ["name", "shortName"]);
+      const searchFilter = buildSearchFilter(search, ["name", "shortName"]);
+
+      const where = {
+        ...searchFilter,
+        organizationId,
+        ...(branchId ? { branchId } : {}),
+      };
 
       const [data, total] = await Promise.all([
         rootPrisma.unit.findMany({
@@ -30,8 +39,14 @@ export class UnitsController {
   });
 
   static getById = catchAsync(async (req: Request, res: Response) => {
-    const unit: any = await rootPrisma.unit.findUnique({
-      where: { id: req.params.id as string },
+    const { organizationId, branchId } = getRequestScope(req);
+
+    const unit: any = await rootPrisma.unit.findFirst({
+      where: {
+        id: req.params.id as string,
+        organizationId,
+        ...(branchId ? { branchId } : {}),
+      },
     });
 
     if (!unit) {
@@ -48,8 +63,14 @@ export class UnitsController {
   });
 
   static create = catchAsync(async (req: Request, res: Response) => {
+    const { organizationId, branchId } = getRequestScope(req);
+
     const existing = await rootPrisma.unit.findFirst({
-      where: { name: req.body.name },
+      where: {
+        name: req.body.name,
+        organizationId,
+        ...(branchId ? { branchId } : {}),
+      },
     });
 
     if (existing) {
@@ -61,7 +82,9 @@ export class UnitsController {
     const unit: any = await rootPrisma.unit.create({
       data: {
         ...rest,
-        shortName: shortName || short_name || null,
+        organizationId,
+        branchId,
+        shortName: short_name || null,
       },
     });
 
@@ -75,15 +98,29 @@ export class UnitsController {
   });
 
   static update = catchAsync(async (req: Request, res: Response) => {
-    const existing = await rootPrisma.unit.findUnique({
-      where: { id: req.params.id as string },
+    const { organizationId, branchId } = getRequestScope(req);
+
+    const existing = await rootPrisma.unit.findFirst({
+      where: {
+        id: req.params.id as string,
+        organizationId,
+        ...(branchId ? { branchId } : {}),
+      },
     });
 
     if (!existing) {
       throw new ErrorHandler("Unit not found", 404);
     }
 
-    const { id, createdAt, updatedAt, short_name, ...rest } = req.body;
+    const {
+      id,
+      createdAt,
+      updatedAt,
+      organizationId: orgId,
+      branchId: brId,
+      short_name,
+      ...rest
+    } = req.body;
 
     const updateData: any = { ...rest };
 
@@ -106,8 +143,14 @@ export class UnitsController {
   });
 
   static delete = catchAsync(async (req: Request, res: Response) => {
-    const unit = await rootPrisma.unit.findUnique({
-      where: { id: req.params.id as string },
+    const { organizationId, branchId } = getRequestScope(req);
+
+    const unit = await rootPrisma.unit.findFirst({
+      where: {
+        id: req.params.id as string,
+        organizationId,
+        ...(branchId ? { branchId } : {}),
+      },
     });
 
     if (!unit) {
@@ -125,8 +168,14 @@ export class UnitsController {
   });
 
   static updateStatus = catchAsync(async (req: Request, res: Response) => {
-    const unit = await rootPrisma.unit.findUnique({
-      where: { id: req.params.id as string },
+    const { organizationId, branchId } = getRequestScope(req);
+
+    const unit = await rootPrisma.unit.findFirst({
+      where: {
+        id: req.params.id as string,
+        organizationId,
+        ...(branchId ? { branchId } : {}),
+      },
     });
 
     if (!unit) {

@@ -26,6 +26,7 @@ import Brands from "@/pages/shared/Attributes/brands"
 import Categories from "@/pages/shared/Attributes/categories"
 import Manufacturers from "@/pages/shared/Attributes/manufacturers"
 import Units from "@/pages/shared/Attributes/units"
+import AdminProfilePage from "@/pages/admin/profile/AdminProfilePage"
 
 export const AdminRoutes = () => {
   return (
@@ -39,6 +40,8 @@ export const AdminRoutes = () => {
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="profile" element={<AdminProfilePage />} />
+
           <Route path="all-inventory" element={<AllInventory />} />
           <Route path="all-compound" element={<AllCompound />} />
           <Route path="import-inventory" element={<ImportInventory />} />
@@ -51,7 +54,13 @@ export const AdminRoutes = () => {
           <Route path="returns" element={<ReturnsPage />} />
           <Route path="invoices" element={<RecentInvoicesPage />} />
           <Route path="pos" element={<POS />} />
-          <Route path="branch" element={<Branch />} />
+          <Route
+            element={
+              <ProtectedRoute allowedPermissions={[PERMISSIONS.BRANCH_VIEW]} />
+            }
+          >
+            <Route path="branch" element={<Branch />} />
+          </Route>
           <Route path="attributes" element={<AttributesPage />}>
             <Route index element={<Navigate to="brands" replace />} />
             <Route path="brands" element={<Brands />} />

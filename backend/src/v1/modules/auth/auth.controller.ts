@@ -82,7 +82,11 @@ export class AuthController {
         include: {
           organizations: {
             include: {
-              organization: true,
+              organization: {
+                include: {
+                  branches: true,
+                },
+              },
               role: {
                 include: {
                   permissions: {
@@ -90,11 +94,6 @@ export class AuthController {
                       permission: true,
                     },
                   },
-                },
-              },
-              branches: {
-                include: {
-                  branch: true,
                 },
               },
             },
@@ -169,7 +168,11 @@ export class AuthController {
         include: {
           organizations: {
             include: {
-              organization: true,
+              organization: {
+                include: {
+                  branches: true,
+                },
+              },
               role: {
                 include: {
                   permissions: {
@@ -177,12 +180,6 @@ export class AuthController {
                       permission: true,
                     },
                   },
-                },
-              },
-
-              branches: {
-                include: {
-                  branch: true,
                 },
               },
             },
