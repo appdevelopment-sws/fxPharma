@@ -1,0 +1,27 @@
+
+//////////////////////////////////////////////////////
+// DIRECT MEMBER PERMISSIONS
+//////////////////////////////////////////////////////
+
+model MemberPermission {
+  id              String    @id @default(cuid())
+
+  memberId        String
+
+  permissionId    String
+
+  //////////////////////////////////////////////////////
+  // true  => allow
+  // false => deny
+  //////////////////////////////////////////////////////
+
+  allowed         Boolean   @default(true)
+
+  member          OrganizationMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  permission      Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  createdAt       DateTime @default(now())
+
+  @@unique([memberId, permissionId])
+}

@@ -20,6 +20,7 @@ import {
   TAX_OPTIONS,
   YES_NO_OPTIONS,
 } from "@/constants/page/admin/inventory"
+import { mapMasterProductToInventoryDraft } from "@/constants/page/admin/importinventory"
 import { queryKeys } from "@/lib/queryKeys"
 import InventoryApi from "@/services/inventoryApi"
 
@@ -27,6 +28,7 @@ interface MedicineStockDialogProps {
   open: boolean
   onClose: (open: boolean) => void
   product?: any | null
+  mode?: "create" | "edit" | "view"
 }
 
 const toNumber = (value: unknown) => {
@@ -42,16 +44,30 @@ const toNullableString = (value: unknown) => {
 
 const toFormValues = (product: any) => ({
   ...MEDICINE_STOCK_FORM_INITIAL_DATA,
+  ...mapMasterProductToInventoryDraft(product),
   id: product?.id || "",
-  product_name: product?.name || product?.product_name || "",
+  product_name: product?.product_name || product?.name || "",
   status: product?.status || "CONTINUE",
-  company: product?.manufacturer || product?.company || "",
-  salt_composition: product?.saltComposition || product?.salt_composition || "",
-  category: product?.category || "TAB",
+  company:
+    product?.company ||
+    product?.manufacturer ||
+    product?.manufacturer?.name ||
+    "",
+  salt_composition:
+    product?.salt_composition ||
+    product?.saltComposition ||
+    product?.salt ||
+    "",
+  category: product?.category || product?.categoryType || product?.category_type || "TAB",
   packing: product?.packing || "",
   unit_1st: product?.unit1st || product?.unit_1st || "",
   unit_2nd: product?.unit2nd || product?.unit_2nd || "",
-  hsn_code: product?.hsnCode || product?.hsn_code || "",
+  hsn_code:
+    product?.hsn_code ||
+    product?.hsnCode ||
+    product?.hsn?.hsncode ||
+    product?.hsn?.code ||
+    "",
   item_type: product?.itemType || product?.item_type || "NORMAL",
   color_type: product?.colorType || product?.color_type || "NORMAL",
   decimal: product?.decimal || "NO",
@@ -138,9 +154,13 @@ export default function MedicineStockDialog({
   open,
   onClose,
   product,
+  mode,
 }: MedicineStockDialogProps) {
-  const isViewMode = !!product?.viewMode
-  const isEditMode = !!product?.id
+  const resolvedMode =
+    mode || (product?.viewMode ? "view" : product?.id ? "edit" : "create")
+  const isViewMode = resolvedMode === "view"
+  const isEditMode = resolvedMode === "edit"
+  const isCreateFromTemplate = resolvedMode === "create" && !!product
 
   const { handleSubmit, control, reset } = useForm({
     defaultValues: MEDICINE_STOCK_FORM_INITIAL_DATA,
@@ -149,13 +169,13 @@ export default function MedicineStockDialog({
 
   useEffect(() => {
     if (open) {
-      if (isEditMode || isViewMode) {
+      if (isEditMode || isViewMode || isCreateFromTemplate) {
         reset(toFormValues(product))
       } else {
         reset(MEDICINE_STOCK_FORM_INITIAL_DATA)
       }
     }
-  }, [open, product, reset, isEditMode, isViewMode])
+  }, [open, product, reset, isEditMode, isViewMode, isCreateFromTemplate])
 
   const queryClient = useQueryClient()
 

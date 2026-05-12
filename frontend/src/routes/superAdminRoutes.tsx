@@ -2,9 +2,7 @@ import { Navigate, Route } from "react-router"
 import ProtectedRoute from "@/components/auth/ProtectedRoute"
 import SuperAdminLayout from "@/layout/SuperAdminLayout"
 import SuperAdminDashboard from "@/pages/super-admin/dashboard/SuperAdminDashboard"
-import SuperAdminProfilePage from "@/pages/super-admin/profile/SuperAdminProfilePage"
 import SuperAdminTenantsPage from "@/pages/super-admin/tenants/SuperAdminTenantsPage"
-import SuperAdminAccessPage from "@/pages/super-admin/access/SuperAdminAccessPage"
 import SuperAdminProductsNewPage from "@/pages/super-admin/products/MasterProductsPage"
 import { PERMISSIONS, ROLES } from "@/lib/access"
 import HsnPage from "@/pages/super-admin/hsn/HsnPage"
@@ -41,7 +39,6 @@ export const SuperAdminRoutes = () => {
         </Route>
         <Route path="subscription" element={<ManageSubscriptionPage />} />
         <Route path="features-management" element={<FeatureManagementPage />} />
-        <Route path="profile" element={<SuperAdminProfilePage />} />
         <Route path="master-products" element={<SuperAdminProductsNewPage />} />
         <Route path="hsn" element={<HsnPage />} />
         <Route path="attributes" element={<AttributesPage />}>
@@ -55,7 +52,7 @@ export const SuperAdminRoutes = () => {
           element={
             <ProtectedRoute
               allowedRoles={[ROLES.SUPER_ADMIN]}
-              allowedPermissions={[PERMISSIONS.USER_READ]}
+              allowedPermissions={[PERMISSIONS.USER_VIEW]}
             />
           }
         >
@@ -68,9 +65,7 @@ export const SuperAdminRoutes = () => {
               allowedPermissions={[PERMISSIONS.ROLE_MANAGE]}
             />
           }
-        >
-          <Route path="access" element={<SuperAdminAccessPage />} />
-        </Route>
+        ></Route>
       </Route>
     </Route>
   )

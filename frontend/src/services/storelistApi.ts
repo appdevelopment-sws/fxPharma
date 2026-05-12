@@ -1,5 +1,4 @@
 import { api } from "./api"
-import type { PermissionName } from "@/lib/access"
 
 export type Store = {
   id: string
@@ -28,7 +27,26 @@ export type Store = {
     name: string
     [key: string]: any
   } | null
+  role_key?: string | null
+  role_name?: string | null
   permissions?: string[]
+  owner?: {
+    firstName?: string
+    lastName?: string
+    email?: string
+    mobile?: string
+    role?: {
+      key: string
+      name: string
+    } | null
+    permissions?: Array<{
+      granted: boolean
+      permission?: {
+        key: string
+        name: string
+      } | null
+    }>
+  }
   isActive: boolean
   createdAt?: string
   updatedAt?: string
@@ -57,7 +75,27 @@ export type StoreFormValues = {
   currency?: string | null
   subscription_plan_id?: string | null
   isActive?: boolean
-  permissions?: PermissionName[]
+  role_key?: string
+  permissions?: string[]
+}
+
+export type StorePermissionMeta = {
+  key: string
+  name: string
+  description?: string | null
+}
+
+export type StoreRoleMeta = {
+  key: string
+  name: string
+  description?: string | null
+  permissions: StorePermissionMeta[]
+}
+
+export type StoreFormMeta = {
+  roles: StoreRoleMeta[]
+  permissions: StorePermissionMeta[]
+  defaultRoleKey: string
 }
 
 export type GetStoresResponse = {
@@ -96,6 +134,7 @@ const mapFormToApi = (data: StoreFormValues) => {
     currency: data.currency,
     planId: data.subscription_plan_id,
     isActive: data.isActive,
+    roleKey: data.role_key,
     permissions: data.permissions ?? [],
   }
 }
@@ -124,6 +163,8 @@ const mapApiToStore = (data: any): Store => {
     currency: data.currency,
     subscription_plan_id: data.planId,
     plan: data.plan,
+    role_key: data.roleKey || data.owner?.role?.key,
+    role_name: data.owner?.role?.name,
     permissions:
       data.owner?.permissions
         ?.filter((permission: any) => permission.granted)
@@ -147,6 +188,11 @@ const StoreListApi = {
   getStoreById: async (id: string): Promise<{ data: Store }> => {
     const res = await api.get<any>(`${BASE_URL}/${id}`)
     return { data: mapApiToStore(res.data) }
+  },
+
+  getStoreFormMeta: async (): Promise<{ data: StoreFormMeta }> => {
+    const res = await api.get<any>(`${BASE_URL}/meta`)
+    return { data: res.data }
   },
 
   createStore: async (data: StoreFormValues): Promise<{ data: Store }> => {

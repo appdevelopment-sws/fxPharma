@@ -1,0 +1,13 @@
+
+model Unit {
+  id        String   @id @default(cuid())
+  name      String
+  shortName String?
+  status    UnitStatus @default(ACTIVE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+enum UnitStatus {
+  ACTIVE
+  INACTIVE
+}

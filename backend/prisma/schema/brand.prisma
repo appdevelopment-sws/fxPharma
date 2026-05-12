@@ -1,0 +1,16 @@
+
+model Brand {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  logo        String?
+  status      BrandStatus @default(ACTIVE)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  masterProducts MasterProduct[]
+}
+
+enum BrandStatus {
+  ACTIVE
+  INACTIVE
+}

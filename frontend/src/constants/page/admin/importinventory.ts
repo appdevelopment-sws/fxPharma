@@ -1,4 +1,14 @@
 import { FORM_TYPE } from "@/constants/shared/form"
+import { MEDICINE_STOCK_FORM_INITIAL_DATA } from "@/constants/page/admin/inventory"
+
+export const ACTIVE_MASTER_PRODUCT_STATUS = "CONTINUE"
+
+export const INITIAL_MASTER_PRODUCT_IMPORT_FILTERS = {
+    page: 1,
+    perPage: 10,
+    search: "",
+    status: ACTIVE_MASTER_PRODUCT_STATUS,
+}
 
 export const MEDICINE_STOCK_BREADCRUMBS = [
     { title: "Inventory", href: "/super-admin/medicine-stock" },
@@ -25,7 +35,7 @@ export const MEDICINE_IMPORT_COLUMNS = [
     { key: "manufacturer", label: "Manufacturer" },
     { key: "category", label: "Category" },
     { key: "type", label: "Type" },
-    { key: "action", label: "Actions" },
+    { key: "action", label: "Import" },
 ]
 
 export const MEDICINE_TYPE_OPTIONS = [
@@ -75,3 +85,46 @@ export const MEDICINE_STOCK_FORM_TYPE = [
     { label: "Syrup", value: FORM_TYPE.SYRUP },
     { label: "Injection", value: FORM_TYPE.INJECTION },
 ]
+
+const getRelationLabel = (value: any, keys: string[]) => {
+    if (!value) return ""
+
+    if (typeof value === "string") return value
+
+    for (const key of keys) {
+        if (value?.[key]) {
+            return value[key]
+        }
+    }
+
+    return ""
+}
+
+export const mapMasterProductToInventoryDraft = (product: any) => ({
+    ...MEDICINE_STOCK_FORM_INITIAL_DATA,
+    id: "",
+    product_name: product?.name || "",
+    status: product?.status || "CONTINUE",
+    company:
+        getRelationLabel(product?.manufacturer, ["name"]) ||
+        product?.manufacturer ||
+        "",
+    salt_composition: product?.salt || "",
+    category: product?.categoryType || product?.category_type || "TAB",
+    packing: "",
+    unit_1st: "",
+    unit_2nd: "",
+    hsn_code:
+        getRelationLabel(product?.hsn, ["hsncode", "code", "name"]) ||
+        product?.hsnCode ||
+        "",
+    item_type: "NORMAL",
+    color_type: product?.colorType || product?.color_type || "NORMAL",
+    decimal: "NO",
+    type: "NORMAL",
+    local_tax: "Taxable",
+    central_tax: "Taxable",
+    is_narcotic: !!(product?.isNarcotic ?? product?.is_narcotic),
+    is_schedule_h: !!(product?.isScheduleH ?? product?.is_schedule_h),
+    is_schedule_h1: !!(product?.isScheduleH1 ?? product?.is_schedule_h1),
+})

@@ -1,0 +1,62 @@
+
+//////////////////////////////////////////////////////
+// AUDIT LOG
+//////////////////////////////////////////////////////
+
+model AuditLog {
+  id              String    @id @default(cuid())
+
+  userId          String?
+  user            User? @relation(fields: [userId], references: [id])
+
+  organizationId  String?
+  organization    Organization? @relation(fields: [organizationId], references: [id])
+
+  branchId        String?
+  branch          Branch? @relation(fields: [branchId], references: [id])
+
+  //////////////////////////////////////////////////////
+  // ACTION TYPE
+  //////////////////////////////////////////////////////
+
+  action          AuditAction
+
+  //////////////////////////////////////////////////////
+  // ENTITY DETAILS
+  //////////////////////////////////////////////////////
+
+  entity          String
+  entityId        String
+
+  //////////////////////////////////////////////////////
+  // CHANGE SNAPSHOT
+  //////////////////////////////////////////////////////
+
+  oldData         Json?
+
+  newData         Json?
+
+  //////////////////////////////////////////////////////
+  // REQUEST INFO
+  //////////////////////////////////////////////////////
+
+  ipAddress       String?
+
+  userAgent       String?
+
+  createdAt       DateTime @default(now())
+
+  @@index([organizationId])
+
+  @@index([branchId])
+
+  @@index([userId])
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+}

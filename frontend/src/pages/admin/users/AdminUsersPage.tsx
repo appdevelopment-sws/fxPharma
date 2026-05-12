@@ -7,7 +7,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { useAuth } from "@/context/authContext"
-import { PERMISSIONS, userManagementCapabilities } from "@/lib/access"
+import { PERMISSIONS } from "@/lib/access"
 
 export default function AdminUsersPage() {
   const { user, hasPermission } = useAuth()
@@ -37,11 +37,6 @@ export default function AdminUsersPage() {
           </CardHeader>
           <CardContent className="space-y-4 text-sm text-muted-foreground">
             <p>
-              The sidebar only exposes this page when the signed-in user has the
-              `{PERMISSIONS.USER_READ}` permission, and the route itself blocks
-              direct access without it.
-            </p>
-            <p>
               That means future CRUD screens can live here without duplicating
               navigation checks in multiple places.
             </p>
@@ -55,30 +50,6 @@ export default function AdminUsersPage() {
               Quick snapshot of what this account can do inside user management.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
-            {userManagementCapabilities.map((item) => (
-              <div
-                key={item.permission}
-                className="flex items-center justify-between rounded-xl border border-border/60 bg-background px-4 py-3"
-              >
-                <div>
-                  <p className="text-sm font-medium text-foreground">
-                    {item.label}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {item.permission}
-                  </p>
-                </div>
-                <Badge
-                  variant={
-                    hasPermission(item.permission) ? "default" : "outline"
-                  }
-                >
-                  {hasPermission(item.permission) ? "Granted" : "Not Granted"}
-                </Badge>
-              </div>
-            ))}
-          </CardContent>
         </Card>
       </div>
     </div>

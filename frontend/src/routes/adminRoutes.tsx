@@ -5,7 +5,6 @@ import RegisterPage from "@/pages/admin/auth/register"
 import AdminDashboard from "@/pages/admin/dashboard/AdminDashboard"
 import AdminUsersPage from "@/pages/admin/users/AdminUsersPage"
 import AdminRolesPage from "@/pages/admin/roles/AdminRolesPage"
-import AdminProfilePage from "@/pages/admin/profile/AdminProfilePage"
 import ProtectedRoute from "@/components/auth/ProtectedRoute"
 import PublicOnlyRoute from "@/components/auth/PublicOnlyRoute"
 import { PERMISSIONS, ROLES } from "@/lib/access"
@@ -36,15 +35,10 @@ export const AdminRoutes = () => {
         <Route path="/admin/register" element={<RegisterPage />} />
       </Route>
 
-      <Route
-        element={
-          <ProtectedRoute allowedRoles={[ROLES.BRANCH_ADMIN, ROLES.STAFF]} />
-        }
-      >
+      <Route element={<ProtectedRoute />}>
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="dashboard" element={<AdminDashboard />} />
-          <Route path="profile" element={<AdminProfilePage />} />
           <Route path="all-inventory" element={<AllInventory />} />
           <Route path="all-compound" element={<AllCompound />} />
           <Route path="import-inventory" element={<ImportInventory />} />
@@ -68,7 +62,7 @@ export const AdminRoutes = () => {
 
           <Route
             element={
-              <ProtectedRoute allowedPermissions={[PERMISSIONS.USER_READ]} />
+              <ProtectedRoute allowedPermissions={[PERMISSIONS.USER_VIEW]} />
             }
           >
             <Route path="users" element={<AdminUsersPage />} />

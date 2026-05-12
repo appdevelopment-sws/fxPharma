@@ -8,7 +8,6 @@ import {
 } from "@/components/ui/card"
 import { useAuth } from "@/context/authContext"
 import { getPermissionSummary } from "@/components/admin/admin-navigation"
-import { permissionLabels, type PermissionName } from "@/lib/access"
 
 export default function AdminRolesPage() {
   const { user } = useAuth()
@@ -53,32 +52,6 @@ export default function AdminRolesPage() {
           </div>
         </CardContent>
       </Card>
-
-      <div className="grid gap-4 md:grid-cols-2">
-        {(Object.entries(permissionLabels) as [PermissionName, string][]).map(
-          ([permission, label]) => {
-            const granted = user.permissions.includes(permission)
-
-            return (
-              <Card
-                key={permission}
-                size="sm"
-                className="border-border/60 shadow-sm"
-              >
-                <CardHeader>
-                  <CardTitle>{permission}</CardTitle>
-                  <CardDescription>{label}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Badge variant={granted ? "default" : "outline"}>
-                    {granted ? "Granted in this role" : "Not included"}
-                  </Badge>
-                </CardContent>
-              </Card>
-            )
-          }
-        )}
-      </div>
     </div>
   )
 }

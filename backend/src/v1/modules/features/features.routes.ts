@@ -1,11 +1,8 @@
 import { Router } from "express";
-import { FeaturesController } from "./features.controller.js";
 import { validate } from "@/middlewares/validate.js";
-import {
-  createFeatureSchema,
-  updateFeatureSchema,
-} from "./features.validation.js";
 import { isAuthenticated } from "@/middlewares/isAuthenticated.js";
+import { FeaturesController } from "./features.controller.js";
+import { createFeatureSchema, updateFeatureSchema } from "./feature.validation.js";
 
 const router = Router();
 

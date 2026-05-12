@@ -14,6 +14,7 @@ import useSearchFilter from "@/hooks/useSearchFilter"
 import { queryKeys } from "@/lib/queryKeys"
 import { ORDER_COLUMNS } from "@/constants/page/admin/order"
 import { INITIAL_ORDER_FILTERS } from "@/constants/page/admin/order"
+import { ordersApi } from "@/services/ordersApi"
 import OrderDialog from "@/components/dialog/admin/orderDialog"
 
 const Orders = () => {
@@ -26,11 +27,11 @@ const Orders = () => {
 
   const { data, isLoading } = useQuery({
     queryKey: queryKeys.orders.list(filter),
-    // queryFn: () => OrderApi.getOrders(filter),
+    queryFn: () => ordersApi.getAll(filter),
   })
 
   const deleteMutation = useMutation({
-    // mutationFn: (id: number) => OrderApi.deleteOrder(id),
+    mutationFn: (id: string) => ordersApi.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.orders.all })
       deleteDisclosure.onClose()
@@ -67,72 +68,39 @@ const Orders = () => {
       },
 
       {
-        key: "product",
-        header:
-          ORDER_COLUMNS.find((c) => c.key === "product")?.label ||
-          "Product Details",
+        key: "id",
+        header: "Order ID",
+        render: (row) => <span className="font-mono text-xs">{row.id}</span>,
+      },
+      {
+        key: "supplier",
+        header: "Supplier",
+        render: (row) => row.supplier?.name || "N/A",
+      },
+      {
+        key: "date",
+        header: "Date",
+        render: (row) => new Date(row.createdAt).toLocaleDateString(),
+      },
+      {
+        key: "items",
+        header: "Items",
+        render: (row) => row.items?.length || 0,
+      },
+      {
+        key: "status",
+        header: "Status",
         render: (row) => (
-          <div>
-            <p className="font-medium">{row.product_name}</p>
-            <p className="text-xs text-muted-foreground">{row.company_name}</p>
-          </div>
+          <Badge 
+            variant={
+              row.status === "COMPLETED" ? "success" : 
+              row.status === "DRAFT" ? "outline" : 
+              "secondary"
+            }
+          >
+            {row.status}
+          </Badge>
         ),
-      },
-
-      {
-        key: "qty",
-        header: ORDER_COLUMNS.find((c) => c.key === "qty")?.label || "Qty",
-        accessor: "quantity",
-      },
-
-      {
-        key: "free",
-        header: ORDER_COLUMNS.find((c) => c.key === "free")?.label || "Free",
-        accessor: "free",
-      },
-
-      {
-        key: "batch",
-        header: ORDER_COLUMNS.find((c) => c.key === "batch")?.label || "Batch",
-        accessor: "batch_no",
-      },
-
-      {
-        key: "expiry",
-        header:
-          ORDER_COLUMNS.find((c) => c.key === "expiry")?.label || "Expiry",
-        accessor: "expiry",
-      },
-
-      {
-        key: "purchase",
-        header:
-          ORDER_COLUMNS.find((c) => c.key === "purchase")?.label || "Purchase",
-        accessor: "purchase_price",
-      },
-
-      {
-        key: "mrp",
-        header: ORDER_COLUMNS.find((c) => c.key === "mrp")?.label || "MRP",
-        accessor: "mrp",
-      },
-
-      {
-        key: "rate1",
-        header: ORDER_COLUMNS.find((c) => c.key === "rate1")?.label || "Rate 1",
-        accessor: "rate1",
-      },
-
-      {
-        key: "rate2",
-        header: ORDER_COLUMNS.find((c) => c.key === "rate2")?.label || "Rate 2",
-        accessor: "rate2",
-      },
-
-      {
-        key: "rate3",
-        header: ORDER_COLUMNS.find((c) => c.key === "rate3")?.label || "Rate 3",
-        accessor: "rate3",
       },
 
       {
@@ -216,7 +184,7 @@ const Orders = () => {
             data={data?.data || []}
             rowKey="id"
             currentPage={filter.page || 1}
-            lastPage={data?.meta?.pages || 1}
+            lastPage={data?.meta?.totalPages || 1}
             pageSize={filter.perPage || 10}
             totalRecords={data?.meta?.total || 0}
             isLoading={isLoading}

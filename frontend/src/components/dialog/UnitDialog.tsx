@@ -31,7 +31,7 @@ export default function UnitDialog({ open, onClose, unit }: Props) {
         reset({
           ...UNIT_FORM_INITIAL_DATA,
           name: unit?.name || "",
-          short_name: unit?.short_name || "",
+          shortName: unit?.shortName || "",
           status: unit?.status || "ACTIVE",
         })
       } else {
@@ -95,7 +95,7 @@ export default function UnitDialog({ open, onClose, unit }: Props) {
 
         <FormField
           control={control}
-          name="short_name"
+          name="shortName"
           label="SHORT NAME"
           placeholder="e.g. TAB, STR"
           readOnly={isViewMode}

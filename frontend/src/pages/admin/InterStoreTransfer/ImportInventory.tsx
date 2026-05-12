@@ -1,21 +1,7 @@
 import { useCallback, useMemo } from "react"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import {
-    Plus,
-    Pencil,
-    Eye,
-    Trash2,
-    Download,
-    ShieldAlert,
-    Layers,
-    Network,
-    Cpu,
-    Boxes,
-    Filter,
-} from "lucide-react"
-import { toast } from "sonner"
+import { useQuery } from "@tanstack/react-query"
+import { ArrowDownToLine } from "lucide-react"
 
-import { ConfirmDialog } from "@/components/confirmDialog"
 import DataTable, { type DataTableColumn } from "@/components/data-table"
 import { FilterBar } from "@/components/filter-bar"
 import SectionCard from "@/components/SectionCard"
@@ -23,63 +9,53 @@ import { Button } from "@/components/ui/button"
 import { useDisclosure } from "@/hooks/useDisclosure"
 import useSearchFilter from "@/hooks/useSearchFilter"
 import { queryKeys } from "@/lib/queryKeys"
-import InventoryApi from "@/services/inventoryApi"
+import ProductApi from "@/services/masterProductApi"
 
 import {
-    INITIAL_MEDICINE_STOCK_FILTERS,
+    ACTIVE_MASTER_PRODUCT_STATUS,
+    INITIAL_MASTER_PRODUCT_IMPORT_FILTERS,
     MEDICINE_IMPORT_COLUMNS,
 } from "@/constants/page/admin/importinventory"
-import FilterImportInventory from "@/components/dialog/admin/FilterImportInventory"
-import NewCompoundDialog from "@/components/dialog/admin/NewCompoundDialog"
-import InterStoreTransfer from "@/components/dialog/admin/InterStoreTransfer"
 import AddMedicineDialog from "@/components/dialog/admin/AddMedicineDialog"
 
 export default function ImportInventoryPage() {
-    const queryClient = useQueryClient()
-    const drawerDisclosure = useDisclosure<any>()
-    const deleteDisclosure = useDisclosure<any>()
-    const filterDisclosure = useDisclosure<any>()
-    const interstoreTransferDisclosure = useDisclosure<any>()
-    const compoundDisclosure = useDisclosure<any>()
+    const {
+        isOpen: isDrawerOpen,
+        data: drawerData,
+        onOpen: openDrawer,
+        onClose: closeDrawer,
+    } = useDisclosure<any>()
     const { filter, handleFilter } = useSearchFilter(
-        INITIAL_MEDICINE_STOCK_FILTERS
+        INITIAL_MASTER_PRODUCT_IMPORT_FILTERS
     )
 
-    const { data: inventoryData, isLoading: isLoadingInventory } = useQuery({
-        queryKey: queryKeys.inventory.list(filter),
-        queryFn: () => InventoryApi.getAll(filter),
+    const masterProductFilter = useMemo(
+        () => ({
+            ...filter,
+            limit: filter.perPage || 10,
+            status: ACTIVE_MASTER_PRODUCT_STATUS,
+        }),
+        [filter]
+    )
+
+    const { data: productData, isLoading: isLoadingProducts } = useQuery({
+        queryKey: queryKeys.masterProducts.list(masterProductFilter),
+        queryFn: () => ProductApi.getMasterProducts(masterProductFilter),
     })
 
-    const deleteProductMutation = useMutation({
-        mutationFn: (id: string) => InventoryApi.delete(id),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: queryKeys.inventory.all })
-            deleteDisclosure.onClose()
-            toast.success("Inventory item deleted successfully")
-        },
-    })
-
-    const handleOpen = (
-        product: any = null,
-        mode: "create" | "edit" | "view" = "create"
-    ) => {
-        drawerDisclosure.onOpen(
-            product ? { ...product, id: product.id, viewMode: mode === "view" } : null
-        )
-    }
-    const handleCompoundOpen = () => {
-        compoundDisclosure.onOpen(null)
-    }
-
-    const handleInterstoreTransferOpen = () => {
-        interstoreTransferDisclosure.onOpen(null)
-    }
     const handleFilterChange = useCallback(
         (updates: Record<string, any>) => {
-            handleFilter({ ...updates, page: 1 })
+            handleFilter({ ...updates, page: 1, status: ACTIVE_MASTER_PRODUCT_STATUS })
         },
         [handleFilter]
     )
+
+    const handleImportOpen = useCallback((product: any) => {
+        openDrawer({
+            ...product,
+            viewMode: false,
+        })
+    }, [openDrawer])
 
     const columns: DataTableColumn<any>[] = useMemo(() => {
         return [
@@ -88,12 +64,11 @@ export default function ImportInventoryPage() {
                 header:
                     MEDICINE_IMPORT_COLUMNS.find((c) => c.key === "serial")?.label || "#",
                 render: (_, index) => {
-                    const currentPage = filter.page || 1
-                    const perPage = filter.perPage || 10
+                    const currentPage = masterProductFilter.page || 1
+                    const perPage = masterProductFilter.perPage || 10
                     return (currentPage - 1) * perPage + index + 1
                 },
             },
-
             {
                 key: "medicine_details",
                 header:
@@ -101,166 +76,105 @@ export default function ImportInventoryPage() {
                         (c) => c.key === "medicine_details"
                     )?.label || "Medicine Details",
                 render: (row) =>
-                    [row.name, row.saltComposition].filter(Boolean).join(" / ") ||
-                    row.name ||
-                    "-",
+                    [row.name, row.salt || row.saltComposition]
+                        .filter(Boolean)
+                        .join(" / ") || row.name || "-",
             },
-
             {
                 key: "manufacturer",
                 header:
                     MEDICINE_IMPORT_COLUMNS.find((c) => c.key === "manufacturer")
                         ?.label || "Manufacturer",
-                accessor: "manufacturer",
+                render: (row) =>
+                    row.manufacturer?.name ||
+                    row.manufacturer ||
+                    row.manufacturerName ||
+                    "-",
             },
-
             {
                 key: "category",
                 header:
                     MEDICINE_IMPORT_COLUMNS.find((c) => c.key === "category")?.label ||
                     "Category",
-                accessor: "category",
+                render: (row) => row.categoryType || row.category_type || "-",
             },
-
             {
                 key: "type",
                 header:
                     MEDICINE_IMPORT_COLUMNS.find((c) => c.key === "type")?.label ||
                     "Type",
-                accessor: "type",
+                render: (row) => row.categoryType || row.category_type || "-",
             },
-
             {
                 key: "action",
                 header:
                     MEDICINE_IMPORT_COLUMNS.find((c) => c.key === "action")?.label ||
-                    "Actions",
+                    "Import",
                 render: (row) => (
-                    <div className="flex items-center gap-2">
-                        <Button
-                            size="icon-sm"
-                            variant="ghost"
-                            onClick={() => handleOpen(row, "view")}
-                        >
-                            <Eye className="size-4" />
-                        </Button>
-
-                        <Button
-                            size="icon-sm"
-                            variant="ghost"
-                            onClick={() => handleOpen(row, "edit")}
-                        >
-                            <Pencil className="size-4" />
-                        </Button>
-
-                        <Button
-                            size="icon-sm"
-                            variant="ghost"
-                            onClick={() => deleteDisclosure.onOpen(row)}
-                        >
-                            <Trash2 className="size-4" />
-                        </Button>
-                    </div>
+                    <Button type="button" size="sm" onClick={() => handleImportOpen(row)}>
+                        <ArrowDownToLine className="mr-2 size-4" />
+                        Import
+                    </Button>
                 ),
             },
         ]
-    }, [filter.page, filter.perPage, deleteDisclosure])
+    }, [handleImportOpen, masterProductFilter.perPage, masterProductFilter.page])
+
     return (
         <div className="space-y-6">
-            <FilterImportInventory
-                open={filterDisclosure.isOpen}
-                onClose={filterDisclosure.onClose}
-                onFilter={handleFilter}
-                initialFilters={filter}
-            />
             <AddMedicineDialog
-                open={drawerDisclosure.isOpen}
-                onClose={drawerDisclosure.onClose}
-                product={drawerDisclosure.data}
-            />
-            <NewCompoundDialog
-                open={compoundDisclosure.isOpen}
-                onClose={compoundDisclosure.onClose}
-                compound={compoundDisclosure.data}
-            />
-
-            <InterStoreTransfer
-                open={interstoreTransferDisclosure.isOpen}
-                onClose={interstoreTransferDisclosure.onClose}
-                product={interstoreTransferDisclosure.data}
-            />
-
-            <ConfirmDialog
-                open={deleteDisclosure.isOpen}
-                onOpenChange={deleteDisclosure.onClose}
-                title="Delete Inventory Item"
-                description={`Are you sure you want to delete "${deleteDisclosure.data?.name}"? This action cannot be undone.`}
-                onConfirm={() =>
-                    deleteProductMutation.mutate(deleteDisclosure.data?.id)
-                }
-                isLoading={deleteProductMutation.isPending}
-                confirmText="delete"
-                variant="danger"
-                confirmationKeyword="DELETE"
+                open={isDrawerOpen}
+                onClose={closeDrawer}
+                product={drawerData}
+                mode="create"
             />
 
             <SectionCard
                 title="Import Inventory"
-                description="Import medicines directly into your local inventory."
-                action={
-                    <div className="flex items-center justify-center gap-x-3">
-                        <Button type="button" onClick={() => filterDisclosure.onOpen()}>
-                            <Filter className="mr-2 size-4" />
-                            Filters
-                        </Button>
-                    </div>
-                }
+                description="Search active master products, import one into the inventory drawer, then save it as stock."
             >
                 <div className="space-y-4">
                     <FilterBar
                         values={{
                             search: filter.search || "",
-                            companyId: filter.companyId || "",
-                            productTypeId: filter.productTypeId || "",
-                            hsnCodeId: filter.hsnCodeId || "",
                         }}
                         onChange={handleFilterChange}
                     >
                         <FilterBar.Search
                             name="search"
-                            className="w-[30%]"
-                            placeholder="Search by medicine name, HSN code, Composition..."
+                            className="w-full md:w-[30%]"
+                            placeholder="Search active master products..."
                         />
-                        {/* Keeping these as simple text inputs to search by IDs as per simplified API limits */}
-                        {/* <FilterBar.Search name="companyId" placeholder="Company ID" />
-            <FilterBar.Search
-              name="productTypeId"
-              placeholder="Product Type ID" 
-            />
-            <FilterBar.Search name="hsnCodeId" placeholder="HSN ID" /> */}
                     </FilterBar>
 
                     <DataTable
                         columns={columns}
-                        data={inventoryData?.data || []}
+                        data={productData?.data || []}
                         rowKey="id"
-                        currentPage={filter.page || 1}
+                        currentPage={masterProductFilter.page || 1}
                         lastPage={
-                            inventoryData?.meta?.totalPages ||
+                            productData?.meta?.totalPages ||
                             Math.ceil(
-                                (inventoryData?.meta?.total || 0) / (filter.perPage || 10)
+                                (productData?.meta?.total || 0) /
+                                    (masterProductFilter.perPage || 10)
                             ) ||
                             1
                         }
-                        pageSize={filter.perPage || 10}
-                        totalRecords={inventoryData?.meta?.total || 0}
-                        isLoading={isLoadingInventory}
-                        onPageChange={(page) => handleFilterChange({ page })}
-                        onPageSizeChange={(perPage) =>
-                            handleFilterChange({ perPage, page: 1 })
+                        pageSize={masterProductFilter.perPage || 10}
+                        totalRecords={productData?.meta?.total || 0}
+                        isLoading={isLoadingProducts}
+                        onPageChange={(page) =>
+                            handleFilterChange({ page, status: ACTIVE_MASTER_PRODUCT_STATUS })
                         }
-                        emptyTitle="No medicine found"
-                        emptyDescription="Search or adjust the filters to see matching records."
+                        onPageSizeChange={(perPage) =>
+                            handleFilterChange({
+                                perPage,
+                                page: 1,
+                                status: ACTIVE_MASTER_PRODUCT_STATUS,
+                            })
+                        }
+                        emptyTitle="No active master products found"
+                        emptyDescription="Try a different search term or create an active master product first."
                     />
                 </div>
             </SectionCard>

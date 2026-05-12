@@ -8,6 +8,7 @@ export const createStoreSchema = z.object({
   category: z.string().optional(),
   logo: z.string().optional(),
   status: storeStatusEnum.default("ACTIVE"),
+  roleKey: z.string().min(1).default("ORG_ADMIN"),
   ownerFirstName: z.string().min(1, "Owner first name is required"),
   ownerLastName: z.string().min(1, "Owner last name is required"),
   ownerPhone: z.string().min(1, "Owner phone is required"),

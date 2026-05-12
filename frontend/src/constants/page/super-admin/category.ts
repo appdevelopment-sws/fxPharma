@@ -16,14 +16,14 @@ export const CATEGORY_COLUMNS = [
 
 export const CATEGORY_FORM_INITIAL_DATA = {
   name: "",
-  parent_id: "",
+  parentId: "",
   description: "",
   status: "ACTIVE",
 }
 
 export const CATEGORY_FORM_DEFAULT_VALUES = {
   name: "",
-  parent_id: "",
+  parentId: "",
   description: "",
   status: "ACTIVE",
 }

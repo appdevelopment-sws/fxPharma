@@ -1,46 +1,197 @@
 import { Request, Response } from "express";
-import { MasterProductService } from "./masterProduct.service.js";
 import { catchAsync } from "../../../utils/catchAsync.js";
-import {
-  getPaginationOptions,
-  formatPaginatedResponse,
-  paginate,
-} from "../../../utils/pagination.js";
+import { paginate } from "../../../utils/pagination.js";
+import ErrorHandler from "../../../utils/ErrorHandler.js";
+import { rootPrisma } from "@/lib/prisma.js";
 
 export class MasterProductController {
-  static getAll = catchAsync(async (req: Request, res: Response) => {
-    await paginate(res, req.query, (skip, take, search) =>
-      MasterProductService.getAllProducts(search, skip, take),
+  private static mapToPrisma(data: any) {
+    const mapped: any = {
+      name: data.name,
+      industrySegment: data.industry_segment,
+      imageUrl: data.image_url,
+      categoryId: data.category_id || null,
+      brandId: data.brand_id || null,
+      manufacturerId: data.manufacturer_id || null,
+      salt: data.salt || null,
+      hsnId: data.hsn_code_id || null,
+      categoryType: data.category_type,
+      status: data.status,
+      colorType: data.color_type,
+      isNarcotic: !!data.is_narcotic,
+      isScheduleH: !!data.is_schedule_h,
+      isScheduleH1: !!data.is_schedule_h1,
+    };
+
+    Object.keys(mapped).forEach(
+      (key) => mapped[key] === undefined && delete mapped[key],
     );
+
+    return mapped;
+  }
+
+  static getAll = catchAsync(async (req: Request, res: Response) => {
+    await paginate(res, req.query, async (skip, take, search) => {
+      const where: any = {
+        AND: [
+          search
+            ? {
+                OR: [
+                  {
+                    name: {
+                      contains: search,
+                      mode: "insensitive",
+                    },
+                  },
+                  {
+                    barcodes: {
+                      some: {
+                        value: {
+                          contains: search,
+                          mode: "insensitive",
+                        },
+                      },
+                    },
+                  },
+                ],
+              }
+            : {},
+        ],
+      };
+
+      const [data, total] = await Promise.all([
+        rootPrisma.masterProduct.findMany({
+          where,
+          skip,
+          take,
+          include: {
+            category: true,
+            brand: true,
+            manufacturer: true,
+            hsn: true,
+            barcodes: true,
+          },
+          orderBy: {
+            createdAt: "desc",
+          },
+        }),
+        rootPrisma.masterProduct.count({ where }),
+      ]);
+
+      return { data, total };
+    });
   });
 
   static getById = catchAsync(async (req: Request, res: Response) => {
-    const product = await MasterProductService.getProductById(
-      req.params.id as string,
-    );
+    const product = await rootPrisma.masterProduct.findUnique({
+      where: { id: req.params.id as string },
+      include: {
+        category: true,
+        brand: true,
+        manufacturer: true,
+        hsn: true,
+        barcodes: true,
+      },
+    });
+
     if (!product) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Product not found" });
+      throw new ErrorHandler("Product not found", 404);
     }
-    res.json({ success: true, data: product });
+
+    res.json({
+      success: true,
+      data: product,
+    });
   });
 
   static create = catchAsync(async (req: Request, res: Response) => {
-    const product = await MasterProductService.createProduct(req.body);
-    res.status(201).json({ success: true, data: product });
+    const { barcodes } = req.body;
+
+    const product = await rootPrisma.masterProduct.create({
+      data: {
+        ...this.mapToPrisma(req.body),
+        barcodes: barcodes
+          ? {
+              create: barcodes
+                .filter((b: any) => b.value)
+                .map((b: any) => ({
+                  value: b.value,
+                })),
+            }
+          : undefined,
+      },
+      include: {
+        category: true,
+        brand: true,
+        manufacturer: true,
+        hsn: true,
+        barcodes: true,
+      },
+    });
+
+    res.status(201).json({
+      success: true,
+      data: product,
+    });
   });
 
   static update = catchAsync(async (req: Request, res: Response) => {
-    const product = await MasterProductService.updateProduct(
-      req.params.id as string,
-      req.body,
-    );
-    res.json({ success: true, data: product });
+    const existing = await rootPrisma.masterProduct.findUnique({
+      where: { id: req.params.id as string },
+    });
+
+    if (!existing) {
+      throw new ErrorHandler("Product not found", 404);
+    }
+
+    const { barcodes } = req.body;
+
+    const product = await rootPrisma.masterProduct.update({
+      where: { id: req.params.id as string },
+      data: {
+        ...this.mapToPrisma(req.body),
+        barcodes: barcodes
+          ? {
+              deleteMany: {},
+              create: barcodes
+                .filter((b: any) => b.value)
+                .map((b: any) => ({
+                  value: b.value,
+                })),
+            }
+          : undefined,
+      },
+      include: {
+        category: true,
+        brand: true,
+        manufacturer: true,
+        hsn: true,
+        barcodes: true,
+      },
+    });
+
+    res.json({
+      success: true,
+      data: product,
+    });
   });
 
   static delete = catchAsync(async (req: Request, res: Response) => {
-    await MasterProductService.deleteProduct(req.params.id as string);
-    res.json({ success: true, message: "Product deleted successfully" });
+    const existing = await rootPrisma.masterProduct.findUnique({
+      where: { id: req.params.id as string },
+    });
+
+    if (!existing) {
+      throw new ErrorHandler("Product not found", 404);
+    }
+
+    await rootPrisma.masterProduct.delete({
+      where: { id: req.params.id as string },
+    });
+
+    res.json({
+      success: true,
+      message: "Product deleted successfully",
+    });
   });
 }

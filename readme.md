@@ -43,7 +43,6 @@ cp .env.sample .env
 cd ..
 ```
 
-
 3. Run the docker commands to start the bakcend server and frontend.
 
 ```bash
@@ -57,7 +56,7 @@ docker compose up -d
 To seed the database run:
 
 ```bash
-docker exec -it dawadukaan-backend-1 npx prisma migrate dev
+docker exec -it dawadukaan-backend-1 npx prisma db push
 
 docker exec -it dawadukaan-backend-1 npx prisma db seed
 ```
@@ -79,9 +78,9 @@ To stop the running containers, run
 ```bash
 docker compose down
 ```
+
 migrate the database
 
 ```bash
-docker compose exec backend npx prisma migrate deploy  
+docker compose exec backend npx prisma migrate deploy
 ```
-

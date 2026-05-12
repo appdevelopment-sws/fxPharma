@@ -1,0 +1,23 @@
+
+//////////////////////////////////////////////////////
+// MEMBER -> BRANCH ACCESS
+//////////////////////////////////////////////////////
+
+model MemberBranch {
+  memberId      String
+
+  branchId      String
+
+  member        OrganizationMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  branch        Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  assignedAt    DateTime @default(now())
+
+  //////////////////////////////////////////////////////
+  // COMPOSITE PRIMARY KEY
+  //////////////////////////////////////////////////////
+
+  @@id([memberId, branchId])
+}
+

@@ -8,6 +8,6 @@ export const INITIAL_UNIT_FILTERS = {
 
 export const UNIT_FORM_INITIAL_DATA = {
   name: "",
-  short_name: "",
+  shortName: "",
   status: "ACTIVE",
 }

@@ -9,9 +9,6 @@ export const INITIAL_COMPOUNDING_FILTERS = {
   page: 1,
   perPage: 10,
   search: "",
-  patient: "",
-  provider: "",
-  status: "",
 }
 
 export const COMPOUNDING_COLUMNS = [

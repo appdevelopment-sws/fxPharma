@@ -20,7 +20,7 @@ import {
   isNavigationItemActive,
   type SidebarNavigationGroup,
 } from "@/components/navigation/sidebar-navigation"
-import { PERMISSIONS, ROLES, superAdminPermissionLabels } from "@/lib/access"
+import { PERMISSIONS, ROLES } from "@/lib/access"
 import { Checkbox } from "../ui/checkbox"
 
 export const superAdminNavigationGroups: SidebarNavigationGroup[] = [
@@ -151,7 +151,7 @@ export function getSuperAdminPermissionSummary(user: AuthUser | null) {
   if (!user) return []
   return user.permissions.map((permission) => ({
     permission,
-    label: superAdminPermissionLabels[permission] ?? permission,
+    label: permission,
   }))
 }
 

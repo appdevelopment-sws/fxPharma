@@ -82,7 +82,7 @@ const Units = () => {
         header: "Symbol",
         render: (row) => (
           <span className="rounded bg-muted px-2 py-1 text-xs font-medium">
-            {row.short_name}
+            {row.shortName}
           </span>
         ),
       },
