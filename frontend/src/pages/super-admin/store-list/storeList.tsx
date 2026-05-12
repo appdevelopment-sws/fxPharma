@@ -17,7 +17,6 @@ import {
   INITIAL_STORE_FILTERS,
   STORE_COLUMNS,
 } from "@/constants/page/super-admin/store"
-import { Badge } from "@/components/ui/badge"
 import AddStoreListDialog from "@/components/dialog/AddStoreListDialog"
 import { StatusBadge } from "@/components/ui/badge-status"
 
@@ -55,7 +54,6 @@ export default function ManageSubscriptionPage() {
     },
     [handleFilter]
   )
-  console.log("harsh")
   const columns: DataTableColumn<any>[] = useMemo(() => {
     return [
       {

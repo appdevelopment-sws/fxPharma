@@ -18,7 +18,6 @@ import {
   TIMEZONE_OPTIONS,
   CURRENCY_OPTIONS,
   STORE_CATEGORY_OPTIONS,
-  STORE_SUBSCRIPTION_OPTIONS,
 } from "@/constants/page/super-admin/store"
 
 import StoreListApi from "@/services/storelistApi"
@@ -80,16 +79,18 @@ export default function ManageStoreDialog({
         reset({
           ...STORE_FORM_INITIAL_DATA,
           ...store,
-          store_visibility: store?.status || store?.store_visibility || "ACTIVE",
-          subscription_plan_id: store?.subscription_plan_id || store?.plan?.id || "2",
-          role_key: store?.role_key || store?.owner?.role?.key || defaultRoleKey,
-          permissions:
-            store?.permissions?.length
-              ? store.permissions
-              : store?.owner?.permissions
-                  ?.filter((permission: any) => permission.granted)
-                  .map((permission: any) => permission.permission?.key)
-                  .filter(Boolean) ?? [],
+          store_visibility:
+            store?.status || store?.store_visibility || "ACTIVE",
+          subscription_plan_id:
+            store?.subscription_plan_id || store?.plan?.id || "2",
+          role_key:
+            store?.role_key || store?.owner?.role?.key || defaultRoleKey,
+          permissions: store?.permissions?.length
+            ? store.permissions
+            : (store?.owner?.permissions
+                ?.filter((permission: any) => permission.granted)
+                .map((permission: any) => permission.permission?.key)
+                .filter(Boolean) ?? []),
         })
       } else {
         reset({
