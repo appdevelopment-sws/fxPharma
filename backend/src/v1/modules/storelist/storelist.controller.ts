@@ -185,6 +185,7 @@ const mapOrganizationToStore = (organization: any) => {
     country: address.country ?? "",
     timezone: organization.timezone ?? null,
     currency: organization.currency ?? null,
+    mainBranchId: mainBranch?.id ?? null,
     subscription_plan_id: organization.planId ?? null,
     plan: organization.plan
       ? {

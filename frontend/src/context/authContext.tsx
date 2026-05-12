@@ -4,6 +4,7 @@ import {
   useState,
   useMemo,
   useEffect,
+  useLayoutEffect,
   type PropsWithChildren,
 } from "react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
@@ -20,6 +21,12 @@ export type AuthUser = {
       id: string
       name: string
       slug: string
+      branches?: Array<{
+        id: string
+        name: string
+        code: string | null
+        isMainBranch?: boolean
+      }>
     }
     role: {
       key: string
@@ -125,6 +132,29 @@ export function AuthProvider({ children }: PropsWithChildren) {
       setActiveOrganizationId(firstOrgId)
     }
   }, [rawUser, activeOrganizationId])
+
+  // Set a default branch for the active organization if none is selected yet.
+  useLayoutEffect(() => {
+    if (!rawUser || !activeOrganizationId || activeBranchId) return
+
+    const activeMembership =
+      rawUser.organizations?.find(
+        (org: any) => org.organizationId === activeOrganizationId
+      ) || rawUser.organizations?.[0]
+
+    const organizationBranches = activeMembership?.organization?.branches ?? []
+    const mainBranch =
+      organizationBranches.find((branch: any) => branch.isMainBranch) ||
+      organizationBranches[0]
+
+    const firstBranchId =
+      activeMembership?.branches?.[0]?.branch?.id ?? mainBranch?.id ?? null
+
+    if (firstBranchId) {
+      localStorage.setItem("activeBranchId", firstBranchId)
+      setActiveBranchId(firstBranchId)
+    }
+  }, [rawUser, activeOrganizationId, activeBranchId])
 
   const value: AuthContextValue = {
     user,

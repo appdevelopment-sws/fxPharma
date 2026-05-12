@@ -21,6 +21,7 @@ export type Store = {
   country: string
   timezone?: string | null
   currency?: string | null
+  mainBranchId?: string | null
   subscription_plan_id?: string | null
   plan?: {
     id: string
@@ -161,6 +162,7 @@ const mapApiToStore = (data: any): Store => {
     country: data.country,
     timezone: data.timezone,
     currency: data.currency,
+    mainBranchId: data.mainBranchId,
     subscription_plan_id: data.planId,
     plan: data.plan,
     role_key: data.roleKey || data.owner?.role?.key,
