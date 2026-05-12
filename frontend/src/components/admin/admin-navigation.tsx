@@ -87,7 +87,7 @@ export const adminNavigationGroups: SidebarNavigationGroup[] = [
             to: "/admin/attributes",
             description: "Master product attributes",
             icon: Barcode,
-            permissions: [PERMISSIONS.MASTER_PRODUCT_VIEW],
+            // permissions: [PERMISSIONS.MASTER_PRODUCT_VIEW],
           },
         ],
       },

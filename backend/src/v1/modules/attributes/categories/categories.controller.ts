@@ -4,11 +4,20 @@ import { paginate } from "../../../../utils/pagination.js";
 import ErrorHandler from "../../../../utils/ErrorHandler.js";
 import { buildSearchFilter } from "@/utils/buildSearchFilter.js";
 import { rootPrisma } from "@/lib/prisma.js";
+import { getRequestScope } from "@/helpers/requestScope.js";
 
 export class CategoriesController {
   static getAll = catchAsync(async (req: Request, res: Response) => {
+    const { organizationId, branchId } = getRequestScope(req);
+
     await paginate(res, req.query, async (skip, take, search) => {
-      const where = buildSearchFilter(search, ["name", "description"]);
+      const searchFilter = buildSearchFilter(search, ["name", "description"]);
+
+      const where = {
+        ...searchFilter,
+        organizationId,
+        ...(branchId ? { branchId } : {}),
+      };
 
       const [data, total] = await Promise.all([
         rootPrisma.category.findMany({
@@ -34,8 +43,14 @@ export class CategoriesController {
   });
 
   static getById = catchAsync(async (req: Request, res: Response) => {
-    const category: any = await rootPrisma.category.findUnique({
-      where: { id: req.params.id as string },
+    const { organizationId, branchId } = getRequestScope(req);
+
+    const category: any = await rootPrisma.category.findFirst({
+      where: {
+        id: req.params.id as string,
+        organizationId,
+        ...(branchId ? { branchId } : {}),
+      },
       include: {
         parent: true,
         children: true,
@@ -56,8 +71,14 @@ export class CategoriesController {
   });
 
   static create = catchAsync(async (req: Request, res: Response) => {
+    const { organizationId, branchId } = getRequestScope(req);
+
     const existing = await rootPrisma.category.findFirst({
-      where: { name: req.body.name },
+      where: {
+        name: req.body.name,
+        organizationId,
+        ...(branchId ? { branchId } : {}),
+      },
     });
 
     if (existing) {
@@ -69,6 +90,8 @@ export class CategoriesController {
     const category: any = await rootPrisma.category.create({
       data: {
         ...rest,
+        organizationId,
+        branchId,
         parentId: parent_id || null,
       },
     });
@@ -83,8 +106,14 @@ export class CategoriesController {
   });
 
   static update = catchAsync(async (req: Request, res: Response) => {
-    const existing = await rootPrisma.category.findUnique({
-      where: { id: req.params.id as string },
+    const { organizationId, branchId } = getRequestScope(req);
+
+    const existing = await rootPrisma.category.findFirst({
+      where: {
+        id: req.params.id as string,
+        organizationId,
+        ...(branchId ? { branchId } : {}),
+      },
       include: {
         children: true,
       },
@@ -94,7 +123,15 @@ export class CategoriesController {
       throw new ErrorHandler("Category not found", 404);
     }
 
-    const { id, createdAt, updatedAt, parent_id, ...rest } = req.body;
+    const {
+      id,
+      createdAt,
+      updatedAt,
+      organizationId: orgId,
+      branchId: brId,
+      parent_id,
+      ...rest
+    } = req.body;
 
     const updateData: any = { ...rest };
 
@@ -117,8 +154,14 @@ export class CategoriesController {
   });
 
   static delete = catchAsync(async (req: Request, res: Response) => {
-    const category = await rootPrisma.category.findUnique({
-      where: { id: req.params.id as string },
+    const { organizationId, branchId } = getRequestScope(req);
+
+    const category = await rootPrisma.category.findFirst({
+      where: {
+        id: req.params.id as string,
+        organizationId,
+        ...(branchId ? { branchId } : {}),
+      },
       include: {
         children: true,
       },
@@ -146,8 +189,14 @@ export class CategoriesController {
   });
 
   static updateStatus = catchAsync(async (req: Request, res: Response) => {
-    const category = await rootPrisma.category.findUnique({
-      where: { id: req.params.id as string },
+    const { organizationId, branchId } = getRequestScope(req);
+
+    const category = await rootPrisma.category.findFirst({
+      where: {
+        id: req.params.id as string,
+        organizationId,
+        ...(branchId ? { branchId } : {}),
+      },
     });
 
     if (!category) {

@@ -32,14 +32,18 @@ export function useLogin() {
 
       // Set initial organization and branch context from first organization
       const firstOrg = user.organizations?.[0]
-      const firstBranch = firstOrg?.branches?.[0]
+      const organizationBranches = firstOrg?.organization?.branches ?? []
+      const mainBranch =
+        organizationBranches.find((branch: any) => branch.isMainBranch) ||
+        organizationBranches[0]
+      const firstBranch = firstOrg?.branches?.[0]?.branch ?? mainBranch
 
       if (firstOrg?.organizationId) {
         localStorage.setItem("activeOrganizationId", firstOrg.organizationId)
       }
       
-      if (firstBranch?.branch?.id) {
-        localStorage.setItem("activeBranchId", firstBranch.branch.id)
+      if (firstBranch?.id) {
+        localStorage.setItem("activeBranchId", firstBranch.id)
       } else {
         localStorage.removeItem("activeBranchId")
       }

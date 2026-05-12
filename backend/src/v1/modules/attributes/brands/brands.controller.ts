@@ -4,10 +4,20 @@ import { paginate } from "../../../../utils/pagination.js";
 import ErrorHandler from "../../../../utils/ErrorHandler.js";
 import { buildSearchFilter } from "@/utils/buildSearchFilter.js";
 import { rootPrisma } from "@/lib/prisma.js";
+import { getRequestScope } from "@/helpers/requestScope.js";
+
 export class BrandsController {
   static getAll = catchAsync(async (req: Request, res: Response) => {
+    const { organizationId, branchId } = getRequestScope(req);
+
     await paginate(res, req.query, async (skip, take, search) => {
-      const where = buildSearchFilter(search, ["name", "description"]);
+      const searchFilter = buildSearchFilter(search, ["name", "description"]);
+
+      const where = {
+        ...searchFilter,
+        organizationId,
+        ...(branchId ? { branchId } : {}),
+      };
 
       const [data, total] = await Promise.all([
         rootPrisma.brand.findMany({
@@ -16,6 +26,7 @@ export class BrandsController {
           skip,
           take,
         }),
+
         rootPrisma.brand.count({ where }),
       ]);
 
@@ -24,8 +35,14 @@ export class BrandsController {
   });
 
   static getById = catchAsync(async (req: Request, res: Response) => {
-    const brand = await rootPrisma.brand.findUnique({
-      where: { id: req.params.id as string },
+    const { organizationId, branchId } = getRequestScope(req);
+
+    const brand = await rootPrisma.brand.findFirst({
+      where: {
+        id: req.params.id as string,
+        organizationId,
+        ...(branchId ? { branchId } : {}),
+      },
     });
 
     if (!brand) {
@@ -39,8 +56,14 @@ export class BrandsController {
   });
 
   static create = catchAsync(async (req: Request, res: Response) => {
+    const { organizationId, branchId } = getRequestScope(req);
+
     const existing = await rootPrisma.brand.findFirst({
-      where: { name: req.body.name },
+      where: {
+        name: req.body.name,
+        organizationId,
+        ...(branchId ? { branchId } : {}),
+      },
     });
 
     if (existing) {
@@ -48,7 +71,11 @@ export class BrandsController {
     }
 
     const brand = await rootPrisma.brand.create({
-      data: req.body,
+      data: {
+        ...req.body,
+        organizationId,
+        branchId,
+      },
     });
 
     res.status(201).json({
@@ -58,15 +85,28 @@ export class BrandsController {
   });
 
   static update = catchAsync(async (req: Request, res: Response) => {
-    const existing = await rootPrisma.brand.findUnique({
-      where: { id: req.params.id as string },
+    const { organizationId, branchId } = getRequestScope(req);
+
+    const existing = await rootPrisma.brand.findFirst({
+      where: {
+        id: req.params.id as string,
+        organizationId,
+        ...(branchId ? { branchId } : {}),
+      },
     });
 
     if (!existing) {
       throw new ErrorHandler("Brand not found", 404);
     }
 
-    const { id, createdAt, updatedAt, ...data } = req.body;
+    const {
+      id,
+      createdAt,
+      updatedAt,
+      organizationId: orgId,
+      branchId: brId,
+      ...data
+    } = req.body;
 
     const brand = await rootPrisma.brand.update({
       where: { id: req.params.id as string },
@@ -80,8 +120,14 @@ export class BrandsController {
   });
 
   static delete = catchAsync(async (req: Request, res: Response) => {
-    const brand = await rootPrisma.brand.findUnique({
-      where: { id: req.params.id as string },
+    const { organizationId, branchId } = getRequestScope(req);
+
+    const brand = await rootPrisma.brand.findFirst({
+      where: {
+        id: req.params.id as string,
+        organizationId,
+        ...(branchId ? { branchId } : {}),
+      },
     });
 
     if (!brand) {
@@ -99,8 +145,14 @@ export class BrandsController {
   });
 
   static updateStatus = catchAsync(async (req: Request, res: Response) => {
-    const brand = await rootPrisma.brand.findUnique({
-      where: { id: req.params.id as string },
+    const { organizationId, branchId } = getRequestScope(req);
+
+    const brand = await rootPrisma.brand.findFirst({
+      where: {
+        id: req.params.id as string,
+        organizationId,
+        ...(branchId ? { branchId } : {}),
+      },
     });
 
     if (!brand) {

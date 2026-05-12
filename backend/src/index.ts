@@ -27,6 +27,12 @@ import brandRoutes from "./v1/modules/attributes/brands/brands.routes.js";
 import unitRoutes from "./v1/modules/attributes/units/units.routes.js";
 import masterProductRoutes from "./v1/modules/masterProducts/masterProduct.routes.js";
 import StoreListRoutes from "./v1/modules/storelist/storelist.routes.js";
+
+import SupplierRoutes from "./v1/modules/suppliers/suppliers.routes.js";
+import OrdersRoutes from "./v1/modules/orders/orders.routes.js";
+import MedicineRoutes from "./v1/modules/inventory/add_medicine/add_medicine.routes.js";
+import CompoundRoutes from "./v1/modules/inventory/new_compound/new_compound.routes.js";
+
 const app = express();
 
 const allowedOrigins = [process.env.CLIENT_URL || ""].filter(Boolean);
@@ -78,6 +84,10 @@ app.use("/api/v1/attributes/units", generalLimiter, unitRoutes);
 
 app.use("/api/v1/master-products", generalLimiter, masterProductRoutes);
 app.use("/api/v1/storelist", generalLimiter, StoreListRoutes);
+app.use("/api/v1/suppliers", generalLimiter, SupplierRoutes);
+app.use("/api/v1/orders", generalLimiter, OrdersRoutes);
+app.use("/api/v1/inventory/add-medicine", generalLimiter, MedicineRoutes);
+app.use("/api/v1/compound", generalLimiter, categoryRoutes);
 app.get("/", (_req: Request, res: Response) => {
   res.json("hello from backend");
 });
