@@ -165,7 +165,7 @@ const mapApiToStore = (data: any): Store => {
     mainBranchId: data.mainBranchId,
     subscription_plan_id: data.planId,
     plan: data.plan,
-    role_key: data.roleKey || data.owner?.role?.key,
+    role_key: data.role_key || data.roleKey || data.owner?.role?.key,
     role_name: data.owner?.role?.name,
     permissions:
       data.owner?.permissions
