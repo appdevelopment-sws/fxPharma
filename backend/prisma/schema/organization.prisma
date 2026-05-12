@@ -25,6 +25,8 @@ model Organization {
   plan   Plan?   @relation(fields: [planId], references: [id])
   suppliers   Supplier[]
   auditLogs   AuditLog[]
+  inventory Inventory[]
+  newCompounds NewCompound[]
 
   @@index([slug])
 }

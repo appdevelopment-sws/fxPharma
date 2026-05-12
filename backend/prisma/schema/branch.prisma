@@ -33,7 +33,8 @@ model Branch {
   members         MemberBranch[]
   suppliers       Supplier[]
   auditLogs       AuditLog[]
-
+  inventory Inventory[]
+  newCompounds NewCompound[]
   @@index([organizationId])
 
   @@unique([organizationId, code])
