@@ -29,6 +29,7 @@ import BrandApi, {
   UnitApi,
 } from "@/services/attributesApi"
 import { COLOR_TYPE_OPTIONS } from "@/constants/shared/form-options"
+import { formatDateForInput } from "@/lib/utils"
 
 interface MedicineStockDialogProps {
   open: boolean
@@ -97,7 +98,9 @@ const toFormValues = (product: any) => ({
   minimum_qty: product?.minQty ?? product?.minimum_qty ?? "0",
   maximum_qty: product?.maxQty ?? product?.maximum_qty ?? "0",
   reorder_qty: product?.reorderQty ?? product?.reorder_qty ?? "0",
-  days_limit: product?.daysLimit ?? product?.days_limit ?? "0",
+  days_limit: formatDateForInput(product?.daysLimit ?? product?.days_limit),
+  temperature_limit:
+    product?.temperatureLimit ?? product?.temperature_limit ?? "",
   conv_stri: product?.convStri ?? product?.conv_stri ?? "",
   conv_cas: product?.convCas ?? product?.conv_cas ?? "",
   volume_discount: product?.volumeDiscount ?? product?.volume_discount ?? "",
@@ -144,7 +147,8 @@ const toApiPayload = (data: any) => ({
   minQty: toNumber(data.minimum_qty),
   maxQty: toNumber(data.maximum_qty),
   reorderQty: toNumber(data.reorder_qty),
-  daysLimit: data.days_limit,
+  daysLimit: data.days_limit || null,
+  temperatureLimit: toNumber(data.temperature_limit),
   convStri: toNumber(data.conv_stri),
   convCas: toNumber(data.conv_cas),
   volumeDiscount: toNumber(data.volume_discount),

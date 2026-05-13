@@ -61,7 +61,7 @@ export const MEDICINE_STOCK_FORM_INITIAL_DATA = {
   minimum_qty: "0",
   maximum_qty: "0",
   reorder_qty: "0",
-  days_limit: "0",
+  days_limit: "",
   conv_stri: "",
   conv_cas: "",
   manufacturer: "",

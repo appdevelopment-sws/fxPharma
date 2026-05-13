@@ -31,6 +31,7 @@ export type InventoryFormValues = {
   maximum_qty?: string | number
   reorder_qty?: string | number
   days_limit?: string | number
+  temperature_limit?: string | number
   conv_stri?: string | number
   conv_cas?: string | number
   volume_discount?: string | number

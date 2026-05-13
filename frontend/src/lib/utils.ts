@@ -14,8 +14,20 @@ export function getImageUrl(path: string | undefined | null) {
   // Remove leading slash if present, so we don't end up with //
   const cleanPath = path.startsWith("/") ? path.slice(1) : path
 
-  // For development with Vite proxy, or production on same domain, 
+  // For development with Vite proxy, or production on same domain,
   // we can use a relative or absolute path from origin.
   // We'll use absolute path from root.
   return `/${cleanPath}`
+}
+
+export const formatDateForInput = (value: unknown) => {
+  if (!value) return ""
+  const date =
+    value instanceof Date
+      ? value
+      : typeof value === "string"
+        ? new Date(value)
+        : null
+  if (!date || Number.isNaN(date.getTime())) return ""
+  return date.toISOString().slice(0, 10)
 }

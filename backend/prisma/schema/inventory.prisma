@@ -40,6 +40,7 @@ model Inventory {
   maxQty          Int?     @default(0) @map("max_qty")
   reorderQty      Int?     @default(0) @map("reorder_qty")
   daysLimit       DateTime?     @map("days_limit")
+  temperatureLimit Decimal? @default(0.0) @map("temperature_limit")
   convStri        Decimal? @default(0.0) @map("conv_stri")
   convCas         Decimal? @default(0.0) @map("conv_cas")
 
