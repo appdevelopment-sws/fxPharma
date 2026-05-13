@@ -84,7 +84,7 @@ export class UnitsController {
         ...rest,
         organizationId,
         branchId,
-        shortName: short_name || null,
+        shortName: short_name || shortName || null,
       },
     });
 
@@ -124,8 +124,9 @@ export class UnitsController {
 
     const updateData: any = { ...rest };
 
-    if (short_name !== undefined) {
-      updateData.shortName = short_name || null;
+    const finalShortName = short_name !== undefined ? short_name : req.body.shortName;
+    if (finalShortName !== undefined) {
+      updateData.shortName = finalShortName || null;
     }
 
     const unit: any = await rootPrisma.unit.update({
