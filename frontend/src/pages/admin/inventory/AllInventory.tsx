@@ -18,8 +18,6 @@ import {
   MEDICINE_STOCK_COLUMNS,
 } from "@/constants/page/admin/inventory"
 import AddMedicineDialog from "@/components/dialog/admin/AddMedicineDialog"
-import NewCompoundDialog from "@/components/dialog/admin/NewCompoundDialog"
-import InterStoreTransfer from "@/components/dialog/admin/InterStoreTransfer"
 
 export default function AllInventoryPage() {
   const queryClient = useQueryClient()

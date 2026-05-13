@@ -9,14 +9,30 @@ import { getRequestScope } from "@/helpers/requestScope.js";
 export class BrandsController {
   static getAll = catchAsync(async (req: Request, res: Response) => {
     const { organizationId, branchId } = getRequestScope(req);
+    const includeGlobal = req.query.includeGlobal === "true";
 
     await paginate(res, req.query, async (skip, take, search) => {
       const searchFilter = buildSearchFilter(search, ["name", "description"]);
 
       const where = {
         ...searchFilter,
-        organizationId,
-        ...(branchId ? { branchId } : {}),
+
+        OR: includeGlobal
+          ? [
+              {
+                organizationId,
+                ...(branchId ? { branchId } : {}),
+              },
+              {
+                isGlobal: true,
+              },
+            ]
+          : [
+              {
+                organizationId,
+                ...(branchId ? { branchId } : {}),
+              },
+            ],
       };
 
       const [data, total] = await Promise.all([

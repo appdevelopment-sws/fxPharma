@@ -6,9 +6,11 @@ export const createInventorySchema = z.object({
   // 01 Product Identification
   name: z.string().min(1, "Product name is required"),
   status: InventoryStatusEnum.optional(),
-  manufacturer: z.string().optional().nullable(),
+  manufacturerId: z.string().nullable().optional(),
+  categoryId: z.string().nullable().optional(),
+  brandId: z.string().nullable().optional(),
+  unitId: z.string().nullable().optional(),
   saltComposition: z.string().optional().nullable(),
-  category: z.string().optional().nullable(),
   company: z.string().optional().nullable(),
   // 02 Classification & Units
   packing: z.string().optional().nullable(),

@@ -31,7 +31,7 @@ model Organization {
   units Unit[]
   categories Category[]
   manufacturers Manufacturer[]
-
+  settings Setting[]
   @@index([slug])
 }
 

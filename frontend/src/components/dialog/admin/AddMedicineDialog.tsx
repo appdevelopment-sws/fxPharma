@@ -36,6 +36,7 @@ interface MedicineStockDialogProps {
   onClose: (open: boolean) => void
   product?: any | null
   mode?: "create" | "edit" | "view"
+  includeGlobal?: boolean
 }
 
 const toNumber = (value: unknown) => {
@@ -56,22 +57,37 @@ const toFormValues = (product: any) => ({
   product_name: product?.product_name || product?.name || "",
   status: product?.status || "CONTINUE",
   company:
+    product?.brandId ||
+    product?.brand_id ||
+    product?.company?.id ||
     product?.company ||
-    product?.manufacturer ||
-    product?.manufacturer?.name ||
     "",
+  manufacturer:
+    product?.manufacturerId ||
+    product?.manufacturer_id ||
+    product?.manufacturer?.id ||
+    "",
+
   salt_composition:
     product?.salt_composition ||
     product?.saltComposition ||
     product?.salt ||
     "",
   category:
-    product?.category ||
+    product?.categoryId ||
+    product?.category_id ||
+    product?.category?.id ||
     product?.categoryType ||
     product?.category_type ||
+    product?.category ||
     "TAB",
   packing: product?.packing || "",
-  unit_1st: product?.unit1st || product?.unit_1st || "",
+  unit_1st:
+    product?.unitId ||
+    product?.unit_id ||
+    product?.unit1st ||
+    product?.unit_1st ||
+    "",
   unit_2nd: product?.unit2nd || product?.unit_2nd || "",
   hsn_code:
     product?.hsn_code ||
@@ -121,9 +137,11 @@ const toFormValues = (product: any) => ({
 const toApiPayload = (data: any) => ({
   name: data.product_name?.trim(),
   status: data.status || "CONTINUE",
-  manufacturer: toNullableString(data.company),
+  brandId: toNullableString(data.company),
+  manufacturerId: toNullableString(data.manufacturer),
+  categoryId: toNullableString(data.category),
+  unitId: toNullableString(data.unit_1st),
   saltComposition: toNullableString(data.salt_composition),
-  category: toNullableString(data.category),
   packing: toNullableString(data.packing),
   unit1st: toNullableString(data.unit_1st),
   unit2nd: toNullableString(data.unit_2nd),
@@ -170,6 +188,7 @@ export default function MedicineStockDialog({
   onClose,
   product,
   mode,
+  includeGlobal = false,
 }: MedicineStockDialogProps) {
   const resolvedMode =
     mode || (product?.viewMode ? "view" : product?.id ? "edit" : "create")
@@ -195,7 +214,8 @@ export default function MedicineStockDialog({
   })
   const { data: companyData } = useQuery({
     queryKey: queryKeys.brands.list({ limit: 20 }),
-    queryFn: () => BrandApi.getBrands({ limit: 20 }),
+    queryFn: () =>
+      BrandApi.getBrands({ limit: 20, includeGlobal: includeGlobal }),
     enabled: open,
   })
 
@@ -209,7 +229,7 @@ export default function MedicineStockDialog({
     () =>
       manufacturersData?.data?.map((manufacturer: any) => ({
         label: manufacturer.name,
-        value: manufacturer.name,
+        value: manufacturer.id,
       })) ?? [],
     [manufacturersData]
   )
@@ -218,7 +238,7 @@ export default function MedicineStockDialog({
     () =>
       companyData?.data?.map((company: any) => ({
         label: company.name,
-        value: company.name,
+        value: company.id,
       })) ?? [],
     [companyData]
   )
@@ -226,7 +246,7 @@ export default function MedicineStockDialog({
     () =>
       categoriesData?.data?.map((category: any) => ({
         label: category.name,
-        value: category.name,
+        value: category.id,
       })) ?? CATEGORY_OPTIONS,
     [categoriesData]
   )
@@ -235,13 +255,14 @@ export default function MedicineStockDialog({
     () =>
       unitsData?.data?.map((unit: any) => ({
         label: unit.name,
-        value: unit.short_name || unit.name,
+        value: unit.id,
       })) ?? [],
     [unitsData]
   )
 
   useEffect(() => {
     if (open) {
+      console.log("Resetting form with product data:", product)
       if (isEditMode || isViewMode || isCreateFromTemplate) {
         reset(toFormValues(product))
       } else {
