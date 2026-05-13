@@ -39,7 +39,7 @@ model Inventory {
   minQty          Int?     @default(0) @map("min_qty")
   maxQty          Int?     @default(0) @map("max_qty")
   reorderQty      Int?     @default(0) @map("reorder_qty")
-  daysLimit       Int?     @default(0) @map("days_limit")
+  daysLimit       DateTime?     @map("days_limit")
   convStri        Decimal? @default(0.0) @map("conv_stri")
   convCas         Decimal? @default(0.0) @map("conv_cas")
 

@@ -53,13 +53,7 @@ export default function AllInventoryPage() {
       product ? { ...product, id: product.id, viewMode: mode === "view" } : null
     )
   }
-  const handleCompoundOpen = () => {
-    compoundDisclosure.onOpen(null)
-  }
 
-  const handleInterstoreTransferOpen = () => {
-    interstoreTransferDisclosure.onOpen(null)
-  }
   const handleFilterChange = useCallback(
     (updates: Record<string, any>) => {
       handleFilter({ ...updates, page: 1 })

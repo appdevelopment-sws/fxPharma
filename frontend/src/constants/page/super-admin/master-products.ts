@@ -1,5 +1,3 @@
-import { FORM_TYPE } from "@/constants/shared/form"
-
 export const MASTER_PRODUCT_BREADCRUMBS = [
   { title: "Products Directory", href: "/super-admin/master-products" },
   { title: "Master Products", href: "/super-admin/master-products" },
@@ -53,11 +51,4 @@ export const CATEGORY_TYPE_OPTIONS = [
 export const PRODUCT_STATUS_OPTIONS = [
   { label: "CONTINUE", value: "CONTINUE" },
   { label: "DISCONTINUE", value: "DISCONTINUE" },
-]
-
-export const COLOR_TYPE_OPTIONS = [
-  { label: "NORMAL", value: "NORMAL" },
-  { label: "SCHEDULE H", value: "SCHEDULE_H" },
-  { label: "SCHEDULE H1", value: "SCHEDULE_H1" },
-  { label: "NARCOTIC", value: "NARCOTIC" },
 ]

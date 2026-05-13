@@ -63,7 +63,6 @@ export class InventoryController {
 
     res.json({ success: true, data: inventory });
   });
-
   static create = catchAsync(async (req: Request, res: Response) => {
     const { organizationId, branchId } = getRequestScope(req);
 
@@ -72,10 +71,14 @@ export class InventoryController {
         ...req.body,
         organizationId,
         branchId,
+        daysLimit: req.body.daysLimit ? new Date(req.body.daysLimit) : null,
       },
     });
 
-    res.status(201).json({ success: true, data: inventory });
+    res.status(201).json({
+      success: true,
+      data: inventory,
+    });
   });
 
   static update = catchAsync(async (req: Request, res: Response) => {
@@ -97,9 +100,11 @@ export class InventoryController {
 
     const inventory = await rootPrisma.inventory.update({
       where: { id: req.params.id as string },
-      data,
+      data: {
+        ...data,
+        daysLimit: data.daysLimit ? new Date(data.daysLimit) : null,
+      },
     });
-
     res.json({ success: true, data: inventory });
   });
 

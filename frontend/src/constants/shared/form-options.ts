@@ -1,0 +1,25 @@
+export const COLOR_TYPE_OPTIONS = [
+  { label: "WHITE", value: "WHITE", className: "bg-white border" },
+  { label: "OFF WHITE", value: "OFF_WHITE", className: "bg-neutral-100" },
+  { label: "RED", value: "RED", className: "bg-red-500" },
+  { label: "PINK", value: "PINK", className: "bg-pink-500" },
+  { label: "ORANGE", value: "ORANGE", className: "bg-orange-500" },
+  { label: "YELLOW", value: "YELLOW", className: "bg-yellow-400" },
+  { label: "GREEN", value: "GREEN", className: "bg-green-500" },
+  { label: "BLUE", value: "BLUE", className: "bg-blue-500" },
+  { label: "DARK BLUE", value: "DARK_BLUE", className: "bg-blue-900" },
+  { label: "PURPLE", value: "PURPLE", className: "bg-purple-500" },
+  { label: "BROWN", value: "BROWN", className: "bg-amber-800" },
+  { label: "BLACK", value: "BLACK", className: "bg-black" },
+  { label: "GREY", value: "GREY", className: "bg-gray-500" },
+  {
+    label: "TRANSPARENT",
+    value: "TRANSPARENT",
+    className: "bg-transparent border border-dashed",
+  },
+  {
+    label: "MULTICOLOR",
+    value: "MULTICOLOR",
+    className: "bg-gradient-to-r from-red-500 via-yellow-400 to-blue-500",
+  },
+]

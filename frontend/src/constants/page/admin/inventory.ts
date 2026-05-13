@@ -37,7 +37,7 @@ export const MEDICINE_STOCK_FORM_INITIAL_DATA = {
   unit_1st: "",
   unit_2nd: "",
   hsn_code: "",
-
+  temperature_limit: "",
   item_type: "NORMAL",
   color_type: "NORMAL",
   decimal: "NO",
@@ -64,7 +64,7 @@ export const MEDICINE_STOCK_FORM_INITIAL_DATA = {
   days_limit: "0",
   conv_stri: "",
   conv_cas: "",
-
+  manufacturer: "",
   /* Discounts & Margins */
   volume_discount: "",
   item_discount: "",

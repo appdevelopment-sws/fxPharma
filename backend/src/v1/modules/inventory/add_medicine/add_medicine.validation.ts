@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { any, z } from "zod";
 
 const InventoryStatusEnum = z.enum(["CONTINUE", "DISCONTINUE"]);
 
@@ -9,7 +9,7 @@ export const createInventorySchema = z.object({
   manufacturer: z.string().optional().nullable(),
   saltComposition: z.string().optional().nullable(),
   category: z.string().optional().nullable(),
-
+  company: z.string().optional().nullable(),
   // 02 Classification & Units
   packing: z.string().optional().nullable(),
   unit1st: z.string().optional().nullable(),
@@ -38,7 +38,7 @@ export const createInventorySchema = z.object({
   minQty: z.coerce.number().int().optional().default(0),
   maxQty: z.coerce.number().int().optional().default(0),
   reorderQty: z.coerce.number().int().optional().default(0),
-  daysLimit: z.coerce.number().int().optional().default(0),
+  daysLimit: any().optional().default(null), // Can be number of days or a date string
   convStri: z.coerce.number().optional().default(0),
   convCas: z.coerce.number().optional().default(0),
 
