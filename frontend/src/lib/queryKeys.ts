@@ -110,4 +110,9 @@ export const queryKeys = {
     list: (filters?: any) => [...queryKeys.branches.all, filters] as const,
     detail: (id: string) => [...queryKeys.branches.all, id] as const,
   },
+  roles: {
+    all: ["roles"] as const,
+    list: (filters?: any) => [...queryKeys.roles.all, filters] as const,
+    detail: (id: string) => [...queryKeys.roles.all, id] as const,
+  },
 }

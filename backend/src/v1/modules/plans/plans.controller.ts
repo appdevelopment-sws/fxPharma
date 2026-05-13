@@ -23,6 +23,11 @@ export class PlansController {
                 feature: true,
               },
             },
+            _count: {
+              select: {
+                organizations: true,
+              },
+            },
           },
           orderBy: { createdAt: "desc" },
           ...(skip !== undefined && { skip }),

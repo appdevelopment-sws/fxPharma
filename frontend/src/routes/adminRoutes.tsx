@@ -27,6 +27,7 @@ import Categories from "@/pages/shared/Attributes/categories"
 import Manufacturers from "@/pages/shared/Attributes/manufacturers"
 import Units from "@/pages/shared/Attributes/units"
 import AdminProfilePage from "@/pages/admin/profile/AdminProfilePage"
+import AdminRolePage from "@/pages/admin/role/Role"
 
 export const AdminRoutes = () => {
   return (
@@ -41,6 +42,7 @@ export const AdminRoutes = () => {
           <Route index element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="profile" element={<AdminProfilePage />} />
+          <Route path="role" element={<AdminRolePage />} />
 
           <Route path="all-inventory" element={<AllInventory />} />
           <Route path="all-compound" element={<AllCompound />} />
