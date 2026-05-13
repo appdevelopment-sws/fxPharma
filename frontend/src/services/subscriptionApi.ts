@@ -127,7 +127,7 @@ const mapApiToPlan = (data: any): Plan => {
     plan_details: data.name,
     pricing: `₹${Number(data.price).toLocaleString()}/${data.billingCycle}`,
     usage_limits: `${data.maxStaff} Users, ${data.maxBranches} Stores`,
-    subscribers: 0,
+    subscribers: data._count?.organizations || 0,
   }
 
   return plan as any
