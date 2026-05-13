@@ -38,6 +38,12 @@ export const adminNavigationGroups: SidebarNavigationGroup[] = [
         icon: UserCog,
       },
       {
+        title: "Role",
+        to: "/admin/role",
+        description: "Role management",
+        icon: ShieldCheck,
+      },
+      {
         title: "Branch",
         to: "/admin/branch",
         description: "Manage pharmacy branches",
