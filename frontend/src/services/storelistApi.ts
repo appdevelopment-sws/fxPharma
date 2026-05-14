@@ -163,7 +163,7 @@ const mapApiToStore = (data: any): Store => {
     timezone: data.timezone,
     currency: data.currency,
     mainBranchId: data.mainBranchId,
-    subscription_plan_id: data.planId,
+    subscription_plan_id: data.subscription_plan_id ?? data.planId,
     plan: data.plan,
     role_key: data.role_key || data.roleKey || data.owner?.role?.key,
     role_name: data.owner?.role?.name,

@@ -406,6 +406,16 @@ export class StoreListController {
         data: {
           name: req.body.storeName,
           slug: organizationSlug,
+          //changes for new fields in organization model
+          description: req.body.description ?? null,
+          category: req.body.category ?? null,
+          logo: req.body.logo ?? null,
+          gstNo: req.body.gstNo ?? null,
+          licenseNo: req.body.licenseNo ?? null,
+          timezone: req.body.timezone ?? null,
+          currency: req.body.currency ?? null,
+          ownerEmail: req.body.ownerEmail ?? req.body.loginEmail,
+
           planId: req.body.planId ?? null,
           isActive:
             req.body.isActive ??
@@ -513,6 +523,17 @@ export class StoreListController {
         where: { id: organizationId },
         data: {
           name: req.body.storeName ?? existing.name,
+
+          description: req.body.description ?? existing.description,
+          category: req.body.category ?? existing.category,
+          logo: req.body.logo ?? existing.logo,
+          gstNo: req.body.gstNo ?? existing.gstNo,
+          licenseNo: req.body.licenseNo ?? existing.licenseNo,
+          timezone: req.body.timezone ?? existing.timezone,
+          currency: req.body.currency ?? existing.currency,
+          ownerEmail: req.body.ownerEmail ?? existing.ownerEmail,
+
+          
           planId: req.body.planId ?? existing.planId,
           isActive:
             req.body.isActive ??

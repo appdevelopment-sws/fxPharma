@@ -19,7 +19,7 @@ enum TaxType {
 model Hsn {
   id          String   @id @default(cuid())
   hsncode     String
-  description String
+  description String?
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

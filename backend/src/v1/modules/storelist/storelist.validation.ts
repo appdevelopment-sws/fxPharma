@@ -12,6 +12,7 @@ export const createStoreSchema = z.object({
   ownerFirstName: z.string().min(1, "Owner first name is required"),
   ownerLastName: z.string().min(1, "Owner last name is required"),
   ownerPhone: z.string().min(1, "Owner phone is required"),
+  ownerEmail: z.string().email("Invalid owner email").optional(),
   loginEmail: z.string().email("Invalid email"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   gstNo: z.string().optional(),
