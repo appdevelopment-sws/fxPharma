@@ -1,6 +1,6 @@
-import { useEffect } from "react"
+import { useEffect, useMemo } from "react"
 import { useForm, type SubmitHandler } from "react-hook-form"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
@@ -23,12 +23,20 @@ import {
 import { mapMasterProductToInventoryDraft } from "@/constants/page/admin/importinventory"
 import { queryKeys } from "@/lib/queryKeys"
 import InventoryApi from "@/services/inventoryApi"
+import BrandApi, {
+  CategoryApi,
+  ManufacturerApi,
+  UnitApi,
+} from "@/services/attributesApi"
+import { COLOR_TYPE_OPTIONS } from "@/constants/shared/form-options"
+import { formatDateForInput } from "@/lib/utils"
 
 interface MedicineStockDialogProps {
   open: boolean
   onClose: (open: boolean) => void
   product?: any | null
   mode?: "create" | "edit" | "view"
+  includeGlobal?: boolean
 }
 
 const toNumber = (value: unknown) => {
@@ -49,18 +57,37 @@ const toFormValues = (product: any) => ({
   product_name: product?.product_name || product?.name || "",
   status: product?.status || "CONTINUE",
   company:
+    product?.brandId ||
+    product?.brand_id ||
+    product?.company?.id ||
     product?.company ||
-    product?.manufacturer ||
-    product?.manufacturer?.name ||
     "",
+  manufacturer:
+    product?.manufacturerId ||
+    product?.manufacturer_id ||
+    product?.manufacturer?.id ||
+    "",
+
   salt_composition:
     product?.salt_composition ||
     product?.saltComposition ||
     product?.salt ||
     "",
-  category: product?.category || product?.categoryType || product?.category_type || "TAB",
+  category:
+    product?.categoryId ||
+    product?.category_id ||
+    product?.category?.id ||
+    product?.categoryType ||
+    product?.category_type ||
+    product?.category ||
+    "TAB",
   packing: product?.packing || "",
-  unit_1st: product?.unit1st || product?.unit_1st || "",
+  unit_1st:
+    product?.unitId ||
+    product?.unit_id ||
+    product?.unit1st ||
+    product?.unit_1st ||
+    "",
   unit_2nd: product?.unit2nd || product?.unit_2nd || "",
   hsn_code:
     product?.hsn_code ||
@@ -87,7 +114,9 @@ const toFormValues = (product: any) => ({
   minimum_qty: product?.minQty ?? product?.minimum_qty ?? "0",
   maximum_qty: product?.maxQty ?? product?.maximum_qty ?? "0",
   reorder_qty: product?.reorderQty ?? product?.reorder_qty ?? "0",
-  days_limit: product?.daysLimit ?? product?.days_limit ?? "0",
+  days_limit: formatDateForInput(product?.daysLimit ?? product?.days_limit),
+  temperature_limit:
+    product?.temperatureLimit ?? product?.temperature_limit ?? "",
   conv_stri: product?.convStri ?? product?.conv_stri ?? "",
   conv_cas: product?.convCas ?? product?.conv_cas ?? "",
   volume_discount: product?.volumeDiscount ?? product?.volume_discount ?? "",
@@ -95,7 +124,8 @@ const toFormValues = (product: any) => ({
   maximum_discount: product?.maxDiscount ?? product?.maximum_discount ?? "",
   minimum_margin: product?.minMargin ?? product?.minimum_margin ?? "",
   special_discount: product?.specialDiscount ?? product?.special_discount ?? "",
-  purchase_discount: product?.purchaseDiscount ?? product?.purchase_discount ?? "",
+  purchase_discount:
+    product?.purchaseDiscount ?? product?.purchase_discount ?? "",
   is_narcotic: !!(product?.isNarcotic ?? product?.is_narcotic),
   is_schedule_h: !!(product?.isScheduleH ?? product?.is_schedule_h),
   is_schedule_h1: !!(product?.isScheduleH1 ?? product?.is_schedule_h1),
@@ -107,9 +137,11 @@ const toFormValues = (product: any) => ({
 const toApiPayload = (data: any) => ({
   name: data.product_name?.trim(),
   status: data.status || "CONTINUE",
-  manufacturer: toNullableString(data.company),
+  brandId: toNullableString(data.company),
+  manufacturerId: toNullableString(data.manufacturer),
+  categoryId: toNullableString(data.category),
+  unitId: toNullableString(data.unit_1st),
   saltComposition: toNullableString(data.salt_composition),
-  category: toNullableString(data.category),
   packing: toNullableString(data.packing),
   unit1st: toNullableString(data.unit_1st),
   unit2nd: toNullableString(data.unit_2nd),
@@ -133,7 +165,8 @@ const toApiPayload = (data: any) => ({
   minQty: toNumber(data.minimum_qty),
   maxQty: toNumber(data.maximum_qty),
   reorderQty: toNumber(data.reorder_qty),
-  daysLimit: toNumber(data.days_limit),
+  daysLimit: data.days_limit || null,
+  temperatureLimit: toNumber(data.temperature_limit),
   convStri: toNumber(data.conv_stri),
   convCas: toNumber(data.conv_cas),
   volumeDiscount: toNumber(data.volume_discount),
@@ -155,6 +188,7 @@ export default function MedicineStockDialog({
   onClose,
   product,
   mode,
+  includeGlobal = false,
 }: MedicineStockDialogProps) {
   const resolvedMode =
     mode || (product?.viewMode ? "view" : product?.id ? "edit" : "create")
@@ -167,8 +201,68 @@ export default function MedicineStockDialog({
     mode: "onChange",
   })
 
+  const { data: categoriesData } = useQuery({
+    queryKey: queryKeys.categories.list({ limit: 20 }),
+    queryFn: () => CategoryApi.getCategories({ limit: 20 }),
+    enabled: open,
+  })
+
+  const { data: manufacturersData } = useQuery({
+    queryKey: queryKeys.manufacturers.list({ limit: 20 }),
+    queryFn: () => ManufacturerApi.getManufacturers({ limit: 20 }),
+    enabled: open,
+  })
+  const { data: companyData } = useQuery({
+    queryKey: queryKeys.brands.list({ limit: 20 }),
+    queryFn: () =>
+      BrandApi.getBrands({ limit: 20, includeGlobal: includeGlobal }),
+    enabled: open,
+  })
+
+  const { data: unitsData } = useQuery({
+    queryKey: queryKeys.units.list({ limit: 20 }),
+    queryFn: () => UnitApi.getUnits({ limit: 20 }),
+    enabled: open,
+  })
+
+  const manufacturerOptions = useMemo(
+    () =>
+      manufacturersData?.data?.map((manufacturer: any) => ({
+        label: manufacturer.name,
+        value: manufacturer.id,
+      })) ?? [],
+    [manufacturersData]
+  )
+
+  const companyOptions = useMemo(
+    () =>
+      companyData?.data?.map((company: any) => ({
+        label: company.name,
+        value: company.id,
+      })) ?? [],
+    [companyData]
+  )
+  const categoryOptions = useMemo(
+    () =>
+      categoriesData?.data?.map((category: any) => ({
+        label: category.name,
+        value: category.id,
+      })) ?? CATEGORY_OPTIONS,
+    [categoriesData]
+  )
+
+  const unitOptions = useMemo(
+    () =>
+      unitsData?.data?.map((unit: any) => ({
+        label: unit.name,
+        value: unit.id,
+      })) ?? [],
+    [unitsData]
+  )
+
   useEffect(() => {
     if (open) {
+      console.log("Resetting form with product data:", product)
       if (isEditMode || isViewMode || isCreateFromTemplate) {
         reset(toFormValues(product))
       } else {
@@ -259,7 +353,30 @@ export default function MedicineStockDialog({
               required
               readOnly={isViewMode}
             />
-
+            <FormSelectField
+              control={control}
+              name="manufacturer"
+              label="Manufacturer"
+              options={manufacturerOptions}
+              placeholder={
+                manufacturerOptions.length
+                  ? "Select manufacturer"
+                  : "Loading manufacturers..."
+              }
+              readOnly={isViewMode}
+            />{" "}
+            <FormSelectField
+              control={control}
+              name="company"
+              label="Company"
+              options={companyOptions}
+              placeholder={
+                companyOptions.length
+                  ? "Select company"
+                  : "Loading companies..."
+              }
+              readOnly={isViewMode}
+            />
             <FormSelectField
               control={control}
               name="status"
@@ -267,26 +384,22 @@ export default function MedicineStockDialog({
               options={PRODUCT_STATUS_OPTIONS}
               readOnly={isViewMode}
             />
-
-            <FormField
-              control={control}
-              name="company"
-              label="Company / Manufacturer"
-              readOnly={isViewMode}
-            />
-
             <FormField
               control={control}
               name="salt_composition"
               label="Salt Composition"
               readOnly={isViewMode}
             />
-
             <FormSelectField
               control={control}
               name="category"
               label="Category"
-              options={CATEGORY_OPTIONS}
+              options={categoryOptions}
+              placeholder={
+                categoryOptions.length
+                  ? "Select category"
+                  : "Loading categories..."
+              }
               readOnly={isViewMode}
             />
           </div>
@@ -298,22 +411,38 @@ export default function MedicineStockDialog({
 
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
             <FormField control={control} name="packing" label="Packing" />
-            <FormField control={control} name="unit_1st" label="Unit 1st" />
-            <FormField control={control} name="unit_2nd" label="Unit 2nd" />
+            <FormSelectField
+              control={control}
+              name="unit_1st"
+              label="Unit 1st"
+              options={unitOptions}
+              placeholder={
+                unitOptions.length ? "Select unit" : "Loading units..."
+              }
+            />
+            <FormSelectField
+              control={control}
+              name="unit_2nd"
+              label="Unit 2nd"
+              options={unitOptions}
+              placeholder={
+                unitOptions.length ? "Select unit" : "Loading units..."
+              }
+            />
             <FormField control={control} name="hsn_code" label="HSN / SAC" />
-
+            {/* 
             <FormSelectField
               control={control}
               name="item_type"
               label="Item Type"
               options={NORMAL_OPTIONS}
-            />
+            /> */}
 
             <FormSelectField
               control={control}
               name="color_type"
               label="Color Type"
-              options={NORMAL_OPTIONS}
+              options={COLOR_TYPE_OPTIONS}
             />
 
             <FormSelectField
@@ -323,12 +452,12 @@ export default function MedicineStockDialog({
               options={YES_NO_OPTIONS}
             />
 
-            <FormSelectField
+            {/* <FormSelectField
               control={control}
               name="type"
               label="Type"
               options={NORMAL_OPTIONS}
-            />
+            /> */}
           </div>
         </div>
 
@@ -414,13 +543,13 @@ export default function MedicineStockDialog({
               inputType="number"
               step="0.01"
             />
-            <FormField
+            {/* <FormField
               control={control}
               name="cer"
               label="C.E.R."
               inputType="number"
               step="0.01"
-            />
+            /> */}
           </div>
         </div>
 
@@ -443,32 +572,38 @@ export default function MedicineStockDialog({
                 label="Maximum Qty"
                 inputType="number"
               />
-              <FormField
+              {/* <FormField
                 control={control}
                 name="reorder_qty"
                 label="Reorder Qty"
                 inputType="number"
-              />
+              /> */}
               <FormField
                 control={control}
                 name="days_limit"
-                label="Days Limit"
-                inputType="number"
+                label="Expiry date"
+                inputType="date"
               />
               <FormField
+                control={control}
+                name="temperature_limit"
+                label="Temperature Limit"
+                inputType="number"
+              />
+              {/* <FormField
                 control={control}
                 name="conv_stri"
                 label="Conv. Stri"
                 inputType="number"
                 step="0.01"
-              />
-              <FormField
+              /> */}
+              {/* <FormField
                 control={control}
                 name="conv_cas"
                 label="Conv. Cas"
                 inputType="number"
                 step="0.01"
-              />
+              /> */}
             </div>
           </div>
 

@@ -38,6 +38,7 @@ model Branch {
   brands Brand[]
   units Unit[]
   categories Category[]
+  settings Setting[]
   manufacturers Manufacturer[]
   @@index([organizationId])
 

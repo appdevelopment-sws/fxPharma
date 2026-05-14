@@ -31,6 +31,7 @@ export type InventoryFormValues = {
   maximum_qty?: string | number
   reorder_qty?: string | number
   days_limit?: string | number
+  temperature_limit?: string | number
   conv_stri?: string | number
   conv_cas?: string | number
   volume_discount?: string | number
@@ -46,6 +47,8 @@ export type InventoryFormValues = {
   negative_stock?: boolean
   edit_rates?: boolean
 }
+
+export type InventoryRequestPayload = Record<string, unknown>
 
 export type InventoryItem = {
   id: string
@@ -125,7 +128,7 @@ const InventoryApi = {
   },
 
   create: async (
-    data: InventoryFormValues
+    data: InventoryRequestPayload
   ): Promise<{ data: InventoryItem }> => {
     const res = await api.post<any>(BASE_URL, data)
     return { data: res.data }
@@ -133,7 +136,7 @@ const InventoryApi = {
 
   update: async (
     id: string | number,
-    data: InventoryFormValues
+    data: InventoryRequestPayload
   ): Promise<{ data: InventoryItem }> => {
     const res = await api.put<any>(`${BASE_URL}/${id}`, data)
     return { data: res.data }

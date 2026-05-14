@@ -18,8 +18,6 @@ import {
   MEDICINE_STOCK_COLUMNS,
 } from "@/constants/page/admin/inventory"
 import AddMedicineDialog from "@/components/dialog/admin/AddMedicineDialog"
-import NewCompoundDialog from "@/components/dialog/admin/NewCompoundDialog"
-import InterStoreTransfer from "@/components/dialog/admin/InterStoreTransfer"
 
 export default function AllInventoryPage() {
   const queryClient = useQueryClient()
@@ -53,13 +51,7 @@ export default function AllInventoryPage() {
       product ? { ...product, id: product.id, viewMode: mode === "view" } : null
     )
   }
-  const handleCompoundOpen = () => {
-    compoundDisclosure.onOpen(null)
-  }
 
-  const handleInterstoreTransferOpen = () => {
-    interstoreTransferDisclosure.onOpen(null)
-  }
   const handleFilterChange = useCallback(
     (updates: Record<string, any>) => {
       handleFilter({ ...updates, page: 1 })

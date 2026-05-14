@@ -11,10 +11,12 @@ model Manufacturer {
   updatedAt DateTime @updatedAt
   organizationId        String   @map("organization_id")
   branchId              String?  @map("branch_id")  
+  isGlobal               Boolean  @default(false) @map("is_global")
+
 
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   branch         Branch?      @relation(fields: [branchId], references: [id], onDelete: SetNull) 
-
+  inventories Inventory[]
   masterProducts MasterProduct[]
 }
 

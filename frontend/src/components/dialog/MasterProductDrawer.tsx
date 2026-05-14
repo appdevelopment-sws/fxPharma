@@ -25,11 +25,10 @@ import BrandApi, {
 import {
   MASTER_PRODUCT_FORM_INITIAL_DATA,
   INDUSTRY_SEGMENT_OPTIONS,
-  CATEGORY_TYPE_OPTIONS,
   PRODUCT_STATUS_OPTIONS,
-  COLOR_TYPE_OPTIONS,
 } from "@/constants/page/super-admin/master-products"
 import sectionHeader from "../sectionHeader"
+import { COLOR_TYPE_OPTIONS } from "@/constants/shared/form-options"
 
 interface MasterProductDialogProps {
   open: boolean
@@ -120,19 +119,22 @@ export default function MasterProductDialog({
         reset({
           ...MASTER_PRODUCT_FORM_INITIAL_DATA,
           name: product?.name || "",
-          industry_segment: product?.industrySegment || product?.industry_segment || "1",
+          industry_segment:
+            product?.industrySegment || product?.industry_segment || "1",
           category_id: product?.categoryId || product?.category_id || "",
           brand_id: product?.brandId || product?.brand_id || "",
-          manufacturer_id: product?.manufacturerId || product?.manufacturer_id || "",
+          manufacturer_id:
+            product?.manufacturerId || product?.manufacturer_id || "",
           salt: product?.salt || "",
-          category_type: product?.categoryType || product?.category_type || "TAB",
+          category_type:
+            product?.categoryType || product?.category_type || "TAB",
           status: product?.status || "CONTINUE",
           hsn_code_id: String(product?.hsnId || product?.hsn_code_id || ""),
           color_type: product?.colorType || product?.color_type || "NORMAL",
           is_narcotic: !!(product?.isNarcotic ?? product?.is_narcotic),
           is_schedule_h: !!(product?.isScheduleH ?? product?.is_schedule_h),
           is_schedule_h1: !!(product?.isScheduleH1 ?? product?.is_schedule_h1),
-          barcodes: product?.barcodes?.length 
+          barcodes: product?.barcodes?.length
             ? product.barcodes.map((b: any) => ({ value: b.value }))
             : [{ value: "" }],
           image_url: product?.imageUrl || product?.image_url || null,

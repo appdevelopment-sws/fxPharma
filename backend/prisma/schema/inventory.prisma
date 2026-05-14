@@ -7,10 +7,11 @@ model Inventory {
   // 01 Product Identification
   name            String
   status          InventoryStatus @default(CONTINUE)
-  manufacturer    String?
+  manufacturerId  String @map("manufacturer_id")
   saltComposition String?  @map("salt_composition")
-  category        String?  @default("TAB")
-
+  categoryId       String?  @default("TAB")
+  brandId          String?  @map("brand_id")
+  unitId           String?  @map("unit_id")
   // 02 Classification & Units
   packing         String?
   unit1st         String?  @map("unit_1st")
@@ -39,7 +40,8 @@ model Inventory {
   minQty          Int?     @default(0) @map("min_qty")
   maxQty          Int?     @default(0) @map("max_qty")
   reorderQty      Int?     @default(0) @map("reorder_qty")
-  daysLimit       Int?     @default(0) @map("days_limit")
+  daysLimit       DateTime?     @map("days_limit")
+  temperatureLimit Decimal? @default(0.0) @map("temperature_limit")
   convStri        Decimal? @default(0.0) @map("conv_stri")
   convCas         Decimal? @default(0.0) @map("conv_cas")
 
@@ -65,7 +67,10 @@ model Inventory {
   // Relations
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   branch       Branch?      @relation(fields: [branchId], references: [id], onDelete: SetNull)
-
+  manufacturer Manufacturer @relation(fields: [manufacturerId], references: [id], onDelete: SetNull)
+  category     Category?    @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  brand        Brand?       @relation(fields: [brandId], references: [id], onDelete: SetNull)
+  unit         Unit?        @relation(fields: [unitId], references: [id], onDelete: SetNull)
   @@index([organizationId])
   @@index([branchId])
   @@index([name])

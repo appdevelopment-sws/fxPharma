@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { any, z } from "zod";
 
 const InventoryStatusEnum = z.enum(["CONTINUE", "DISCONTINUE"]);
 
@@ -6,10 +6,12 @@ export const createInventorySchema = z.object({
   // 01 Product Identification
   name: z.string().min(1, "Product name is required"),
   status: InventoryStatusEnum.optional(),
-  manufacturer: z.string().optional().nullable(),
+  manufacturerId: z.string().nullable().optional(),
+  categoryId: z.string().nullable().optional(),
+  brandId: z.string().nullable().optional(),
+  unitId: z.string().nullable().optional(),
   saltComposition: z.string().optional().nullable(),
-  category: z.string().optional().nullable(),
-
+  company: z.string().optional().nullable(),
   // 02 Classification & Units
   packing: z.string().optional().nullable(),
   unit1st: z.string().optional().nullable(),
@@ -19,7 +21,7 @@ export const createInventorySchema = z.object({
   colorType: z.string().optional().nullable(),
   decimal: z.string().optional().nullable(),
   type: z.string().optional().nullable(),
-
+  temperatureLimit: z.coerce.number().optional().default(0),
   // 03 Pricing & Taxation
   localTax: z.string().optional().nullable(),
   centralTax: z.string().optional().nullable(),
@@ -38,7 +40,7 @@ export const createInventorySchema = z.object({
   minQty: z.coerce.number().int().optional().default(0),
   maxQty: z.coerce.number().int().optional().default(0),
   reorderQty: z.coerce.number().int().optional().default(0),
-  daysLimit: z.coerce.number().int().optional().default(0),
+  daysLimit: z.coerce.date().optional().default(new Date()), // Can be number of days or a date string
   convStri: z.coerce.number().optional().default(0),
   convCas: z.coerce.number().optional().default(0),
 
