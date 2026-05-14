@@ -96,7 +96,7 @@ export default function UnitDialog({ open, onClose, unit }: Props) {
         <FormField
           control={control}
           name="shortName"
-          label="SHORT NAME"
+          label="CODE"
           placeholder="e.g. TAB, STR"
           readOnly={isViewMode}
         />
