@@ -30,6 +30,7 @@ import BrandApi, {
 } from "@/services/attributesApi"
 import { COLOR_TYPE_OPTIONS } from "@/constants/shared/form-options"
 import { formatDateForInput } from "@/lib/utils"
+import TaxApi, { HsnApi } from "@/services/taxApi"
 
 interface MedicineStockDialogProps {
   open: boolean
@@ -50,9 +51,33 @@ const toNullableString = (value: unknown) => {
   return String(value)
 }
 
+const withSelectedOption = (
+  options: Array<{ label: string; value: string }>,
+  selectedValue: unknown,
+  selectedLabel?: unknown
+) => {
+  const value =
+    selectedValue === null || selectedValue === undefined
+      ? ""
+      : String(selectedValue)
+  if (!value) return options
+
+  const hasOption = options.some((option) => option.value === value)
+  if (hasOption) return options
+
+  return [
+    {
+      value,
+      label: String(selectedLabel || value),
+    },
+    ...options,
+  ]
+}
+
 const toFormValues = (product: any) => ({
   ...MEDICINE_STOCK_FORM_INITIAL_DATA,
-  ...mapMasterProductToInventoryDraft(product),
+
+  // ...mapMasterProductToInventoryDraft(product),
   id: product?.id || "",
   product_name: product?.product_name || product?.name || "",
   status: product?.status || "CONTINUE",
@@ -202,68 +227,98 @@ export default function MedicineStockDialog({
   })
 
   const { data: categoriesData } = useQuery({
-    queryKey: queryKeys.categories.list({ limit: 20 }),
-    queryFn: () => CategoryApi.getCategories({ limit: 20 }),
+    queryKey: queryKeys.categories.list({ limit: 20, includeGlobal }),
+    queryFn: () => CategoryApi.getCategories({ limit: 20, includeGlobal }),
     enabled: open,
   })
 
   const { data: manufacturersData } = useQuery({
-    queryKey: queryKeys.manufacturers.list({ limit: 20 }),
-    queryFn: () => ManufacturerApi.getManufacturers({ limit: 20 }),
+    queryKey: queryKeys.manufacturers.list({
+      limit: 20,
+      includeGlobal,
+    }),
+    queryFn: () =>
+      ManufacturerApi.getManufacturers({ limit: 20, includeGlobal }),
     enabled: open,
   })
   const { data: companyData } = useQuery({
-    queryKey: queryKeys.brands.list({ limit: 20 }),
+    queryKey: queryKeys.brands.list({ limit: 20, includeGlobal }),
     queryFn: () =>
       BrandApi.getBrands({ limit: 20, includeGlobal: includeGlobal }),
     enabled: open,
   })
-
   const { data: unitsData } = useQuery({
-    queryKey: queryKeys.units.list({ limit: 20 }),
-    queryFn: () => UnitApi.getUnits({ limit: 20 }),
+    queryKey: queryKeys.units.list({ limit: 20, includeGlobal }),
+    queryFn: () => UnitApi.getUnits({ limit: 20, includeGlobal }),
+    enabled: open,
+  })
+  const { data: hsnData } = useQuery({
+    queryKey: queryKeys.hsnCodes.list({ limit: 20, includeGlobal }),
+    queryFn: () => HsnApi.getHsnCodes({ limit: 20, includeGlobal }),
     enabled: open,
   })
 
   const manufacturerOptions = useMemo(
     () =>
-      manufacturersData?.data?.map((manufacturer: any) => ({
-        label: manufacturer.name,
-        value: manufacturer.id,
-      })) ?? [],
-    [manufacturersData]
+      withSelectedOption(
+        manufacturersData?.data?.map((manufacturer: any) => ({
+          label: manufacturer.name,
+          value: manufacturer.id,
+        })) ?? [],
+        product?.manufacturerId ||
+          product?.manufacturer_id ||
+          product?.manufacturer?.id,
+        product?.manufacturer?.name || product?.manufacturer?.label
+      ),
+    [manufacturersData, product]
   )
 
   const companyOptions = useMemo(
     () =>
-      companyData?.data?.map((company: any) => ({
-        label: company.name,
-        value: company.id,
-      })) ?? [],
-    [companyData]
+      withSelectedOption(
+        companyData?.data?.map((company: any) => ({
+          label: company.name,
+          value: company.id,
+        })) ?? [],
+        product?.brandId || product?.brand_id || product?.brand?.id,
+        product?.brand?.name || product?.brand?.label
+      ),
+    [companyData, product]
   )
   const categoryOptions = useMemo(
     () =>
-      categoriesData?.data?.map((category: any) => ({
-        label: category.name,
-        value: category.id,
-      })) ?? CATEGORY_OPTIONS,
-    [categoriesData]
+      withSelectedOption(
+        categoriesData?.data?.map((category: any) => ({
+          label: category.name,
+          value: category.id,
+        })) ?? CATEGORY_OPTIONS,
+        product?.categoryId || product?.category_id || product?.category?.id,
+        product?.category?.name || product?.category?.label
+      ),
+    [categoriesData, product]
   )
 
   const unitOptions = useMemo(
     () =>
-      unitsData?.data?.map((unit: any) => ({
-        label: unit.name,
-        value: unit.id,
-      })) ?? [],
-    [unitsData]
+      withSelectedOption(
+        unitsData?.data?.map((unit: any) => ({
+          label: unit.name,
+          value: unit.id,
+        })) ?? [],
+        product?.unitId ||
+          product?.unit_id ||
+          product?.unit?.id ||
+          product?.unit_1st,
+        product?.unit?.name || product?.unit?.label
+      ),
+    [product, unitsData]
   )
 
   useEffect(() => {
     if (open) {
       console.log("Resetting form with product data:", product)
       if (isEditMode || isViewMode || isCreateFromTemplate) {
+        console.log("Mapping product to form values:", product)
         reset(toFormValues(product))
       } else {
         reset(MEDICINE_STOCK_FORM_INITIAL_DATA)
@@ -359,9 +414,7 @@ export default function MedicineStockDialog({
               label="Manufacturer"
               options={manufacturerOptions}
               placeholder={
-                manufacturerOptions.length
-                  ? "Select manufacturer"
-                  : "Loading manufacturers..."
+                manufacturerOptions.length ? "Select manufacturer" : ""
               }
               readOnly={isViewMode}
             />{" "}
@@ -370,11 +423,7 @@ export default function MedicineStockDialog({
               name="company"
               label="Company"
               options={companyOptions}
-              placeholder={
-                companyOptions.length
-                  ? "Select company"
-                  : "Loading companies..."
-              }
+              placeholder={companyOptions.length ? "Select company" : ""}
               readOnly={isViewMode}
             />
             <FormSelectField
@@ -429,7 +478,12 @@ export default function MedicineStockDialog({
                 unitOptions.length ? "Select unit" : "Loading units..."
               }
             />
-            <FormField control={control} name="hsn_code" label="HSN / SAC" />
+            <FormSelectField
+              control={control}
+              name="hsn_code"
+              label="HSN / SAC"
+              options={[]}
+            />
             {/* 
             <FormSelectField
               control={control}

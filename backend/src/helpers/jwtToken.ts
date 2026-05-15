@@ -16,9 +16,9 @@ if (!accessTokenSecret || !refreshTokenSecret) {
   throw new Error("JWT secrets are not configured");
 }
 
-export const sendToken = (user: AuthTokenUser, res: any) => {
-  const refreshToken = generateRefreshToken(user);
-  const accessToken = generateAccessToken(user);
+export const sendToken = ({ user, res, role }: any) => {
+  const refreshToken = generateRefreshToken(user, role);
+  const accessToken = generateAccessToken(user, role);
 
   res.cookie("accessToken", accessToken, {
     httpOnly: true,
@@ -35,21 +35,24 @@ export const sendToken = (user: AuthTokenUser, res: any) => {
   });
 };
 
-export const generateAccessToken = (user: AuthTokenUser) =>
+export const generateAccessToken = (user: AuthTokenUser, role: string) =>
   jwt.sign(
     {
       id: user.id,
       email: user.email,
+      name: user.name,
+      role: role,
     },
     accessTokenSecret,
-    { expiresIn: "12h" }
+    { expiresIn: "12h" },
   );
 
-export const generateRefreshToken = (user: AuthTokenUser) =>
+export const generateRefreshToken = (user: AuthTokenUser, role: string) =>
   jwt.sign(
     {
       id: user.id,
+      role: role,
     },
     refreshTokenSecret,
-    { expiresIn: "7d" }
+    { expiresIn: "7d" },
   );

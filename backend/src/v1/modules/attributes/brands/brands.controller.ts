@@ -8,9 +8,13 @@ import { getRequestScope } from "@/helpers/requestScope.js";
 
 export class BrandsController {
   static getAll = catchAsync(async (req: Request, res: Response) => {
-    const { organizationId, branchId } = getRequestScope(req);
-    const includeGlobal = req.query.includeGlobal === "true";
-
+    const { organizationId, branchId, role, isSuperAdmin } =
+      getRequestScope(req);
+    const includeGlobal = req.query.includeGlobal === "true" || isSuperAdmin;
+    console.log("Requesting brands with scope:", {
+      organizationId,
+      isSuperAdmin,
+    });
     await paginate(res, req.query, async (skip, take, search) => {
       const searchFilter = buildSearchFilter(search, ["name", "description"]);
 
@@ -72,8 +76,11 @@ export class BrandsController {
   });
 
   static create = catchAsync(async (req: Request, res: Response) => {
-    const { organizationId, branchId } = getRequestScope(req);
-
+    const { organizationId, branchId, isSuperAdmin } = getRequestScope(req);
+    console.log("Creating brand with scope:", {
+      organizationId,
+      isSuperAdmin,
+    });
     const existing = await rootPrisma.brand.findFirst({
       where: {
         name: req.body.name,
@@ -91,6 +98,7 @@ export class BrandsController {
         ...req.body,
         organizationId,
         branchId,
+        isGlobal: isSuperAdmin,
       },
     });
 

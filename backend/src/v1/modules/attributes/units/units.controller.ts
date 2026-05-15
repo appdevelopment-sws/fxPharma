@@ -9,16 +9,30 @@ import { getRequestScope } from "@/helpers/requestScope.js";
 export class UnitsController {
   static getAll = catchAsync(async (req: Request, res: Response) => {
     const { organizationId, branchId } = getRequestScope(req);
-
+    const includeGlobal = req.query.includeGlobal === "true";
     await paginate(res, req.query, async (skip, take, search) => {
       const searchFilter = buildSearchFilter(search, ["name", "shortName"]);
 
       const where = {
         ...searchFilter,
-        organizationId,
-        ...(branchId ? { branchId } : {}),
-      };
 
+        OR: includeGlobal
+          ? [
+              {
+                organizationId,
+                ...(branchId ? { branchId } : {}),
+              },
+              {
+                isGlobal: true,
+              },
+            ]
+          : [
+              {
+                organizationId,
+                ...(branchId ? { branchId } : {}),
+              },
+            ],
+      };
       const [data, total] = await Promise.all([
         rootPrisma.unit.findMany({
           where,
@@ -63,7 +77,7 @@ export class UnitsController {
   });
 
   static create = catchAsync(async (req: Request, res: Response) => {
-    const { organizationId, branchId } = getRequestScope(req);
+    const { organizationId, branchId, isSuperAdmin } = getRequestScope(req);
 
     const existing = await rootPrisma.unit.findFirst({
       where: {
@@ -85,6 +99,7 @@ export class UnitsController {
         organizationId,
         branchId,
         shortName: short_name || shortName || null,
+        isGlobal: isSuperAdmin,
       },
     });
 
@@ -124,7 +139,8 @@ export class UnitsController {
 
     const updateData: any = { ...rest };
 
-    const finalShortName = short_name !== undefined ? short_name : req.body.shortName;
+    const finalShortName =
+      short_name !== undefined ? short_name : req.body.shortName;
     if (finalShortName !== undefined) {
       updateData.shortName = finalShortName || null;
     }
