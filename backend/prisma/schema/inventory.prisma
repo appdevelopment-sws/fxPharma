@@ -16,6 +16,9 @@ model Inventory {
   packing         String?
   unit1st         String?  @map("unit_1st")
   unit2nd         String?  @map("unit_2nd")
+  packQty1        Int?     @default(0) @map("pack_qty_1")
+  packQty2        Int?     @default(0) @map("pack_qty_2")
+  packQty3        Int?     @default(0) @map("pack_qty_3")
   hsnCode         String?  @map("hsn_code")
   itemType        String?  @default("NORMAL") @map("item_type")
   colorType       String?  @default("NORMAL") @map("color_type")
@@ -80,3 +83,11 @@ enum InventoryStatus {
   CONTINUE
   DISCONTINUE
 }
+
+
+// packing = selected outer type
+// unit1st = selected middle type
+// unit2nd = selected inner type
+// packQty1 = quantity for packing
+// packQty2 = quantity for unit1st
+// packQty3 = quantity for unit2nd

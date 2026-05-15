@@ -112,12 +112,11 @@ const toFormValues = (
     product?.category?.id ||
     (options?.allowCategoryTypeFallback
       ? product?.categoryType || product?.category_type || product?.category
-      : "") ||
-    "TAB",
+      : ""),
   packing: product?.packing || "",
-  pack_qty_1: product?.packQty1 || product?.pack_qty_1 || "",
-  pack_qty_2: product?.packQty2 || product?.pack_qty_2 || "",
-  pack_qty_3: product?.packQty3 || product?.pack_qty_3 || "",
+  pack_qty_1: product?.packQty1 ?? product?.pack_qty_1 ?? "",
+  pack_qty_2: product?.packQty2 ?? product?.pack_qty_2 ?? "",
+  pack_qty_3: product?.packQty3 ?? product?.pack_qty_3 ?? "",
   unit_1st: product?.unit1st || product?.unit_1st || "",
   unit_2nd: product?.unit2nd || product?.unit_2nd || "",
   hsn_code:
@@ -175,6 +174,9 @@ const toApiPayload = (data: any) => ({
   packing: toNullableString(data.packing),
   unit1st: toNullableString(data.unit_1st),
   unit2nd: toNullableString(data.unit_2nd),
+  packQty1: toNumber(data.pack_qty_1),
+  packQty2: toNumber(data.pack_qty_2),
+  packQty3: toNumber(data.pack_qty_3),
   hsnCode: toNullableString(data.hsn_code),
   itemType: toNullableString(data.item_type),
   colorType: toNullableString(data.color_type),
