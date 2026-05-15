@@ -313,7 +313,21 @@ export default function MedicineStockDialog({
       ),
     [product, unitsData]
   )
-
+  const hsnOptions = useMemo(
+    () =>
+      withSelectedOption(
+        hsnData?.data?.map((hsn: any) => ({
+          label: `${hsn.hsncode} - ${hsn.hsnMappings[0]?.tax?.rate}%`,
+          value: hsn.hsncode,
+        })) ?? [],
+        product?.hsn_code ||
+          product?.hsnCode ||
+          product?.hsn?.hsncode ||
+          product?.hsn?.code,
+        product?.hsn?.description || product?.hsn?.label
+      ),
+    [product, hsnData]
+  )
   useEffect(() => {
     if (open) {
       console.log("Resetting form with product data:", product)
@@ -482,7 +496,7 @@ export default function MedicineStockDialog({
               control={control}
               name="hsn_code"
               label="HSN / SAC"
-              options={[]}
+              options={hsnOptions}
             />
             {/* 
             <FormSelectField
