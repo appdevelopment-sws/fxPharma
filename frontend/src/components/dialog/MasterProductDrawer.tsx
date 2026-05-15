@@ -22,6 +22,10 @@ import BrandApi, {
   ManufacturerApi,
   UnitApi,
 } from "@/services/attributesApi"
+import BrandDrawer from "@/components/dialog/BrandsDialog"
+import CategoryDialog from "@/components/dialog/categoryDialog"
+import ManufacturerDialog from "@/components/dialog/ManufacturerDialog"
+import UnitDialog from "@/components/dialog/UnitDialog"
 import {
   MASTER_PRODUCT_FORM_INITIAL_DATA,
   INDUSTRY_SEGMENT_OPTIONS,
@@ -36,6 +40,8 @@ interface MasterProductDialogProps {
   product?: any | null
 }
 
+type QuickAddDialog = "category" | "brand" | "manufacturer" | "unit" | null
+
 export default function MasterProductDialog({
   open,
   onClose,
@@ -44,6 +50,7 @@ export default function MasterProductDialog({
   const isViewMode = !!product?.viewMode
   const isEditMode = !!product?.id
   const productId = product?.id
+  const [quickAddDialog, setQuickAddDialog] = useState<QuickAddDialog>(null)
 
   // Centralized search selects
   const hsn = useSearchSelect(
@@ -185,249 +192,297 @@ export default function MasterProductDialog({
     })
   }
 
+  const quickAddButton = (target: Exclude<QuickAddDialog, null>, label: string) =>
+    !isViewMode ? (
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon-xs"
+        aria-label={label}
+        title={label}
+        className="text-muted-foreground hover:text-foreground"
+        onClick={(event) => {
+          event.preventDefault()
+          event.stopPropagation()
+          setQuickAddDialog(target)
+        }}
+      >
+        <Plus className="size-3.5" />
+      </Button>
+    ) : null
+
   return (
-    <FormContainer
-      variant="modal"
-      open={open}
-      onOpenChange={(isOpen) => onClose(isOpen)}
-      title={
-        isViewMode
-          ? "View Product"
-          : isEditMode
-            ? "Edit Product"
-            : "Add Product"
-      }
-      description={
-        isViewMode
-          ? "Viewing master product details."
-          : isEditMode
-            ? "Update master product details."
-            : "Create a new generic master product."
-      }
-      size="xl"
-      footer={
-        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onClose(false)}
-            disabled={handleMutation.isPending || isUploading}
-          >
-            {isViewMode ? "Close" : "Cancel"}
-          </Button>
-          {!isViewMode && (
+    <>
+      <FormContainer
+        variant="modal"
+        open={open}
+        onOpenChange={(isOpen) => onClose(isOpen)}
+        title={
+          isViewMode
+            ? "View Product"
+            : isEditMode
+              ? "Edit Product"
+              : "Add Product"
+        }
+        description={
+          isViewMode
+            ? "Viewing master product details."
+            : isEditMode
+              ? "Update master product details."
+              : "Create a new generic master product."
+        }
+        size="xl"
+        footer={
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Button
-              type="submit"
-              form="master-product-dialog-form"
+              type="button"
+              variant="outline"
+              onClick={() => onClose(false)}
               disabled={handleMutation.isPending || isUploading}
             >
-              {isUploading
-                ? "Uploading..."
-                : handleMutation.isPending
-                  ? "Saving..."
-                  : isEditMode
-                    ? "Update Product"
-                    : "Save Product"}
+              {isViewMode ? "Close" : "Cancel"}
             </Button>
-          )}
-        </div>
-      }
-    >
-      <form
-        id="master-product-dialog-form"
-        onSubmit={handleSubmit(onSubmit)}
-        className="space-y-8"
-      >
-        {/* Section 01: General Information */}
-        <div className="rounded-xl border bg-card p-6 shadow-sm">
-          {sectionHeader("01", "General Information")}
-          <div className="grid gap-6 sm:grid-cols-2">
-            <FormField
-              control={control}
-              name="name"
-              label="PRODUCT FULL NAME"
-              placeholder="e.g. Crocin Advance 650mg"
-              required
-              readOnly={isViewMode}
-            />
-            <FormSelectField
-              control={control}
-              name="industry_segment"
-              label="INDUSTRY SEGMENT"
-              options={INDUSTRY_SEGMENT_OPTIONS}
-              readOnly={isViewMode}
-            />
-            <FormSearchSelect
-              control={control}
-              name="category_id"
-              label="MASTER CATEGORY"
-              placeholder="Search Category..."
-              options={category.options}
-              onSearch={category.onSearch}
-              loading={category.loading}
-              readOnly={isViewMode}
-            />
-            <FormSearchSelect
-              control={control}
-              name="brand_id"
-              label="BRAND NAME"
-              placeholder="Search Brand..."
-              options={brand.options}
-              onSearch={brand.onSearch}
-              loading={brand.loading}
-              readOnly={isViewMode}
-            />
-            <FormSearchSelect
-              control={control}
-              name="manufacturer_id"
-              label="PARENT MANUFACTURER"
-              placeholder="Search Manufacturer..."
-              options={manufacturer.options}
-              onSearch={manufacturer.onSearch}
-              loading={manufacturer.loading}
-              readOnly={isViewMode}
-            />
-            <FormField
-              control={control}
-              name="salt"
-              label="SALT COMPOSITION"
-              placeholder="e.g. Paracetamol 500mg"
-              readOnly={isViewMode}
-            />
 
-            <div className="grid grid-cols-2 gap-4">
-              <FormSearchSelect
+            {!isViewMode && (
+              <Button
+                type="submit"
+                form="master-product-dialog-form"
+                disabled={handleMutation.isPending || isUploading}
+              >
+                {isUploading
+                  ? "Uploading..."
+                  : handleMutation.isPending
+                    ? "Saving..."
+                    : isEditMode
+                      ? "Update Product"
+                      : "Save Product"}
+              </Button>
+            )}
+          </div>
+        }
+      >
+        <form
+          id="master-product-dialog-form"
+          onSubmit={handleSubmit(onSubmit)}
+          className="space-y-8"
+        >
+          {/* Section 01: General Information */}
+          <div className="rounded-xl border bg-card p-6 shadow-sm">
+            {sectionHeader("01", "General Information")}
+            <div className="grid gap-6 sm:grid-cols-2">
+              <FormField
                 control={control}
-                name="category_type"
-                label="CATEGORY TYPE"
-                placeholder="Search Type..."
-                options={categoryType.options}
-                onSearch={categoryType.onSearch}
-                loading={categoryType.loading}
+                name="name"
+                label="PRODUCT FULL NAME"
+                placeholder="e.g. Crocin Advance 650mg"
+                required
                 readOnly={isViewMode}
               />
               <FormSelectField
                 control={control}
-                name="status"
-                label="  STATUS"
-                options={PRODUCT_STATUS_OPTIONS}
+                name="industry_segment"
+                label="INDUSTRY SEGMENT"
+                options={INDUSTRY_SEGMENT_OPTIONS}
                 readOnly={isViewMode}
               />
-            </div>
-
-            <FormFileUpload
-              control={control}
-              name="image_url"
-              label=" IMAGE"
-              accept="image/*"
-              maxSizeText="PNG, JPG up to 5MB"
-              disabled={isViewMode}
-            />
-          </div>
-        </div>
-
-        {/* Section 02: Classifications & Units */}
-        <div className="rounded-xl border bg-card p-6 shadow-sm">
-          {sectionHeader("02", "Classifications & Units")}
-
-          <div className="grid gap-6 sm:grid-cols-3">
-            <FormSearchSelect
-              control={control}
-              name="hsn_code_id"
-              label="HSN / SAC CODE"
-              placeholder="Search HSN..."
-              options={hsn.options}
-              loading={hsn.loading}
-              onSearch={hsn.onSearch}
-              readOnly={isViewMode}
-            />
-            <FormSelectField
-              control={control}
-              name="color_type"
-              label="COLOR TYPE"
-              options={COLOR_TYPE_OPTIONS}
-              readOnly={isViewMode}
-            />
-
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium">
-                  REGISTERED BARCODES (EAN/UPC)
-                </label>
-                {!isViewMode && (
-                  <button
-                    type="button"
-                    onClick={() => append({ value: "" })}
-                    className="flex items-center text-xs font-bold text-primary hover:underline"
-                  >
-                    <Plus className="mr-1 size-3" />
-                    ADD SKU CODE
-                  </button>
+              <FormSearchSelect
+                control={control}
+                name="category_id"
+                label="MASTER CATEGORY"
+                placeholder="Search Category..."
+                options={category.options}
+                onSearch={category.onSearch}
+                loading={category.loading}
+                readOnly={isViewMode}
+                labelAction={quickAddButton("category", "Add category")}
+              />
+              <FormSearchSelect
+                control={control}
+                name="brand_id"
+                label="BRAND NAME"
+                placeholder="Search Brand..."
+                options={brand.options}
+                onSearch={brand.onSearch}
+                loading={brand.loading}
+                readOnly={isViewMode}
+                labelAction={quickAddButton("brand", "Add brand")}
+              />
+              <FormSearchSelect
+                control={control}
+                name="manufacturer_id"
+                label="PARENT MANUFACTURER"
+                placeholder="Search Manufacturer..."
+                options={manufacturer.options}
+                onSearch={manufacturer.onSearch}
+                loading={manufacturer.loading}
+                readOnly={isViewMode}
+                labelAction={quickAddButton(
+                  "manufacturer",
+                  "Add manufacturer"
                 )}
+              />
+              <FormField
+                control={control}
+                name="salt"
+                label="SALT COMPOSITION"
+                placeholder="e.g. Paracetamol 500mg"
+                readOnly={isViewMode}
+              />
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormSearchSelect
+                  control={control}
+                  name="category_type"
+                  label="CATEGORY TYPE"
+                  placeholder="Search Type..."
+                  options={categoryType.options}
+                  onSearch={categoryType.onSearch}
+                  loading={categoryType.loading}
+                  readOnly={isViewMode}
+                  labelAction={quickAddButton("unit", "Add category type")}
+                />
+                <FormSelectField
+                  control={control}
+                  name="status"
+                  label="  STATUS"
+                  options={PRODUCT_STATUS_OPTIONS}
+                  readOnly={isViewMode}
+                />
               </div>
-              <div className="space-y-3">
-                {fields.map((field, index) => (
-                  <div
-                    key={field.id}
-                    className="flex items-center justify-center gap-2"
-                  >
-                    <div className="relative flex-1">
-                      <FormField
-                        control={control}
-                        name={`barcodes.${index}.value`}
-                        label=""
-                        placeholder="SCAN PRODUCT BARCODE"
-                        readOnly={isViewMode}
-                      />
-                      {/* <Camera className="absolute top-3 right-3 size-4 cursor-pointer text-muted-foreground" /> */}
+
+              <FormFileUpload
+                control={control}
+                name="image_url"
+                label=" IMAGE"
+                accept="image/*"
+                maxSizeText="PNG, JPG up to 5MB"
+                disabled={isViewMode}
+              />
+            </div>
+          </div>
+
+          {/* Section 02: Classifications & Units */}
+          <div className="rounded-xl border bg-card p-6 shadow-sm">
+            {sectionHeader("02", "Classifications & Units")}
+
+            <div className="grid gap-6 sm:grid-cols-3">
+              <FormSearchSelect
+                control={control}
+                name="hsn_code_id"
+                label="HSN / SAC CODE"
+                placeholder="Search HSN..."
+                options={hsn.options}
+                loading={hsn.loading}
+                onSearch={hsn.onSearch}
+                readOnly={isViewMode}
+              />
+              <FormSelectField
+                control={control}
+                name="color_type"
+                label="COLOR TYPE"
+                options={COLOR_TYPE_OPTIONS}
+                readOnly={isViewMode}
+              />
+
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium">
+                    REGISTERED BARCODES (EAN/UPC)
+                  </label>
+                  {!isViewMode && (
+                    <button
+                      type="button"
+                      onClick={() => append({ value: "" })}
+                      className="flex items-center text-xs font-bold text-primary hover:underline"
+                    >
+                      <Plus className="mr-1 size-3" />
+                      ADD SKU CODE
+                    </button>
+                  )}
+                </div>
+                <div className="space-y-3">
+                  {fields.map((field, index) => (
+                    <div
+                      key={field.id}
+                      className="flex items-center justify-center gap-2"
+                    >
+                      <div className="relative flex-1">
+                        <FormField
+                          control={control}
+                          name={`barcodes.${index}.value`}
+                          label=""
+                          placeholder="SCAN PRODUCT BARCODE"
+                          readOnly={isViewMode}
+                        />
+                        {/* <Camera className="absolute top-3 right-3 size-4 cursor-pointer text-muted-foreground" /> */}
+                      </div>
+                      {fields.length > 1 && !isViewMode && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => remove(index)}
+                          className="text-destructive hover:bg-destructive/10"
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
+                      )}
                     </div>
-                    {fields.length > 1 && !isViewMode && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => remove(index)}
-                        className="text-destructive hover:bg-destructive/10"
-                      >
-                        <Trash2 className="size-4" />
-                      </Button>
-                    )}
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Section 03: Regulatory & System Flags */}
-        <div className="rounded-xl border bg-card p-6 shadow-sm">
-          {sectionHeader("03", "Regulatory & System Flags")}
+          {/* Section 03: Regulatory & System Flags */}
+          <div className="rounded-xl border bg-card p-6 shadow-sm">
+            {sectionHeader("03", "Regulatory & System Flags")}
 
-          <div className="grid gap-6 sm:grid-cols-2">
-            <FormSwitch
-              control={control}
-              name="is_narcotic"
-              label="Narcotic Drug"
-              description="Requires special tracking and reporting"
-              disabled={isViewMode}
-            />
-            <FormSwitch
-              control={control}
-              name="is_schedule_h"
-              label="Schedule H"
-              description="Prescription required for billing"
-              disabled={isViewMode}
-            />
-            <FormSwitch
-              control={control}
-              name="is_schedule_h1"
-              label="Schedule H1"
-              description="Strict audit logging and separate register"
-              disabled={isViewMode}
-            />
+            <div className="grid gap-6 sm:grid-cols-2">
+              <FormSwitch
+                control={control}
+                name="is_narcotic"
+                label="Narcotic Drug"
+                description="Requires special tracking and reporting"
+                disabled={isViewMode}
+              />
+              <FormSwitch
+                control={control}
+                name="is_schedule_h"
+                label="Schedule H"
+                description="Prescription required for billing"
+                disabled={isViewMode}
+              />
+              <FormSwitch
+                control={control}
+                name="is_schedule_h1"
+                label="Schedule H1"
+                description="Strict audit logging and separate register"
+                disabled={isViewMode}
+              />
+            </div>
           </div>
-        </div>
-      </form>
-    </FormContainer>
+        </form>
+      </FormContainer>
+
+      <CategoryDialog
+        open={quickAddDialog === "category"}
+        onClose={(isOpen) => setQuickAddDialog(isOpen ? "category" : null)}
+      />
+      <BrandDrawer
+        open={quickAddDialog === "brand"}
+        onClose={(isOpen) => setQuickAddDialog(isOpen ? "brand" : null)}
+      />
+      <ManufacturerDialog
+        open={quickAddDialog === "manufacturer"}
+        onClose={(isOpen) =>
+          setQuickAddDialog(isOpen ? "manufacturer" : null)
+        }
+      />
+      <UnitDialog
+        open={quickAddDialog === "unit"}
+        onClose={(isOpen) => setQuickAddDialog(isOpen ? "unit" : null)}
+      />
+    </>
   )
 }

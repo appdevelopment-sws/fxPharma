@@ -48,7 +48,7 @@ export class HsnMappingController {
   });
 
   static create = catchAsync(async (req: Request, res: Response) => {
-    const { hsnid, taxid } = req.body;
+    const { hsnid, taxid, effectiveFrom, effectiveTo } = req.body;
 
     const existing = await rootPrisma.hsnMapping.findUnique({
       where: {
@@ -61,7 +61,16 @@ export class HsnMappingController {
     }
 
     const mapping = await rootPrisma.hsnMapping.create({
-      data: { hsnid, taxid },
+      data: {
+        hsnid,
+        taxid,
+        effectiveFrom,
+        effectiveTo,
+      },
+      include: {
+        hsn: true,
+        tax: true,
+      },
     });
 
     res.status(201).json({
@@ -81,7 +90,16 @@ export class HsnMappingController {
 
     const mapping = await rootPrisma.hsnMapping.update({
       where: { id: req.params.id as string },
-      data: req.body,
+      data: {
+        hsnid: req.body.hsnid,
+        taxid: req.body.taxid,
+        effectiveFrom: req.body.effectiveFrom,
+        effectiveTo: req.body.effectiveTo,
+      },
+      include: {
+        hsn: true,
+        tax: true,
+      },
     });
 
     res.json({

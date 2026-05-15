@@ -74,7 +74,7 @@ const Manufacturers = () => {
         render: (row) => (
           <div>
             <p className="font-medium">{row.name}</p>
-            <p className="text-xs text-muted-foreground">{row.createdAt}</p>
+            {/* <p className="text-xs text-muted-foreground">{row.createdAt}</p> */}
           </div>
         ),
       },

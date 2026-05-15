@@ -14,10 +14,13 @@ import { useDisclosure } from "@/hooks/useDisclosure"
 import useSearchFilter from "@/hooks/useSearchFilter"
 import { queryKeys } from "@/lib/queryKeys"
 import ProductApi, { type MasterProduct } from "@/services/masterProductApi"
+import BrandApi, { ManufacturerApi } from "@/services/attributesApi"
 
 import {
+  CATEGORY_TYPE_OPTIONS,
   INITIAL_PRODUCT_FILTERS,
   MASTER_PRODUCT_COLUMNS,
+  PRODUCT_STATUS_OPTIONS,
 } from "@/constants/page/super-admin/master-products"
 import BulkUploadProductModal from "@/components/shared/bulkUploadProductModal"
 
@@ -31,6 +34,16 @@ export default function MasterProductsPage() {
   const { data: productsData, isLoading: isLoadingProducts } = useQuery({
     queryKey: queryKeys.masterProducts.list(filter),
     queryFn: () => ProductApi.getMasterProducts(filter),
+  })
+
+  const { data: brandsData } = useQuery({
+    queryKey: queryKeys.brands.list({ limit: 1000 }),
+    queryFn: () => BrandApi.getBrands({ limit: 1000 }),
+  })
+
+  const { data: manufacturersData } = useQuery({
+    queryKey: queryKeys.manufacturers.list({ limit: 1000 }),
+    queryFn: () => ManufacturerApi.getManufacturers({ limit: 1000 }),
   })
 
   const deleteProductMutation = useMutation({
@@ -58,6 +71,28 @@ export default function MasterProductsPage() {
       handleFilter({ ...updates, page: 1 })
     },
     [handleFilter]
+  )
+
+  const brandOptions = useMemo(
+    () => [
+      { label: "All Brands", value: "all" },
+      ...(brandsData?.data || []).map((brand) => ({
+        label: brand.name,
+        value: String(brand.id),
+      })),
+    ],
+    [brandsData]
+  )
+
+  const manufacturerOptions = useMemo(
+    () => [
+      { label: "All Companies", value: "all" },
+      ...(manufacturersData?.data || []).map((manufacturer) => ({
+        label: manufacturer.name,
+        value: String(manufacturer.id),
+      })),
+    ],
+    [manufacturersData]
   )
 
   const columns: DataTableColumn<MasterProduct>[] = useMemo(() => {
@@ -204,21 +239,44 @@ export default function MasterProductsPage() {
           <FilterBar
             values={{
               search: filter.search || "",
+              brandId: filter.brandId || "all",
+              manufacturerId: filter.manufacturerId || "all",
+              categoryType: filter.categoryType || "all",
+              status: filter.status || "all",
             }}
             onChange={handleFilterChange}
           >
             <FilterBar.Search
               name="search"
               className="w-[30%]"
-              placeholder="Search by product name, generic, or brand..."
+              placeholder="Search by product, salt, company, brand..."
             />
-            {/* Keeping these as simple text inputs to search by IDs as per simplified API limits */}
-            {/* <FilterBar.Search name="companyId" placeholder="Company ID" />
-            <FilterBar.Search
-              name="productTypeId"
-              placeholder="Product Type ID"
+            <FilterBar.Select
+              name="manufacturerId"
+              placeholder="All Companies"
+              options={manufacturerOptions}
             />
-            <FilterBar.Search name="hsnCodeId" placeholder="HSN ID" /> */}
+            <FilterBar.Select
+              name="brandId"
+              placeholder="All Brands"
+              options={brandOptions}
+            />
+            <FilterBar.Select
+              name="categoryType"
+              placeholder="All Types"
+              options={[
+                { label: "All Types", value: "all" },
+                ...CATEGORY_TYPE_OPTIONS,
+              ]}
+            />
+            <FilterBar.Select
+              name="status"
+              placeholder="All Status"
+              options={[
+                { label: "All Status", value: "all" },
+                ...PRODUCT_STATUS_OPTIONS,
+              ]}
+            />
           </FilterBar>
 
           <DataTable

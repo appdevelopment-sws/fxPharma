@@ -7,6 +7,10 @@ export const INITIAL_PRODUCT_FILTERS = {
   page: 1,
   limit: 10,
   search: "",
+  brandId: "all",
+  manufacturerId: "all",
+  categoryType: "all",
+  status: "all",
 }
 
 export const MASTER_PRODUCT_COLUMNS = [
