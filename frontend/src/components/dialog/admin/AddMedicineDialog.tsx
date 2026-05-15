@@ -13,24 +13,24 @@ import {
 
 import sectionHeader from "@/components/sectionHeader"
 import {
+  BOX_TYPE_OPTIONS,
   CATEGORY_OPTIONS,
   MEDICINE_STOCK_FORM_INITIAL_DATA,
-  NORMAL_OPTIONS,
+  PACKAGING_TYPE_OPTIONS,
   PRODUCT_STATUS_OPTIONS,
+  STRIP_CONTENT_OPTIONS,
   TAX_OPTIONS,
   YES_NO_OPTIONS,
 } from "@/constants/page/admin/inventory"
-import { mapMasterProductToInventoryDraft } from "@/constants/page/admin/importinventory"
 import { queryKeys } from "@/lib/queryKeys"
 import InventoryApi from "@/services/inventoryApi"
 import BrandApi, {
   CategoryApi,
   ManufacturerApi,
-  UnitApi,
 } from "@/services/attributesApi"
 import { COLOR_TYPE_OPTIONS } from "@/constants/shared/form-options"
 import { formatDateForInput } from "@/lib/utils"
-import TaxApi, { HsnApi } from "@/services/taxApi"
+import { HsnApi } from "@/services/taxApi"
 
 interface MedicineStockDialogProps {
   open: boolean
@@ -117,12 +117,10 @@ const toFormValues = (product: any) => ({
     product?.category ||
     "TAB",
   packing: product?.packing || "",
-  unit_1st:
-    product?.unitId ||
-    product?.unit_id ||
-    product?.unit1st ||
-    product?.unit_1st ||
-    "",
+  pack_qty_1: product?.packQty1 || product?.pack_qty_1 || "",
+  pack_qty_2: product?.packQty2 || product?.pack_qty_2 || "",
+  pack_qty_3: product?.packQty3 || product?.pack_qty_3 || "",
+  unit_1st: product?.unit1st || product?.unit_1st || "",
   unit_2nd: product?.unit2nd || product?.unit_2nd || "",
   hsn_code:
     product?.hsn_code ||
@@ -175,7 +173,6 @@ const toApiPayload = (data: any) => ({
   brandId: toNullableString(data.company),
   manufacturerId: toNullableString(data.manufacturer),
   categoryId: toNullableString(data.category),
-  unitId: toNullableString(data.unit_1st),
   saltComposition: toNullableString(data.salt_composition),
   packing: toNullableString(data.packing),
   unit1st: toNullableString(data.unit_1st),
@@ -257,11 +254,6 @@ export default function MedicineStockDialog({
       BrandApi.getBrands({ limit: 20, includeGlobal: includeGlobal }),
     enabled: open,
   })
-  const { data: unitsData } = useQuery({
-    queryKey: queryKeys.units.list({ limit: 20, includeGlobal }),
-    queryFn: () => UnitApi.getUnits({ limit: 20, includeGlobal }),
-    enabled: open,
-  })
   const { data: hsnData } = useQuery({
     queryKey: queryKeys.hsnCodes.list({ limit: 20, includeGlobal }),
     queryFn: () => HsnApi.getHsnCodes({ limit: 20, includeGlobal }),
@@ -308,21 +300,6 @@ export default function MedicineStockDialog({
     [categoriesData, product]
   )
 
-  const unitOptions = useMemo(
-    () =>
-      withSelectedOption(
-        unitsData?.data?.map((unit: any) => ({
-          label: unit.name,
-          value: unit.id,
-        })) ?? [],
-        product?.unitId ||
-          product?.unit_id ||
-          product?.unit?.id ||
-          product?.unit_1st,
-        product?.unit?.name || product?.unit?.label
-      ),
-    [product, unitsData]
-  )
   const hsnOptions = useMemo(
     () =>
       withSelectedOption(
@@ -344,6 +321,31 @@ export default function MedicineStockDialog({
     name: "hsn_code",
   })
 
+  const selectedInnerPackType = useWatch({
+    control,
+    name: "unit_1st",
+  })
+
+  const watchedPurchaseRate = useWatch({
+    control,
+    name: "purchase_rate",
+  })
+
+  const watchedPackQty1 = useWatch({
+    control,
+    name: "pack_qty_1",
+  })
+
+  const watchedPackQty2 = useWatch({
+    control,
+    name: "pack_qty_2",
+  })
+
+  let watchedPackQty3: string | null = useWatch({
+    control,
+    name: "pack_qty_3",
+  })
+
   useEffect(() => {
     if (!open) return
 
@@ -358,6 +360,62 @@ export default function MedicineStockDialog({
     setValue("cgst", cgst as any, { shouldDirty: true, shouldValidate: true })
     setValue("sgst", sgst as any, { shouldDirty: true, shouldValidate: true })
   }, [open, isViewMode, hsnData, selectedHsnCode, setValue])
+
+  useEffect(() => {
+    if (!open || isViewMode) return
+
+    if (selectedInnerPackType !== "strip") {
+      setValue("unit_2nd", "", { shouldDirty: true, shouldValidate: true })
+    }
+  }, [open, isViewMode, selectedInnerPackType, setValue])
+  console.log(watchedPackQty3, "==> herer ")
+  useEffect(() => {
+    if (!open || isViewMode) return
+
+    const purchaseRate = toNumber(watchedPurchaseRate)
+    if (!purchaseRate) {
+      setValue("cost_unit", "", { shouldDirty: true, shouldValidate: true })
+      return
+    }
+
+    const qty1 = Math.max(1, toNumber(watchedPackQty1))
+    const qty2 = Math.max(1, toNumber(watchedPackQty2))
+    const qty3 = Math.max(1, toNumber(watchedPackQty3))
+    let totalUnits = 0
+
+    if (selectedInnerPackType == "strip") {
+      totalUnits = qty1 * qty2 * qty3
+    } else {
+      totalUnits = qty1 * qty2
+      setValue("pack_qty_3", "", {
+        shouldDirty: true,
+        shouldValidate: true,
+      })
+    }
+    console.log("Calculating cost per unit with", {
+      purchaseRate,
+      qty1,
+      qty2,
+      qty3,
+      totalUnits,
+    })
+    const costPerUnit = Number(((purchaseRate * qty1) / totalUnits).toFixed(2))
+
+    setValue("cost_unit", costPerUnit as any, {
+      shouldDirty: true,
+      shouldValidate: true,
+    })
+  }, [
+    open,
+    isViewMode,
+    watchedPurchaseRate,
+    watchedPackQty1,
+    watchedPackQty2,
+    watchedPackQty3,
+    selectedInnerPackType,
+
+    setValue,
+  ])
 
   useEffect(() => {
     if (open) {
@@ -501,41 +559,86 @@ export default function MedicineStockDialog({
 
         {/* Classification */}
         <div className="rounded-xl border p-6">
-          {sectionHeader("02", "Classification & Units")}
+          {sectionHeader("02", "Packing Setup (Easy Mode)")}
 
-          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-            <FormField control={control} name="packing" label="Packing" />
-            <FormSelectField
-              control={control}
-              name="unit_1st"
-              label="Unit 1st"
-              options={unitOptions}
-              placeholder={
-                unitOptions.length ? "Select unit" : "Loading units..."
-              }
-            />
-            <FormSelectField
-              control={control}
-              name="unit_2nd"
-              label="Unit 2nd"
-              options={unitOptions}
-              placeholder={
-                unitOptions.length ? "Select unit" : "Loading units..."
-              }
-            />
+          <div className="rounded-2xl border border-border/70 bg-zinc-950 p-5 text-zinc-100 shadow-sm">
+            <div className="grid gap-4 xl:grid-cols-3">
+              <div className="space-y-3">
+                {" "}
+                <FormSelectField
+                  control={control}
+                  name="packing"
+                  label="Box"
+                  options={BOX_TYPE_OPTIONS}
+                  placeholder="Select box type"
+                  readOnly={isViewMode}
+                />
+                <FormField
+                  control={control}
+                  name="pack_qty_1"
+                  label="Box Qty"
+                  inputType="number"
+                  min="0"
+                  readOnly={isViewMode}
+                  placeholder="5"
+                />
+              </div>
+
+              <div className="space-y-3">
+                {" "}
+                <FormSelectField
+                  control={control}
+                  name="unit_1st"
+                  label="Contains"
+                  options={PACKAGING_TYPE_OPTIONS}
+                  placeholder="Select contains type"
+                  readOnly={isViewMode}
+                />
+                <FormField
+                  control={control}
+                  name="pack_qty_2"
+                  label="Contains Qty"
+                  inputType="number"
+                  min="0"
+                  readOnly={isViewMode}
+                  placeholder="10"
+                />
+              </div>
+
+              <div className="space-y-3">
+                {" "}
+                {selectedInnerPackType === "strip" && (
+                  <>
+                    <FormSelectField
+                      control={control}
+                      name="unit_2nd"
+                      label="Containing"
+                      options={STRIP_CONTENT_OPTIONS}
+                      placeholder="Select tablets or capsules"
+                      readOnly={isViewMode}
+                    />{" "}
+                    <FormField
+                      control={control}
+                      name="pack_qty_3"
+                      label="Content Qty"
+                      inputType="number"
+                      min="0"
+                      readOnly={isViewMode}
+                      placeholder="10"
+                    />
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-5 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
             <FormSelectField
               control={control}
               name="hsn_code"
               label="HSN / SAC"
               options={hsnOptions}
             />
-            {/* 
-            <FormSelectField
-              control={control}
-              name="item_type"
-              label="Item Type"
-              options={NORMAL_OPTIONS}
-            /> */}
 
             <FormSelectField
               control={control}
@@ -550,13 +653,6 @@ export default function MedicineStockDialog({
               label="Decimal"
               options={YES_NO_OPTIONS}
             />
-
-            {/* <FormSelectField
-              control={control}
-              name="type"
-              label="Type"
-              options={NORMAL_OPTIONS}
-            /> */}
           </div>
         </div>
 
@@ -596,14 +692,14 @@ export default function MedicineStockDialog({
             <FormField
               control={control}
               name="mrp"
-              label="M.R.P."
+              label="M.R.P. (per box)"
               inputType="number"
               step="0.01"
             />
             <FormField
               control={control}
               name="purchase_rate"
-              label="Purchase Rate"
+              label="Purchase Rate (per box)"
               inputType="number"
               step="0.01"
             />
@@ -624,21 +720,21 @@ export default function MedicineStockDialog({
             <FormField
               control={control}
               name="rate_a"
-              label="Rate - A"
+              label="Rate - A (per box)"
               inputType="number"
               step="0.01"
             />
             <FormField
               control={control}
               name="rate_b"
-              label="Rate - B"
+              label="Rate - B (per box)"
               inputType="number"
               step="0.01"
             />
             <FormField
               control={control}
               name="rate_c"
-              label="Rate - C"
+              label="Rate - C (per box)"
               inputType="number"
               step="0.01"
             />
