@@ -24,6 +24,15 @@ const INITIAL_MAPPING_FILTERS = {
   search: "",
 }
 
+const formatDate = (value?: string | Date | null) => {
+  if (!value) return "-"
+
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return "-"
+
+  return format(date, "dd MMM yyyy")
+}
+
 const HsnMappingPage = () => {
   const queryClient = useQueryClient()
   const dialogDisclosure = useDisclosure<HsnMapping | null>()
@@ -116,14 +125,22 @@ const HsnMappingPage = () => {
             : `Tax #${row.taxid}`,
       },
       {
-        key: "effective",
-        header: "Created At",
+        key: "effectiveFrom",
+        header: "Effective From",
         render: (row) => (
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <Calendar className="size-3" />
-            <span>
-              {format(new Date(row.createdAt || new Date()), "dd MMM yyyy")}
-            </span>
+            <span>{formatDate(row.effectiveFrom)}</span>
+          </div>
+        ),
+      },
+      {
+        key: "effectiveTo",
+        header: "Effective To",
+        render: (row) => (
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Calendar className="size-3" />
+            <span>{formatDate(row.effectiveTo)}</span>
           </div>
         ),
       },

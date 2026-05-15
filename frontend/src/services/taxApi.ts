@@ -75,14 +75,13 @@ export type HsnFormValues = {
 }
 
 export type HsnMapping = {
-  hsnId(hsnId: any): unknown
-  taxId(taxId: any): unknown
-  effectiveFrom: any
-  effectiveTo: any
-  createdAt: Date
   id: string
   hsnid: string
   taxid: string
+  effectiveFrom?: string | null
+  effectiveTo?: string | null
+  createdAt?: string
+  updatedAt?: string
   hsn?: HsnCode
   tax?: TaxRate
 }
@@ -130,6 +129,8 @@ export const HsnApi = {
     const data = {
       hsnid: values.hsnId,
       taxid: values.taxId,
+      effectiveFrom: values.effectiveFrom,
+      effectiveTo: values.effectiveTo || null,
     }
     return api.post(MAPPING_BASE_URL, data)
   },
@@ -138,6 +139,8 @@ export const HsnApi = {
     const data = {
       hsnid: values.hsnId,
       taxid: values.taxId,
+      effectiveFrom: values.effectiveFrom,
+      effectiveTo: values.effectiveTo || null,
     }
     return api.put(`${MAPPING_BASE_URL}/${id}`, data)
   },
