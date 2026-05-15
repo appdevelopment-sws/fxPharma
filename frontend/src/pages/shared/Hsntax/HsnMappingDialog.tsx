@@ -56,10 +56,12 @@ export default function HsnMappingDialog({
         reset({
           hsnId: String(mapping.hsnid),
           taxId: String(mapping.taxid),
-          effectiveFrom: mapping.createdAt
-            ? new Date(mapping.createdAt).toISOString().split("T")[0]
+          effectiveFrom: mapping.effectiveFrom
+            ? new Date(mapping.effectiveFrom).toISOString().split("T")[0]
             : new Date().toISOString().split("T")[0],
-          effectiveTo: "",
+          effectiveTo: mapping.effectiveTo
+            ? new Date(mapping.effectiveTo).toISOString().split("T")[0]
+            : "",
         })
       } else {
         reset(DEFAULT_VALUES)
