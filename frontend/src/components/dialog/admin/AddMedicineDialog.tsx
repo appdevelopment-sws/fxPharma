@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from "react"
-import { useForm, type SubmitHandler } from "react-hook-form"
+import { useForm, useWatch, type SubmitHandler } from "react-hook-form"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 
@@ -49,6 +49,16 @@ const toNumber = (value: unknown) => {
 const toNullableString = (value: unknown) => {
   if (value === "" || value === null || value === undefined) return null
   return String(value)
+}
+
+const splitTaxRate = (rate: unknown) => {
+  const parsed = Number(rate)
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return { cgst: 0, sgst: 0 }
+  }
+
+  const half = Number((parsed / 2).toFixed(2))
+  return { cgst: half, sgst: half }
 }
 
 const withSelectedOption = (
@@ -221,7 +231,7 @@ export default function MedicineStockDialog({
   const isEditMode = resolvedMode === "edit"
   const isCreateFromTemplate = resolvedMode === "create" && !!product
 
-  const { handleSubmit, control, reset } = useForm({
+  const { handleSubmit, control, reset, setValue } = useForm({
     defaultValues: MEDICINE_STOCK_FORM_INITIAL_DATA,
     mode: "onChange",
   })
@@ -317,7 +327,7 @@ export default function MedicineStockDialog({
     () =>
       withSelectedOption(
         hsnData?.data?.map((hsn: any) => ({
-          label: `${hsn.hsncode} - ${hsn.hsnMappings[0]?.tax?.rate}%`,
+          label: `${hsn.hsncode} - ${hsn.hsnMappings[0]?.tax?.rate ?? 0}%`,
           value: hsn.hsncode,
         })) ?? [],
         product?.hsn_code ||
@@ -328,6 +338,27 @@ export default function MedicineStockDialog({
       ),
     [product, hsnData]
   )
+
+  const selectedHsnCode = useWatch({
+    control,
+    name: "hsn_code",
+  })
+
+  useEffect(() => {
+    if (!open) return
+
+    const matchedHsn = hsnData?.data?.find(
+      (hsn: any) => String(hsn.hsncode) === String(selectedHsnCode)
+    )
+    const taxRate = matchedHsn?.hsnMappings?.[0]?.tax?.rate
+
+    if (taxRate === undefined || taxRate === null) return
+
+    const { cgst, sgst } = splitTaxRate(taxRate)
+    setValue("cgst", cgst as any, { shouldDirty: true, shouldValidate: true })
+    setValue("sgst", sgst as any, { shouldDirty: true, shouldValidate: true })
+  }, [open, isViewMode, hsnData, selectedHsnCode, setValue])
+
   useEffect(() => {
     if (open) {
       console.log("Resetting form with product data:", product)
