@@ -4,6 +4,13 @@ import { paginate } from "../../../utils/pagination.js";
 import ErrorHandler from "../../../utils/ErrorHandler.js";
 import { rootPrisma } from "@/lib/prisma.js";
 
+const getFilterValue = (value: unknown) => {
+  const normalized = Array.isArray(value) ? value[0] : value;
+  return typeof normalized === "string" && normalized !== "all"
+    ? normalized
+    : undefined;
+};
+
 export class MasterProductController {
   private static mapToPrisma(data: any) {
     const mapped: any = {
@@ -32,8 +39,17 @@ export class MasterProductController {
 
   static getAll = catchAsync(async (req: Request, res: Response) => {
     await paginate(res, req.query, async (skip, take, search) => {
+      const brandId = getFilterValue(req.query.brandId);
+      const manufacturerId = getFilterValue(req.query.manufacturerId);
+      const categoryType = getFilterValue(req.query.categoryType);
+      const status = getFilterValue(req.query.status);
+
       const where: any = {
         AND: [
+          brandId ? { brandId } : {},
+          manufacturerId ? { manufacturerId } : {},
+          categoryType ? { categoryType } : {},
+          status ? { status } : {},
           search
             ? {
                 OR: [
@@ -41,6 +57,68 @@ export class MasterProductController {
                     name: {
                       contains: search,
                       mode: "insensitive",
+                    },
+                  },
+                  {
+                    salt: {
+                      contains: search,
+                      mode: "insensitive",
+                    },
+                  },
+                  {
+                    categoryType: {
+                      contains: search,
+                      mode: "insensitive",
+                    },
+                  },
+                  {
+                    brand: {
+                      is: {
+                        name: {
+                          contains: search,
+                          mode: "insensitive",
+                        },
+                      },
+                    },
+                  },
+                  {
+                    manufacturer: {
+                      is: {
+                        name: {
+                          contains: search,
+                          mode: "insensitive",
+                        },
+                      },
+                    },
+                  },
+                  {
+                    category: {
+                      is: {
+                        name: {
+                          contains: search,
+                          mode: "insensitive",
+                        },
+                      },
+                    },
+                  },
+                  {
+                    hsn: {
+                      is: {
+                        OR: [
+                          {
+                            hsncode: {
+                              contains: search,
+                              mode: "insensitive",
+                            },
+                          },
+                          {
+                            description: {
+                              contains: search,
+                              mode: "insensitive",
+                            },
+                          },
+                        ],
+                      },
                     },
                   },
                   {
