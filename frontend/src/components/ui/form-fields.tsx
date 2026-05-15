@@ -388,11 +388,18 @@ type FieldLabelProps = {
   label: string
   required?: boolean
   tooltip?: string
+  action?: React.ReactNode
 }
 
-function FieldLabel({ htmlFor, label, required, tooltip }: FieldLabelProps) {
+function FieldLabel({
+  htmlFor,
+  label,
+  required,
+  tooltip,
+  action,
+}: FieldLabelProps) {
   return (
-    <div className="flex items-center gap-1.5">
+    <div className="flex min-h-5 items-center gap-1.5">
       <Label htmlFor={htmlFor}>
         {label}
         {required ? <span className="text-destructive">*</span> : null}
@@ -409,6 +416,7 @@ function FieldLabel({ htmlFor, label, required, tooltip }: FieldLabelProps) {
           </Tooltip>
         </TooltipProvider>
       ) : null}
+      {action}
     </div>
   )
 }
@@ -430,6 +438,7 @@ interface FormSearchSelectProps<T extends FieldValues> {
   readOnly?: boolean
   error?: string
   tooltip?: string
+  labelAction?: React.ReactNode
 }
 
 /**
@@ -448,6 +457,7 @@ export function FormSearchSelect<T extends FieldValues>({
   readOnly,
   error,
   tooltip,
+  labelAction,
 }: FormSearchSelectProps<T>) {
   const [open, setOpen] = React.useState(false)
   const [searchValue, setSearchValue] = React.useState("")
@@ -474,6 +484,7 @@ export function FormSearchSelect<T extends FieldValues>({
             label={label}
             required={required}
             tooltip={tooltip}
+            action={labelAction}
           />
 
           <Popover open={open} onOpenChange={setOpen}>
