@@ -32,6 +32,9 @@ model HsnMapping {
   id        String   @id @default(cuid())
   hsnid     String
   taxid     String
+  effectiveFrom DateTime  @default(now()) @map("effective_from")
+  effectiveTo   DateTime? @map("effective_to")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

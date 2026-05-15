@@ -186,7 +186,7 @@ const mapOrganizationToStore = (organization: any) => {
       organization.ownerLastName ??
       "",
     ownerPhone: owner?.phone ?? organization.ownerPhone ?? "",
-    ownerEmail: owner?.email ?? organization.ownerEmail ?? "",
+    ownerEmail: organization.ownerEmail ?? owner?.email ?? "",
     loginEmail: owner?.email ?? organization.ownerEmail ?? "",
     gstNo: organization.gstNo ?? null,
     licenseNo: organization.licenseNo ?? null,
@@ -434,7 +434,7 @@ export class StoreListController {
       const owner = await tx.user.create({
         data: {
           name: buildOwnerName(req.body.ownerFirstName, req.body.ownerLastName),
-          email: req.body.ownerEmail ?? req.body.loginEmail,
+          email: req.body.loginEmail,
           phone: req.body.ownerPhone,
           passwordHash,
           status: "ACTIVE",
@@ -567,10 +567,7 @@ export class StoreListController {
                 ownerMembership.user.name?.split(" ")?.slice(1).join(" ") ??
                 "",
             ),
-            email:
-              req.body.ownerEmail ??
-              req.body.loginEmail ??
-              ownerMembership.user.email,
+            email: req.body.loginEmail ?? ownerMembership.user.email,
             phone: req.body.ownerPhone ?? ownerMembership.user.phone,
             ...(req.body.password
               ? {
@@ -632,8 +629,7 @@ export class StoreListController {
                   })
                 : mainBranch.address,
             phone: req.body.ownerPhone ?? mainBranch.phone,
-            email:
-              req.body.ownerEmail ?? req.body.loginEmail ?? mainBranch.email,
+            email: req.body.ownerEmail ?? mainBranch.email,
           },
         });
       }
