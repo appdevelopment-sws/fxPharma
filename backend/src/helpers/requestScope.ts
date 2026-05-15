@@ -7,18 +7,22 @@ const getHeaderValue = (value: string | string[] | undefined) =>
 export type RequestScope = {
   organizationId: string;
   branchId: string | null;
+  role: string;
+  isSuperAdmin: boolean;
 };
 
-export function getRequestScope(req: Request): RequestScope {
+export function getRequestScope(req: any): RequestScope {
   const organizationId = getHeaderValue(req.headers["x-organization-id"]);
   const branchId = getHeaderValue(req.headers["x-branch-id"]) || null;
-
+  const role = req.user.role;
   if (!organizationId) {
     throw new ErrorHandler("Organization context is required", 400);
   }
-
+  const isSuperAdmin = role === "SUPER_ADMIN";
   return {
     organizationId,
     branchId,
+    role,
+    isSuperAdmin,
   };
 }

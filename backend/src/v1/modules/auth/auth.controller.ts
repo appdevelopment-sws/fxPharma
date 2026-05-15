@@ -119,23 +119,28 @@ export class AuthController {
       }
 
       // Create token
-      const token = jwt.sign(
-        {
-          userId: user.id,
-          email: user.email,
-        },
-        JWT_SECRET,
-        {
-          expiresIn: "7d",
-        },
-      );
+      // const token = jwt.sign(
+      //   {
+      //     userId: user.id,
+      //     email: user.email,
+      //     role: user.organizations[0]?.role?.name || "user",
+      //   },
+      //   JWT_SECRET,
+      //   {
+      //     expiresIn: "7d",
+      //   },
+      // );
 
       // Remove passwordHash from response
       const { passwordHash: _, ...userWithoutPassword } = user;
-      sendToken(user, res);
+      sendToken({
+        user: user,
+        role: user.organizations[0]?.role?.key || "USER",
+        res: res,
+      });
       return res.json({
         success: true,
-        token,
+        // token,
         data: userWithoutPassword,
       });
     } catch (error) {

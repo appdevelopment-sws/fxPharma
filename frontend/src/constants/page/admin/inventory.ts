@@ -36,6 +36,9 @@ export const MEDICINE_STOCK_FORM_INITIAL_DATA = {
   packing: "",
   unit_1st: "",
   unit_2nd: "",
+  pack_qty_1: "",
+  pack_qty_2: "",
+  pack_qty_3: "",
   hsn_code: "",
   temperature_limit: "",
   item_type: "NORMAL",
@@ -92,6 +95,23 @@ export const CATEGORY_OPTIONS = [
   { label: "CAP", value: "CAP" },
   { label: "SYRUP", value: "SYRUP" },
   { label: "INJ", value: "INJ" },
+]
+
+export const PACKAGING_TYPE_OPTIONS = [
+  { label: "Strip", value: "strip" },
+  { label: "Bottle", value: "bottle" },
+  { label: "Sachet", value: "sachet" },
+  { label: "Vial", value: "vial" },
+  { label: "Ampoule", value: "ampoule" },
+  { label: "Tube", value: "tube" },
+  { label: "Pouch", value: "pouch" },
+  { label: "Blister Pack", value: "Blister Pack" },
+]
+export const BOX_TYPE_OPTIONS = [{ label: "Box", value: "box" }]
+
+export const STRIP_CONTENT_OPTIONS = [
+  { label: "Tablets", value: "Tablets" },
+  { label: "Capsules", value: "Capsules" },
 ]
 
 export const TAX_OPTIONS = [

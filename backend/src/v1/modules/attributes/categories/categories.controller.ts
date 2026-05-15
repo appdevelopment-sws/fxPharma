@@ -9,14 +9,28 @@ import { getRequestScope } from "@/helpers/requestScope.js";
 export class CategoriesController {
   static getAll = catchAsync(async (req: Request, res: Response) => {
     const { organizationId, branchId } = getRequestScope(req);
-
+    const includeGlobal = req.query.includeGlobal === "true";
     await paginate(res, req.query, async (skip, take, search) => {
       const searchFilter = buildSearchFilter(search, ["name", "description"]);
-
       const where = {
         ...searchFilter,
-        organizationId,
-        ...(branchId ? { branchId } : {}),
+
+        OR: includeGlobal
+          ? [
+              {
+                organizationId,
+                ...(branchId ? { branchId } : {}),
+              },
+              {
+                isGlobal: true,
+              },
+            ]
+          : [
+              {
+                organizationId,
+                ...(branchId ? { branchId } : {}),
+              },
+            ],
       };
 
       const [data, total] = await Promise.all([
@@ -71,7 +85,7 @@ export class CategoriesController {
   });
 
   static create = catchAsync(async (req: Request, res: Response) => {
-    const { organizationId, branchId } = getRequestScope(req);
+    const { organizationId, branchId, isSuperAdmin } = getRequestScope(req);
 
     const existing = await rootPrisma.category.findFirst({
       where: {
@@ -93,6 +107,7 @@ export class CategoriesController {
         organizationId,
         branchId,
         parentId: parent_id || null,
+        isGlobal: isSuperAdmin,
       },
     });
 

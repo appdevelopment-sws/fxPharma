@@ -9,6 +9,7 @@ import { getRequestScope } from "@/helpers/requestScope.js";
 export class ManufacturerController {
   static getAll = catchAsync(async (req: Request, res: Response) => {
     const { organizationId, branchId } = getRequestScope(req);
+    const includeGlobal = req.query.includeGlobal === "true";
 
     await paginate(res, req.query, async (skip, take, search) => {
       const searchFilter = buildSearchFilter(search, [
@@ -20,8 +21,22 @@ export class ManufacturerController {
 
       const where = {
         ...searchFilter,
-        organizationId,
-        ...(branchId ? { branchId } : {}),
+        OR: includeGlobal
+          ? [
+              {
+                organizationId,
+                ...(branchId ? { branchId } : {}),
+              },
+              {
+                isGlobal: true,
+              },
+            ]
+          : [
+              {
+                organizationId,
+                ...(branchId ? { branchId } : {}),
+              },
+            ],
       };
 
       const [data, total] = await Promise.all([
@@ -60,7 +75,7 @@ export class ManufacturerController {
   });
 
   static create = catchAsync(async (req: Request, res: Response) => {
-    const { organizationId, branchId } = getRequestScope(req);
+    const { organizationId, branchId, isSuperAdmin } = getRequestScope(req);
 
     const existing = await rootPrisma.manufacturer.findFirst({
       where: {
@@ -79,6 +94,7 @@ export class ManufacturerController {
         ...req.body,
         organizationId,
         branchId,
+        isGlobal: isSuperAdmin,
       },
     });
 

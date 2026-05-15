@@ -4,9 +4,11 @@ import { paginate } from "../../../utils/pagination.js";
 import ErrorHandler from "../../../utils/ErrorHandler.js";
 import { buildSearchFilter } from "@/utils/buildSearchFilter.js";
 import { rootPrisma } from "@/lib/prisma.js";
+import { getRequestScope } from "@/helpers/requestScope.js";
 
 export class TaxController {
   static getAll = catchAsync(async (req: Request, res: Response) => {
+    const { isSuperAdmin } = getRequestScope(req);
     await paginate(res, req.query, async (skip, take, search) => {
       const where = buildSearchFilter(search, ["name"]);
 

@@ -7,7 +7,7 @@ model Tax {
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
+  isGlobal    Boolean  @default(false)
   hsnMappings HsnMapping[]
 }
 
@@ -23,7 +23,7 @@ model Hsn {
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
+  isGlobal    Boolean  @default(false)
   hsnMappings HsnMapping[]
   masterProducts MasterProduct[]
 }
@@ -37,6 +37,7 @@ model HsnMapping {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  isGlobal    Boolean  @default(false)
 
   hsn Hsn @relation(fields: [hsnid], references: [id], onDelete: Cascade)
   tax Tax @relation(fields: [taxid], references: [id], onDelete: Cascade)
