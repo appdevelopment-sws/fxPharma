@@ -84,19 +84,17 @@ const withSelectedOption = (
   ]
 }
 
-const toFormValues = (product: any) => ({
+const toFormValues = (
+  product: any,
+  options?: { allowCategoryTypeFallback?: boolean }
+) => ({
   ...MEDICINE_STOCK_FORM_INITIAL_DATA,
 
   // ...mapMasterProductToInventoryDraft(product),
   id: product?.id || "",
   product_name: product?.product_name || product?.name || "",
   status: product?.status || "CONTINUE",
-  company:
-    product?.brandId ||
-    product?.brand_id ||
-    product?.company?.id ||
-    product?.company ||
-    "",
+  company: product?.brandId || product?.brand_id || product?.company?.id || "",
   manufacturer:
     product?.manufacturerId ||
     product?.manufacturer_id ||
@@ -112,9 +110,9 @@ const toFormValues = (product: any) => ({
     product?.categoryId ||
     product?.category_id ||
     product?.category?.id ||
-    product?.categoryType ||
-    product?.category_type ||
-    product?.category ||
+    (options?.allowCategoryTypeFallback
+      ? product?.categoryType || product?.category_type || product?.category
+      : "") ||
     "TAB",
   packing: product?.packing || "",
   pack_qty_1: product?.packQty1 || product?.pack_qty_1 || "",
@@ -368,7 +366,6 @@ export default function MedicineStockDialog({
       setValue("unit_2nd", "", { shouldDirty: true, shouldValidate: true })
     }
   }, [open, isViewMode, selectedInnerPackType, setValue])
-  console.log(watchedPackQty3, "==> herer ")
   useEffect(() => {
     if (!open || isViewMode) return
 
@@ -422,7 +419,11 @@ export default function MedicineStockDialog({
       console.log("Resetting form with product data:", product)
       if (isEditMode || isViewMode || isCreateFromTemplate) {
         console.log("Mapping product to form values:", product)
-        reset(toFormValues(product))
+        reset(
+          toFormValues(product, {
+            allowCategoryTypeFallback: isCreateFromTemplate,
+          })
+        )
       } else {
         reset(MEDICINE_STOCK_FORM_INITIAL_DATA)
       }

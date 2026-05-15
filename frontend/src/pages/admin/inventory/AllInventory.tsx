@@ -146,6 +146,7 @@ export default function AllInventoryPage() {
         open={drawerDisclosure.isOpen}
         onClose={drawerDisclosure.onClose}
         product={drawerDisclosure.data}
+        includeGlobal={true}
       />
       {/* <NewCompoundDialog
         open={compoundDisclosure.isOpen}
