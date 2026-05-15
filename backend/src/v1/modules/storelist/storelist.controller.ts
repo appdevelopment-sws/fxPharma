@@ -186,7 +186,7 @@ const mapOrganizationToStore = (organization: any) => {
       organization.ownerLastName ??
       "",
     ownerPhone: owner?.phone ?? organization.ownerPhone ?? "",
-    ownerEmail: owner?.email ?? organization.ownerEmail ?? "",
+    ownerEmail: organization.ownerEmail ?? owner?.email ?? "",
     loginEmail: owner?.email ?? organization.ownerEmail ?? "",
     gstNo: organization.gstNo ?? null,
     licenseNo: organization.licenseNo ?? null,
@@ -406,6 +406,16 @@ export class StoreListController {
         data: {
           name: req.body.storeName,
           slug: organizationSlug,
+          //changes for new fields in organization model
+          description: req.body.description ?? null,
+          category: req.body.category ?? null,
+          logo: req.body.logo ?? null,
+          gstNo: req.body.gstNo ?? null,
+          licenseNo: req.body.licenseNo ?? null,
+          timezone: req.body.timezone ?? null,
+          currency: req.body.currency ?? null,
+          ownerEmail: req.body.ownerEmail ?? req.body.loginEmail,
+
           planId: req.body.planId ?? null,
           isActive:
             req.body.isActive ??
@@ -424,7 +434,7 @@ export class StoreListController {
       const owner = await tx.user.create({
         data: {
           name: buildOwnerName(req.body.ownerFirstName, req.body.ownerLastName),
-          email: req.body.ownerEmail ?? req.body.loginEmail,
+          email: req.body.loginEmail,
           phone: req.body.ownerPhone,
           passwordHash,
           status: "ACTIVE",
@@ -513,6 +523,17 @@ export class StoreListController {
         where: { id: organizationId },
         data: {
           name: req.body.storeName ?? existing.name,
+
+          description: req.body.description ?? existing.description,
+          category: req.body.category ?? existing.category,
+          logo: req.body.logo ?? existing.logo,
+          gstNo: req.body.gstNo ?? existing.gstNo,
+          licenseNo: req.body.licenseNo ?? existing.licenseNo,
+          timezone: req.body.timezone ?? existing.timezone,
+          currency: req.body.currency ?? existing.currency,
+          ownerEmail: req.body.ownerEmail ?? existing.ownerEmail,
+
+          
           planId: req.body.planId ?? existing.planId,
           isActive:
             req.body.isActive ??
@@ -546,10 +567,7 @@ export class StoreListController {
                 ownerMembership.user.name?.split(" ")?.slice(1).join(" ") ??
                 "",
             ),
-            email:
-              req.body.ownerEmail ??
-              req.body.loginEmail ??
-              ownerMembership.user.email,
+            email: req.body.loginEmail ?? ownerMembership.user.email,
             phone: req.body.ownerPhone ?? ownerMembership.user.phone,
             ...(req.body.password
               ? {
@@ -611,8 +629,7 @@ export class StoreListController {
                   })
                 : mainBranch.address,
             phone: req.body.ownerPhone ?? mainBranch.phone,
-            email:
-              req.body.ownerEmail ?? req.body.loginEmail ?? mainBranch.email,
+            email: req.body.ownerEmail ?? mainBranch.email,
           },
         });
       }

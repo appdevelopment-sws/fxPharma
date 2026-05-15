@@ -65,7 +65,6 @@ router.get("/:id", isAuthenticated, HsnController.getById);
  *             type: object
  *             required:
  *               - hsncode
- *               - description
  *             properties:
  *               hsncode: { type: string }
  *               description: { type: string }

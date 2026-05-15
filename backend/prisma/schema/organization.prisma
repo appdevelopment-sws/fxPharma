@@ -4,6 +4,16 @@ model Organization {
   name        String
   slug        String    @unique
 
+  description String?
+  category    String?
+  logo        String?
+  gstNo       String?
+  licenseNo   String?
+  timezone    String?
+  currency    String?
+  ownerEmail  String?
+
+
   isActive    Boolean   @default(true)
 
   createdAt   DateTime  @default(now())

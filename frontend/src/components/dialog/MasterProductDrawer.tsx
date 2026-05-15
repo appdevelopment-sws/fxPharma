@@ -270,7 +270,7 @@ export default function MasterProductDialog({
             <FormSearchSelect
               control={control}
               name="brand_id"
-              label="PRODUCT BRAND"
+              label="BRAND NAME"
               placeholder="Search Brand..."
               options={brand.options}
               onSearch={brand.onSearch}
@@ -309,7 +309,7 @@ export default function MasterProductDialog({
               <FormSelectField
                 control={control}
                 name="status"
-                label="PRODUCT STATUS"
+                label="  STATUS"
                 options={PRODUCT_STATUS_OPTIONS}
                 readOnly={isViewMode}
               />
@@ -318,7 +318,7 @@ export default function MasterProductDialog({
             <FormFileUpload
               control={control}
               name="image_url"
-              label="PRODUCT IMAGE"
+              label=" IMAGE"
               accept="image/*"
               maxSizeText="PNG, JPG up to 5MB"
               disabled={isViewMode}
