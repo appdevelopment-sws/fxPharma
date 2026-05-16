@@ -28,6 +28,8 @@ import unitRoutes from "./v1/modules/attributes/units/units.routes.js";
 import masterProductRoutes from "./v1/modules/masterProducts/masterProduct.routes.js";
 import StoreListRoutes from "./v1/modules/storelist/storelist.routes.js";
 import rolesRoutes from "./v1/modules/roles/roles.route.js";
+import branchesRoutes from "./v1/modules/branches/branches.route.js";
+import usersRoutes from "./v1/modules/users/users.route.js";
 
 import SupplierRoutes from "./v1/modules/suppliers/suppliers.routes.js";
 import OrdersRoutes from "./v1/modules/orders/orders.routes.js";
@@ -85,6 +87,8 @@ app.use("/api/v1/attributes/units", generalLimiter, unitRoutes);
 
 app.use("/api/v1/master-products", generalLimiter, masterProductRoutes);
 app.use("/api/v1/storelist", generalLimiter, StoreListRoutes);
+app.use("/api/v1/branches", generalLimiter, branchesRoutes);
+app.use("/api/v1/users", generalLimiter, usersRoutes);
 app.use("/api/v1/suppliers", generalLimiter, SupplierRoutes);
 app.use("/api/v1/roles", generalLimiter, rolesRoutes);
 app.use("/api/v1/orders", generalLimiter, OrdersRoutes);

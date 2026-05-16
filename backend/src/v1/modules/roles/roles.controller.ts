@@ -109,6 +109,12 @@ export class RolesController {
       });
     });
 
+    if (!result) {
+      return res
+        .status(500)
+        .json({ success: false, message: "Failed to create role" });
+    }
+
     const normalized = {
       ...result,
       permissions: result.permissions
@@ -144,6 +150,12 @@ export class RolesController {
         include: { permissions: { include: { permission: true } } },
       });
     });
+
+    if (!result) {
+      return res
+        .status(500)
+        .json({ success: false, message: "Failed to update role" });
+    }
 
     const normalized = {
       ...result,

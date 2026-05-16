@@ -87,6 +87,11 @@ export class AuthController {
                   branches: true,
                 },
               },
+              branches: {
+                include: {
+                  branch: true,
+                },
+              },
               role: {
                 include: {
                   permissions: {
@@ -176,6 +181,11 @@ export class AuthController {
               organization: {
                 include: {
                   branches: true,
+                },
+              },
+              branches: {
+                include: {
+                  branch: true,
                 },
               },
               role: {

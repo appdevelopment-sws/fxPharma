@@ -1,4 +1,5 @@
-import { useForm, type SubmitHandler } from "react-hook-form"
+import { useMemo } from "react"
+import { useForm, useWatch, type SubmitHandler } from "react-hook-form"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 
@@ -6,7 +7,9 @@ import { FormContainer } from "@/components/formContainer"
 import { FormField, FormSelectField } from "@/components/ui/form-fields"
 import { Button } from "@/components/ui/button"
 
+import { useAuth } from "@/context/authContext"
 import { queryKeys } from "@/lib/queryKeys"
+import { RoleApi } from "@/services/roleApi"
 import { UserApi } from "@/services/userApi"
 import { BranchApi } from "@/services/branchApi"
 
@@ -20,7 +23,7 @@ const INITIAL_DATA = {
   name: "",
   email: "",
   password: "",
-  // role: ROLES.STAFF,
+  roleId: "",
   branchId: "",
 }
 
@@ -41,21 +44,46 @@ export default function UserDialog({
     defaultValues: editingUser || INITIAL_DATA,
   })
 
+  const { activeOrganizationId } = useAuth()
   const queryClient = useQueryClient()
 
-  const { data: branchesData, isLoading: isLoadingBranches } = useQuery({
-    queryKey: queryKeys.branches.all,
-    queryFn: () => BranchApi.getBranches(),
-    enabled: open,
+  const { data: rolesData, isLoading: isLoadingRoles } = useQuery({
+    queryKey: ["roles", activeOrganizationId],
+    queryFn: () => RoleApi.getRoles({ organizationId: activeOrganizationId }),
+    enabled: open && Boolean(activeOrganizationId),
   })
 
+  const { data: branchesData, isLoading: isLoadingBranches } = useQuery({
+    queryKey: ["branches", activeOrganizationId],
+    queryFn: () =>
+      BranchApi.getBranches({
+        organizationId: activeOrganizationId,
+        perPage: 100,
+      }),
+    enabled: open && Boolean(activeOrganizationId),
+  })
+
+  const roles = rolesData?.data || []
   const branches = branchesData?.data || []
+
+  const selectedRoleId = useWatch({ control, name: "roleId" })
+  const selectedRole = useMemo(
+    () => roles.find((role: any) => role.id === selectedRoleId),
+    [roles, selectedRoleId]
+  )
 
   const handleMutation = useMutation({
     mutationFn: async (data: any) => {
+      const payload = {
+        ...data,
+        organizationId: activeOrganizationId,
+        branchId:
+          selectedRole?.scope != "ORGANIZATION" ? data.branchId : undefined,
+      }
+
       return isEditMode
-        ? UserApi.updateUser(userId, data)
-        : UserApi.createUser(data)
+        ? UserApi.updateUser(userId, payload)
+        : UserApi.createUser(payload)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -142,29 +170,40 @@ export default function UserDialog({
           )}
           <FormSelectField
             control={control}
-            name="role"
+            name="roleId"
             label="ROLE"
-            options={
-              [
-                // { label: "Staff", value: ROLES.STAFF },
-                // { label: "Branch Admin", value: ROLES.BRANCH_ADMIN },
-              ]
-            }
-            required
-          />
-          <FormSelectField
-            control={control}
-            name="branchId"
-            label="ASSIGN BRANCH"
-            options={branches.map((b: any) => ({
-              label: b.branch_name,
-              value: b.id,
+            options={roles.map((role: any) => ({
+              label: `${role.name} (${role.scope})`,
+              value: role.id,
             }))}
-            placeholder={
-              isLoadingBranches ? "Loading branches..." : "Select Branch"
-            }
+            placeholder={isLoadingRoles ? "Loading roles..." : "Select Role"}
             required
           />
+          {selectedRole ? (
+            <p className="text-sm text-muted-foreground">
+              {selectedRole.scope === "BRANCH"
+                ? "Branch roles are only valid for the selected branch."
+                : selectedRole.scope === "ORGANIZATION"
+                  ? "Organization roles apply across the entire organization."
+                  : "Global roles apply across all organizations and branches."}
+            </p>
+          ) : null}
+
+          {selectedRole?.scope != "ORGANIZATION" ? (
+            <FormSelectField
+              control={control}
+              name="branchId"
+              label="ASSIGN BRANCH"
+              options={branches.map((b: any) => ({
+                label: b.branch_name || b.name,
+                value: b.id,
+              }))}
+              placeholder={
+                isLoadingBranches ? "Loading branches..." : "Select Branch"
+              }
+              required
+            />
+          ) : null}
         </div>
       </form>
     </FormContainer>

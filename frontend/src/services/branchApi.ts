@@ -2,7 +2,23 @@ import { api } from "./api"
 
 export const BranchApi = {
   getBranches: async (params?: any) => {
-    return api.get("/branches", { params })
+    const { perPage, ...rest } = params || {}
+    const res = await api.get("/branches", {
+      params: {
+        ...rest,
+        limit: perPage ?? rest.limit,
+      },
+    })
+
+    return {
+      ...res,
+      meta: res.meta
+        ? {
+            ...res.meta,
+            pages: res.meta.totalPages,
+          }
+        : res.meta,
+    }
   },
   getBranch: async (id: string) => {
     return api.get(`/branches/${id}`)
