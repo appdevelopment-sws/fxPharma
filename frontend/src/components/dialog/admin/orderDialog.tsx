@@ -30,7 +30,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 import { ordersApi } from "@/services/ordersApi"
 import SupplierApi from "@/services/supplierApi"
-import ProductApi from "@/services/masterProductApi"
+import InventoryApi from "@/services/inventoryApi"
 import { queryKeys } from "@/lib/queryKeys"
 
 interface OrderDialogProps {
@@ -56,18 +56,18 @@ export default function OrderDialog({
         queryFn: () => SupplierApi.getSuppliers(),
     })
 
-    const { data: productsData, isLoading: isLoadingProducts } = useQuery({
-        queryKey: ["master-products", "suggested"],
-        queryFn: () => ProductApi.getMasterProducts({ limit: 4 }),
+    const { data: inventoryData, isLoading: isLoadingInventory } = useQuery({
+        queryKey: queryKeys.inventory.list({ limit: 4 }),
+        queryFn: () => InventoryApi.getAll({ limit: 4 }),
     })
 
     const suppliers = suppliersData?.data || []
-    const suggestedProducts = productsData?.data || []
+    const suggestedProducts = inventoryData?.data || []
     const [productSearch, setProductSearch] = useState("")
 
-    const { data: searchResultsData, isLoading: isSearchingProducts } = useQuery({
-        queryKey: ["master-products", "search", productSearch],
-        queryFn: () => ProductApi.getMasterProducts({ search: productSearch, limit: 5 }),
+    const { data: searchResultsData, isLoading: isSearchingInventory } = useQuery({
+        queryKey: queryKeys.inventory.list({ search: productSearch, limit: 5 }),
+        queryFn: () => InventoryApi.getAll({ search: productSearch, limit: 5 }),
         enabled: productSearch.length > 2,
     })
 
@@ -86,6 +86,18 @@ export default function OrderDialog({
             supplierId: "",
             status: "DRAFT",
         }
+    })
+
+    const getItemKey = (item: any) => item?.inventoryId || item?.id || item?.tempId
+
+    const normalizeItem = (inventoryItem: any) => ({
+        inventoryId: inventoryItem.id,
+        name: inventoryItem.name,
+        description: inventoryItem.saltComposition || inventoryItem.category?.name || "",
+        qty: 1,
+        unit: "strips",
+        purchaseRate: inventoryItem.purchaseRate ?? undefined,
+        inventory: inventoryItem,
     })
 
     useEffect(() => {
@@ -133,23 +145,31 @@ export default function OrderDialog({
 
     const updateQty = (id: any, delta: number) => {
         setSelectedItems(prev => prev.map(item =>
-            (item.id === id || item.tempId === id) ? { ...item, qty: Math.max(1, (Number(item.qty) || 0) + delta) } : item
+            getItemKey(item) === id
+                ? { ...item, qty: Math.max(1, (Number(item.qty) || 0) + delta) }
+                : item
         ))
     }
 
     const removeItem = (id: any) => {
-        setSelectedItems(prev => prev.filter(item => item.id !== id && item.tempId !== id))
+        setSelectedItems(prev => prev.filter(item => getItemKey(item) !== id))
     }
 
-    const addItem = (name: string, description: string = "") => {
-        const newItem = {
-            tempId: Date.now(),
-            name,
-            description,
-            qty: 1,
-            unit: "strips"
-        }
-        setSelectedItems(prev => [...prev, newItem])
+    const addItem = (inventoryItem: any) => {
+        const itemKey = inventoryItem.id
+        setSelectedItems(prev => {
+            const existingIndex = prev.findIndex((item) => getItemKey(item) === itemKey)
+
+            if (existingIndex >= 0) {
+                return prev.map((item, index) =>
+                    index === existingIndex
+                        ? { ...item, qty: Math.max(1, (Number(item.qty) || 0) + 1) }
+                        : item
+                )
+            }
+
+            return [...prev, normalizeItem(inventoryItem)]
+        })
     }
 
     return (
@@ -200,7 +220,7 @@ export default function OrderDialog({
                             />
                             {productSearch.length > 2 && (
                                 <div className="absolute left-0 right-0 top-full z-10 mt-2 rounded-xl border bg-card shadow-lg">
-                                    {isSearchingProducts ? (
+                                    {isSearchingInventory ? (
                                         <div className="p-4 text-sm text-muted-foreground">Searching...</div>
                                     ) : searchResults.length === 0 ? (
                                         <div className="p-4 text-sm text-muted-foreground">No medicines found.</div>
@@ -211,13 +231,15 @@ export default function OrderDialog({
                                                     key={prod.id}
                                                     className="flex cursor-pointer items-center justify-between rounded-lg p-3 hover:bg-primary/5"
                                                     onClick={() => {
-                                                        addItem(prod.name, prod.category?.name || "")
+                                                        addItem(prod)
                                                         setProductSearch("")
                                                     }}
                                                 >
                                                     <div>
                                                         <p className="font-bold">{prod.name}</p>
-                                                        <p className="text-xs text-muted-foreground">{prod.manufacturer?.name}</p>
+                                                        <p className="text-xs text-muted-foreground">
+                                                            {prod.saltComposition || prod.category?.name || "Inventory item"}
+                                                        </p>
                                                     </div>
                                                     <Plus className="size-4 text-primary" />
                                                 </div>
@@ -238,10 +260,10 @@ export default function OrderDialog({
 
                             <div className="space-y-3">
                                 {selectedItems.map((item) => (
-                                    <div key={item.id} className="grid grid-cols-12 items-center rounded-xl border p-4 transition-all hover:border-primary/30 hover:bg-primary/5">
+                                    <div key={getItemKey(item)} className="grid grid-cols-12 items-center rounded-xl border p-4 transition-all hover:border-primary/30 hover:bg-primary/5">
                                         <div className="col-span-6">
-                                            <p className="text-lg font-bold">{item.name}</p>
-                                            <p className="text-sm text-muted-foreground">{item.description}</p>
+                                            <p className="text-lg font-bold">{item.inventory?.name || item.name}</p>
+                                            <p className="text-sm text-muted-foreground">{item.description || item.inventory?.saltComposition || ""}</p>
                                         </div>
 
                                         <div className="col-span-3 flex justify-center">
@@ -250,7 +272,7 @@ export default function OrderDialog({
                                                     type="button"
                                                     variant="ghost"
                                                     size="icon-sm"
-                                                    onClick={() => updateQty(item.id, -1)}
+                                                    onClick={() => updateQty(getItemKey(item), -1)}
                                                     className="h-8 w-8 rounded-lg hover:bg-muted"
                                                 >
                                                     <Minus className="size-4" />
@@ -258,14 +280,14 @@ export default function OrderDialog({
                                                 <Input
                                                     type="number"
                                                     value={item.qty}
-                                                    onChange={(e) => updateQty(item.id, parseInt(e.target.value) - item.qty)}
+                                                    onChange={(e) => updateQty(getItemKey(item), parseInt(e.target.value) - item.qty)}
                                                     className="h-8 w-16 border-none text-center font-bold focus-visible:ring-0"
                                                 />
                                                 <Button
                                                     type="button"
                                                     variant="ghost"
                                                     size="icon-sm"
-                                                    onClick={() => updateQty(item.id, 1)}
+                                                    onClick={() => updateQty(getItemKey(item), 1)}
                                                     className="h-8 w-8 rounded-lg hover:bg-muted"
                                                 >
                                                     <Plus className="size-4" />
@@ -290,7 +312,7 @@ export default function OrderDialog({
                                                 type="button"
                                                 variant="ghost"
                                                 size="icon-sm"
-                                                onClick={() => removeItem(item.id)}
+                                                onClick={() => removeItem(getItemKey(item))}
                                                 className="h-10 w-10 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                                             >
                                                 <Trash2 className="size-5" />
@@ -312,12 +334,12 @@ export default function OrderDialog({
                         </div>
 
                         <div className="space-y-3">
-                            {isLoadingProducts ? (
-                                <p className="text-sm text-muted-foreground">Loading suggestions...</p>
-                            ) : suggestedProducts.length === 0 ? (
-                                <p className="text-sm text-muted-foreground">No suggestions available.</p>
-                            ) : suggestedProducts.map((item) => (
-                                <div key={item.id} className="flex items-center justify-between rounded-xl border bg-card p-4 transition-all hover:border-purple-300">
+                                {isLoadingInventory ? (
+                                    <p className="text-sm text-muted-foreground">Loading suggestions...</p>
+                                ) : suggestedProducts.length === 0 ? (
+                                    <p className="text-sm text-muted-foreground">No suggestions available.</p>
+                                ) : suggestedProducts.map((item) => (
+                                    <div key={item.id} className="flex items-center justify-between rounded-xl border bg-card p-4 transition-all hover:border-purple-300">
                                     <div className="flex items-center gap-4">
                                         <div className="space-y-1">
                                             <p className="font-bold">{item.name}</p>
@@ -334,7 +356,7 @@ export default function OrderDialog({
                                         size="icon-sm"
                                         variant="outline"
                                         className="h-10 w-10 rounded-xl border-purple-200 text-purple-500 hover:bg-purple-500 hover:text-white"
-                                        onClick={() => addItem(item.name)}
+                                        onClick={() => addItem(item)}
                                     >
                                         <Plus className="size-5" />
                                     </Button>

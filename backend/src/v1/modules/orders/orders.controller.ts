@@ -53,7 +53,11 @@ export class OrdersController {
         rootPrisma.order.findMany({
           where: filters,
           include: {
-            items: true,
+            items: {
+              include: {
+                inventory: true,
+              } as any,
+            },
             supplier: true,
           },
           orderBy: { createdAt: "desc" },
@@ -73,7 +77,11 @@ export class OrdersController {
     const order = await rootPrisma.order.findUnique({
       where: { id: req.params.id as string },
       include: {
-        items: true,
+        items: {
+          include: {
+            inventory: true,
+          } as any,
+        },
         supplier: true,
       },
     });
@@ -107,7 +115,11 @@ export class OrdersController {
         },
       },
       include: {
-        items: true,
+        items: {
+          include: {
+            inventory: true,
+          } as any,
+        },
       },
     });
 
@@ -149,7 +161,11 @@ export class OrdersController {
         }),
       },
       include: {
-        items: true,
+        items: {
+          include: {
+            inventory: true,
+          } as any,
+        },
       },
     });
 

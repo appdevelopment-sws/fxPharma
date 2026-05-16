@@ -1,10 +1,10 @@
 import { z } from "zod";
 
 const orderItemSchema = z.object({
-  name: z.string().min(1, "Item name is required"),
-  description: z.string().optional().nullable(),
-  qty: z.number().int().positive().default(1),
+  inventoryId: z.string().min(1, "Inventory item is required"),
+  qty: z.coerce.number().int().positive().default(1),
   unit: z.string().optional().nullable(),
+  purchaseRate: z.coerce.number().optional().nullable(),
 });
 
 export const createOrderSchema = z.object({
