@@ -25,7 +25,15 @@ export class InventoryController {
           {
             OR: [
               { name: { contains: search, mode: "insensitive" } },
-              { manufacturer: { contains: search, mode: "insensitive" } },
+              {
+                manufacturer: {
+                  is: {
+                    name: {
+                      contains: search,
+                    },
+                  },
+                },
+              },
               { saltComposition: { contains: search, mode: "insensitive" } },
             ],
           },

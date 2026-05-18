@@ -40,7 +40,8 @@ export function DashboardHeader({
       setIsFullscreen(!!document.fullscreenElement)
     }
     document.addEventListener("fullscreenchange", handleFullscreenChange)
-    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange)
+    return () =>
+      document.removeEventListener("fullscreenchange", handleFullscreenChange)
   }, [])
 
   const toggleFullscreen = () => {
@@ -97,25 +98,29 @@ export function DashboardHeader({
             <input
               type="text"
               placeholder="Search..."
-              className="h-9 w-48 rounded-full border-transparent bg-muted/50 pr-4 pl-10 text-sm text-foreground transition-all outline-none placeholder:text-muted-foreground focus:bg-background focus:ring-2 focus:ring-blue-500/20 dark:bg-slate-800 lg:w-64"
+              className="h-9 w-48 rounded-full border-transparent bg-muted/50 pr-4 pl-10 text-sm text-foreground transition-all outline-none placeholder:text-muted-foreground focus:bg-background focus:ring-2 focus:ring-blue-500/20 lg:w-64 dark:bg-slate-800"
             />
           </div>
 
           <div className="flex items-center gap-1 border-r border-border pr-2 sm:gap-2">
-            <Button
+            {/* <Button
               variant="ghost"
               size="icon"
               className="hidden text-muted-foreground hover:bg-accent hover:text-accent-foreground sm:flex"
             >
               <Globe className="size-5" />
-            </Button>
+            </Button> */}
             <Button
               variant="ghost"
               size="icon"
               onClick={toggleFullscreen}
               className="hidden text-muted-foreground hover:bg-accent hover:text-accent-foreground sm:flex"
             >
-              {isFullscreen ? <Minimize className="size-5" /> : <Maximize className="size-5" />}
+              {isFullscreen ? (
+                <Minimize className="size-5" />
+              ) : (
+                <Maximize className="size-5" />
+              )}
             </Button>
             <div className="relative">
               <Button
@@ -145,7 +150,7 @@ export function DashboardHeader({
                 .join("")}
               <div className="absolute right-0 bottom-0 size-2.5 rounded-full border-2 border-white bg-green-500 ring-1 ring-slate-100 dark:border-slate-900 dark:ring-slate-800" />
             </div>
-            <ChevronDown className="size-4 text-muted-foreground transition-colors group-hover:text-blue-600" />
+            {/* <ChevronDown className="size-4 text-muted-foreground transition-colors group-hover:text-blue-600" /> */}
           </button>
         </div>
       </div>

@@ -184,16 +184,23 @@ export default function UserDialog({
             inputType="email"
             required
           />
-          {!isEditMode && (
-            <FormField
-              control={control}
-              name="password"
-              label="PASSWORD"
-              placeholder="Min 8 characters"
-              inputType="password"
-              required
-            />
-          )}
+          <FormField
+            control={control}
+            name="password"
+            label={isEditMode ? "NEW PASSWORD" : "PASSWORD"}
+            placeholder={
+              isEditMode
+                ? "Leave blank to keep the current password"
+                : "Min 8 characters"
+            }
+            inputType="password"
+            required={!isEditMode}
+          />
+          {isEditMode ? (
+            <p className="text-sm text-muted-foreground">
+              Leave the password empty if you do not want to change it.
+            </p>
+          ) : null}
           <FormSelectField
             control={control}
             name="roleId"

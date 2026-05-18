@@ -90,9 +90,6 @@ export default function SupplierDrawer({
       reset()
       onClose(false)
     },
-    onError: (error: any) => {
-      toast.error(error?.response?.data?.message || "Something went wrong")
-    },
   })
 
   const onSubmit: SubmitHandler<SupplierFormValues & { isActive?: boolean }> = async (data) => {
