@@ -28,7 +28,7 @@ const findRoleScope = async (roleId: string) => {
 export class UsersController {
   static getAll = catchAsync(async (req: Request, res: Response) => {
     await paginate(res, req.query, async (skip, take, search) => {
-      const { organizationId } = getRequestScope(req);
+      const { organizationId, branchId } = getRequestScope(req);
       const where: any = {
         organizations: {
           some: {
@@ -70,7 +70,7 @@ export class UsersController {
   });
 
   static getById = catchAsync(async (req: Request, res: Response) => {
-    const { organizationId } = getRequestScope(req);
+    const { organizationId, branchId } = getRequestScope(req);
 
     const user = await rootPrisma.user.findFirst({
       where: {
@@ -78,16 +78,43 @@ export class UsersController {
         organizations: {
           some: {
             organizationId,
+            ...(branchId
+              ? {
+                  branches: {
+                    some: {
+                      branchId,
+                    },
+                  },
+                }
+              : {}),
           },
         },
       },
       include: {
         organizations: {
-          where: { organizationId },
+          where: {
+            organizationId,
+            ...(branchId
+              ? {
+                  branches: {
+                    some: {
+                      branchId,
+                    },
+                  },
+                }
+              : {}),
+          },
           include: {
             organization: true,
             role: true,
             branches: {
+              ...(branchId
+                ? {
+                    where: {
+                      branchId,
+                    },
+                  }
+                : {}),
               include: {
                 branch: true,
               },
@@ -115,12 +142,10 @@ export class UsersController {
     });
 
     if (existingUser) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "User with this email already exists",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "User with this email already exists",
+      });
     }
 
     const roleScope = await findRoleScope(roleId);

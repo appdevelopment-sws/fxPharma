@@ -5,7 +5,7 @@ export const createRoleSchema = z.object({
   key: z.string().optional(),
   description: z.string().optional(),
   //   organizationId: z.string().optional(),
-  //   scope: z.enum(["GLOBAL", "ORGANIZATION", "BRANCH"]).optional(),
+  scope: z.enum(["GLOBAL", "ORGANIZATION", "BRANCH"]).optional(),
   permissions: z.array(z.string()).optional(),
   isSystem: z.boolean().optional(),
 });

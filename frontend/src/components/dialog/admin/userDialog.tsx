@@ -1,4 +1,4 @@
-import { useMemo } from "react"
+import { useEffect, useMemo } from "react"
 import { useForm, useWatch, type SubmitHandler } from "react-hook-form"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
@@ -41,7 +41,7 @@ export default function UserDialog({
     reset,
     formState: { isSubmitting },
   } = useForm({
-    defaultValues: editingUser || INITIAL_DATA,
+    defaultValues: INITIAL_DATA,
   })
 
   const { activeOrganizationId } = useAuth()
@@ -71,6 +71,32 @@ export default function UserDialog({
     () => roles.find((role: any) => role.id === selectedRoleId),
     [roles, selectedRoleId]
   )
+
+  useEffect(() => {
+    if (!open) {
+      reset(INITIAL_DATA)
+      return
+    }
+
+    if (!editingUser) {
+      reset(INITIAL_DATA)
+      return
+    }
+
+    const primaryMembership = editingUser.organizations?.[0]
+    const branchId =
+      primaryMembership?.branches?.[0]?.branchId ??
+      primaryMembership?.branches?.[0]?.branch?.id ??
+      ""
+
+    reset({
+      name: editingUser.name ?? "",
+      email: editingUser.email ?? "",
+      password: "",
+      roleId: primaryMembership?.role?.id ?? "",
+      branchId,
+    })
+  }, [editingUser, open, reset])
 
   const handleMutation = useMutation({
     mutationFn: async (data: any) => {

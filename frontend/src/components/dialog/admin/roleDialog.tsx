@@ -89,6 +89,7 @@ export default function RoleDialog({
         key: data.key || data.name.toUpperCase().replace(/\s+/g, "_"),
         scope: data.scope || "ORGANIZATION",
       }
+      console.log("Submitting role with payload:", payload, "Role ID:", roleId)
       return isEditMode
         ? RoleApi.updateRole(roleId, payload)
         : RoleApi.createRole(payload)
@@ -178,6 +179,12 @@ export default function RoleDialog({
             label="ROLE NAME"
             placeholder="e.g. Finance"
             required
+          />{" "}
+          <FormField
+            control={control}
+            name="description"
+            label="ROLE DESCRIPTION"
+            placeholder="e.g. Finance role"
           />
           {/* <FormField
             control={control}
@@ -186,18 +193,16 @@ export default function RoleDialog({
             placeholder="e.g. FINANCE"
             readOnly={false}
           /> */}
-
-          {/* <FormSelectField
+          <FormSelectField
             control={control}
             name="scope"
             label="SCOPE"
             options={[
               { label: "Organization", value: "ORGANIZATION" },
               { label: "Branch", value: "BRANCH" },
-              { label: "Global", value: "GLOBAL" },
+              // { label: "Global", value: "GLOBAL" },
             ]}
-          /> */}
-
+          />
           {/* Organization selector shown when scope is ORGANIZATION or BRANCH */}
           {/* <FormSelectField
             control={control}
@@ -206,7 +211,6 @@ export default function RoleDialog({
             options={organizationOptions}
             placeholder="Select organization"
           /> */}
-
           <PermissionMultiSelectField
             control={control}
             name="permissions"

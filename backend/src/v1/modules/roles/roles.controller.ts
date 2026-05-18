@@ -85,7 +85,12 @@ export class RolesController {
   static create = catchAsync(async (req: Request, res: Response) => {
     const payload: any = { ...req.body };
     const { organizationId, branchId } = getRequestScope(req);
-
+    console.log(
+      "Creating role with payload:",
+      payload,
+      "Organization ID:",
+      organizationId,
+    );
     // Auto-generate key and sensible defaults
     payload.key =
       payload.key || payload.name?.toUpperCase().replace(/\s+/g, "_");
