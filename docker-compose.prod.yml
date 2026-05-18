@@ -20,7 +20,6 @@ services:
       - "5174:80"
     depends_on:
       - backend
-
   db:
     image: postgres:15
     restart: always
@@ -28,6 +27,13 @@ services:
       - ./backend/.env
     volumes:
       - postgres_data:/var/lib/postgresql/data
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - "8088:8080"
+    depends_on:
+      - db
 
   redis:
     image: redis:7
