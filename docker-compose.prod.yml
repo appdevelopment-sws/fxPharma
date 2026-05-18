@@ -17,7 +17,7 @@ services:
       dockerfile: dockerfile.prod
     restart: always
     ports:
-      - "5173:90"
+      - "5174:5173"
     depends_on:
       - backend
 
