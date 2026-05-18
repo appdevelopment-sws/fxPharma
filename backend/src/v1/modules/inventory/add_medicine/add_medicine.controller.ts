@@ -25,7 +25,15 @@ export class InventoryController {
           {
             OR: [
               { name: { contains: search, mode: "insensitive" } },
-              { manufacturer: { contains: search, mode: "insensitive" } },
+              {
+                manufacturer: {
+                  is: {
+                    name: {
+                      contains: search,
+                    },
+                  },
+                },
+              },
               { saltComposition: { contains: search, mode: "insensitive" } },
             ],
           },
@@ -35,6 +43,11 @@ export class InventoryController {
       const [data, total] = await Promise.all([
         rootPrisma.inventory.findMany({
           where: filters,
+          // include: {
+          //   brand: true,
+          //   category: true,
+          //   manufacturer: true,
+          // },
           orderBy: { createdAt: "desc" },
           ...(skip !== undefined && { skip }),
           ...(take !== undefined && { take }),
@@ -51,6 +64,11 @@ export class InventoryController {
 
     const inventory = await rootPrisma.inventory.findUnique({
       where: { id: req.params.id as string },
+      include: {
+        brand: true,
+        category: true,
+        manufacturer: true,
+      },
     });
 
     if (!inventory) {

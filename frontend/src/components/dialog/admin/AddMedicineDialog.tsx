@@ -84,19 +84,17 @@ const withSelectedOption = (
   ]
 }
 
-const toFormValues = (product: any) => ({
+const toFormValues = (
+  product: any,
+  options?: { allowCategoryTypeFallback?: boolean }
+) => ({
   ...MEDICINE_STOCK_FORM_INITIAL_DATA,
 
   // ...mapMasterProductToInventoryDraft(product),
   id: product?.id || "",
   product_name: product?.product_name || product?.name || "",
   status: product?.status || "CONTINUE",
-  company:
-    product?.brandId ||
-    product?.brand_id ||
-    product?.company?.id ||
-    product?.company ||
-    "",
+  company: product?.brandId || product?.brand_id || product?.company?.id || "",
   manufacturer:
     product?.manufacturerId ||
     product?.manufacturer_id ||
@@ -112,14 +110,13 @@ const toFormValues = (product: any) => ({
     product?.categoryId ||
     product?.category_id ||
     product?.category?.id ||
-    product?.categoryType ||
-    product?.category_type ||
-    product?.category ||
-    "TAB",
+    (options?.allowCategoryTypeFallback
+      ? product?.categoryType || product?.category_type || product?.category
+      : ""),
   packing: product?.packing || "",
-  pack_qty_1: product?.packQty1 || product?.pack_qty_1 || "",
-  pack_qty_2: product?.packQty2 || product?.pack_qty_2 || "",
-  pack_qty_3: product?.packQty3 || product?.pack_qty_3 || "",
+  pack_qty_1: product?.packQty1 ?? product?.pack_qty_1 ?? "",
+  pack_qty_2: product?.packQty2 ?? product?.pack_qty_2 ?? "",
+  pack_qty_3: product?.packQty3 ?? product?.pack_qty_3 ?? "",
   unit_1st: product?.unit1st || product?.unit_1st || "",
   unit_2nd: product?.unit2nd || product?.unit_2nd || "",
   hsn_code:
@@ -177,6 +174,9 @@ const toApiPayload = (data: any) => ({
   packing: toNullableString(data.packing),
   unit1st: toNullableString(data.unit_1st),
   unit2nd: toNullableString(data.unit_2nd),
+  packQty1: toNumber(data.pack_qty_1),
+  packQty2: toNumber(data.pack_qty_2),
+  packQty3: toNumber(data.pack_qty_3),
   hsnCode: toNullableString(data.hsn_code),
   itemType: toNullableString(data.item_type),
   colorType: toNullableString(data.color_type),
@@ -368,7 +368,6 @@ export default function MedicineStockDialog({
       setValue("unit_2nd", "", { shouldDirty: true, shouldValidate: true })
     }
   }, [open, isViewMode, selectedInnerPackType, setValue])
-  console.log(watchedPackQty3, "==> herer ")
   useEffect(() => {
     if (!open || isViewMode) return
 
@@ -422,7 +421,11 @@ export default function MedicineStockDialog({
       console.log("Resetting form with product data:", product)
       if (isEditMode || isViewMode || isCreateFromTemplate) {
         console.log("Mapping product to form values:", product)
-        reset(toFormValues(product))
+        reset(
+          toFormValues(product, {
+            allowCategoryTypeFallback: isCreateFromTemplate,
+          })
+        )
       } else {
         reset(MEDICINE_STOCK_FORM_INITIAL_DATA)
       }
@@ -559,7 +562,7 @@ export default function MedicineStockDialog({
 
         {/* Classification */}
         <div className="rounded-xl border p-6">
-          {sectionHeader("02", "Packing Setup (Easy Mode)")}
+          {sectionHeader("02", "Packing Setup & Classification")}
 
           <div className="rounded-2xl border border-border/70 bg-zinc-950 p-5 text-zinc-100 shadow-sm">
             <div className="grid gap-4 xl:grid-cols-3">

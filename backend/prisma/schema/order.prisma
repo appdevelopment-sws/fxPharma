@@ -20,21 +20,27 @@ model Order {
   @@index([organizationId])
   @@index([branchId])
 }
-
 model OrderItem {
-  id          String   @id @default(cuid())
-  orderId     String   @map("order_id")
-  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  
-  name        String
-  description String?
-  qty         Int      @default(1)
-  unit        String?
-  
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id            String   @id @default(cuid())
+
+  orderId       String   @map("order_id")
+  order         Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  inventoryId   String   @map("inventory_id")
+  inventory     Inventory @relation(fields: [inventoryId], references: [id])
+
+  qty           Int      @default(1)
+
+  unit          String?
+  purchaseRate  Decimal? @map("purchase_rate")
+
+  receivedQty   Int      @default(0) @map("received_qty")
+
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
 
   @@index([orderId])
+  @@index([inventoryId])
 }
 
 enum OrderStatus {

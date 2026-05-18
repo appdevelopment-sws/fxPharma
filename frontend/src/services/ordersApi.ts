@@ -4,10 +4,13 @@ const BASE_URL = "/orders"
 
 export interface OrderItem {
   id?: string
+  inventoryId?: string
   name: string
   description?: string
   qty: number
   unit?: string
+  purchaseRate?: number
+  inventory?: any
 }
 
 export interface OrderFormValues {
@@ -22,10 +25,13 @@ const mapToApi = (data: any) => {
     supplierId: data.supplierId,
     status: data.status || "DRAFT",
     items: (data.items || []).map((item: any) => ({
-      name: item.name,
-      description: item.description,
-      qty: Number(item.qty) || 0,
+      inventoryId: item.inventoryId,
+      qty: Math.max(1, Number(item.qty) || 1),
       unit: item.unit,
+      purchaseRate:
+        item.purchaseRate === undefined || item.purchaseRate === null
+          ? undefined
+          : Number(item.purchaseRate),
     })),
   }
 }
@@ -36,6 +42,9 @@ const mapFromApi = (data: any) => {
     supplierId: data.supplierId,
     items: (data.items || []).map((item: any) => ({
       ...item,
+      inventoryId: item.inventoryId,
+      name: item.inventory?.name || item.name,
+      description: item.inventory?.saltComposition || item.description,
       qty: item.qty,
     })),
   }

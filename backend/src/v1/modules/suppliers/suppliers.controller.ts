@@ -28,7 +28,7 @@ export class SuppliersController {
             }
           : {}),
       };
-
+      console.log("Supplier where clause:", where);
       const [data, total] = await Promise.all([
         rootPrisma.supplier.findMany({
           where,

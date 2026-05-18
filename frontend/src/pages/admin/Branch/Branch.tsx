@@ -13,23 +13,12 @@ import { useDisclosure } from "@/hooks/useDisclosure"
 import useSearchFilter from "@/hooks/useSearchFilter"
 import { queryKeys } from "@/lib/queryKeys"
 import { StatusBadge } from "@/components/ui/badge-status"
+import { BranchApi } from "@/services/branchApi"
 
 import {
   INITIAL_BRANCHES_FILTERS,
   BRANCHES_COLUMNS,
 } from "@/constants/page/admin/branch"
-
-// Temporary placeholder for BranchApi
-const BranchApi = {
-  getBranches: async (params?: any) => {
-    console.log("Fetching branches with params:", params)
-    return { data: [], meta: { total: 0, pages: 1 } }
-  },
-  deleteBranch: async (id: string) => {
-    console.log("Deleting branch:", id)
-    return { success: true }
-  },
-}
 
 export default function Branch() {
   const queryClient = useQueryClient()
@@ -192,6 +181,7 @@ export default function Branch() {
             currentPage={filter.page || 1}
             lastPage={
               branchesData?.meta?.pages ||
+              branchesData?.meta?.totalPages ||
               Math.ceil(
                 (branchesData?.meta?.total || 0) / (filter.perPage || 10)
               ) ||

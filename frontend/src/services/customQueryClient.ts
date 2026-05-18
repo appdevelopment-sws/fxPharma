@@ -4,9 +4,36 @@ import { QueryClient, QueryCache, MutationCache } from "@tanstack/react-query"
 import { toast } from "sonner"
 
 function getErrorMessage(error: any): string {
-  return (
-    error?.response?.data?.message || error?.message || "Something went wrong"
-  )
+  const responseData = error?.response?.data ?? error?.data ?? error
+  const baseMessage =
+    responseData?.message || error?.message || "Something went wrong"
+
+  const validationErrors = responseData?.errors
+  if (!validationErrors || typeof validationErrors !== "object") {
+    return baseMessage
+  }
+
+  const fieldMessages = Object.entries(validationErrors)
+    .flatMap(([field, value]) => {
+      if (Array.isArray(value)) {
+        return value.map((message) => `${field}: ${String(message)}`)
+      }
+
+      if (value && typeof value === "object") {
+        return Object.entries(value).map(
+          ([nestedField, message]) => `${field}.${nestedField}: ${String(message)}`
+        )
+      }
+
+      return [`${field}: ${String(value)}`]
+    })
+    .filter(Boolean)
+
+  if (!fieldMessages.length) {
+    return baseMessage
+  }
+
+  return `${baseMessage}. ${fieldMessages.join(" | ")}`
 }
 
 export const queryClient = new QueryClient({

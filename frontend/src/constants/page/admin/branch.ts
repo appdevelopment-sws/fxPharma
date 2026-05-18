@@ -14,6 +14,9 @@ export const INITIAL_BRANCHES_FILTERS = {
 
 export const BRANCH_FORM_INITIAL_DATA = {
   branch_name: "",
+  code: "",
   address: "",
+  phone: "",
+  email: "",
   status: "ACTIVE",
 }

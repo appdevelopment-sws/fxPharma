@@ -41,7 +41,7 @@ export function useLogin() {
       if (firstOrg?.organizationId) {
         localStorage.setItem("activeOrganizationId", firstOrg.organizationId)
       }
-      
+
       if (firstBranch?.id) {
         localStorage.setItem("activeBranchId", firstBranch.id)
       } else {

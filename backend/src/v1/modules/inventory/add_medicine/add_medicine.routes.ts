@@ -84,6 +84,9 @@ router.get("/:id", isAuthenticated, InventoryController.getById);
  *               packing: { type: string }
  *               unit1st: { type: string }
  *               unit2nd: { type: string }
+ *               packQty1: { type: integer }
+ *               packQty2: { type: integer }
+ *               packQty3: { type: integer }
  *               hsnCode: { type: string }
  *               itemType: { type: string }
  *               colorType: { type: string }

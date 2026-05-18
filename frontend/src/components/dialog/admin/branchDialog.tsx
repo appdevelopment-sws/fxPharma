@@ -9,21 +9,7 @@ import { Button } from "@/components/ui/button"
 
 import { queryKeys } from "@/lib/queryKeys"
 import { BRANCH_FORM_INITIAL_DATA } from "@/constants/page/admin/branch"
-
-// We'll use a placeholder for BranchApi until it's officially created
-// This follows the structure of existing APIs like SupplierApi
-const BranchApi = {
-  createBranch: async (data: any) => {
-    // return api.post("/branches", data)
-    console.log("Creating branch:", data)
-    return { data }
-  },
-  updateBranch: async (id: string, data: any) => {
-    // return api.put(`/branches/${id}`, data)
-    console.log("Updating branch:", id, data)
-    return { data }
-  },
-}
+import { BranchApi } from "@/services/branchApi"
 
 interface BranchDialogProps {
   open: boolean
@@ -53,9 +39,13 @@ export default function BranchDialog({
     if (open) {
       if (isEditMode || isViewMode) {
         reset({
-          branch_name: branch?.branch_name || "",
+          branch_name: branch?.branch_name || branch?.name || "",
+          code: branch?.code || "",
           address: branch?.address || "",
-          status: branch?.status || "ACTIVE",
+          phone: branch?.phone || "",
+          email: branch?.email || "",
+          status:
+            branch?.status || (branch?.isActive === false ? "INACTIVE" : "ACTIVE"),
         })
       } else {
         reset(BRANCH_FORM_INITIAL_DATA)
@@ -152,11 +142,33 @@ export default function BranchDialog({
           />
           <FormField
             control={control}
+            name="code"
+            label="BRANCH CODE"
+            placeholder="e.g. DT-001"
+            readOnly={isViewMode}
+          />
+          <FormField
+            control={control}
             name="address"
             label="ADDRESS"
             placeholder="e.g. 123 Main St, City"
             readOnly={isViewMode}
             required
+          />
+          <FormField
+            control={control}
+            name="phone"
+            label="PHONE"
+            placeholder="e.g. +91 98765 43210"
+            readOnly={isViewMode}
+          />
+          <FormField
+            control={control}
+            name="email"
+            label="EMAIL"
+            placeholder="e.g. branch@example.com"
+            inputType="email"
+            readOnly={isViewMode}
           />
           <FormSelectField
             control={control}

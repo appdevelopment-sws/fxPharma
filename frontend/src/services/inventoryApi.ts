@@ -10,6 +10,9 @@ export type InventoryFormValues = {
   packing?: string
   unit_1st?: string
   unit_2nd?: string
+  pack_qty_1?: string | number
+  pack_qty_2?: string | number
+  pack_qty_3?: string | number
   hsn_code?: string
   item_type?: string
   color_type?: string
@@ -60,6 +63,9 @@ export type InventoryItem = {
   packing?: string | null
   unit1st?: string | null
   unit2nd?: string | null
+  packQty1?: number | null
+  packQty2?: number | null
+  packQty3?: number | null
   hsnCode?: string | null
   itemType?: string | null
   colorType?: string | null
