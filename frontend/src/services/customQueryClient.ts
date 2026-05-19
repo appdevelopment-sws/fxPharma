@@ -45,19 +45,31 @@ function getErrorMessage(error: any): string {
     return baseMessage
   }
 
-  return `${baseMessage}. ${fieldMessages.join(" | ")}`
+  return fieldMessages.join(" | ")
+}
+
+function showErrorToast(error: any) {
+  const responseData = error?.response?.data ?? error?.data ?? error
+  const fieldMessages = formatValidationErrors(responseData?.errors)
+
+  if (fieldMessages.length) {
+    fieldMessages.forEach((message) => toast.error(message))
+    return
+  }
+
+  toast.error(getErrorMessage(error))
 }
 
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error) => {
-      toast.error(getErrorMessage(error))
+      showErrorToast(error)
     },
   }),
 
   mutationCache: new MutationCache({
     onError: (error) => {
-      toast.error(getErrorMessage(error))
+      showErrorToast(error)
     },
 
     onSuccess: (data: any) => {
