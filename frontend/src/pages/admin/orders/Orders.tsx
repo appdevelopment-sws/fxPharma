@@ -160,11 +160,10 @@ const Orders = () => {
         onClose={drawerDisclosure.onClose}
         order={drawerDisclosure.data}
       />
-      /
       <OrderConfirmFormDialog
-        open={shareDisclosure.isOpen}
-        onClose={shareDisclosure.onClose}
-        order={shareDisclosure.data}
+        open={orderConfirmDisclosure.isOpen}
+        onClose={orderConfirmDisclosure.onClose}
+        order={orderConfirmDisclosure.data}
       />
       <ShareDialog
         open={shareDisclosure.isOpen}

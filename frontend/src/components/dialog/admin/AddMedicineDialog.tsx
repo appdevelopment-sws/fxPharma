@@ -564,7 +564,7 @@ export default function MedicineStockDialog({
         <div className="rounded-xl border p-6">
           {sectionHeader("02", "Packing Setup & Classification")}
 
-          <div className="rounded-2xl border border-border/70 bg-zinc-950 p-5 text-zinc-100 shadow-sm">
+          <div className="rounded-2xl">
             <div className="grid gap-4 xl:grid-cols-3">
               <div className="space-y-3">
                 {" "}
