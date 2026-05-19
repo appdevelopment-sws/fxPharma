@@ -43,11 +43,11 @@ export class InventoryController {
       const [data, total] = await Promise.all([
         rootPrisma.inventory.findMany({
           where: filters,
-          // include: {
-          //   brand: true,
-          //   category: true,
-          //   manufacturer: true,
-          // },
+          include: {
+            brand: true,
+            category: true,
+            manufacturer: true,
+          },
           orderBy: { createdAt: "desc" },
           ...(skip !== undefined && { skip }),
           ...(take !== undefined && { take }),
