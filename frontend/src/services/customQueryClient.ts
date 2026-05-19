@@ -3,32 +3,44 @@
 import { QueryClient, QueryCache, MutationCache } from "@tanstack/react-query"
 import { toast } from "sonner"
 
+function formatValidationErrors(errors: any): string[] {
+  if (!errors) return []
+
+  if (typeof errors === "string") {
+    return [errors]
+  }
+
+  if (Array.isArray(errors)) {
+    return errors.flatMap((value) => formatValidationErrors(value))
+  }
+
+  if (typeof errors !== "object") {
+    return [String(errors)]
+  }
+
+  return Object.entries(errors).flatMap(([field, value]) => {
+    if (Array.isArray(value)) {
+      return value.flatMap((message) => formatValidationErrors(message).map((m) => `${field}: ${m}`))
+    }
+
+    if (value && typeof value === "object") {
+      return Object.entries(value).flatMap(([nestedField, message]) =>
+        formatValidationErrors(message).map(
+          (m) => `${field}.${nestedField}: ${m}`
+        )
+      )
+    }
+
+    return [`${field}: ${String(value)}`]
+  })
+}
+
 function getErrorMessage(error: any): string {
   const responseData = error?.response?.data ?? error?.data ?? error
   const baseMessage =
     responseData?.message || error?.message || "Something went wrong"
 
-  const validationErrors = responseData?.errors
-  if (!validationErrors || typeof validationErrors !== "object") {
-    return baseMessage
-  }
-
-  const fieldMessages = Object.entries(validationErrors)
-    .flatMap(([field, value]) => {
-      if (Array.isArray(value)) {
-        return value.map((message) => `${field}: ${String(message)}`)
-      }
-
-      if (value && typeof value === "object") {
-        return Object.entries(value).map(
-          ([nestedField, message]) => `${field}.${nestedField}: ${String(message)}`
-        )
-      }
-
-      return [`${field}: ${String(value)}`]
-    })
-    .filter(Boolean)
-
+  const fieldMessages = formatValidationErrors(responseData?.errors)
   if (!fieldMessages.length) {
     return baseMessage
   }

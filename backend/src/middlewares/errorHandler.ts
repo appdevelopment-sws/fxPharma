@@ -2,6 +2,16 @@ import { Request, Response, NextFunction } from "express";
 import { ZodError } from "zod";
 import { formatZodError } from "../utils/errorFormatter.js";
 
+const formatValidationMessage = (errors: Record<string, string>) => {
+  const fieldMessages = Object.entries(errors).map(
+    ([field, message]) => `${field}: ${message}`
+  );
+
+  return fieldMessages.length
+    ? `Validation failed. ${fieldMessages.join(" | ")}`
+    : "Validation failed";
+};
+
 /**
  * Global error handling middleware for Express
  */
@@ -13,10 +23,11 @@ export const globalErrorHandler = (
 ) => {
   // If it's a Zod validation error
   if (err instanceof ZodError) {
+    const errors = formatZodError(err);
     return res.status(400).json({
       success: false,
-      message: "Validation failed",
-      errors: formatZodError(err),
+      message: formatValidationMessage(errors),
+      errors,
     });
   }
 

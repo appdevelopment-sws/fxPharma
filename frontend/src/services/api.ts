@@ -22,7 +22,18 @@ CustomApi.interceptors.response.use(
     if (response.config.responseType === "blob") {
       return response
     }
-    return response.data
+
+    const data = response.data
+
+    // Treat application-level failures as real errors even when the HTTP status is 200.
+    if (data?.success === false) {
+      const apiError: any = new Error(data?.message || "Request failed")
+      apiError.response = response
+      apiError.data = data
+      return Promise.reject(apiError)
+    }
+
+    return data
   },
   (error) => {
     console.log(error)
