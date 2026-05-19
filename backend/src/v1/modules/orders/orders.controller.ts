@@ -4,6 +4,14 @@ import { paginate } from "../../../utils/pagination.js";
 import { rootPrisma } from "@/lib/prisma.js";
 import { getRequestScope } from "@/helpers/requestScope.js";
 
+const ORDER_STATUS_VALUES = [
+  "DRAFT",
+  "SENT",
+  "PENDING",
+  "COMPLETED",
+  "CANCELLED",
+] as const;
+
 export class OrdersController {
   private static canAccessOrder(
     order: { organizationId: string; branchId: string | null },
@@ -34,17 +42,25 @@ export class OrdersController {
           : {}),
       };
 
-      if (search) {
+      const normalizedSearch = search?.trim();
+      const normalizedStatus = normalizedSearch?.toUpperCase();
+
+      if (normalizedSearch) {
+        const searchClauses: any[] = [
+          {
+            supplier: {
+              companyName: { contains: normalizedSearch, mode: "insensitive" },
+            },
+          },
+        ];
+
+        if (ORDER_STATUS_VALUES.includes(normalizedStatus as any)) {
+          searchClauses.push({ status: normalizedStatus });
+        }
+
         filters.AND = [
           {
-            OR: [
-              {
-                supplier: {
-                  companyName: { contains: search, mode: "insensitive" },
-                },
-              },
-              { status: { contains: search, mode: "insensitive" } },
-            ],
+            OR: searchClauses,
           },
         ];
       }
