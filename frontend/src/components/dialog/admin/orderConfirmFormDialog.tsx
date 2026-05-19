@@ -323,7 +323,7 @@ export default function OrderConfirmFormDialog({
                 Review quantities, batches, expiry, and pricing before saving.
               </p>
             </div>
-            {/* 
+
             <Button
               type="button"
               variant="outline"
@@ -331,8 +331,8 @@ export default function OrderConfirmFormDialog({
               onClick={() => append(buildBlankRow())}
             >
               <Plus className="mr-2 size-4" />
-              Add Free Item Row
-            </Button> */}
+              Add Item
+            </Button>
           </div>
 
           <div className="overflow-x-auto">
