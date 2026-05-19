@@ -19,6 +19,21 @@ import {
 } from "@/constants/page/admin/inventory"
 import AddMedicineDialog from "@/components/dialog/admin/AddMedicineDialog"
 
+const getRelationName = (value: unknown) => {
+  if (typeof value === "string" || typeof value === "number") {
+    return String(value) || "-"
+  }
+
+  if (value && typeof value === "object" && "name" in value) {
+    const name = (value as { name?: unknown }).name
+    if (typeof name === "string" || typeof name === "number") {
+      return String(name) || "-"
+    }
+  }
+
+  return "-"
+}
+
 export default function AllInventoryPage() {
   const queryClient = useQueryClient()
   const drawerDisclosure = useDisclosure<any>()
@@ -86,7 +101,7 @@ export default function AllInventoryPage() {
         header:
           MEDICINE_STOCK_COLUMNS.find((c) => c.key === "manufacturer")?.label ||
           "Manufacturer",
-        accessor: "manufacturer",
+        render: (row) => getRelationName(row.manufacturer),
       },
 
       {
@@ -94,7 +109,7 @@ export default function AllInventoryPage() {
         header:
           MEDICINE_STOCK_COLUMNS.find((c) => c.key === "category")?.label ||
           "Category",
-        accessor: "category",
+        render: (row) => getRelationName(row.category),
       },
 
       {

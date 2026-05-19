@@ -53,13 +53,22 @@ export type InventoryFormValues = {
 
 export type InventoryRequestPayload = Record<string, unknown>
 
+type InventoryRelation = {
+  id: string
+  name?: string | null
+}
+
 export type InventoryItem = {
   id: string
   name: string
   status: "CONTINUE" | "DISCONTINUE"
-  manufacturer?: string | null
+  manufacturerId?: string | null
+  manufacturer?: InventoryRelation | string | null
   saltComposition?: string | null
-  category?: string | null
+  categoryId?: string | null
+  category?: InventoryRelation | string | null
+  brandId?: string | null
+  brand?: InventoryRelation | null
   packing?: string | null
   unit1st?: string | null
   unit2nd?: string | null
