@@ -162,6 +162,8 @@ const toFormValues = (
   hide_product: !!(product?.hideProduct ?? product?.hide_product),
   negative_stock: !!(product?.negativeStock ?? product?.negative_stock),
   edit_rates: !!(product?.editRates ?? product?.edit_rates ?? true),
+
+  available_stock: product?.availableStock ?? product?.available_stock ?? "",
 })
 
 const toApiPayload = (data: any) => ({
@@ -213,6 +215,7 @@ const toApiPayload = (data: any) => ({
   hideProduct: !!data.hide_product,
   negativeStock: !!data.negative_stock,
   editRates: !!data.edit_rates,
+  available_stock: toNumber(data.available_stock),
 })
 
 export default function MedicineStockDialog({
@@ -642,19 +645,23 @@ export default function MedicineStockDialog({
               label="HSN / SAC"
               options={hsnOptions}
             />
-
             <FormSelectField
               control={control}
               name="color_type"
               label="Color Type"
               options={COLOR_TYPE_OPTIONS}
             />
-
             <FormSelectField
               control={control}
               name="decimal"
               label="Decimal"
               options={YES_NO_OPTIONS}
+            />
+            <FormField
+              control={control}
+              name="available_stock"
+              label="Available Stock Qty"
+              inputType="text"
             />
           </div>
         </div>
@@ -695,24 +702,24 @@ export default function MedicineStockDialog({
             <FormField
               control={control}
               name="mrp"
-              label="M.R.P. (per box)"
+              label="M.R.P. "
               inputType="number"
               step="0.01"
             />
             <FormField
               control={control}
               name="purchase_rate"
-              label="Purchase Rate (per box)"
+              label="Purchase Rate "
               inputType="number"
               step="0.01"
             />
-            <FormField
+            {/* <FormField
               control={control}
               name="cost_unit"
               label="Cost / Unit"
               inputType="number"
               step="0.01"
-            />
+            /> */}
             <FormField
               control={control}
               name="igst"
@@ -723,21 +730,21 @@ export default function MedicineStockDialog({
             <FormField
               control={control}
               name="rate_a"
-              label="Rate - A (per box)"
+              label="Rate - A "
               inputType="number"
               step="0.01"
             />
             <FormField
               control={control}
               name="rate_b"
-              label="Rate - B (per box)"
+              label="Rate - B "
               inputType="number"
               step="0.01"
             />
             <FormField
               control={control}
               name="rate_c"
-              label="Rate - C (per box)"
+              label="Rate - C "
               inputType="number"
               step="0.01"
             />

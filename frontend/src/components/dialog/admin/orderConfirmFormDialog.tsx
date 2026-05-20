@@ -190,7 +190,7 @@ export default function OrderConfirmFormDialog({
 
       return ordersApi.update(order.id, {
         ...values,
-        status: values.status || "DELIVERED",
+        status: "COMPLETED",
         items: values.items,
       })
     },

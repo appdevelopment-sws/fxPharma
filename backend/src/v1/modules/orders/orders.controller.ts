@@ -12,11 +12,84 @@ const ORDER_STATUS_VALUES = [
   "CANCELLED",
 ] as const;
 
+const toNumber = (value: unknown) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+
+const normalizeOrderStatus = (status?: string | null) => {
+  if (status === "DELIVERED") {
+    return "COMPLETED";
+  }
+
+  return status || undefined;
+};
+
+const parseExpiryDate = (value?: string | null) => {
+  if (!value) return undefined;
+
+  const trimmed = value.trim();
+  const directDate = new Date(trimmed);
+  if (!Number.isNaN(directDate.getTime())) {
+    return directDate;
+  }
+
+  const match = trimmed.match(/^(\d{1,2})\/(\d{2}|\d{4})$/);
+  if (!match) return undefined;
+
+  const month = Number(match[1]);
+  const year = Number(match[2].length === 2 ? `20${match[2]}` : match[2]);
+
+  if (!Number.isFinite(month) || month < 1 || month > 12) return undefined;
+
+  return new Date(year, month, 0);
+};
+
+const buildOrderItemData = (item: any) => ({
+  inventoryId: item.inventoryId,
+  qty: Math.max(1, toNumber(item.qty)),
+  unit: item.unit ?? null,
+  purchaseRate:
+    item.purchaseRate === undefined || item.purchaseRate === null
+      ? null
+      : toNumber(item.purchaseRate),
+  receivedQty: Math.max(0, toNumber(item.qty) + toNumber(item.freeQty)),
+});
+
+const buildInventoryUpdateData = (item: any) => {
+  const data: Record<string, any> = {};
+
+  if (item.expiry !== undefined && item.expiry !== null && item.expiry !== "") {
+    const parsedExpiry = parseExpiryDate(item.expiry);
+    if (parsedExpiry) {
+      data.daysLimit = parsedExpiry;
+    }
+  }
+
+  const numericFields: Array<[string, unknown]> = [
+    ["purchaseRate", item.purchaseRate],
+    ["mrp", item.mrp],
+    ["rateA", item.rate1],
+    ["rateB", item.rate2],
+    ["rateC", item.rate3],
+    ["cgst", item.cgst],
+    ["sgst", item.sgst],
+  ];
+
+  for (const [field, value] of numericFields) {
+    if (value !== undefined && value !== null && value !== "") {
+      data[field] = toNumber(value);
+    }
+  }
+
+  return data;
+};
+
 export class OrdersController {
   private static canAccessOrder(
     order: { organizationId: string; branchId: string | null },
     organizationId: string,
-    branchId: string | null
+    branchId: string | null,
   ) {
     if (order.organizationId !== organizationId) {
       return false;
@@ -43,7 +116,9 @@ export class OrdersController {
       };
 
       const normalizedSearch = search?.trim();
-      const normalizedStatus = normalizedSearch?.toUpperCase();
+      const normalizedStatus = normalizeOrderStatus(
+        normalizedSearch?.toUpperCase(),
+      );
 
       if (normalizedSearch) {
         const searchClauses: any[] = [
@@ -54,7 +129,10 @@ export class OrdersController {
           },
         ];
 
-        if (ORDER_STATUS_VALUES.includes(normalizedStatus as any)) {
+        if (
+          normalizedStatus &&
+          ORDER_STATUS_VALUES.includes(normalizedStatus as any)
+        ) {
           searchClauses.push({ status: normalizedStatus });
         }
 
@@ -124,10 +202,11 @@ export class OrdersController {
     const order = await rootPrisma.order.create({
       data: {
         ...orderData,
+        status: normalizeOrderStatus(orderData.status) || undefined,
         organizationId,
         branchId,
         items: {
-          create: items,
+          create: (items || []).map(buildOrderItemData),
         },
       },
       include: {
@@ -145,7 +224,7 @@ export class OrdersController {
   static update = catchAsync(async (req: Request, res: Response) => {
     const { organizationId, branchId } = getRequestScope(req);
     const { items, ...orderData } = req.body;
-
+    console.log("Received order update request:", { organizationId });
     const existing = await rootPrisma.order.findUnique({
       where: { id: req.params.id as string },
       select: { id: true, organizationId: true, branchId: true },
@@ -163,26 +242,56 @@ export class OrdersController {
         .json({ success: false, message: "Order not found" });
     }
 
-    const order = await rootPrisma.order.update({
-      where: { id: req.params.id as string },
-      data: {
-        ...orderData,
-        organizationId,
-        branchId: existing.branchId ?? branchId,
-        ...(items && {
-          items: {
-            deleteMany: {},
-            create: items,
-          },
-        }),
-      },
-      include: {
-        items: {
-          include: {
-            inventory: true,
-          } as any,
+    const order = await rootPrisma.$transaction(async (tx) => {
+      if (Array.isArray(items)) {
+        for (const item of items) {
+          if (!item?.inventoryId) continue;
+          console.log("Processing inventory update for item:", item);
+          const inventoryUpdateData = buildInventoryUpdateData(item);
+          if (Object.keys(inventoryUpdateData).length > 0) {
+            const result = await tx.inventory.updateMany({
+              where: {
+                id: item.inventoryId,
+                organizationId,
+              },
+              data: {
+                ...inventoryUpdateData,
+                availableStock: item.qty,
+                purchaseRate: item.purchaseRate / item.qty,
+              },
+            });
+
+            if (result.count === 0) {
+              throw new Error(
+                `Inventory item not found for order item ${item.inventoryId}`,
+              );
+            }
+          }
+        }
+      }
+
+      return tx.order.update({
+        where: { id: req.params.id as string },
+        data: {
+          ...orderData,
+          status: normalizeOrderStatus(orderData.status) || undefined,
+          organizationId,
+          branchId: existing.branchId ?? branchId,
+          ...(items && {
+            items: {
+              deleteMany: {},
+              create: (items || []).map(buildOrderItemData),
+            },
+          }),
         },
-      },
+        include: {
+          items: {
+            include: {
+              inventory: true,
+            } as any,
+          },
+        },
+      });
     });
 
     res.json({ success: true, data: order });

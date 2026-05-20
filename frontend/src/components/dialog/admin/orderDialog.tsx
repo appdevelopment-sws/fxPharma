@@ -75,7 +75,7 @@ const buildItemFromInventory = (inventoryItem: any): OrderItemFormValue => ({
   description:
     inventoryItem.saltComposition || inventoryItem.category?.name || "",
   qty: 1,
-  unit: "strips",
+  unit: "strip",
   purchaseRate: inventoryItem.purchaseRate ?? undefined,
   inventory: inventoryItem,
 })
@@ -86,7 +86,7 @@ const buildItemFromOrderItem = (item: any): OrderItemFormValue => ({
   name: item.inventory?.name || item.name || "",
   description: item.inventory?.saltComposition || item.description || "",
   qty: Math.max(1, toNumber(item.qty || 1)),
-  unit: item.unit || "strips",
+  unit: item.unit || "strip",
   purchaseRate:
     item.purchaseRate === undefined || item.purchaseRate === null
       ? undefined
@@ -519,7 +519,7 @@ export default function OrderDialog({
 
                         <div className="col-span-2">
                           <select
-                            value={item?.unit || "strips"}
+                            value={item?.unit || "strip"}
                             onChange={(e) => updateUnit(index, e.target.value)}
                             disabled={isViewMode}
                             className="h-10 w-full rounded-xl border bg-background px-3 text-sm font-medium outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-80"
