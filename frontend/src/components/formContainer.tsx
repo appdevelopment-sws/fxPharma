@@ -20,6 +20,7 @@ type FormContainerProps = {
   description?: string
   footer?: React.ReactNode
   children: React.ReactNode
+  className?: string
 }
 
 const sizeMap = {
@@ -50,6 +51,7 @@ export function FormContainer({
   footer,
   children,
   height = "full",
+  className,
 }: FormContainerProps) {
   if (variant === "modal") {
     return (

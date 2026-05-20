@@ -33,6 +33,9 @@ type OrderConfirmItem = {
   rate1: number
   rate2: number
   rate3: number
+
+  cgst: number
+  sgst: number
 }
 
 type OrderConfirmFormValues = {
@@ -78,12 +81,14 @@ const buildRowFromItem = (item: any): OrderConfirmItem => ({
   qty: toNumber(item.qty || item.ordQty || 1),
   freeQty: toNumber(item.freeQty || item.free || 0),
   batchNo: item.batchNo || item.batch || "",
-  expiry: item.expiry || "",
+  expiry: item.inventory?.daysLimit || "",
   purchaseRate: toNumber(item.purchaseRate),
-  mrp: toNumber(item.mrp),
-  rate1: toNumber(item.rate1),
-  rate2: toNumber(item.rate2),
-  rate3: toNumber(item.rate3),
+  mrp: toNumber(item.inventory?.mrp),
+  rate1: toNumber(item.inventory?.rateA),
+  rate2: toNumber(item.inventory?.rateB),
+  rate3: toNumber(item.inventory?.rateC),
+  cgst: toNumber(item.inventory?.cgst),
+  sgst: toNumber(item.inventory?.sgst),
 })
 
 const buildBlankRow = (): OrderConfirmItem => ({
@@ -101,6 +106,8 @@ const buildBlankRow = (): OrderConfirmItem => ({
   rate1: 0,
   rate2: 0,
   rate3: 0,
+  cgst: 0,
+  sgst: 0,
 })
 
 export default function OrderConfirmFormDialog({
@@ -129,7 +136,7 @@ export default function OrderConfirmFormDialog({
 
   useEffect(() => {
     if (!open) return
-
+    console.table(order?.items)
     const items =
       Array.isArray(order?.items) && order.items.length > 0
         ? order.items.map(buildRowFromItem)
@@ -349,6 +356,8 @@ export default function OrderConfirmFormDialog({
                 <div className="col-span-1">Rate 1</div>
                 <div className="col-span-1">Rate 2</div>
                 <div className="col-span-1">Rate 3</div>
+                <div className="col-span-1">CGST</div>
+                <div className="col-span-1">SGST</div>
                 <div className="col-span-1 text-right">Action</div>
               </div>
 
@@ -372,7 +381,6 @@ export default function OrderConfirmFormDialog({
                         /> */}
                       </div>
                     </div>
-
                     <div className="col-span-1">
                       <Input
                         type="number"
@@ -384,7 +392,6 @@ export default function OrderConfirmFormDialog({
                         className="h-10 rounded-2xl border-border/60 text-center font-semibold text-foreground"
                       />
                     </div>
-
                     <div className="col-span-1">
                       <Input
                         type="number"
@@ -396,7 +403,6 @@ export default function OrderConfirmFormDialog({
                         className="h-10 rounded-2xl border-border/60 text-center font-semibold text-foreground"
                       />
                     </div>
-
                     <div className="col-span-1">
                       <Input
                         {...register(`items.${index}.batchNo`)}
@@ -404,7 +410,6 @@ export default function OrderConfirmFormDialog({
                         className="h-10 rounded-2xl border-border/60 text-foreground"
                       />
                     </div>
-
                     <div className="col-span-1">
                       <Input
                         type="text"
@@ -413,7 +418,6 @@ export default function OrderConfirmFormDialog({
                         className="h-10 rounded-2xl border-border/60 text-foreground"
                       />
                     </div>
-
                     <div className="col-span-1">
                       <Input
                         type="number"
@@ -425,7 +429,6 @@ export default function OrderConfirmFormDialog({
                         className="h-10 rounded-2xl border-border/60 text-right font-semibold text-foreground"
                       />
                     </div>
-
                     <div className="col-span-1">
                       <Input
                         type="number"
@@ -437,7 +440,6 @@ export default function OrderConfirmFormDialog({
                         className="h-10 rounded-2xl border-border/60 text-right font-semibold text-foreground"
                       />
                     </div>
-
                     <div className="col-span-1">
                       <Input
                         type="number"
@@ -449,7 +451,6 @@ export default function OrderConfirmFormDialog({
                         className="h-10 rounded-2xl border-border/60 text-right font-semibold text-foreground"
                       />
                     </div>
-
                     <div className="col-span-1">
                       <Input
                         type="number"
@@ -461,7 +462,6 @@ export default function OrderConfirmFormDialog({
                         className="h-10 rounded-2xl border-border/60 text-right font-semibold text-foreground"
                       />
                     </div>
-
                     <div className="col-span-1">
                       <Input
                         type="number"
@@ -472,8 +472,25 @@ export default function OrderConfirmFormDialog({
                         })}
                         className="h-10 rounded-2xl border-border/60 text-right font-semibold text-foreground"
                       />
+                    </div>{" "}
+                    <div className="col-span-1">
+                      <Input
+                        type="number"
+                        {...register(`items.${index}.cgst`, {
+                          valueAsNumber: true,
+                        })}
+                        className="h-10 rounded-2xl border-border/60 text-right font-semibold text-foreground"
+                      />
                     </div>
-
+                    <div className="col-span-1">
+                      <Input
+                        type="number"
+                        {...register(`items.${index}.sgst`, {
+                          valueAsNumber: true,
+                        })}
+                        className="h-10 rounded-2xl border-border/60 text-right font-semibold text-foreground"
+                      />
+                    </div>
                     <div className="col-span-1 flex justify-end">
                       <Button
                         type="button"
