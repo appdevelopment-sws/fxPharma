@@ -1,6 +1,14 @@
 import { useCallback, useMemo } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { Plus, Pencil, Eye, Trash2 } from "lucide-react"
+import {
+  Plus,
+  Pencil,
+  Eye,
+  Trash2,
+  Share,
+  Check,
+  CheckLine,
+} from "lucide-react"
 import { toast } from "sonner"
 
 import DataTable, { type DataTableColumn } from "@/components/data-table"
@@ -16,12 +24,17 @@ import { ORDER_COLUMNS } from "@/constants/page/admin/order"
 import { INITIAL_ORDER_FILTERS } from "@/constants/page/admin/order"
 import { ordersApi } from "@/services/ordersApi"
 import OrderDialog from "@/components/dialog/admin/orderDialog"
+import { StatusBadge } from "@/components/ui/badge-status"
+import ShareDialog from "@/components/dialog/admin/shareDialog"
+import OrderConfirmFormDialog from "@/components/dialog/admin/orderConfirmFormDialog"
 
 const Orders = () => {
   const queryClient = useQueryClient()
 
   const drawerDisclosure = useDisclosure<any>()
   const deleteDisclosure = useDisclosure<any>()
+  const shareDisclosure = useDisclosure<any>()
+  const orderConfirmDisclosure = useDisclosure<any>()
 
   const { filter, handleFilter } = useSearchFilter(INITIAL_ORDER_FILTERS)
 
@@ -90,17 +103,7 @@ const Orders = () => {
       {
         key: "status",
         header: "Status",
-        render: (row) => (
-          <Badge 
-            variant={
-              row.status === "COMPLETED" ? "success" : 
-              row.status === "DRAFT" ? "outline" : 
-              "secondary"
-            }
-          >
-            {row.status}
-          </Badge>
-        ),
+        render: (row) => <StatusBadge status={row.status} />,
       },
 
       {
@@ -115,7 +118,6 @@ const Orders = () => {
             >
               <Eye className="size-4" />
             </Button>
-
             <Button
               size="icon-sm"
               variant="ghost"
@@ -123,7 +125,20 @@ const Orders = () => {
             >
               <Pencil className="size-4" />
             </Button>
-
+            <Button
+              size="icon-sm"
+              variant="ghost"
+              onClick={() => shareDisclosure.onOpen(row)}
+            >
+              <Share className="size-4" />
+            </Button>{" "}
+            <Button
+              size="icon-sm"
+              variant="ghost"
+              onClick={() => orderConfirmDisclosure.onOpen(row)}
+            >
+              <Check className="size-6" />
+            </Button>
             <Button
               size="icon-sm"
               variant="ghost"
@@ -145,7 +160,16 @@ const Orders = () => {
         onClose={drawerDisclosure.onClose}
         order={drawerDisclosure.data}
       />
-
+      <OrderConfirmFormDialog
+        open={orderConfirmDisclosure.isOpen}
+        onClose={orderConfirmDisclosure.onClose}
+        order={orderConfirmDisclosure.data}
+      />
+      <ShareDialog
+        open={shareDisclosure.isOpen}
+        onClose={shareDisclosure.onClose}
+        order={shareDisclosure.data}
+      />
       <ConfirmDialog
         open={deleteDisclosure.isOpen}
         onOpenChange={deleteDisclosure.onClose}
@@ -156,7 +180,6 @@ const Orders = () => {
         confirmText="delete"
         variant="danger"
       />
-
       <SectionCard
         title="Orders"
         description="Manage received items"
