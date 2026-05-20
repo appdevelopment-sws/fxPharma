@@ -88,7 +88,7 @@ const Orders = () => {
       {
         key: "supplier",
         header: "Supplier",
-        render: (row) => row.supplier?.name || "N/A",
+        render: (row) => row.supplier?.companyName || "N/A",
       },
       {
         key: "date",

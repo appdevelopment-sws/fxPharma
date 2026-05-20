@@ -203,7 +203,8 @@ export default function OrderConfirmFormDialog({
       onOpenChange={(isOpen) => onClose(isOpen)}
       title="Receive Order"
       description="Confirm the received stock, batches, expiry, and rates before updating inventory."
-      size="full"
+      size="extrafull"
+      height="extrafull"
       footer={null}
     >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">

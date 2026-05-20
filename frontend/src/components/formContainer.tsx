@@ -12,7 +12,8 @@ import {
 
 type FormContainerProps = {
   variant?: "drawer" | "modal"
-  size?: "sm" | "md" | "lg" | "xl" | "full"
+  size?: "sm" | "md" | "lg" | "xl" | "full" | "extrafull"
+  height?: "sm" | "md" | "lg" | "xl" | "full" | "extrafull"
   open: boolean
   onOpenChange: (open: boolean) => void
   title: string
@@ -27,6 +28,16 @@ const sizeMap = {
   lg: "min-w-2xl",
   xl: "min-w-4xl",
   full: "min-w-[95vw]",
+  extrafull: "min-w-[100vw]",
+}
+
+const heightMap = {
+  sm: "max-h-[30vh]",
+  md: "max-h-[40vh]",
+  lg: "max-h-[50vh]",
+  xl: "max-h-[60vh]",
+  full: "max-h-[90vh]",
+  extrafull: "max-h-[100vh]",
 }
 
 export function FormContainer({
@@ -38,13 +49,14 @@ export function FormContainer({
   description,
   footer,
   children,
+  height = "full",
 }: FormContainerProps) {
   if (variant === "modal") {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent
           onInteractOutside={(e) => e.preventDefault()}
-          className={sizeMap[size]! + " max-h-[90vh] overflow-y-auto"}
+          className={`${sizeMap[size]!} ${heightMap[height]!} overflow-y-auto`}
         >
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
