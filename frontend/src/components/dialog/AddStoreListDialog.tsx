@@ -1,5 +1,6 @@
-import { useEffect } from "react"
+import { useEffect, useMemo } from "react"
 import { useForm, type SubmitHandler } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query"
 
 import { Button } from "@/components/ui/button"
@@ -24,6 +25,7 @@ import StoreListApi from "@/services/storelistApi"
 import SubscriptionApi from "@/services/subscriptionApi"
 import { queryKeys } from "@/lib/queryKeys"
 import { toast } from "sonner"
+import { createStoreFormSchema } from "@/validations/super-admin/storeValidation"
 
 interface ManageStoreDialogProps {
   open: boolean
@@ -38,11 +40,28 @@ export default function ManageStoreDialog({
 }: ManageStoreDialogProps) {
   const isViewMode = !!store?.viewMode
   const isEditMode = !!store?.id
+  const storeFormSchema = useMemo(
+    () => createStoreFormSchema(isEditMode),
+    [isEditMode]
+  )
 
-  const { handleSubmit, control, reset, watch, setValue } = useForm({
+  const {
+    handleSubmit,
+    control,
+    reset,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm({
     defaultValues: STORE_FORM_INITIAL_DATA,
+    resolver: zodResolver(storeFormSchema),
     mode: "onChange",
   })
+
+  const getError = (name: string) => {
+    const error = errors[name as keyof typeof errors]
+    return typeof error?.message === "string" ? error.message : undefined
+  }
 
   const selectedPlan = watch("subscription_plan_id")
   const selectedRoleKey = watch("role_key")
@@ -237,6 +256,7 @@ export default function ManageStoreDialog({
                 required={true}
                 placeholder="e.g. Medicare Plus Pharmacy"
                 readOnly={isViewMode}
+                error={getError("store_name")}
               />
 
               <FormField
@@ -245,6 +265,7 @@ export default function ManageStoreDialog({
                 label="Description"
                 placeholder="Brief description of the store's services..."
                 readOnly={isViewMode}
+                error={getError("description")}
               />
 
               <FormSelectField
@@ -253,6 +274,8 @@ export default function ManageStoreDialog({
                 label="Store Category"
                 options={STORE_CATEGORY_OPTIONS}
                 readOnly={isViewMode}
+                error={getError("store_category")}
+                required
               />
 
               <FormFileUpload
@@ -262,6 +285,7 @@ export default function ManageStoreDialog({
                 accept="image/*"
                 maxSizeText="SVG, PNG, JPG (Max 2MB)"
                 disabled={isViewMode}
+                error={getError("store_logo")}
               />
             </div>
           </div>
@@ -278,6 +302,7 @@ export default function ManageStoreDialog({
                 required={true}
                 placeholder="First Name"
                 readOnly={isViewMode}
+                error={getError("first_name")}
               />
 
               <FormField
@@ -287,6 +312,7 @@ export default function ManageStoreDialog({
                 required={true}
                 placeholder="Last Name"
                 readOnly={isViewMode}
+                error={getError("last_name")}
               />
 
               <FormField
@@ -296,6 +322,7 @@ export default function ManageStoreDialog({
                 required={true}
                 placeholder="owner@example.com"
                 readOnly={isViewMode}
+                error={getError("email")}
               />
 
               <FormField
@@ -305,6 +332,7 @@ export default function ManageStoreDialog({
                 required={true}
                 placeholder="+1 (555) 000-0000"
                 readOnly={isViewMode}
+                error={getError("phone")}
               />
             </div>
           </div>
@@ -321,6 +349,7 @@ export default function ManageStoreDialog({
                 required={true}
                 placeholder="login@example.com"
                 readOnly={isViewMode}
+                error={getError("login_email")}
               />
 
               <FormField
@@ -328,9 +357,20 @@ export default function ManageStoreDialog({
                 name="password"
                 label="Password"
                 required={!isEditMode}
-                placeholder="********"
+                placeholder={
+                  isEditMode
+                    ? "Leave blank to keep the current password"
+                    : "Min 8 characters"
+                }
+                inputType="password"
                 readOnly={isViewMode}
+                error={getError("password")}
               />
+              {isEditMode ? (
+                <p className="text-sm text-muted-foreground">
+                  Leave the password empty if you do not want to change it.
+                </p>
+              ) : null}
 
               <FormField
                 control={control}
@@ -338,6 +378,7 @@ export default function ManageStoreDialog({
                 label="GST No."
                 placeholder="Enter GST Number"
                 readOnly={isViewMode}
+                error={getError("gst_number")}
               />
 
               <FormField
@@ -346,10 +387,11 @@ export default function ManageStoreDialog({
                 label="License No."
                 placeholder="Enter License Number"
                 readOnly={isViewMode}
+                error={getError("license_number")}
               />
             </div>
           </div>
-{/* 
+          {/*
           <div className="rounded-xl border p-6">
             {sectionHeader("04", "Role Assignment")}
 
@@ -396,6 +438,7 @@ export default function ManageStoreDialog({
                 required={true}
                 placeholder="123 Main St, Suite 100"
                 readOnly={isViewMode}
+                error={getError("street_address")}
               />
 
               <div className="grid gap-5 md:grid-cols-2">
@@ -406,6 +449,7 @@ export default function ManageStoreDialog({
                   required={true}
                   placeholder="City"
                   readOnly={isViewMode}
+                  error={getError("city")}
                 />
 
                 <FormField
@@ -415,6 +459,7 @@ export default function ManageStoreDialog({
                   required={true}
                   placeholder="State"
                   readOnly={isViewMode}
+                  error={getError("state")}
                 />
 
                 <FormField
@@ -424,6 +469,7 @@ export default function ManageStoreDialog({
                   required={true}
                   placeholder="ZIP Code"
                   readOnly={isViewMode}
+                  error={getError("zip_code")}
                 />
 
                 <FormField
@@ -433,6 +479,7 @@ export default function ManageStoreDialog({
                   required={true}
                   placeholder="United States"
                   readOnly={isViewMode}
+                  error={getError("country")}
                 />
               </div>
             </div>
@@ -451,6 +498,8 @@ export default function ManageStoreDialog({
               label="Store Visibility"
               options={STORE_VISIBILITY_OPTIONS}
               readOnly={isViewMode}
+              error={getError("store_visibility")}
+              required
             />
           </div>
 
@@ -468,7 +517,12 @@ export default function ManageStoreDialog({
                   <div
                     key={plan.id}
                     onClick={() =>
-                      !isViewMode && setValue("subscription_plan_id", plan.id)
+                      !isViewMode &&
+                      setValue("subscription_plan_id", plan.id, {
+                        shouldDirty: true,
+                        shouldTouch: true,
+                        shouldValidate: true,
+                      })
                     }
                     className={`cursor-pointer rounded-xl border p-4 transition ${
                       selectedPlan === plan.id
@@ -497,6 +551,11 @@ export default function ManageStoreDialog({
                   </div>
                 ))
               )}
+              {getError("subscription_plan_id") ? (
+                <p className="text-xs text-destructive">
+                  {getError("subscription_plan_id")}
+                </p>
+              ) : null}
             </div>
           </div>
 
@@ -511,6 +570,8 @@ export default function ManageStoreDialog({
                 label="Timezone"
                 options={TIMEZONE_OPTIONS}
                 readOnly={isViewMode}
+                error={getError("timezone")}
+                required
               />
 
               <FormSelectField
@@ -519,6 +580,8 @@ export default function ManageStoreDialog({
                 label="Currency"
                 options={CURRENCY_OPTIONS}
                 readOnly={isViewMode}
+                error={getError("currency")}
+                required
               />
             </div>
           </div>
