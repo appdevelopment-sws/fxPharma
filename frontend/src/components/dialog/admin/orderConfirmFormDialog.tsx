@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from "react"
-import { useFieldArray, useForm } from "react-hook-form"
+import { useFieldArray, useForm, useWatch } from "react-hook-form"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import {
   CalendarDays,
@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ordersApi } from "@/services/ordersApi"
 import { queryKeys } from "@/lib/queryKeys"
+import { PACKAGING_TYPE_OPTIONS } from "@/constants/page/admin/inventory"
 
 type OrderConfirmItem = {
   tempId: string
@@ -36,6 +37,7 @@ type OrderConfirmItem = {
 
   cgst: number
   sgst: number
+  freeUnit: string
 }
 
 type OrderConfirmFormValues = {
@@ -89,6 +91,7 @@ const buildRowFromItem = (item: any): OrderConfirmItem => ({
   rate3: toNumber(item.inventory?.rateC),
   cgst: toNumber(item.inventory?.cgst),
   sgst: toNumber(item.inventory?.sgst),
+  freeUnit: item.freeUnit || item.freeUnit || "strips",
 })
 
 const buildBlankRow = (): OrderConfirmItem => ({
@@ -108,6 +111,7 @@ const buildBlankRow = (): OrderConfirmItem => ({
   rate3: 0,
   cgst: 0,
   sgst: 0,
+  freeUnit: "strips",
 })
 
 export default function OrderConfirmFormDialog({
@@ -117,7 +121,7 @@ export default function OrderConfirmFormDialog({
 }: OrderConfirmFormDialogProps) {
   const queryClient = useQueryClient()
 
-  const { control, register, handleSubmit, reset, watch } =
+  const { control, register, handleSubmit, reset, setValue } =
     useForm<OrderConfirmFormValues>({
       defaultValues: {
         supplierId: "",
@@ -129,6 +133,12 @@ export default function OrderConfirmFormDialog({
       },
     })
 
+  const items =
+    useWatch({
+      control,
+      name: "items",
+    }) || []
+
   const { fields, append, remove } = useFieldArray({
     control,
     name: "items",
@@ -136,12 +146,12 @@ export default function OrderConfirmFormDialog({
 
   useEffect(() => {
     if (!open) return
-    console.table(order?.items)
+    // console.table(order?.items)
     const items =
       Array.isArray(order?.items) && order.items.length > 0
         ? order.items.map(buildRowFromItem)
         : [buildBlankRow()]
-
+    console.table(items)
     reset({
       supplierId: order?.supplierId || order?.supplier?.id || "",
       status: order?.status || "DELIVERED",
@@ -153,8 +163,6 @@ export default function OrderConfirmFormDialog({
       items,
     })
   }, [open, order, reset])
-
-  const items = watch("items") || []
 
   const totals = useMemo(() => {
     const totalProducts = items.length
@@ -199,6 +207,12 @@ export default function OrderConfirmFormDialog({
   const onSubmit = (values: OrderConfirmFormValues) => {
     saveMutation.mutate(values)
   }
+  const updateUnit = (index: number, unit: string) => {
+    setValue(`items.${index}.unit`, unit, {
+      shouldDirty: true,
+      shouldTouch: true,
+    })
+  }
 
   const originalPoUrl =
     order?.originalPoUrl || order?.poUrl || order?.documentUrl
@@ -214,18 +228,12 @@ export default function OrderConfirmFormDialog({
       height="extrafull"
       footer={null}
     >
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="max-w-[1860px] space-y-6"
+      >
         <div className="flex flex-col gap-4 rounded-3xl lg:flex-row lg:items-start lg:justify-between">
           <div className="space-y-3">
-            <div className="flex flex-wrap items-center gap-3">
-              <h2 className="text-3xl font-black tracking-tight text-foreground">
-                Receive Order {order?.id ? `#${order.id}` : ""}
-              </h2>
-              <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold tracking-widest text-primary uppercase">
-                {watch("status") || "DELIVERED"}
-              </span>
-            </div>
-
             <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
               <span className="inline-flex items-center gap-2">
                 <Truck className="size-4 text-primary" />
@@ -343,10 +351,10 @@ export default function OrderConfirmFormDialog({
             </Button>
           </div>
 
-          <div className="overflow-x-auto">
-            <div className="min-w-[1200px]">
-              <div className="grid grid-cols-12 gap-3 border-b border-border/60 px-6 py-4 text-xs font-bold tracking-widest text-muted-foreground uppercase">
-                <div className="col-span-2">Product Details</div>
+          <div className="w-full overflow-x-auto">
+            <div className="w-max">
+              <div className="grid grid-cols-14 gap-3 border-b border-border/60 px-6 py-4 text-xs font-bold tracking-widest text-muted-foreground uppercase">
+                <div className="col-span-1">Product Details</div>
                 <div className="col-span-1 text-center">Ord Qty</div>
                 <div className="col-span-1 text-center">Free</div>
                 <div className="col-span-1">Batch No.</div>
@@ -365,9 +373,9 @@ export default function OrderConfirmFormDialog({
                 {fields.map((field, index) => (
                   <div
                     key={field.id}
-                    className="grid grid-cols-12 items-center gap-3 px-6 py-4"
+                    className="grid grid-cols-14 items-center gap-3 px-6 py-4"
                   >
-                    <div className="col-span-2">
+                    <div className="col-span-1">
                       <div className="space-y-2">
                         <Input
                           {...register(`items.${index}.name`)}
@@ -382,26 +390,61 @@ export default function OrderConfirmFormDialog({
                       </div>
                     </div>
                     <div className="col-span-1">
-                      <Input
-                        type="number"
-                        min={0}
-                        step="1"
-                        {...register(`items.${index}.qty`, {
-                          valueAsNumber: true,
-                        })}
-                        className="h-10 rounded-2xl border-border/60 text-center font-semibold text-foreground"
-                      />
+                      <div className="flex items-center overflow-hidden rounded-2xl border border-border/60 bg-background focus-within:ring-2 focus-within:ring-primary/20">
+                        {/* Qty Input */}
+                        <Input
+                          type="number"
+                          min={0}
+                          step="1"
+                          {...register(`items.${index}.qty`, {
+                            valueAsNumber: true,
+                          })}
+                          className="h-10 w-20 border-0 bg-transparent text-center font-semibold shadow-none focus-visible:ring-0"
+                        />
+
+                        {/* Divider */}
+                        <div className="h-6 w-px bg-border/60" />
+                        {/* Unit Select */}
+                        <select
+                          {...register(`items.${index}.unit`)}
+                          className="flex-1 bg-transparent px-3 text-sm font-medium outline-none"
+                        >
+                          {PACKAGING_TYPE_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
                     <div className="col-span-1">
-                      <Input
-                        type="number"
-                        min={0}
-                        step="1"
-                        {...register(`items.${index}.freeQty`, {
-                          valueAsNumber: true,
-                        })}
-                        className="h-10 rounded-2xl border-border/60 text-center font-semibold text-foreground"
-                      />
+                      <div className="flex items-center overflow-hidden rounded-2xl border border-border/60 bg-background focus-within:ring-2 focus-within:ring-primary/20">
+                        {/* Qty Input */}
+                        <Input
+                          type="number"
+                          min={0}
+                          step="1"
+                          {...register(`items.${index}.freeQty`, {
+                            valueAsNumber: true,
+                          })}
+                          className="h-10 w-20 border-0 bg-transparent text-center font-semibold shadow-none focus-visible:ring-0"
+                        />
+
+                        {/* Divider */}
+                        <div className="h-6 w-px bg-border/60" />
+
+                        {/* Unit Select */}
+                        <select
+                          {...register(`items.${index}.freeUnit`)}
+                          className="flex-1 bg-transparent px-3 text-sm font-medium outline-none"
+                        >
+                          {PACKAGING_TYPE_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
                     <div className="col-span-1">
                       <Input
