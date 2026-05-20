@@ -29,10 +29,10 @@ export const SUPPLIER_OPTIONS = [
 ]
 
 export const ORDER_STATUS_OPTIONS = [
-  { label: "Draft", value: "draft" },
-  { label: "Pending", value: "pending" },
-  { label: "Sent", value: "sent" },
-  { label: "Delivered", value: "delivered" },
+  { label: "Draft", value: "DRAFT" },
+  { label: "Pending", value: "PENDING" },
+  { label: "Sent", value: "SENT" },
+  { label: "Delivered", value: "DELIVERED" },
 ]
 
 export const UNIT_OPTIONS = [
@@ -65,6 +65,12 @@ export const SUPPLIER_ACCOUNT_SUMMARY = {
   paid: 4000,
   remaining: 1400,
   total: 5400,
+}
+
+export const ORDER_FORM_INITIAL_DATA = {
+  supplierId: "",
+  status: "DRAFT",
+  items: [],
 }
 
 export const RECENT_ORDERS = [

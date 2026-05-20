@@ -63,7 +63,7 @@ model Inventory {
   hideProduct     Boolean  @default(false) @map("hide_product")
   negativeStock   Boolean  @default(false) @map("negative_stock")
   editRates       Boolean  @default(true)  @map("edit_rates")
-
+  availableStock   Int?     @default(0) @map("available_stock")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
   orderItems OrderItem[]

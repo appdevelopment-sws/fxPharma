@@ -8,6 +8,7 @@ import {
   Share,
   Check,
   CheckLine,
+  CheckCheck,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -48,7 +49,6 @@ const Orders = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.orders.all })
       deleteDisclosure.onClose()
-      toast.success("Order deleted successfully")
     },
   })
 
@@ -88,7 +88,7 @@ const Orders = () => {
       {
         key: "supplier",
         header: "Supplier",
-        render: (row) => row.supplier?.name || "N/A",
+        render: (row) => row.supplier?.companyName || "N/A",
       },
       {
         key: "date",
@@ -118,26 +118,39 @@ const Orders = () => {
             >
               <Eye className="size-4" />
             </Button>
-            <Button
-              size="icon-sm"
-              variant="ghost"
-              onClick={() => handleOpen(row, "edit")}
-            >
-              <Pencil className="size-4" />
-            </Button>
+            {row.status != "COMPLETED" && (
+              <Button
+                size="icon-sm"
+                variant="ghost"
+                onClick={() => handleOpen(row, "edit")}
+              >
+                <Pencil className="size-4" />
+              </Button>
+            )}
             <Button
               size="icon-sm"
               variant="ghost"
               onClick={() => shareDisclosure.onOpen(row)}
             >
               <Share className="size-4" />
-            </Button>{" "}
+            </Button>
+
             <Button
               size="icon-sm"
               variant="ghost"
+              className={
+                row.status === "COMPLETED"
+                  ? "rounded-2xl font-bold text-primary"
+                  : ""
+              }
+              disabled={row.status === "COMPLETED"}
               onClick={() => orderConfirmDisclosure.onOpen(row)}
             >
-              <Check className="size-6" />
+              {row.status === "COMPLETED" ? (
+                <CheckCheck className="size-6" />
+              ) : (
+                <Check className="size-6" />
+              )}
             </Button>
             <Button
               size="icon-sm"

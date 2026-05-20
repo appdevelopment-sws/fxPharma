@@ -17,6 +17,8 @@ export interface OrderItem {
   rate1?: number
   rate2?: number
   rate3?: number
+  cgst?: number
+  sgst?: number
   inventory?: any
 }
 
@@ -59,6 +61,14 @@ const mapToApi = (data: any) => {
         item.rate3 === undefined || item.rate3 === null
           ? undefined
           : Number(item.rate3),
+      cgst:
+        item.cgst === undefined || item.cgst === null
+          ? undefined
+          : Number(item.cgst),
+      sgst:
+        item.sgst === undefined || item.sgst === null
+          ? undefined
+          : Number(item.sgst),
     })),
   }
 }
@@ -83,6 +93,8 @@ const mapFromApi = (data: any) => {
       rate1: item.rate1,
       rate2: item.rate2,
       rate3: item.rate3,
+      cgst: item.cgst,
+      sgst: item.sgst,
     })),
   }
 }

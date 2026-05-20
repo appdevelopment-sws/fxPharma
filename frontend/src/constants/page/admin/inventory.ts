@@ -83,6 +83,7 @@ export const MEDICINE_STOCK_FORM_INITIAL_DATA = {
   hide_product: false,
   negative_stock: false,
   edit_rates: true,
+  available_stock: "",
 }
 
 export const PRODUCT_STATUS_OPTIONS = [

@@ -1,511 +1,706 @@
-import { useState, useEffect } from "react"
+import { useEffect, useMemo, useState } from "react"
 import {
-    Search,
-    Plus,
-    Minus,
-    Trash2,
-    Truck,
-    History,
-    MessageCircle,
-    Mail,
-    CheckCircle2,
-    Clock
+  useFieldArray,
+  useForm,
+  useWatch,
+  type SubmitHandler,
+} from "react-hook-form"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import {
+  CheckCircle2,
+  Clock,
+  Mail,
+  MessageCircle,
+  Minus,
+  Plus,
+  Search,
+  Trash2,
+  Truck,
 } from "lucide-react"
+import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
-import { FormContainer } from "@/components/formContainer"
 import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import {
-    FormSelectField,
-} from "@/components/ui/form-fields"
-import { useForm } from "react-hook-form"
+import { FormContainer } from "@/components/formContainer"
+import { FormSelectField } from "@/components/ui/form-fields"
 
 import {
-    UNIT_OPTIONS,
-    SUPPLIER_ACCOUNT_SUMMARY,
+  ORDER_FORM_INITIAL_DATA,
+  ORDER_STATUS_OPTIONS,
+  UNIT_OPTIONS,
 } from "@/constants/page/admin/order"
-
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { toast } from "sonner"
-import { ordersApi } from "@/services/ordersApi"
-import SupplierApi from "@/services/supplierApi"
-import InventoryApi from "@/services/inventoryApi"
 import { queryKeys } from "@/lib/queryKeys"
+import { ordersApi } from "@/services/ordersApi"
+import InventoryApi from "@/services/inventoryApi"
+import SupplierApi from "@/services/supplierApi"
+import { PACKAGING_TYPE_OPTIONS } from "@/constants/page/admin/inventory"
 
 interface OrderDialogProps {
-    open: boolean
-    onClose: (open: boolean) => void
-    order?: any | null
+  open: boolean
+  onClose: (open: boolean) => void
+  order?: any | null
+}
+
+type OrderItemFormValue = {
+  tempId: string
+  inventoryId?: string
+  name: string
+  description: string
+  qty: number
+  unit: string
+  purchaseRate?: number
+  inventory?: any
+}
+
+type OrderFormValues = {
+  supplierId: string
+  status: string
+  items: OrderItemFormValue[]
+}
+
+const createTempId = () =>
+  typeof crypto !== "undefined" && crypto.randomUUID
+    ? crypto.randomUUID()
+    : `row_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+
+const toNumber = (value: unknown) => {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : 0
+}
+
+const buildItemFromInventory = (inventoryItem: any): OrderItemFormValue => ({
+  tempId: createTempId(),
+  inventoryId: inventoryItem.id,
+  name: inventoryItem.name || "",
+  description:
+    inventoryItem.saltComposition || inventoryItem.category?.name || "",
+  qty: 1,
+  unit: "strip",
+  purchaseRate: inventoryItem.purchaseRate ?? undefined,
+  inventory: inventoryItem,
+})
+
+const buildItemFromOrderItem = (item: any): OrderItemFormValue => ({
+  tempId: item.tempId || item.id || createTempId(),
+  inventoryId: item.inventoryId || item.inventory?.id || "",
+  name: item.inventory?.name || item.name || "",
+  description: item.inventory?.saltComposition || item.description || "",
+  qty: Math.max(1, toNumber(item.qty || 1)),
+  unit: item.unit || "strip",
+  purchaseRate:
+    item.purchaseRate === undefined || item.purchaseRate === null
+      ? undefined
+      : Number(item.purchaseRate),
+  inventory: item.inventory,
+})
+
+const buildFormValues = (order?: any): OrderFormValues => {
+  const items =
+    Array.isArray(order?.items) && order.items.length > 0
+      ? order.items.map(buildItemFromOrderItem)
+      : []
+
+  return {
+    ...ORDER_FORM_INITIAL_DATA,
+    supplierId: order?.supplierId || order?.supplier?.id || "",
+    status: order?.status || ORDER_FORM_INITIAL_DATA.status,
+    items,
+  }
 }
 
 export default function OrderDialog({
-    open,
-    onClose,
-    order,
+  open,
+  onClose,
+  order,
 }: OrderDialogProps) {
-    const isEditMode = !!order?.id
-    const isViewMode = !!order?.viewMode
-    const queryClient = useQueryClient()
+  const isEditMode = !!order?.id
+  const isViewMode = !!order?.viewMode
 
-    const [selectedItems, setSelectedItems] = useState<any[]>([])
-    const [selectedSupplier, setSelectedSupplier] = useState<any>(null)
+  const queryClient = useQueryClient()
+  const [productSearch, setProductSearch] = useState("")
 
-    const { data: suppliersData, isLoading: isLoadingSuppliers } = useQuery({
-        queryKey: queryKeys.suppliers.all,
-        queryFn: () => SupplierApi.getSuppliers(),
-    })
+  const {
+    handleSubmit,
+    control,
+    reset,
+    setValue,
+    formState: { isSubmitting },
+  } = useForm<OrderFormValues>({
+    defaultValues: buildFormValues(),
+    mode: "onChange",
+  })
 
-    const { data: inventoryData, isLoading: isLoadingInventory } = useQuery({
-        queryKey: queryKeys.inventory.list({ limit: 4 }),
-        queryFn: () => InventoryApi.getAll({ limit: 4 }),
-    })
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "items",
+  })
 
-    const suppliers = suppliersData?.data || []
-    const suggestedProducts = inventoryData?.data || []
-    const [productSearch, setProductSearch] = useState("")
+  const supplierId = useWatch({ control, name: "supplierId" })
+  const items = useWatch({ control, name: "items" }) || []
+  const status = useWatch({ control, name: "status" })
 
-    const { data: searchResultsData, isLoading: isSearchingInventory } = useQuery({
-        queryKey: queryKeys.inventory.list({ search: productSearch, limit: 5 }),
-        queryFn: () => InventoryApi.getAll({ search: productSearch, limit: 5 }),
-        enabled: productSearch.length > 2,
-    })
+  const { data: suppliersData, isLoading: isLoadingSuppliers } = useQuery({
+    queryKey: queryKeys.suppliers.all,
+    queryFn: () => SupplierApi.getSuppliers(),
+    enabled: open,
+  })
 
-    const searchResults = searchResultsData?.data || []
+  const { data: inventoryData, isLoading: isLoadingInventory } = useQuery({
+    queryKey: queryKeys.inventory.list({ limit: 4 }),
+    queryFn: () => InventoryApi.getAll({ limit: 4 }),
+    enabled: open,
+  })
 
-    const { data: recentOrdersData, isLoading: isLoadingRecentOrders } = useQuery({
-        queryKey: ["orders", "recent", selectedSupplier?.id],
-        queryFn: () => ordersApi.getAll({ search: selectedSupplier?.companyName, limit: 5 }),
-        enabled: !!selectedSupplier?.id,
-    })
+  const { data: searchResultsData, isLoading: isSearchingInventory } = useQuery(
+    {
+      queryKey: queryKeys.inventory.list({ search: productSearch, limit: 5 }),
+      queryFn: () => InventoryApi.getAll({ search: productSearch, limit: 5 }),
+      enabled: open && productSearch.length > 2,
+    }
+  )
 
-    const recentOrders = recentOrdersData?.data || []
+  const suppliers = suppliersData?.data || []
+  const suggestedProducts = inventoryData?.data || []
+  const searchResults = searchResultsData?.data || []
 
-    const { control, reset, handleSubmit, setValue } = useForm({
-        defaultValues: {
-            supplierId: "",
-            status: "DRAFT",
-        }
-    })
+  const selectedSupplier = useMemo(
+    () =>
+      suppliers.find((supplier: any) => supplier.id === supplierId) ||
+      (order?.supplier?.id === supplierId ? order.supplier : null) ||
+      null,
+    [order?.supplier, supplierId, suppliers]
+  )
 
-    const getItemKey = (item: any) => item?.inventoryId || item?.id || item?.tempId
-
-    const normalizeItem = (inventoryItem: any) => ({
-        inventoryId: inventoryItem.id,
-        name: inventoryItem.name,
-        description: inventoryItem.saltComposition || inventoryItem.category?.name || "",
-        qty: 1,
-        unit: "strips",
-        purchaseRate: inventoryItem.purchaseRate ?? undefined,
-        inventory: inventoryItem,
-    })
-
-    useEffect(() => {
-        if (open) {
-            if (order) {
-                setSelectedItems(order.items || [])
-                setSelectedSupplier(order.supplier || null)
-                reset({
-                    supplierId: order.supplierId,
-                    status: order.status,
-                })
-            } else {
-                setSelectedItems([])
-                setSelectedSupplier(null)
-                reset({
-                    supplierId: "",
-                    status: "DRAFT",
-                })
-            }
-        }
-    }, [open, order, reset])
-
-    const saveMutation = useMutation({
-        mutationFn: (data: any) => {
-            const payload = {
-                ...data,
-                supplierId: selectedSupplier?.id,
-                items: selectedItems,
-            }
-            return isEditMode ? ordersApi.update(order.id, payload) : ordersApi.create(payload)
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: queryKeys.orders.all })
-            toast.success(isEditMode ? "Order updated" : "Order created")
-            onClose(false)
-        },
-        onError: () => {
-            toast.error("Failed to save order")
-        }
-    })
-
-    const onSubmit = (data: any) => {
-        saveMutation.mutate(data)
+  useEffect(() => {
+    if (!open) {
+      setProductSearch("")
+      reset(buildFormValues())
+      return
     }
 
-    const updateQty = (id: any, delta: number) => {
-        setSelectedItems(prev => prev.map(item =>
-            getItemKey(item) === id
-                ? { ...item, qty: Math.max(1, (Number(item.qty) || 0) + delta) }
-                : item
-        ))
-    }
+    reset(buildFormValues(order))
+    setProductSearch("")
+  }, [open, order, reset])
 
-    const removeItem = (id: any) => {
-        setSelectedItems(prev => prev.filter(item => getItemKey(item) !== id))
-    }
+  const saveMutation = useMutation({
+    mutationFn: (data: OrderFormValues) => {
+      const payload = {
+        ...data,
+        supplierId: data.supplierId || selectedSupplier?.id,
+        items: data.items,
+      }
 
-    const addItem = (inventoryItem: any) => {
-        const itemKey = inventoryItem.id
-        setSelectedItems(prev => {
-            const existingIndex = prev.findIndex((item) => getItemKey(item) === itemKey)
+      return isEditMode
+        ? ordersApi.update(order.id, payload)
+        : ordersApi.create(payload)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders.all })
+      toast.success(isEditMode ? "Order updated" : "Order created")
+      reset(buildFormValues())
+      onClose(false)
+    },
+    onError: () => {
+      toast.error("Failed to save order")
+    },
+  })
 
-            if (existingIndex >= 0) {
-                return prev.map((item, index) =>
-                    index === existingIndex
-                        ? { ...item, qty: Math.max(1, (Number(item.qty) || 0) + 1) }
-                        : item
-                )
-            }
+  const updateQty = (index: number, delta: number) => {
+    const currentQty = toNumber(items?.[index]?.qty)
+    setValue(`items.${index}.qty`, Math.max(1, currentQty + delta), {
+      shouldDirty: true,
+      shouldTouch: true,
+    })
+  }
 
-            return [...prev, normalizeItem(inventoryItem)]
-        })
-    }
+  const updateUnit = (index: number, unit: string) => {
+    setValue(`items.${index}.unit`, unit, {
+      shouldDirty: true,
+      shouldTouch: true,
+    })
+  }
 
-    return (
-        <FormContainer
-            variant="modal"
-            open={open}
-            onOpenChange={(isOpen) => onClose(isOpen)}
-            title={isEditMode ? "Edit Order" : "Create New Order"}
-            size="full"
-            footer={
-                <div className="flex justify-end gap-3">
-                    <Button variant="outline" onClick={() => onClose(false)}>
-                        {isViewMode ? "Close" : "Cancel"}
-                    </Button>
-                    {!isViewMode && (
-                        <Button 
-                            onClick={handleSubmit(onSubmit)}
-                            disabled={saveMutation.isPending}
-                        >
-                            {saveMutation.isPending ? "Saving..." : isEditMode ? "Update Order" : "Save Order"}
-                        </Button>
-                    )}
-                </div>
-            }
-        >
-            <form onSubmit={handleSubmit(onSubmit)} className="grid h-full grid-cols-1 gap-8 p-1 xl:grid-cols-3">
-                {/* Left Column: Order Items & Suggestions */}
-                <div className="space-y-8 xl:col-span-2">
-                    {/* Order Items Section */}
-                    <div className="rounded-2xl border bg-card p-6 shadow-sm">
-                        <div className="mb-6 flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                                    <Plus className="size-5" />
-                                </div>
-                                <h2 className="text-xl font-bold">Order Items</h2>
-                            </div>
+  const addItem = (inventoryItem: any) => {
+    if (isViewMode) return
 
-                        </div>
-
-                        <div className="relative mb-8">
-                            <Search className="absolute left-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground" />
-                            <Input
-                                className="h-12 pl-12 pr-4 text-base focus-visible:ring-primary/20"
-                                placeholder="Search existing medicines to add..."
-                                value={productSearch}
-                                onChange={(e) => setProductSearch(e.target.value)}
-                            />
-                            {productSearch.length > 2 && (
-                                <div className="absolute left-0 right-0 top-full z-10 mt-2 rounded-xl border bg-card shadow-lg">
-                                    {isSearchingInventory ? (
-                                        <div className="p-4 text-sm text-muted-foreground">Searching...</div>
-                                    ) : searchResults.length === 0 ? (
-                                        <div className="p-4 text-sm text-muted-foreground">No medicines found.</div>
-                                    ) : (
-                                        <div className="max-h-60 overflow-y-auto p-2">
-                                            {searchResults.map((prod) => (
-                                                <div
-                                                    key={prod.id}
-                                                    className="flex cursor-pointer items-center justify-between rounded-lg p-3 hover:bg-primary/5"
-                                                    onClick={() => {
-                                                        addItem(prod)
-                                                        setProductSearch("")
-                                                    }}
-                                                >
-                                                    <div>
-                                                        <p className="font-bold">{prod.name}</p>
-                                                        <p className="text-xs text-muted-foreground">
-                                                            {prod.saltComposition || prod.category?.name || "Inventory item"}
-                                                        </p>
-                                                    </div>
-                                                    <Plus className="size-4 text-primary" />
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="space-y-4">
-                            <div className="grid grid-cols-12 px-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                                <div className="col-span-6">Medicine</div>
-                                <div className="col-span-3 text-center">Quantity</div>
-                                <div className="col-span-2 text-center">Unit</div>
-                                <div className="col-span-1 text-right"></div>
-                            </div>
-
-                            <div className="space-y-3">
-                                {selectedItems.map((item) => (
-                                    <div key={getItemKey(item)} className="grid grid-cols-12 items-center rounded-xl border p-4 transition-all hover:border-primary/30 hover:bg-primary/5">
-                                        <div className="col-span-6">
-                                            <p className="text-lg font-bold">{item.inventory?.name || item.name}</p>
-                                            <p className="text-sm text-muted-foreground">{item.description || item.inventory?.saltComposition || ""}</p>
-                                        </div>
-
-                                        <div className="col-span-3 flex justify-center">
-                                            <div className="flex items-center gap-1 rounded-xl border bg-background p-1 shadow-sm">
-                                                <Button
-                                                    type="button"
-                                                    variant="ghost"
-                                                    size="icon-sm"
-                                                    onClick={() => updateQty(getItemKey(item), -1)}
-                                                    className="h-8 w-8 rounded-lg hover:bg-muted"
-                                                >
-                                                    <Minus className="size-4" />
-                                                </Button>
-                                                <Input
-                                                    type="number"
-                                                    value={item.qty}
-                                                    onChange={(e) => updateQty(getItemKey(item), parseInt(e.target.value) - item.qty)}
-                                                    className="h-8 w-16 border-none text-center font-bold focus-visible:ring-0"
-                                                />
-                                                <Button
-                                                    type="button"
-                                                    variant="ghost"
-                                                    size="icon-sm"
-                                                    onClick={() => updateQty(getItemKey(item), 1)}
-                                                    className="h-8 w-8 rounded-lg hover:bg-muted"
-                                                >
-                                                    <Plus className="size-4" />
-                                                </Button>
-                                            </div>
-                                        </div>
-
-                                        <div className="col-span-2 flex justify-center">
-                                            <select
-                                                className="h-10 rounded-xl border bg-background px-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/20"
-                                                value={item.unit}
-                                                onChange={(e) => { }}
-                                            >
-                                                {UNIT_OPTIONS.map(opt => (
-                                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-
-                                        <div className="col-span-1 flex justify-end">
-                                            <Button
-                                                type="button"
-                                                variant="ghost"
-                                                size="icon-sm"
-                                                onClick={() => removeItem(getItemKey(item))}
-                                                className="h-10 w-10 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                                            >
-                                                <Trash2 className="size-5" />
-                                            </Button>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Suggested Section */}
-                    <div className="rounded-2xl border bg-muted/30 p-6">
-                        <div className="mb-6 flex items-center gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-500/10 text-purple-500">
-                                <CheckCircle2 className="size-5" />
-                            </div>
-                            <h2 className="text-xl font-bold">Suggested to Order</h2>
-                        </div>
-
-                        <div className="space-y-3">
-                                {isLoadingInventory ? (
-                                    <p className="text-sm text-muted-foreground">Loading suggestions...</p>
-                                ) : suggestedProducts.length === 0 ? (
-                                    <p className="text-sm text-muted-foreground">No suggestions available.</p>
-                                ) : suggestedProducts.map((item) => (
-                                    <div key={item.id} className="flex items-center justify-between rounded-xl border bg-card p-4 transition-all hover:border-purple-300">
-                                    <div className="flex items-center gap-4">
-                                        <div className="space-y-1">
-                                            <p className="font-bold">{item.name}</p>
-                                            <div className="flex items-center gap-2">
-                                                <Badge variant="outline" className="h-5 rounded-md px-2 text-[10px] font-bold uppercase tracking-wider">
-                                                    Stock Low
-                                                </Badge>
-                                                <p className="text-xs text-muted-foreground">{item.manufacturer?.name || "Manufacturer"}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <Button
-                                        type="button"
-                                        size="icon-sm"
-                                        variant="outline"
-                                        className="h-10 w-10 rounded-xl border-purple-200 text-purple-500 hover:bg-purple-500 hover:text-white"
-                                        onClick={() => addItem(item)}
-                                    >
-                                        <Plus className="size-5" />
-                                    </Button>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-
-                {/* Right Column: Supplier & Status */}
-                <div className="space-y-6">
-                    {/* Supplier Section */}
-                    <div className="rounded-2xl border bg-card p-6 shadow-sm">
-                        <div className="mb-6 flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-500/10 text-orange-500">
-                                    <Truck className="size-5" />
-                                </div>
-                                <h2 className="text-xl font-bold">Supplier</h2>
-                            </div>
-                        </div>
-
-                        <div className="space-y-3">
-                            {isLoadingSuppliers ? (
-                                <p className="text-sm text-muted-foreground">Loading suppliers...</p>
-                            ) : suppliers.length === 0 ? (
-                                <p className="text-sm text-muted-foreground">No suppliers found.</p>
-                            ) : suppliers.map((supplier) => (
-                                <div
-                                    key={supplier.id}
-                                    onClick={() => {
-                                        setSelectedSupplier(supplier)
-                                        setValue("supplierId", supplier.id)
-                                    }}
-                                    className={`cursor-pointer rounded-2xl border-2 p-4 transition-all ${selectedSupplier?.id === supplier.id
-                                        ? "border-primary bg-primary/5 ring-4 ring-primary/5"
-                                        : "border-border hover:border-primary/30"
-                                        }`}
-                                >
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <div className="flex items-center gap-2">
-                                                <p className="font-bold">{supplier.companyName}</p>
-                                                {supplier.isPreferred && (
-                                                    <Badge variant="outline" className="h-5 rounded-md border-primary/30 bg-primary/10 px-2 text-[9px] font-bold uppercase tracking-wider text-primary">
-                                                        Preferred
-                                                    </Badge>
-                                                )}
-                                            </div>
-                                            <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
-                                                <Clock className="size-3" />
-                                                <span>Delivers in {supplier.isPreferred ? "24h" : "48h"}</span>
-                                            </div>
-                                        </div>
-                                        {selectedSupplier?.id === supplier.id && (
-                                            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-white">
-                                                <CheckCircle2 className="size-4" />
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Account Status Section */}
-                    <div className="rounded-2xl border bg-card p-6 shadow-sm">
-                        <div className="mb-6 flex items-center gap-3 text-muted-foreground">
-                            <Clock className="size-5" />
-                            <h3 className="font-bold">{selectedSupplier?.companyName || "Supplier"} - Account Status</h3>
-                        </div>
-
-                        <div className="space-y-4">
-                            <div className="flex justify-between text-sm">
-                                <div className="space-y-1">
-                                    <p className="text-muted-foreground">Total Paid</p>
-                                    <p className="text-lg font-bold text-emerald-500">${SUPPLIER_ACCOUNT_SUMMARY.paid.toLocaleString()}</p>
-                                </div>
-                                <div className="space-y-1 text-right">
-                                    <p className="text-muted-foreground">Remaining</p>
-                                    <p className="text-lg font-bold text-destructive">${SUPPLIER_ACCOUNT_SUMMARY.remaining.toLocaleString()}</p>
-                                </div>
-                            </div>
-
-                            {/* Custom Progress Bar */}
-                            <div className="h-2 w-full overflow-hidden rounded-full bg-destructive/10">
-                                <div
-                                    className="h-full bg-emerald-500 transition-all"
-                                    style={{ width: `${(SUPPLIER_ACCOUNT_SUMMARY.paid / SUPPLIER_ACCOUNT_SUMMARY.total) * 100}%` }}
-                                />
-                            </div>
-                            <p className="text-right text-xs font-bold text-muted-foreground">Total Billed: ${SUPPLIER_ACCOUNT_SUMMARY.total.toLocaleString()}</p>
-                        </div>
-
-                        <div className="mt-8 space-y-4">
-                            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Recent Orders</p>
-                            <div className="space-y-2">
-                                {isLoadingRecentOrders ? (
-                                    <p className="text-xs text-muted-foreground">Loading recent orders...</p>
-                                ) : recentOrders.length === 0 ? (
-                                    <p className="text-xs text-muted-foreground">No recent orders.</p>
-                                ) : recentOrders.map((order, idx) => (
-                                    <div key={idx} className="flex items-center justify-between rounded-xl bg-muted/30 p-3 text-sm">
-                                        <span className="font-medium text-muted-foreground">{new Date(order.createdAt).toLocaleDateString()}</span>
-                                        <span className="font-bold">Items: {order.items?.length || 0}</span>
-                                        <Badge variant="outline" className="h-5 rounded-md border-emerald-200 bg-emerald-50 px-2 text-[9px] font-bold uppercase text-emerald-600">
-                                            {order.status}
-                                        </Badge>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Order Summary & Actions */}
-                    <div className="rounded-2xl bg-card p-6">
-                        <div className="space-y-4 text-sm font-medium">
-                            <div className="flex justify-between">
-                                <span className="text-muted-foreground">Total Items</span>
-                                <span className="font-bold">{selectedItems.length}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="text-muted-foreground">Supplier Email</span>
-                                <span className="font-bold">{selectedSupplier?.email || "N/A"}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="text-muted-foreground">Supplier Phone</span>
-                                <span className="font-bold">{selectedSupplier?.phone || "N/A"}</span>
-                            </div>
-                        </div>
-
-                        <div className="my-6 border-t border-dashed" />
-
-                        <div className="flex items-center justify-between">
-                            <p className="font-bold text-muted-foreground uppercase tracking-widest text-[10px]">Order Status</p>
-                            <p className="font-black text-cyan-400 tracking-tighter text-xl italic">DRAFT</p>
-                        </div>
-
-                        <div className="mt-8 space-y-3">
-                            <Button type="button" className="h-14 w-full rounded-2xl bg-emerald-500 text-base font-bold shadow-lg shadow-emerald-500/20 hover:bg-emerald-600 active:scale-[0.98]">
-                                <MessageCircle className="mr-3 size-6" /> Send Order via WhatsApp
-                            </Button>
-                            <Button type="button" className="h-14 w-full rounded-2xl bg-cyan-400 text-base font-bold shadow-lg shadow-cyan-400/20 hover:bg-cyan-500 active:scale-[0.98]">
-                                <Mail className="mr-3 size-6" /> Send Order via Email
-                            </Button>
-                        </div>
-                    </div>
-                </div>
-            </form>
-        </FormContainer>
+    const existingIndex = items.findIndex(
+      (item: any) => item.inventoryId === inventoryItem.id
     )
+
+    if (existingIndex >= 0) {
+      updateQty(existingIndex, 1)
+      return
+    }
+
+    append(buildItemFromInventory(inventoryItem))
+  }
+
+  const removeItem = (index: number) => {
+    if (isViewMode) return
+    remove(index)
+  }
+
+  const totalItems = items.length
+  const totalQty = items.reduce(
+    (sum: number, item: any) => sum + Math.max(1, toNumber(item.qty)),
+    0
+  )
+
+  const onSubmit: SubmitHandler<OrderFormValues> = (data) => {
+    saveMutation.mutate(data)
+  }
+
+  return (
+    <FormContainer
+      variant="modal"
+      open={open}
+      onOpenChange={(isOpen) => onClose(isOpen)}
+      title={isEditMode ? "Edit Order" : "Create New Order"}
+      description="Create a supplier order, add medicines, and keep the purchase list ready for confirmation."
+      size="extrafull"
+      height="extrafull"
+      footer={
+        <div className="flex justify-end gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onClose(false)}
+          >
+            {isViewMode ? "Close" : "Cancel"}
+          </Button>
+          {!isViewMode && (
+            <Button
+              type="submit"
+              form="order-dialog-form"
+              disabled={saveMutation.isPending || isSubmitting}
+            >
+              {saveMutation.isPending || isSubmitting
+                ? "Saving..."
+                : isEditMode
+                  ? "Update Order"
+                  : "Save Order"}
+            </Button>
+          )}
+        </div>
+      }
+    >
+      <form
+        id="order-dialog-form"
+        onSubmit={handleSubmit(onSubmit)}
+        className="space-y-6"
+      >
+        <div className="flex flex-col gap-4 rounded-3xl border bg-card p-6 lg:flex-row lg:items-start lg:justify-between">
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center gap-3">
+              <h2 className="text-3xl font-black tracking-tight text-foreground">
+                {isEditMode ? "Edit Order" : "New Purchase Order"}
+              </h2>
+              <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold tracking-widest text-primary uppercase">
+                {status || "DRAFT"}
+              </span>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+              <span className="inline-flex items-center gap-2">
+                <Truck className="size-4 text-primary" />
+                {selectedSupplier?.companyName || "Select a supplier"}
+              </span>
+              <span className="hidden text-muted-foreground/40 sm:inline">
+                |
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <Clock className="size-4 text-muted-foreground" />
+                {totalItems} items
+              </span>
+            </div>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-2xl border bg-muted/30 px-4 py-3">
+              <p className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">
+                Total Items
+              </p>
+              <p className="mt-2 text-2xl font-black tracking-tight text-foreground">
+                {totalItems}
+              </p>
+            </div>
+            <div className="rounded-2xl border bg-muted/30 px-4 py-3">
+              <p className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">
+                Total Qty
+              </p>
+              <p className="mt-2 text-2xl font-black tracking-tight text-foreground">
+                {totalQty}
+              </p>
+            </div>
+            <div className="rounded-2xl border bg-muted/30 px-4 py-3">
+              <p className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">
+                Supplier
+              </p>
+              <p className="mt-2 truncate text-sm font-semibold text-foreground">
+                {selectedSupplier?.companyName || "Not selected"}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid gap-6 xl:grid-cols-3">
+          <div className="space-y-6 xl:col-span-2">
+            <div className="rounded-3xl border bg-card p-6 shadow-sm">
+              <div className="mb-6 flex items-center justify-between">
+                <div>
+                  <h3 className="text-xl font-bold">Order Details</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Choose a supplier and set the order status.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid gap-5 md:grid-cols-2">
+                <FormSelectField
+                  control={control}
+                  name="supplierId"
+                  label="SUPPLIER"
+                  options={suppliers.map((supplier: any) => ({
+                    label: supplier.companyName,
+                    value: supplier.id,
+                  }))}
+                  placeholder={
+                    isLoadingSuppliers
+                      ? "Loading suppliers..."
+                      : "Select supplier"
+                  }
+                  required
+                  readOnly={isViewMode}
+                />
+                {/* <FormSelectField
+                  control={control}
+                  name="status"
+                  label="STATUS"
+                  options={ORDER_STATUS_OPTIONS}
+                  readOnly={isViewMode}
+                /> */}
+              </div>
+            </div>
+
+            <div className="rounded-3xl border bg-card p-6 shadow-sm">
+              <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-xl font-bold">Order Items</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Search existing medicines and add them to the purchase list.
+                  </p>
+                </div>
+                <div className="w-full max-w-md">
+                  <div className="relative">
+                    {/* <Search className="absolute top-1/2 left-4 size-4 -translate-y-1/2 text-muted-foreground" /> */}
+                    <Input
+                      value={productSearch}
+                      onChange={(e) => setProductSearch(e.target.value)}
+                      placeholder="Search medicines to add..."
+                      className="h-11 pl-11"
+                      disabled={isViewMode}
+                    />
+                    {productSearch.length > 2 && (
+                      <div className="absolute top-full right-0 left-0 z-20 mt-2 rounded-2xl border bg-card shadow-xl">
+                        {isSearchingInventory ? (
+                          <div className="p-4 text-sm text-muted-foreground">
+                            Searching...
+                          </div>
+                        ) : searchResults.length === 0 ? (
+                          <div className="p-4 text-sm text-muted-foreground">
+                            No medicines found.
+                          </div>
+                        ) : (
+                          <div className="max-h-64 overflow-y-auto p-2">
+                            {searchResults.map((prod: any) => (
+                              <button
+                                key={prod.id}
+                                type="button"
+                                onClick={() => {
+                                  addItem(prod)
+                                  setProductSearch("")
+                                }}
+                                className="flex w-full items-center justify-between rounded-xl px-3 py-3 text-left transition-colors hover:bg-primary/5"
+                              >
+                                <div>
+                                  <p className="font-semibold text-foreground">
+                                    {prod.name}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {prod.saltComposition ||
+                                      prod.category?.name ||
+                                      "Inventory item"}
+                                  </p>
+                                </div>
+                                <Plus className="size-4 text-primary" />
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-12 px-4 text-xs font-bold tracking-wider text-muted-foreground uppercase">
+                <div className="col-span-6">Medicine</div>
+                <div className="col-span-3 text-center">Quantity</div>
+                <div className="col-span-2 text-center">Unit</div>
+                <div className="col-span-1 text-right">Action</div>
+              </div>
+
+              <div className="mt-3 space-y-3">
+                {fields.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed p-6 text-sm text-muted-foreground">
+                    No medicines added yet. Use search or suggested items to add
+                    order lines.
+                  </div>
+                ) : (
+                  fields.map((field, index) => {
+                    const item = items[index]
+
+                    return (
+                      <div
+                        key={field.id}
+                        className="grid grid-cols-12 items-center gap-4 rounded-2xl border p-4"
+                      >
+                        <div className="col-span-6">
+                          <p className="font-bold text-foreground">
+                            {item?.inventory?.name || item?.name || "Medicine"}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {item?.description ||
+                              item?.inventory?.saltComposition ||
+                              "No description"}
+                          </p>
+                        </div>
+
+                        <div className="col-span-3 flex justify-center">
+                          <div className="flex items-center gap-1 rounded-2xl border bg-background p-1">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon-sm"
+                              onClick={() => updateQty(index, -1)}
+                              className="h-8 w-8 rounded-xl"
+                              disabled={isViewMode}
+                            >
+                              <Minus className="size-4" />
+                            </Button>
+                            <Input
+                              type="number"
+                              value={item?.qty ?? 1}
+                              onChange={(e) =>
+                                setValue(
+                                  `items.${index}.qty`,
+                                  Math.max(1, toNumber(e.target.value) || 1),
+                                  {
+                                    shouldDirty: true,
+                                    shouldTouch: true,
+                                  }
+                                )
+                              }
+                              className="h-8 w-16 border-none text-center font-bold focus-visible:ring-0"
+                              readOnly={isViewMode}
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon-sm"
+                              onClick={() => updateQty(index, 1)}
+                              className="h-8 w-8 rounded-xl"
+                              disabled={isViewMode}
+                            >
+                              <Plus className="size-4" />
+                            </Button>
+                          </div>
+                        </div>
+
+                        <div className="col-span-2">
+                          <select
+                            value={item?.unit || "strip"}
+                            onChange={(e) => updateUnit(index, e.target.value)}
+                            disabled={isViewMode}
+                            className="h-10 w-full rounded-xl border bg-background px-3 text-sm font-medium outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-80"
+                          >
+                            {PACKAGING_TYPE_OPTIONS.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="col-span-1 flex justify-end">
+                          {!isViewMode ? (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon-sm"
+                              onClick={() => removeItem(index)}
+                              className="h-10 w-10 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                            >
+                              <Trash2 className="size-5" />
+                            </Button>
+                          ) : null}
+                        </div>
+                      </div>
+                    )
+                  })
+                )}
+              </div>
+            </div>
+
+            <div className="rounded-3xl border bg-muted/30 p-6">
+              <div className="mb-6 flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <CheckCircle2 className="size-5" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold">Suggested to Order</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Quick-add medicines that are currently low in stock.
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                {isLoadingInventory ? (
+                  <p className="text-sm text-muted-foreground">
+                    Loading suggestions...
+                  </p>
+                ) : suggestedProducts.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    No suggestions available.
+                  </p>
+                ) : (
+                  suggestedProducts.map((item: any) => (
+                    <div
+                      key={item.id}
+                      className="flex items-center justify-between rounded-2xl border bg-card p-4"
+                    >
+                      <div className="space-y-1">
+                        <p className="font-semibold text-foreground">
+                          {item.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {item.manufacturer?.name || "Manufacturer"}
+                        </p>
+                      </div>
+                      <Button
+                        type="button"
+                        size="icon-sm"
+                        variant="outline"
+                        className="h-10 w-10 rounded-xl"
+                        onClick={() => addItem(item)}
+                        disabled={isViewMode}
+                      >
+                        <Plus className="size-5" />
+                      </Button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            <div className="rounded-3xl border bg-card p-6 shadow-sm">
+              <div className="mb-6 flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-500/10 text-orange-500">
+                  <Truck className="size-5" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold">Supplier Summary</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Contact details for the selected supplier.
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-4 text-sm">
+                <div className="flex justify-between gap-4">
+                  <span className="text-muted-foreground">Supplier Email</span>
+                  <span className="text-right font-semibold">
+                    {selectedSupplier?.email || "N/A"}
+                  </span>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <span className="text-muted-foreground">Supplier Phone</span>
+                  <span className="text-right font-semibold">
+                    {selectedSupplier?.phone || "N/A"}
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-6 space-y-4">
+                <div className="rounded-2xl bg-muted/30 p-4">
+                  <p className="text-xs font-bold tracking-widest text-muted-foreground uppercase">
+                    Supplier Status
+                  </p>
+                  <p className="mt-2 text-sm font-semibold text-foreground">
+                    {selectedSupplier?.isPreferred
+                      ? "Preferred supplier"
+                      : "Standard supplier"}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-3xl border bg-card p-6 shadow-sm">
+              <div className="space-y-4 text-sm font-medium">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Total Items</span>
+                  <span className="font-bold">{totalItems}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Supplier Email</span>
+                  <span className="font-bold">
+                    {selectedSupplier?.email || "N/A"}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Supplier Phone</span>
+                  <span className="font-bold">
+                    {selectedSupplier?.phone || "N/A"}
+                  </span>
+                </div>
+              </div>
+
+              <div className="my-6 border-t border-dashed" />
+
+              {/* <div className="flex items-center justify-between">
+                <p className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">
+                  Order Status
+                </p>
+                <p className="text-xl font-black tracking-tighter text-cyan-400 italic">
+                  {status || "DRAFT"}
+                </p>
+              </div>
+
+              <div className="mt-8 space-y-3">
+                <Button
+                  type="button"
+                  className="h-14 w-full rounded-2xl bg-emerald-500 text-base font-bold shadow-lg shadow-emerald-500/20 hover:bg-emerald-600 active:scale-[0.98]"
+                  disabled={!selectedSupplier?.phone}
+                >
+                  <MessageCircle className="mr-3 size-6" />
+                  Send Order via WhatsApp
+                </Button>
+                <Button
+                  type="button"
+                  className="h-14 w-full rounded-2xl bg-cyan-400 text-base font-bold shadow-lg shadow-cyan-400/20 hover:bg-cyan-500 active:scale-[0.98]"
+                  disabled={!selectedSupplier?.email}
+                >
+                  <Mail className="mr-3 size-6" />
+                  Send Order via Email
+                </Button>
+              </div> */}
+            </div>
+          </div>
+        </div>
+      </form>
+    </FormContainer>
+  )
 }
