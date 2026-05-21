@@ -259,12 +259,14 @@ export default function OrderDialog({
       description="Create a supplier order, add medicines, and keep the purchase list ready for confirmation."
       size="extrafull"
       height="extrafull"
+      scrollable={false}
       footer={
         <div className="flex justify-end gap-3">
           <Button
             type="button"
             variant="outline"
             onClick={() => onClose(false)}
+            className="h-9 rounded-lg border-border/60 text-xs font-semibold hover:bg-muted/30 transition-all duration-200"
           >
             {isViewMode ? "Close" : "Cancel"}
           </Button>
@@ -273,6 +275,7 @@ export default function OrderDialog({
               type="submit"
               form="order-dialog-form"
               disabled={saveMutation.isPending || isSubmitting}
+              className="h-9 rounded-lg px-5 text-xs font-semibold bg-primary hover:bg-primary/95 text-primary-foreground transition-all duration-200 shadow-xs"
             >
               {saveMutation.isPending || isSubmitting
                 ? "Saving..."
@@ -287,75 +290,93 @@ export default function OrderDialog({
       <form
         id="order-dialog-form"
         onSubmit={handleSubmit(onSubmit)}
-        className="space-y-6"
+        className="max-w-[1860px] space-y-4"
       >
-        <div className="flex flex-col gap-4 rounded-3xl border bg-card p-6 lg:flex-row lg:items-start lg:justify-between">
-          <div className="space-y-3">
-            <div className="flex flex-wrap items-center gap-3">
-              <h2 className="text-3xl font-black tracking-tight text-foreground">
-                {isEditMode ? "Edit Order" : "New Purchase Order"}
-              </h2>
-              <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold tracking-widest text-primary uppercase">
-                {status || "DRAFT"}
-              </span>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-              <span className="inline-flex items-center gap-2">
+        <div className="flex flex-col gap-3 rounded-2xl lg:flex-row lg:items-center lg:justify-between">
+          <div className="space-y-1">
+            <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+              <span className="inline-flex items-center gap-1.5">
                 <Truck className="size-4 text-primary" />
-                {selectedSupplier?.companyName || "Select a supplier"}
+                <span className="font-semibold text-foreground">
+                  {selectedSupplier?.companyName || "Supplier not selected"}
+                </span>
               </span>
               <span className="hidden text-muted-foreground/40 sm:inline">
                 |
               </span>
-              <span className="inline-flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5">
                 <Clock className="size-4 text-muted-foreground" />
-                {totalItems} items
+                <span className="font-semibold text-foreground">
+                  Status: {status || "DRAFT"}
+                </span>
               </span>
-            </div>
-          </div>
-
-          <div className="grid gap-3 sm:grid-cols-3">
-            <div className="rounded-2xl border bg-muted/30 px-4 py-3">
-              <p className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">
-                Total Items
-              </p>
-              <p className="mt-2 text-2xl font-black tracking-tight text-foreground">
-                {totalItems}
-              </p>
-            </div>
-            <div className="rounded-2xl border bg-muted/30 px-4 py-3">
-              <p className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">
-                Total Qty
-              </p>
-              <p className="mt-2 text-2xl font-black tracking-tight text-foreground">
-                {totalQty}
-              </p>
-            </div>
-            <div className="rounded-2xl border bg-muted/30 px-4 py-3">
-              <p className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">
-                Supplier
-              </p>
-              <p className="mt-2 truncate text-sm font-semibold text-foreground">
-                {selectedSupplier?.companyName || "Not selected"}
-              </p>
             </div>
           </div>
         </div>
 
-        <div className="grid gap-6 xl:grid-cols-3">
-          <div className="space-y-6 xl:col-span-2">
-            <div className="rounded-3xl border bg-card p-6 shadow-sm">
-              <div className="mb-6 flex items-center justify-between">
+        <div className="grid gap-3 sm:grid-cols-3">
+          <div className="rounded-2xl border border-border/60 bg-gradient-to-br from-card via-card to-primary/5 p-4 shadow-xs hover:-translate-y-0.5 hover:shadow-sm hover:shadow-primary/5 hover:border-primary/20 transition-all duration-300">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <Clock className="size-4.5" />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                  Total Items
+                </p>
+                <p className="text-2xl font-black text-foreground mt-0.5">
+                  {totalItems} Items
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-border/60 bg-gradient-to-br from-card via-card to-violet-500/5 p-4 shadow-xs hover:-translate-y-0.5 hover:shadow-sm hover:shadow-violet-500/5 hover:border-violet-500/20 transition-all duration-300">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-500/10 text-violet-600">
+                <Plus className="size-4.5" />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                  Total Qty
+                </p>
+                <p className="text-2xl font-black text-foreground mt-0.5">
+                  {totalQty}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-border/60 bg-gradient-to-br from-card via-card to-emerald-500/5 p-4 shadow-xs hover:-translate-y-0.5 hover:shadow-sm hover:shadow-emerald-500/5 hover:border-emerald-500/20 transition-all duration-300">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
+                <Truck className="size-4.5" />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                  Supplier
+                </p>
+                <p className="text-sm font-bold text-foreground mt-1 truncate max-w-[200px]">
+                  {selectedSupplier?.companyName || "Not selected"}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid gap-4 xl:grid-cols-3">
+          <div className="space-y-4 xl:col-span-2">
+            <div className="rounded-xl border border-border/50 bg-card p-4.5 shadow-xs">
+              <div className="mb-4 flex items-center justify-between">
                 <div>
-                  <h3 className="text-xl font-bold">Order Details</h3>
-                  <p className="text-sm text-muted-foreground">
+                  <h3 className="text-sm font-bold text-foreground">Order Details</h3>
+                  <p className="text-[11px] text-muted-foreground">
                     Choose a supplier and set the order status.
                   </p>
                 </div>
               </div>
 
-              <div className="grid gap-5 md:grid-cols-2">
+              <div className="grid gap-4 md:grid-cols-2">
                 <FormSelectField
                   control={control}
                   name="supplierId"
@@ -382,36 +403,36 @@ export default function OrderDialog({
               </div>
             </div>
 
-            <div className="rounded-3xl border bg-card p-6 shadow-sm">
-              <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+            <div className="rounded-xl border border-border/50 bg-card p-4.5 shadow-xs">
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
                 <div>
-                  <h3 className="text-xl font-bold">Order Items</h3>
-                  <p className="text-sm text-muted-foreground">
+                  <h3 className="text-sm font-bold text-foreground">Order Items</h3>
+                  <p className="text-[11px] text-muted-foreground">
                     Search existing medicines and add them to the purchase list.
                   </p>
                 </div>
                 <div className="w-full max-w-md">
                   <div className="relative">
-                    {/* <Search className="absolute top-1/2 left-4 size-4 -translate-y-1/2 text-muted-foreground" /> */}
+                    <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       value={productSearch}
                       onChange={(e) => setProductSearch(e.target.value)}
                       placeholder="Search medicines to add..."
-                      className="h-11 pl-11"
+                      className="h-9 pl-9 text-xs rounded-lg border-border/60 hover:border-primary/30 focus-visible:border-primary/50 focus-visible:ring-4 focus-visible:ring-primary/10 transition-all duration-200"
                       disabled={isViewMode}
                     />
                     {productSearch.length > 2 && (
-                      <div className="absolute top-full right-0 left-0 z-20 mt-2 rounded-2xl border bg-card shadow-xl">
+                      <div className="absolute top-full right-0 left-0 z-20 mt-1.5 rounded-xl border border-border/60 bg-card shadow-lg max-h-60 overflow-y-auto">
                         {isSearchingInventory ? (
-                          <div className="p-4 text-sm text-muted-foreground">
+                          <div className="p-3 text-xs text-muted-foreground">
                             Searching...
                           </div>
                         ) : searchResults.length === 0 ? (
-                          <div className="p-4 text-sm text-muted-foreground">
+                          <div className="p-3 text-xs text-muted-foreground">
                             No medicines found.
                           </div>
                         ) : (
-                          <div className="max-h-64 overflow-y-auto p-2">
+                          <div className="p-1">
                             {searchResults.map((prod: any) => (
                               <button
                                 key={prod.id}
@@ -420,19 +441,19 @@ export default function OrderDialog({
                                   addItem(prod)
                                   setProductSearch("")
                                 }}
-                                className="flex w-full items-center justify-between rounded-xl px-3 py-3 text-left transition-colors hover:bg-primary/5"
+                                className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left transition-colors hover:bg-primary/5"
                               >
                                 <div>
-                                  <p className="font-semibold text-foreground">
+                                  <p className="text-xs font-semibold text-foreground">
                                     {prod.name}
                                   </p>
-                                  <p className="text-xs text-muted-foreground">
+                                  <p className="text-[10px] text-muted-foreground">
                                     {prod.saltComposition ||
                                       prod.category?.name ||
                                       "Inventory item"}
                                   </p>
                                 </div>
-                                <Plus className="size-4 text-primary" />
+                                <Plus className="size-3.5 text-primary" />
                               </button>
                             ))}
                           </div>
@@ -443,16 +464,16 @@ export default function OrderDialog({
                 </div>
               </div>
 
-              <div className="grid grid-cols-12 px-4 text-xs font-bold tracking-wider text-muted-foreground uppercase">
+              <div className="grid grid-cols-12 px-4 py-2 text-[10px] font-bold tracking-wider text-muted-foreground uppercase bg-muted/10 rounded-lg">
                 <div className="col-span-6">Medicine</div>
                 <div className="col-span-3 text-center">Quantity</div>
                 <div className="col-span-2 text-center">Unit</div>
                 <div className="col-span-1 text-right">Action</div>
               </div>
 
-              <div className="mt-3 space-y-3">
+              <div className="mt-2 space-y-2 max-h-[30vh] overflow-y-auto pr-1">
                 {fields.length === 0 ? (
-                  <div className="rounded-2xl border border-dashed p-6 text-sm text-muted-foreground">
+                  <div className="rounded-xl border border-dashed border-border/60 p-6 text-center text-xs text-muted-foreground bg-muted/5">
                     No medicines added yet. Use search or suggested items to add
                     order lines.
                   </div>
@@ -463,13 +484,13 @@ export default function OrderDialog({
                     return (
                       <div
                         key={field.id}
-                        className="grid grid-cols-12 items-center gap-4 rounded-2xl border p-4"
+                        className="grid grid-cols-12 items-center gap-3 rounded-xl border border-border/60 bg-muted/5 p-3 hover:bg-muted/10 hover:border-primary/20 transition-all duration-200"
                       >
                         <div className="col-span-6">
-                          <p className="font-bold text-foreground">
+                          <p className="text-xs font-bold text-foreground">
                             {item?.inventory?.name || item?.name || "Medicine"}
                           </p>
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-[10px] text-muted-foreground line-clamp-1">
                             {item?.description ||
                               item?.inventory?.saltComposition ||
                               "No description"}
@@ -477,16 +498,16 @@ export default function OrderDialog({
                         </div>
 
                         <div className="col-span-3 flex justify-center">
-                          <div className="flex items-center gap-1 rounded-2xl border bg-background p-1">
+                          <div className="flex items-center gap-0.5 rounded-lg border border-border/60 bg-background p-0.5 hover:border-primary/30 transition-all duration-200">
                             <Button
                               type="button"
                               variant="ghost"
                               size="icon-sm"
                               onClick={() => updateQty(index, -1)}
-                              className="h-8 w-8 rounded-xl"
+                              className="h-7 w-7 rounded-md"
                               disabled={isViewMode}
                             >
-                              <Minus className="size-4" />
+                              <Minus className="size-3" />
                             </Button>
                             <Input
                               type="number"
@@ -501,7 +522,7 @@ export default function OrderDialog({
                                   }
                                 )
                               }
-                              className="h-8 w-16 border-none text-center font-bold focus-visible:ring-0"
+                              className="h-7 w-12 border-none bg-transparent p-0 text-center text-xs font-bold focus-visible:ring-0"
                               readOnly={isViewMode}
                             />
                             <Button
@@ -509,10 +530,10 @@ export default function OrderDialog({
                               variant="ghost"
                               size="icon-sm"
                               onClick={() => updateQty(index, 1)}
-                              className="h-8 w-8 rounded-xl"
+                              className="h-7 w-7 rounded-md"
                               disabled={isViewMode}
                             >
-                              <Plus className="size-4" />
+                              <Plus className="size-3" />
                             </Button>
                           </div>
                         </div>
@@ -522,7 +543,7 @@ export default function OrderDialog({
                             value={item?.unit || "strip"}
                             onChange={(e) => updateUnit(index, e.target.value)}
                             disabled={isViewMode}
-                            className="h-10 w-full rounded-xl border bg-background px-3 text-sm font-medium outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-80"
+                            className="h-8 w-full rounded-lg border border-border/60 bg-background px-2 text-xs font-medium text-foreground outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 disabled:cursor-not-allowed disabled:opacity-80 transition-all duration-200"
                           >
                             {PACKAGING_TYPE_OPTIONS.map((option) => (
                               <option key={option.value} value={option.value}>
@@ -539,9 +560,9 @@ export default function OrderDialog({
                               variant="ghost"
                               size="icon-sm"
                               onClick={() => removeItem(index)}
-                              className="h-10 w-10 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                              className="h-8 w-8 rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors duration-200"
                             >
-                              <Trash2 className="size-5" />
+                              <Trash2 className="size-4" />
                             </Button>
                           ) : null}
                         </div>
@@ -552,39 +573,39 @@ export default function OrderDialog({
               </div>
             </div>
 
-            <div className="rounded-3xl border bg-muted/30 p-6">
-              <div className="mb-6 flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                  <CheckCircle2 className="size-5" />
+            <div className="rounded-xl border border-border/50 bg-muted/5 p-4.5">
+              <div className="mb-4 flex items-center gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <CheckCircle2 className="size-4.5" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold">Suggested to Order</h3>
-                  <p className="text-sm text-muted-foreground">
+                  <h3 className="text-sm font-bold text-foreground">Suggested to Order</h3>
+                  <p className="text-[11px] text-muted-foreground">
                     Quick-add medicines that are currently low in stock.
                   </p>
                 </div>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-2 max-h-[22vh] overflow-y-auto pr-1">
                 {isLoadingInventory ? (
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-xs text-muted-foreground">
                     Loading suggestions...
                   </p>
                 ) : suggestedProducts.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-xs text-muted-foreground">
                     No suggestions available.
                   </p>
                 ) : (
                   suggestedProducts.map((item: any) => (
                     <div
                       key={item.id}
-                      className="flex items-center justify-between rounded-2xl border bg-card p-4"
+                      className="flex items-center justify-between rounded-xl border border-border/50 bg-card p-3 hover:border-primary/20 transition-all duration-200"
                     >
-                      <div className="space-y-1">
-                        <p className="font-semibold text-foreground">
+                      <div className="space-y-0.5">
+                        <p className="text-xs font-semibold text-foreground">
                           {item.name}
                         </p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-[10px] text-muted-foreground">
                           {item.manufacturer?.name || "Manufacturer"}
                         </p>
                       </div>
@@ -592,11 +613,11 @@ export default function OrderDialog({
                         type="button"
                         size="icon-sm"
                         variant="outline"
-                        className="h-10 w-10 rounded-xl"
+                        className="h-8 w-8 rounded-lg hover:bg-primary/5 hover:text-primary transition-all duration-200"
                         onClick={() => addItem(item)}
                         disabled={isViewMode}
                       >
-                        <Plus className="size-5" />
+                        <Plus className="size-4" />
                       </Button>
                     </div>
                   ))
@@ -605,95 +626,81 @@ export default function OrderDialog({
             </div>
           </div>
 
-          <div className="space-y-6">
-            <div className="rounded-3xl border bg-card p-6 shadow-sm">
-              <div className="mb-6 flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-500/10 text-orange-500">
-                  <Truck className="size-5" />
+          <div className="space-y-4">
+            <div className="rounded-xl border border-border/50 bg-card p-4.5 shadow-xs space-y-4 bg-gradient-to-br from-card to-muted/5">
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-orange-500/10 text-orange-500">
+                  <Truck className="size-4.5" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold">Supplier Summary</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Contact details for the selected supplier.
+                  <h3 className="text-sm font-bold text-foreground">Supplier Summary</h3>
+                  <p className="text-[11px] text-muted-foreground">
+                    Selected supplier contact details and status.
                   </p>
                 </div>
               </div>
 
-              <div className="space-y-4 text-sm">
-                <div className="flex justify-between gap-4">
-                  <span className="text-muted-foreground">Supplier Email</span>
-                  <span className="text-right font-semibold">
+              <div className="space-y-2.5 text-xs">
+                <div className="flex justify-between gap-4 py-1.5 border-b border-border/20">
+                  <span className="text-muted-foreground font-medium">Company Name</span>
+                  <span className="text-right font-bold text-foreground">
+                    {selectedSupplier?.companyName || "N/A"}
+                  </span>
+                </div>
+                <div className="flex justify-between gap-4 py-1.5 border-b border-border/20">
+                  <span className="text-muted-foreground font-medium">Supplier Email</span>
+                  <span className="text-right font-bold text-foreground">
                     {selectedSupplier?.email || "N/A"}
                   </span>
                 </div>
-                <div className="flex justify-between gap-4">
-                  <span className="text-muted-foreground">Supplier Phone</span>
-                  <span className="text-right font-semibold">
+                <div className="flex justify-between gap-4 py-1.5 border-b border-border/20">
+                  <span className="text-muted-foreground font-medium">Supplier Phone</span>
+                  <span className="text-right font-bold text-foreground">
                     {selectedSupplier?.phone || "N/A"}
                   </span>
                 </div>
-              </div>
-
-              <div className="mt-6 space-y-4">
-                <div className="rounded-2xl bg-muted/30 p-4">
-                  <p className="text-xs font-bold tracking-widest text-muted-foreground uppercase">
-                    Supplier Status
-                  </p>
-                  <p className="mt-2 text-sm font-semibold text-foreground">
+                <div className="flex justify-between gap-4 py-1.5 border-b border-border/20">
+                  <span className="text-muted-foreground font-medium">Preferred Status</span>
+                  <span className="text-right font-bold text-foreground">
                     {selectedSupplier?.isPreferred
                       ? "Preferred supplier"
                       : "Standard supplier"}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-3xl border bg-card p-6 shadow-sm">
-              <div className="space-y-4 text-sm font-medium">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Total Items</span>
-                  <span className="font-bold">{totalItems}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Supplier Email</span>
-                  <span className="font-bold">
-                    {selectedSupplier?.email || "N/A"}
                   </span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Supplier Phone</span>
-                  <span className="font-bold">
-                    {selectedSupplier?.phone || "N/A"}
+                <div className="flex justify-between gap-4 py-1.5">
+                  <span className="text-muted-foreground font-medium">Total Unique Items</span>
+                  <span className="text-right font-bold text-foreground">
+                    {totalItems}
                   </span>
                 </div>
               </div>
 
-              <div className="my-6 border-t border-dashed" />
+              {/* <div className="my-4 border-t border-dashed" />
 
-              {/* <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between">
                 <p className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">
                   Order Status
                 </p>
-                <p className="text-xl font-black tracking-tighter text-cyan-400 italic">
+                <p className="text-lg font-black tracking-tighter text-cyan-400 italic">
                   {status || "DRAFT"}
                 </p>
               </div>
 
-              <div className="mt-8 space-y-3">
+              <div className="mt-4 space-y-2">
                 <Button
                   type="button"
-                  className="h-14 w-full rounded-2xl bg-emerald-500 text-base font-bold shadow-lg shadow-emerald-500/20 hover:bg-emerald-600 active:scale-[0.98]"
+                  className="h-10 w-full rounded-xl bg-emerald-500 text-xs font-bold shadow-xs hover:bg-emerald-600 transition-all duration-200"
                   disabled={!selectedSupplier?.phone}
                 >
-                  <MessageCircle className="mr-3 size-6" />
+                  <MessageCircle className="mr-2 size-4" />
                   Send Order via WhatsApp
                 </Button>
                 <Button
                   type="button"
-                  className="h-14 w-full rounded-2xl bg-cyan-400 text-base font-bold shadow-lg shadow-cyan-400/20 hover:bg-cyan-500 active:scale-[0.98]"
+                  className="h-10 w-full rounded-xl bg-cyan-400 text-xs font-bold shadow-xs hover:bg-cyan-500 transition-all duration-200"
                   disabled={!selectedSupplier?.email}
                 >
-                  <Mail className="mr-3 size-6" />
+                  <Mail className="mr-2 size-4" />
                   Send Order via Email
                 </Button>
               </div> */}
