@@ -21,6 +21,7 @@ type FormContainerProps = {
   footer?: React.ReactNode
   children: React.ReactNode
   className?: string
+  scrollable?: boolean
 }
 
 const sizeMap = {
@@ -52,22 +53,37 @@ export function FormContainer({
   children,
   height = "full",
   className,
+  scrollable = true,
 }: FormContainerProps) {
   if (variant === "modal") {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent
           onInteractOutside={(e) => e.preventDefault()}
-          className={`${sizeMap[size]!} ${heightMap[height]!} overflow-y-auto`}
+          className={`${sizeMap[size]!} ${heightMap[height]!} ${
+            scrollable ? "overflow-y-auto" : "flex flex-col overflow-hidden p-0 gap-0"
+          }`}
         >
-          <DialogHeader>
-            <DialogTitle>{title}</DialogTitle>
-            <DialogDescription>{description}</DialogDescription>
-          </DialogHeader>
+          <div className={scrollable ? undefined : "p-6 pb-4 border-b border-border/20 shrink-0 pr-12"}>
+            <DialogHeader>
+              <DialogTitle>{title}</DialogTitle>
+              <DialogDescription>{description}</DialogDescription>
+            </DialogHeader>
+          </div>
 
-          {children}
+          {scrollable ? (
+            children
+          ) : (
+            <div className="flex-1 overflow-y-auto p-6">
+              {children}
+            </div>
+          )}
 
-          {footer && <DialogFooter>{footer}</DialogFooter>}
+          {footer && (
+            <div className={scrollable ? undefined : "p-6 border-t border-border/20 shrink-0"}>
+              <DialogFooter>{footer}</DialogFooter>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     )
