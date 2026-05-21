@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { Prisma } from "@prisma/client";
 import { catchAsync } from "../../../utils/catchAsync.js";
 import { paginate } from "../../../utils/pagination.js";
 import { rootPrisma } from "@/lib/prisma.js";
@@ -87,6 +88,47 @@ const buildInventoryUpdateData = (item: any) => {
   return data;
 };
 
+const buildPaymentHistoryData = ({
+  orderId,
+  organizationId,
+  branchId,
+  amount,
+  paymentMode,
+  paymentDetails,
+  isUdhar,
+  notes,
+}: {
+  orderId: string;
+  organizationId: string;
+  branchId: string | null;
+  amount: number;
+  paymentMode?: string | null;
+  paymentDetails?: string | null;
+  isUdhar?: boolean;
+  notes?: string | null;
+}) => ({
+  orderId,
+  organizationId,
+  branchId,
+  amount,
+  paymentMode: paymentMode ?? null,
+  paymentDetails: paymentDetails ?? null,
+  isUdhar: Boolean(isUdhar),
+  notes: notes ?? null,
+});
+
+const ORDER_INCLUDE: Prisma.OrderInclude = {
+  items: {
+    include: {
+      inventory: true,
+    } as any,
+  },
+  paymentHistory: {
+    orderBy: { paidAt: "desc" as const },
+  },
+  supplier: true,
+};
+
 export class OrdersController {
   private static canAccessOrder(
     order: { organizationId: string; branchId: string | null },
@@ -112,8 +154,8 @@ export class OrdersController {
         organizationId,
         ...(branchId
           ? {
-            OR: [{ branchId }, { branchId: null }],
-          }
+              OR: [{ branchId }, { branchId: null }],
+            }
           : {}),
       };
 
@@ -148,14 +190,7 @@ export class OrdersController {
       const [data, total] = await Promise.all([
         rootPrisma.order.findMany({
           where: filters,
-          include: {
-            items: {
-              include: {
-                inventory: true,
-              } as any,
-            },
-            supplier: true,
-          },
+          include: ORDER_INCLUDE,
           orderBy: { createdAt: "desc" },
           skip,
           take,
@@ -172,14 +207,7 @@ export class OrdersController {
 
     const order = await rootPrisma.order.findUnique({
       where: { id: req.params.id as string },
-      include: {
-        items: {
-          include: {
-            inventory: true,
-          } as any,
-        },
-        supplier: true,
-      },
+      include: ORDER_INCLUDE,
     });
 
     if (!order) {
@@ -207,23 +235,39 @@ export class OrdersController {
       branchId: orderData.branchId === "" ? null : orderData.branchId,
     };
 
-    const order = await rootPrisma.order.create({
-      data: {
-        ...cleanedOrderData,
-        status: normalizeOrderStatus(cleanedOrderData.status) || undefined,
-        organizationId,
-        branchId,
-        items: {
-          create: (items || []).map(buildOrderItemData),
+    const order = await rootPrisma.$transaction(async (tx) => {
+      const created = await tx.order.create({
+        data: {
+          ...cleanedOrderData,
+          status: normalizeOrderStatus(cleanedOrderData.status) || undefined,
+          organizationId,
+          branchId,
+          items: {
+            create: (items || []).map(buildOrderItemData),
+          },
         },
-      },
-      include: {
-        items: {
-          include: {
-            inventory: true,
-          } as any,
-        },
-      },
+      });
+
+      const createdPaidAmount = toNumber(cleanedOrderData.paidAmount);
+      if (createdPaidAmount > 0) {
+        await tx.orderPayment.create({
+          data: buildPaymentHistoryData({
+            orderId: created.id,
+            organizationId,
+            branchId,
+            amount: createdPaidAmount,
+            paymentMode: cleanedOrderData.paymentMode,
+            paymentDetails: cleanedOrderData.paymentDetails,
+            isUdhar: cleanedOrderData.isUdhar,
+            notes: cleanedOrderData.notes,
+          }),
+        });
+      }
+
+      return tx.order.findUnique({
+        where: { id: created.id },
+        include: ORDER_INCLUDE,
+      });
     });
 
     res.status(201).json({ success: true, data: order });
@@ -232,14 +276,16 @@ export class OrdersController {
   static update = catchAsync(async (req: Request, res: Response) => {
     const { organizationId, branchId } = getRequestScope(req);
     const { items, ...orderData } = req.body;
-    console.log('req.body', req.body)
-    console.log("Received order update request:", { organizationId });
     const existing = await rootPrisma.order.findUnique({
       where: { id: req.params.id as string },
-      select: { id: true, organizationId: true, branchId: true, status: true },
+      select: {
+        id: true,
+        organizationId: true,
+        branchId: true,
+        status: true,
+        paidAmount: true,
+      },
     });
-    console.table(orderData);
-    console.log(items)
 
     if (!existing) {
       return res
@@ -258,14 +304,19 @@ export class OrdersController {
       supplierId: orderData.supplierId === "" ? null : orderData.supplierId,
       branchId: orderData.branchId === "" ? null : orderData.branchId,
     };
-
+    const previousPaidAmount = toNumber(existing.paidAmount);
+    const nextPaidAmount =
+      cleanedOrderData.paidAmount === undefined
+        ? previousPaidAmount
+        : toNumber(cleanedOrderData.paidAmount);
+    const paymentDelta = Math.max(0, nextPaidAmount - previousPaidAmount);
     const order = await rootPrisma.$transaction(async (tx) => {
-      const shouldUpdateInventory = existing.status !== "PENDING" && existing.status !== "COMPLETED";
+      const shouldUpdateInventory =
+        existing.status !== "PENDING" && existing.status !== "COMPLETED";
 
       if (shouldUpdateInventory && Array.isArray(items)) {
         for (const item of items) {
           if (!item?.inventoryId) continue;
-          console.log("Processing inventory update for item:", item);
           const inventoryUpdateData = buildInventoryUpdateData(item);
           if (Object.keys(inventoryUpdateData).length > 0) {
             const result = await tx.inventory.updateMany({
@@ -275,12 +326,10 @@ export class OrdersController {
               },
               data: {
                 ...inventoryUpdateData,
-                // increase availablestock + whhatw it was hhaving earlierr
                 availableStock: {
-                  increment: item.qty + (item.freeQuantity || 0),
+                  increment: item.qty + (item.freeQty || 0),
                 },
                 purchaseRate: item.purchaseRate / item.qty,
-
               },
             });
 
@@ -293,12 +342,17 @@ export class OrdersController {
         }
       }
 
-      return tx.order.update({
+      const updated = await tx.order.update({
         where: { id: req.params.id as string },
         data: {
           ...cleanedOrderData,
           status: normalizeOrderStatus(cleanedOrderData.status) || undefined,
           organizationId,
+          isUdhar: cleanedOrderData.isUdhar,
+          paidAmount:
+            cleanedOrderData.paidAmount === undefined
+              ? undefined
+              : nextPaidAmount,
           branchId: existing.branchId ?? branchId,
           ...(items && {
             items: {
@@ -307,13 +361,26 @@ export class OrdersController {
             },
           }),
         },
-        include: {
-          items: {
-            include: {
-              inventory: true,
-            } as any,
-          },
-        },
+      });
+
+      if (paymentDelta > 0) {
+        await tx.orderPayment.create({
+          data: buildPaymentHistoryData({
+            orderId: updated.id,
+            organizationId,
+            branchId: existing.branchId ?? branchId,
+            amount: paymentDelta,
+            paymentMode: cleanedOrderData.paymentMode,
+            paymentDetails: cleanedOrderData.paymentDetails,
+            isUdhar: cleanedOrderData.isUdhar,
+            notes: cleanedOrderData.notes,
+          }),
+        });
+      }
+
+      return tx.order.findUnique({
+        where: { id: updated.id },
+        include: ORDER_INCLUDE,
       });
     });
 

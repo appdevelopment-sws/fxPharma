@@ -22,6 +22,17 @@ export interface OrderItem {
   inventory?: any
 }
 
+export interface OrderPaymentHistory {
+  id?: string
+  amount: number
+  paymentMode?: string | null
+  paymentDetails?: string | null
+  isUdhar?: boolean
+  notes?: string | null
+  paidAt?: string
+  createdAt?: string
+}
+
 export interface OrderFormValues {
   id?: string
   supplierId: string
@@ -31,6 +42,15 @@ export interface OrderFormValues {
   isUdhar?: string | boolean
   paidAmount?: number
   items: OrderItem[]
+  paymentHistory?: OrderPaymentHistory[]
+}
+
+const toBoolean = (value: any) => {
+  if (typeof value === "boolean") return value
+  if (typeof value === "string") {
+    return ["true", "yes", "1"].includes(value.toLowerCase())
+  }
+  return Boolean(value)
 }
 
 const mapToApi = (data: any) => {
@@ -103,8 +123,21 @@ const mapFromApi = (data: any) => {
     notes: data.notes,
     paymentMode: data.paymentMode,
     paymentDetails: data.paymentDetails,
-    isUdhar: Boolean(data.isUdhar),
-    paidAmount: data.paidAmount,
+    isUdhar: toBoolean(data.isUdhar),
+    paidAmount:
+      data.paidAmount === undefined || data.paidAmount === null
+        ? 0
+        : Number(data.paidAmount),
+    paymentHistory: (data.paymentHistory || []).map((entry: any) => ({
+      id: entry.id,
+      amount: Number(entry.amount || 0),
+      paymentMode: entry.paymentMode,
+      paymentDetails: entry.paymentDetails,
+      isUdhar: toBoolean(entry.isUdhar),
+      notes: entry.notes,
+      paidAt: entry.paidAt,
+      createdAt: entry.createdAt,
+    })),
     items: (data.items || []).map((item: any) => ({
       ...item,
       inventoryId: item.inventoryId,
