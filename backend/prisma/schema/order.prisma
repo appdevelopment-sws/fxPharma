@@ -6,6 +6,10 @@ model Order {
   
   supplierId      String?     @map("supplier_id")
   supplier        Supplier?   @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+
+  invoiceNo      String?     @map("invoice_no")
+  receivedAt     DateTime?   @map("received_at")
+  notes          String?
   
   status          OrderStatus @default(DRAFT)
   paymentMode     String?     @map("payment_mode")
@@ -15,6 +19,7 @@ model Order {
 
   items           OrderItem[]
   paymentHistory  OrderPayment[]
+  inventoryBatches InventoryBatch[]
   
   createdAt       DateTime    @default(now()) @map("created_at")
   updatedAt       DateTime    @updatedAt @map("updated_at")
@@ -35,8 +40,11 @@ model OrderItem {
   inventory     Inventory @relation(fields: [inventoryId], references: [id])
 
   qty           Int      @default(1)
+  freeQty       Int      @default(0) @map("free_qty")
 
   unit          String?
+  batchNo       String?  @map("batch_no")
+  expiry        String?
   purchaseRate  Decimal? @map("purchase_rate")
 
   receivedQty   Int      @default(0) @map("received_qty")
@@ -46,6 +54,7 @@ model OrderItem {
 
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
+  inventoryBatches InventoryBatch[]
 
   @@index([orderId])
   @@index([inventoryId])

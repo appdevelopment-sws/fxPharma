@@ -46,10 +46,24 @@ const parseExpiryDate = (value?: string | null) => {
   return new Date(year, month, 0);
 };
 
+const parseOptionalDate = (value?: string | null) => {
+  if (!value) return undefined;
+
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return undefined;
+  }
+
+  return parsed;
+};
+
 const buildOrderItemData = (item: any) => ({
   inventoryId: item.inventoryId,
   qty: Math.max(1, toNumber(item.qty)),
+  freeQty: Math.max(0, toNumber(item.freeQty)),
   unit: item.unit ?? null,
+  batchNo: item.batchNo ?? null,
+  expiry: item.expiry ?? null,
   purchaseRate:
     item.purchaseRate === undefined || item.purchaseRate === null
       ? null
@@ -61,13 +75,6 @@ const buildOrderItemData = (item: any) => ({
 
 const buildInventoryUpdateData = (item: any) => {
   const data: Record<string, any> = {};
-
-  if (item.expiry !== undefined && item.expiry !== null && item.expiry !== "") {
-    const parsedExpiry = parseExpiryDate(item.expiry);
-    if (parsedExpiry) {
-      data.daysLimit = parsedExpiry;
-    }
-  }
 
   const numericFields: Array<[string, unknown]> = [
     ["purchaseRate", item.purchaseRate],
@@ -86,6 +93,76 @@ const buildInventoryUpdateData = (item: any) => {
   }
 
   return data;
+};
+
+const buildInventoryBatchData = ({
+  orderId,
+  orderItemId,
+  organizationId,
+  branchId,
+  item,
+}: {
+  orderId: string;
+  orderItemId: string;
+  organizationId: string;
+  branchId: string | null;
+  item: any;
+}) => {
+  const receivedQty = Math.max(0, toNumber(item.qty) + toNumber(item.freeQty));
+  const expiryDate = parseExpiryDate(item.expiry);
+  const batchNo = String(item.batchNo ?? "").trim();
+
+  if (!batchNo) {
+    throw new Error(
+      `Batch number is required for inventory item ${item.inventoryId}`,
+    );
+  }
+
+  if (!item.expiry || !expiryDate) {
+    throw new Error(
+      `Valid expiry is required for inventory item ${item.inventoryId}`,
+    );
+  }
+
+  return {
+    orderId,
+    orderItemId,
+    organizationId,
+    branchId,
+    inventoryId: item.inventoryId,
+    batchNo,
+    expiry: item.expiry,
+    expiryDate,
+    unit: item.unit ?? null,
+    receivedQty,
+    availableQty: receivedQty,
+    purchaseRate:
+      item.purchaseRate === undefined || item.purchaseRate === null
+        ? null
+        : toNumber(item.purchaseRate),
+    mrp:
+      item.mrp === undefined || item.mrp === null ? null : toNumber(item.mrp),
+    rateA:
+      item.rate1 === undefined || item.rate1 === null
+        ? null
+        : toNumber(item.rate1),
+    rateB:
+      item.rate2 === undefined || item.rate2 === null
+        ? null
+        : toNumber(item.rate2),
+    rateC:
+      item.rate3 === undefined || item.rate3 === null
+        ? null
+        : toNumber(item.rate3),
+    cgst:
+      item.cgst === undefined || item.cgst === null
+        ? null
+        : toNumber(item.cgst),
+    sgst:
+      item.sgst === undefined || item.sgst === null
+        ? null
+        : toNumber(item.sgst),
+  };
 };
 
 const buildPaymentHistoryData = ({
@@ -117,7 +194,7 @@ const buildPaymentHistoryData = ({
   notes: notes ?? null,
 });
 
-const ORDER_INCLUDE: Prisma.OrderInclude = {
+const ORDER_INCLUDE = {
   items: {
     include: {
       inventory: true,
@@ -126,8 +203,11 @@ const ORDER_INCLUDE: Prisma.OrderInclude = {
   paymentHistory: {
     orderBy: { paidAt: "desc" as const },
   },
+  inventoryBatches: {
+    orderBy: [{ receivedAt: "asc" as const }, { createdAt: "asc" as const }],
+  },
   supplier: true,
-};
+} as Prisma.OrderInclude;
 
 export class OrdersController {
   private static canAccessOrder(
@@ -233,6 +313,7 @@ export class OrdersController {
       ...orderData,
       supplierId: orderData.supplierId === "" ? null : orderData.supplierId,
       branchId: orderData.branchId === "" ? null : orderData.branchId,
+      receivedAt: parseOptionalDate(orderData.receivedAt),
     };
 
     const order = await rootPrisma.$transaction(async (tx) => {
@@ -286,7 +367,8 @@ export class OrdersController {
         paidAmount: true,
       },
     });
-
+    console.log("Existing order for update:", existing);
+    console.log("Update data:", items);
     if (!existing) {
       return res
         .status(404)
@@ -303,6 +385,7 @@ export class OrdersController {
       ...orderData,
       supplierId: orderData.supplierId === "" ? null : orderData.supplierId,
       branchId: orderData.branchId === "" ? null : orderData.branchId,
+      receivedAt: parseOptionalDate(orderData.receivedAt),
     };
     const previousPaidAmount = toNumber(existing.paidAmount);
     const nextPaidAmount =
@@ -310,38 +393,9 @@ export class OrdersController {
         ? previousPaidAmount
         : toNumber(cleanedOrderData.paidAmount);
     const paymentDelta = Math.max(0, nextPaidAmount - previousPaidAmount);
+    const isFirstReceipt =
+      existing.status !== "PENDING" && existing.status !== "COMPLETED";
     const order = await rootPrisma.$transaction(async (tx) => {
-      const shouldUpdateInventory =
-        existing.status !== "PENDING" && existing.status !== "COMPLETED";
-
-      if (shouldUpdateInventory && Array.isArray(items)) {
-        for (const item of items) {
-          if (!item?.inventoryId) continue;
-          const inventoryUpdateData = buildInventoryUpdateData(item);
-          if (Object.keys(inventoryUpdateData).length > 0) {
-            const result = await tx.inventory.updateMany({
-              where: {
-                id: item.inventoryId,
-                organizationId,
-              },
-              data: {
-                ...inventoryUpdateData,
-                availableStock: {
-                  increment: item.qty + (item.freeQty || 0),
-                },
-                purchaseRate: item.purchaseRate / item.qty,
-              },
-            });
-
-            if (result.count === 0) {
-              throw new Error(
-                `Inventory item not found for order item ${item.inventoryId}`,
-              );
-            }
-          }
-        }
-      }
-
       const updated = await tx.order.update({
         where: { id: req.params.id as string },
         data: {
@@ -354,14 +408,81 @@ export class OrdersController {
               ? undefined
               : nextPaidAmount,
           branchId: existing.branchId ?? branchId,
-          ...(items && {
-            items: {
-              deleteMany: {},
-              create: (items || []).map(buildOrderItemData),
-            },
-          }),
+          ...(isFirstReceipt &&
+            Array.isArray(items) && {
+              items: {
+                deleteMany: {},
+                create: (items || []).map(buildOrderItemData),
+              },
+            }),
         },
       });
+
+      const receivedOrder = await tx.order.findUnique({
+        where: { id: updated.id },
+        include: ORDER_INCLUDE,
+      });
+
+      if (isFirstReceipt && Array.isArray(items)) {
+        for (const item of items) {
+          if (!item?.inventoryId) continue;
+          const receivedQty = Math.max(
+            0,
+            toNumber(item.qty) + toNumber(item.freeQty),
+          );
+
+          const inventoryUpdateData = buildInventoryUpdateData(item);
+          const result = await tx.inventory.updateMany({
+            where: {
+              id: item.inventoryId,
+              organizationId,
+            },
+            data: {
+              ...inventoryUpdateData,
+              availableStock: {
+                increment: receivedQty,
+              },
+              ...(item.purchaseRate !== undefined &&
+              item.purchaseRate !== null &&
+              item.purchaseRate !== ""
+                ? {
+                    purchaseRate: toNumber(item.purchaseRate),
+                    costPerUnit: toNumber(item.purchaseRate),
+                  }
+                : {}),
+            },
+          });
+
+          if (result.count === 0) {
+            throw new Error(
+              `Inventory item not found for order item ${item.inventoryId}`,
+            );
+          }
+        }
+
+        if (!receivedOrder?.items?.length) {
+          throw new Error("Order items could not be refreshed after save");
+        }
+
+        for (let index = 0; index < receivedOrder.items.length; index += 1) {
+          const orderItem = receivedOrder.items[index];
+          const sourceItem = items[index];
+
+          if (!sourceItem) {
+            continue;
+          }
+
+          await (tx as any).inventoryBatch.create({
+            data: buildInventoryBatchData({
+              orderId: receivedOrder.id,
+              orderItemId: orderItem.id,
+              organizationId,
+              branchId: existing.branchId ?? branchId,
+              item: sourceItem,
+            }),
+          });
+        }
+      }
 
       if (paymentDelta > 0) {
         await tx.orderPayment.create({

@@ -36,6 +36,7 @@ model Organization {
   suppliers   Supplier[]
   auditLogs   AuditLog[]
   inventory Inventory[]
+  inventoryBatches InventoryBatch[]
   newCompounds NewCompound[]
   brands Brand[]
   units Unit[]
