@@ -112,8 +112,8 @@ export class OrdersController {
         organizationId,
         ...(branchId
           ? {
-              OR: [{ branchId }, { branchId: null }],
-            }
+            OR: [{ branchId }, { branchId: null }],
+          }
           : {}),
       };
 
@@ -232,15 +232,15 @@ export class OrdersController {
   static update = catchAsync(async (req: Request, res: Response) => {
     const { organizationId, branchId } = getRequestScope(req);
     const { items, ...orderData } = req.body;
-
-    console.log("Received :", { organizationId, branchId });
+    console.log('req.body', req.body)
     console.log("Received order update request:", { organizationId });
     const existing = await rootPrisma.order.findUnique({
       where: { id: req.params.id as string },
       select: { id: true, organizationId: true, branchId: true, status: true },
     });
     console.table(orderData);
-    console.log(items);
+    console.log(items)
+
     if (!existing) {
       return res
         .status(404)
@@ -260,8 +260,7 @@ export class OrdersController {
     };
 
     const order = await rootPrisma.$transaction(async (tx) => {
-      const shouldUpdateInventory =
-        existing.status !== "PENDING" && existing.status !== "COMPLETED";
+      const shouldUpdateInventory = existing.status !== "PENDING" && existing.status !== "COMPLETED";
 
       if (shouldUpdateInventory && Array.isArray(items)) {
         for (const item of items) {
@@ -281,6 +280,7 @@ export class OrdersController {
                   increment: item.qty + (item.freeQuantity || 0),
                 },
                 purchaseRate: item.purchaseRate / item.qty,
+
               },
             });
 
