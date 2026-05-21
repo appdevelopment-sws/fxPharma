@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react"
+import { useEffect, useMemo, useRef } from "react"
 import { useFieldArray, useForm, useWatch } from "react-hook-form"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import {
@@ -266,6 +266,14 @@ export default function OrderConfirmFormDialog({
     () => normalizePaymentHistory(order, savedPaidAmount),
     [order, savedPaidAmount]
   )
+  const totalPaidSoFar = useMemo(
+    () =>
+      paymentHistory.reduce(
+        (sum, entry) => sum + toNumber(entry.amount),
+        0
+      ),
+    [paymentHistory]
+  )
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -294,10 +302,10 @@ export default function OrderConfirmFormDialog({
       paymentMode: order?.paymentMode || "cash",
       paymentDetails: order?.paymentDetails || "",
       isUdhar: normalizedIsUdhar ? "YES" : "NO",
-      paidAmount: savedPaidAmount,
+      paidAmount: 0,
       items,
     })
-  }, [open, order, reset, savedPaidAmount])
+  }, [open, order, reset])
 
   const totals = useMemo(() => {
     const totalProducts = items.length
@@ -306,10 +314,10 @@ export default function OrderConfirmFormDialog({
       0
     )
     const subtotalExclTax = items.reduce((sum, item) => {
-      return sum + toNumber(item.qty) * toNumber(item.purchaseRate)
+      return sum + toNumber(item.purchaseRate)
     }, 0)
     const totalDiscountAmount = items.reduce((sum, item) => {
-      const lineBase = toNumber(item.qty) * toNumber(item.purchaseRate)
+      const lineBase = toNumber(item.purchaseRate)
       const discountValue = toNumber(item.discount)
 
       if ((item.discount_type || "flat") === "percentage") {
@@ -319,7 +327,7 @@ export default function OrderConfirmFormDialog({
       return sum + discountValue
     }, 0)
     const totalTax = items.reduce((sum, item) => {
-      const lineBase = toNumber(item.qty) * toNumber(item.purchaseRate)
+      const lineBase = toNumber(item.purchaseRate)
       const discountValue = toNumber(item.discount)
       const discountAmount =
         (item.discount_type || "flat") === "percentage"
@@ -334,7 +342,7 @@ export default function OrderConfirmFormDialog({
       0,
       subtotalExclTax - totalDiscountAmount + totalTax
     )
-    const balanceDue = Math.max(0, netPayable - toNumber(paidAmount))
+    const balanceDue = Math.max(0, netPayable - totalPaidSoFar - toNumber(paidAmount))
 
     return {
       totalProducts,
@@ -345,20 +353,31 @@ export default function OrderConfirmFormDialog({
       netPayable,
       balanceDue,
     }
-  }, [items, paidAmount])
+  }, [items, paidAmount, totalPaidSoFar])
 
   const isAlreadyReceived = order?.status === "PENDING" || order?.status === "COMPLETED"
 
+  const remainingAmount = useMemo(() => {
+    return Math.max(0, totals.netPayable - totalPaidSoFar)
+  }, [totals.netPayable, totalPaidSoFar])
+
+  const prevIsUdharRef = useRef(isUdhar)
   useEffect(() => {
     if (!open) return
 
-    if (isUdhar === "NO" && savedPaidAmount <= 0 && totals.netPayable > 0) {
-      setValue("paidAmount", totals.netPayable, {
+    if (isUdhar === "NO") {
+      setValue("paidAmount", remainingAmount, {
+        shouldDirty: true,
+        shouldTouch: true,
+      })
+    } else if (isUdhar === "YES" && prevIsUdharRef.current === "NO") {
+      setValue("paidAmount", 0, {
         shouldDirty: true,
         shouldTouch: true,
       })
     }
-  }, [open, isUdhar, savedPaidAmount, setValue, totals.netPayable])
+    prevIsUdharRef.current = isUdhar
+  }, [open, isUdhar, remainingAmount, setValue])
 
   const saveMutation = useMutation({
     mutationFn: async (values: OrderConfirmFormValues) => {
@@ -367,10 +386,12 @@ export default function OrderConfirmFormDialog({
       }
 
       const balanceDue = Math.max(0, totals.netPayable - toNumber(values.paidAmount))
-      const determinedStatus = balanceDue === 0 ? "COMPLETED" : "PENDING"
+      const determinedStatus = balanceDue < 0.01 ? "COMPLETED" : "PENDING"
+      const isUdharValue = determinedStatus === "COMPLETED" ? "NO" : values.isUdhar
 
       return ordersApi.update(order.id, {
         ...values,
+        isUdhar: isUdharValue,
         status: determinedStatus,
         items: values.items,
       })
@@ -392,17 +413,13 @@ export default function OrderConfirmFormDialog({
   const onSubmit = (values: OrderConfirmFormValues) => {
     saveMutation.mutate({
       ...values,
-      paidAmount: toNumber(values.paidAmount),
+      paidAmount: totalPaidSoFar + toNumber(values.paidAmount),
     })
   }
 
   const paidAmountValue = toNumber(paidAmount)
-  const outstandingAmount = Math.max(0, totals.netPayable - paidAmountValue)
+  const outstandingAmount = Math.max(0, totals.netPayable - totalPaidSoFar - paidAmountValue)
   const lastPayment = paymentHistory[0]
-  const totalPaidSoFar = paymentHistory.reduce(
-    (sum, entry) => sum + toNumber(entry.amount),
-    0
-  )
 
   const originalPoUrl =
     order?.originalPoUrl || order?.poUrl || order?.documentUrl
@@ -420,25 +437,28 @@ export default function OrderConfirmFormDialog({
       }
       size="extrafull"
       height="extrafull"
+      scrollable={false}
       footer={null}
     >
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="max-w-[1860px] space-y-6"
+        className="max-w-[1860px] space-y-4"
       >
-        <div className="flex flex-col gap-4 rounded-3xl lg:flex-row lg:items-start lg:justify-between">
-          <div className="space-y-3">
-            <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-              <span className="inline-flex items-center gap-2">
+        <div className="flex flex-col gap-3 rounded-2xl lg:flex-row lg:items-center lg:justify-between">
+          <div className="space-y-1">
+            <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+              <span className="inline-flex items-center gap-1.5">
                 <Truck className="size-4 text-primary" />
-                {order?.supplier?.name ||
-                  order?.supplier?.companyName ||
-                  "Supplier not selected"}
+                <span className="font-semibold text-foreground">
+                  {order?.supplier?.name ||
+                    order?.supplier?.companyName ||
+                    "Supplier not selected"}
+                </span>
               </span>
               <span className="hidden text-muted-foreground/40 sm:inline">
                 |
               </span>
-              <span className="inline-flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5">
                 <CalendarDays className="size-4 text-muted-foreground" />
                 {order?.createdAt
                   ? new Date(order.createdAt).toLocaleString()
@@ -447,11 +467,11 @@ export default function OrderConfirmFormDialog({
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-2">
             <Button
               type="button"
               variant="outline"
-              className="h-12 rounded-2xl border-border/60 bg-background px-5 font-semibold text-foreground shadow-sm"
+              className="h-9 rounded-lg border-border/60 bg-background px-4 text-xs font-semibold text-foreground shadow-xs hover:bg-muted/30 transition-all duration-200"
               disabled={!originalPoUrl}
               onClick={() => {
                 if (originalPoUrl) {
@@ -459,15 +479,15 @@ export default function OrderConfirmFormDialog({
                 }
               }}
             >
-              <FileText className="mr-2 size-4" />
+              <FileText className="mr-1.5 size-4" />
               Original PO
             </Button>
             <Button
               type="submit"
-              className="h-12 rounded-2xl px-6 font-semibold shadow-lg"
+              className="h-9 rounded-lg px-5 text-xs font-semibold shadow-xs bg-primary hover:bg-primary/95 text-primary-foreground transition-all duration-200"
               disabled={saveMutation.isPending}
             >
-              <CircleDollarSign className="mr-2 size-4" />
+              <CircleDollarSign className="mr-1.5 size-4" />
               {saveMutation.isPending
                 ? "Saving..."
                 : isAlreadyReceived
@@ -477,49 +497,49 @@ export default function OrderConfirmFormDialog({
           </div>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-3">
-          <div className="rounded-3xl border border-border/60 bg-card p-5 shadow-sm">
-            <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                <Package className="size-5" />
+        <div className="grid gap-3 md:grid-cols-3">
+          <div className="rounded-2xl border border-border/60 bg-gradient-to-br from-card via-card to-primary/5 p-4 shadow-xs hover:-translate-y-0.5 hover:shadow-sm hover:shadow-primary/5 hover:border-primary/20 transition-all duration-300">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <Package className="size-4.5" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-muted-foreground">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                   Total Products
                 </p>
-                <p className="text-3xl font-black text-card-foreground">
+                <p className="text-2xl font-black text-foreground mt-0.5">
                   {totals.totalProducts} Items
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="rounded-3xl border border-border/60 bg-card p-5 shadow-sm">
-            <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                <Package className="size-5" />
+          <div className="rounded-2xl border border-border/60 bg-gradient-to-br from-card via-card to-violet-500/5 p-4 shadow-xs hover:-translate-y-0.5 hover:shadow-sm hover:shadow-violet-500/5 hover:border-violet-500/20 transition-all duration-300">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-500/10 text-violet-600">
+                <Package className="size-4.5" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-muted-foreground">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                   Total Units Received
                 </p>
-                <p className="text-3xl font-black text-card-foreground">
+                <p className="text-2xl font-black text-foreground mt-0.5">
                   {totals.totalUnitsReceived}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="rounded-3xl border border-border/60 bg-card p-5 shadow-sm">
-            <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                <CircleDollarSign className="size-5" />
+          <div className="rounded-2xl border border-border/60 bg-gradient-to-br from-card via-card to-emerald-500/5 p-4 shadow-xs hover:-translate-y-0.5 hover:shadow-sm hover:shadow-emerald-500/5 hover:border-emerald-500/20 transition-all duration-300">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
+                <CircleDollarSign className="size-4.5" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-muted-foreground">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                   Subtotal Excl. Tax
                 </p>
-                <p className="text-3xl font-black text-card-foreground">
+                <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-0.5">
                   ₹{formatMoney(totals.subtotalExclTax)}
                 </p>
               </div>
@@ -527,13 +547,13 @@ export default function OrderConfirmFormDialog({
           </div>
         </div>
 
-        <section className="rounded-[28px] border border-border/60 bg-card shadow-sm">
-          <div className="flex flex-col gap-4 border-b border-border/60 p-6 lg:flex-row lg:items-center lg:justify-between">
+        <section className="rounded-xl border border-border/50 bg-card shadow-xs overflow-hidden">
+          <div className="flex flex-col gap-3 border-b border-border/50 py-3 px-5 lg:flex-row lg:items-center lg:justify-between bg-muted/5">
             <div>
-              <h3 className="text-xl font-black text-card-foreground">
+              <h3 className="text-sm font-bold tracking-tight text-foreground">
                 Received Items List
               </h3>
-              <p className="mt-1 text-sm text-muted-foreground">
+              <p className="mt-0.5 text-[11px] text-muted-foreground">
                 Review quantities, batches, expiry, and pricing before saving.
               </p>
             </div>
@@ -541,56 +561,52 @@ export default function OrderConfirmFormDialog({
             <Button
               type="button"
               variant="outline"
-              className="h-10 rounded-2xl border-border/60 bg-background px-4 font-semibold text-foreground hover:bg-muted"
+              className="h-8 rounded-lg border-border/50 bg-background px-3 text-xs font-bold text-foreground hover:bg-muted/40 transition-all duration-200"
               onClick={() => append(buildBlankRow())}
             >
-              <Plus className="mr-2 size-4" />
+              <Plus className="mr-1 size-3" />
               Add Item
             </Button>
           </div>
 
           <div className="w-full overflow-x-auto">
-            <div className="w-max">
-              <div className="grid grid-cols-14 gap-3 border-b border-border/60 px-6 py-4 text-xs font-bold tracking-widest text-muted-foreground uppercase">
-                <div className="col-span-1">Product Details</div>
-                <div className="col-span-1 text-center">Ord Qty</div>
-                <div className="col-span-1 text-center">Free</div>
-                <div className="col-span-1">Batch No.</div>
-                <div className="col-span-1">Expiry</div>{" "}
-                <div className="col-span-1">Purchase</div>
-                <div className="col-span-1">MRP/Sell</div>
-                <div className="col-span-1">Rate 1</div>
-                <div className="col-span-1">Rate 2</div>
-                <div className="col-span-1">Rate 3</div>
-                <div className="col-span-1">CGST</div>
-                <div className="col-span-1">SGST</div>{" "}
-                <div className="col-span-1">discount</div>
-                <div className="col-span-1 text-right">Action</div>
+            <div className="w-max min-w-full">
+              <div
+                className="grid gap-3 border-b border-border/40 px-6 py-2.5 text-[11px] font-bold tracking-wider text-muted-foreground uppercase bg-muted/10"
+                style={{ gridTemplateColumns: "240px 140px 140px 105px 90px 100px 100px 95px 95px 95px 80px 80px 140px 50px" }}
+              >
+                <div>Product Details</div>
+                <div className="text-center">Ord Qty</div>
+                <div className="text-center">Free</div>
+                <div>Batch No.</div>
+                <div>Expiry</div>
+                <div className="text-right">Purchase</div>
+                <div className="text-right">MRP/Sell</div>
+                <div className="text-right">Rate 1</div>
+                <div className="text-right">Rate 2</div>
+                <div className="text-right">Rate 3</div>
+                <div className="text-right">CGST</div>
+                <div className="text-right">SGST</div>
+                <div className="text-center">discount</div>
+                <div className="text-right">Action</div>
               </div>
 
-              <div className="divide-y divide-border/60">
+              <div className="divide-y divide-border/40 bg-card/50 max-h-[220px] overflow-y-auto min-h-[90px]">
                 {fields.map((field, index) => (
                   <div
                     key={field.id}
-                    className="grid grid-cols-14 items-center gap-3 px-6 py-4"
+                    className="grid items-center gap-3 px-6 py-3 hover:bg-muted/10 transition-colors duration-150"
+                    style={{ gridTemplateColumns: "240px 140px 140px 105px 90px 100px 100px 95px 95px 95px 80px 80px 140px 50px" }}
                   >
-                    <div className="col-span-1">
-                      <div className="space-y-2">
-                        <Input
-                          {...register(`items.${index}.name`)}
-                          placeholder="Product name"
-                          className="h-10 rounded-2xl border-border/60 bg-background font-semibold text-foreground"
-                        />
-                        {/* <Input
-                          {...register(`items.${index}.description`)}
-                          placeholder="description"
-                          className="h-10 rounded-2xl border-border/60 bg-background text-muted-foreground"
-                        /> */}
-                      </div>
+                    <div>
+                      <Input
+                        {...register(`items.${index}.name`)}
+                        placeholder="Product name"
+                        className="h-9 rounded-lg border-border/60 bg-background px-3 font-semibold text-foreground hover:border-primary/30 focus-visible:border-primary/50 focus-visible:ring-4 focus-visible:ring-primary/10 transition-all duration-200 text-xs"
+                      />
                     </div>
-                    <div className="col-span-1">
-                      <div className="flex items-center overflow-hidden rounded-2xl border border-border/60 bg-background focus-within:ring-2 focus-within:ring-primary/20">
-                        {/* Qty Input */}
+                    <div>
+                      <div className="flex items-center overflow-hidden rounded-lg border border-border/60 bg-background hover:border-primary/30 focus-within:border-primary/50 focus-within:ring-4 focus-within:ring-primary/10 transition-all duration-200">
                         <Input
                           type="text"
                           min={0}
@@ -598,15 +614,12 @@ export default function OrderConfirmFormDialog({
                           {...register(`items.${index}.qty`, {
                             valueAsNumber: true,
                           })}
-                          className="h-10 w-20 border-0 bg-transparent text-center font-semibold shadow-none focus-visible:ring-0"
+                          className="h-9 w-16 border-0 bg-transparent text-center font-semibold shadow-none focus-visible:ring-0 text-xs"
                         />
-
-                        {/* Divider */}
-                        <div className="h-6 w-px bg-border/60" />
-                        {/* Unit Select */}
+                        <div className="h-5 w-px bg-border/60" />
                         <select
                           {...register(`items.${index}.unit`)}
-                          className="flex-1 bg-transparent px-3 text-sm font-medium outline-none"
+                          className="flex-1 bg-transparent px-2 text-xs font-semibold outline-none py-1.5 text-foreground"
                         >
                           {PACKAGING_TYPE_OPTIONS.map((option) => (
                             <option key={option.value} value={option.value}>
@@ -616,9 +629,8 @@ export default function OrderConfirmFormDialog({
                         </select>
                       </div>
                     </div>
-                    <div className="col-span-1">
-                      <div className="flex items-center overflow-hidden rounded-2xl border border-border/60 bg-background focus-within:ring-2 focus-within:ring-primary/20">
-                        {/* Qty Input */}
+                    <div>
+                      <div className="flex items-center overflow-hidden rounded-lg border border-border/60 bg-background hover:border-primary/30 focus-within:border-primary/50 focus-within:ring-4 focus-within:ring-primary/10 transition-all duration-200">
                         <Input
                           type="text"
                           min={0}
@@ -626,16 +638,12 @@ export default function OrderConfirmFormDialog({
                           {...register(`items.${index}.freeQty`, {
                             valueAsNumber: true,
                           })}
-                          className="h-10 w-20 border-0 bg-transparent text-center font-semibold shadow-none focus-visible:ring-0"
+                          className="h-9 w-16 border-0 bg-transparent text-center font-semibold shadow-none focus-visible:ring-0 text-xs"
                         />
-
-                        {/* Divider */}
-                        <div className="h-6 w-px bg-border/60" />
-
-                        {/* Unit Select */}
+                        <div className="h-5 w-px bg-border/60" />
                         <select
                           {...register(`items.${index}.freeUnit`)}
-                          className="flex-1 bg-transparent px-3 text-sm font-medium outline-none"
+                          className="flex-1 bg-transparent px-2 text-xs font-semibold outline-none py-1.5 text-foreground"
                         >
                           {PACKAGING_TYPE_OPTIONS.map((option) => (
                             <option key={option.value} value={option.value}>
@@ -645,22 +653,22 @@ export default function OrderConfirmFormDialog({
                         </select>
                       </div>
                     </div>
-                    <div className="col-span-1">
+                    <div>
                       <Input
                         {...register(`items.${index}.batchNo`)}
                         placeholder="Batch"
-                        className="h-10 rounded-2xl border-border/60 text-foreground"
+                        className="h-9 rounded-lg border-border/60 bg-background px-3 text-foreground hover:border-primary/30 focus-visible:border-primary/50 focus-visible:ring-4 focus-visible:ring-primary/10 transition-all duration-200 text-xs"
                       />
                     </div>
-                    <div className="col-span-1">
+                    <div>
                       <Input
                         type="text"
                         {...register(`items.${index}.expiry`)}
                         placeholder="MM/YY"
-                        className="h-10 rounded-2xl border-border/60 text-foreground"
+                        className="h-9 rounded-lg border-border/60 bg-background px-3 text-foreground hover:border-primary/30 focus-visible:border-primary/50 focus-visible:ring-4 focus-visible:ring-primary/10 transition-all duration-200 text-xs"
                       />
                     </div>
-                    <div className="col-span-1">
+                    <div>
                       <Input
                         type="text"
                         min={0}
@@ -668,10 +676,10 @@ export default function OrderConfirmFormDialog({
                         {...register(`items.${index}.purchaseRate`, {
                           valueAsNumber: true,
                         })}
-                        className="h-10 rounded-2xl border-border/60 text-right font-semibold text-foreground"
+                        className="h-9 rounded-lg border-border/60 bg-background px-3 text-right font-semibold text-foreground hover:border-primary/30 focus-visible:border-primary/50 focus-visible:ring-4 focus-visible:ring-primary/10 transition-all duration-200 text-xs"
                       />
                     </div>
-                    <div className="col-span-1">
+                    <div>
                       <Input
                         type="text"
                         min={0}
@@ -679,10 +687,10 @@ export default function OrderConfirmFormDialog({
                         {...register(`items.${index}.mrp`, {
                           valueAsNumber: true,
                         })}
-                        className="h-10 rounded-2xl border-border/60 text-right font-semibold text-foreground"
+                        className="h-9 rounded-lg border-border/60 bg-background px-3 text-right font-semibold text-foreground hover:border-primary/30 focus-visible:border-primary/50 focus-visible:ring-4 focus-visible:ring-primary/10 transition-all duration-200 text-xs"
                       />
                     </div>
-                    <div className="col-span-1">
+                    <div>
                       <Input
                         type="text"
                         min={0}
@@ -690,10 +698,10 @@ export default function OrderConfirmFormDialog({
                         {...register(`items.${index}.rate1`, {
                           valueAsNumber: true,
                         })}
-                        className="h-10 rounded-2xl border-border/60 text-right font-semibold text-foreground"
+                        className="h-9 rounded-lg border-border/60 bg-background px-3 text-right font-semibold text-foreground hover:border-primary/30 focus-visible:border-primary/50 focus-visible:ring-4 focus-visible:ring-primary/10 transition-all duration-200 text-xs"
                       />
                     </div>
-                    <div className="col-span-1">
+                    <div>
                       <Input
                         type="text"
                         min={0}
@@ -701,10 +709,10 @@ export default function OrderConfirmFormDialog({
                         {...register(`items.${index}.rate2`, {
                           valueAsNumber: true,
                         })}
-                        className="h-10 rounded-2xl border-border/60 text-right font-semibold text-foreground"
+                        className="h-9 rounded-lg border-border/60 bg-background px-3 text-right font-semibold text-foreground hover:border-primary/30 focus-visible:border-primary/50 focus-visible:ring-4 focus-visible:ring-primary/10 transition-all duration-200 text-xs"
                       />
                     </div>
-                    <div className="col-span-1">
+                    <div>
                       <Input
                         type="text"
                         min={0}
@@ -712,30 +720,29 @@ export default function OrderConfirmFormDialog({
                         {...register(`items.${index}.rate3`, {
                           valueAsNumber: true,
                         })}
-                        className="h-10 rounded-2xl border-border/60 text-right font-semibold text-foreground"
+                        className="h-9 rounded-lg border-border/60 bg-background px-3 text-right font-semibold text-foreground hover:border-primary/30 focus-visible:border-primary/50 focus-visible:ring-4 focus-visible:ring-primary/10 transition-all duration-200 text-xs"
                       />
-                    </div>{" "}
-                    <div className="col-span-1">
+                    </div>
+                    <div>
                       <Input
                         type="text"
                         {...register(`items.${index}.cgst`, {
                           valueAsNumber: true,
                         })}
-                        className="h-10 rounded-2xl border-border/60 text-right font-semibold text-foreground"
+                        className="h-9 rounded-lg border-border/60 bg-background px-3 text-right font-semibold text-foreground hover:border-primary/30 focus-visible:border-primary/50 focus-visible:ring-4 focus-visible:ring-primary/10 transition-all duration-200 text-xs"
                       />
                     </div>
-                    <div className="col-span-1">
+                    <div>
                       <Input
                         type="text"
                         {...register(`items.${index}.sgst`, {
                           valueAsNumber: true,
                         })}
-                        className="h-10 rounded-2xl border-border/60 text-right font-semibold text-foreground"
+                        className="h-9 rounded-lg border-border/60 bg-background px-3 text-right font-semibold text-foreground hover:border-primary/30 focus-visible:border-primary/50 focus-visible:ring-4 focus-visible:ring-primary/10 transition-all duration-200 text-xs"
                       />
-                    </div>{" "}
-                    <div className="col-span-1">
-                      <div className="flex items-center overflow-hidden rounded-2xl border border-border/60 bg-background focus-within:ring-2 focus-within:ring-primary/20">
-                        {/* Qty Input */}
+                    </div>
+                    <div>
+                      <div className="flex items-center overflow-hidden rounded-lg border border-border/60 bg-background hover:border-primary/30 focus-within:border-primary/50 focus-within:ring-4 focus-within:ring-primary/10 transition-all duration-200">
                         <Input
                           type="text"
                           min={0}
@@ -743,15 +750,12 @@ export default function OrderConfirmFormDialog({
                           {...register(`items.${index}.discount`, {
                             valueAsNumber: true,
                           })}
-                          className="h-10 w-20 border-0 bg-transparent text-center font-semibold shadow-none focus-visible:ring-0"
+                          className="h-9 w-14 border-0 bg-transparent text-center font-semibold shadow-none focus-visible:ring-0 text-xs"
                         />
-
-                        {/* Divider */}
-                        <div className="h-6 w-px bg-border/60" />
-                        {/* Unit Select */}
+                        <div className="h-5 w-px bg-border/60" />
                         <select
                           {...register(`items.${index}.discount_type`)}
-                          className="flex-1 bg-transparent px-3 text-sm font-medium outline-none"
+                          className="flex-1 bg-transparent px-2 text-xs font-semibold outline-none py-1.5 text-foreground"
                         >
                           {DISCOUNT_TYPE_OPTIONS.map((option) => (
                             <option key={option.value} value={option.value}>
@@ -761,12 +765,12 @@ export default function OrderConfirmFormDialog({
                         </select>
                       </div>
                     </div>
-                    <div className="col-span-1 flex justify-end">
+                    <div className="flex justify-end">
                       <Button
                         type="button"
                         variant="ghost"
                         size="icon-sm"
-                        className="h-10 w-10 rounded-2xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                        className="h-9 w-9 rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors duration-200"
                         onClick={() => remove(index)}
                         disabled={fields.length === 1}
                       >
@@ -781,119 +785,117 @@ export default function OrderConfirmFormDialog({
         </section>
 
         <section className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-          <div className="rounded-[28px] border border-border/60 bg-card p-6 shadow-sm">
-            <h4 className="text-lg font-black text-card-foreground">
-              Receiving Notes
-            </h4>
-            <div className="mt-4 grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-muted-foreground">
+          <div className="rounded-xl border border-border/50 bg-gradient-to-br from-card to-muted/10 p-4.5 shadow-xs">
+            <h4 className="text-sm font-bold text-foreground">Receiving Notes</h4>
+            <div className="mt-3.5 grid gap-3 md:grid-cols-2">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-muted-foreground">
                   Received Date
                 </label>
                 <Input
                   type="date"
                   {...register("receivedAt")}
-                  className="h-11 rounded-2xl border-border/60"
+                  className="h-10 rounded-lg border-border/50 focus-visible:border-primary/50 focus-visible:ring-4 focus-visible:ring-primary/10 transition-all duration-200 text-xs"
                 />
               </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-muted-foreground">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-muted-foreground">
                   Invoice No.
                 </label>
                 <Input
                   {...register("invoiceNo")}
                   placeholder="Invoice / GRN number"
-                  className="h-11 rounded-2xl border-border/60"
+                  className="h-10 rounded-lg border-border/50 focus-visible:border-primary/50 focus-visible:ring-4 focus-visible:ring-primary/10 transition-all duration-200 text-xs"
                 />
               </div>
             </div>
 
-            <div className="mt-4 space-y-2">
-              <label className="text-sm font-semibold text-muted-foreground">
+            <div className="mt-3.5 space-y-1.5">
+              <label className="text-xs font-semibold text-muted-foreground">
                 Notes
               </label>
               <Input
                 {...register("notes")}
                 placeholder="Short note for receiving..."
-                className="h-11 rounded-2xl border-border/60"
+                className="h-10 rounded-lg border-border/50 focus-visible:border-primary/50 focus-visible:ring-4 focus-visible:ring-primary/10 transition-all duration-200 text-xs"
               />
             </div>
           </div>
 
-          <div className="rounded-[28px] border border-border/60 bg-card p-6 text-card-foreground shadow-sm">
-            <h4 className="text-lg font-black">Payment & Totals</h4>
-            <div className="mt-5 grid gap-3 sm:grid-cols-2">
-              <div className="rounded-2xl bg-muted/40 px-4 py-3">
-                <p className="text-xs font-semibold text-muted-foreground uppercase">
+          <div className="rounded-xl border border-border/50 bg-gradient-to-br from-card to-muted/10 p-4.5 text-card-foreground shadow-xs">
+            <h4 className="text-sm font-bold">Payment & Totals</h4>
+            <div className="mt-3.5 grid gap-2.5 sm:grid-cols-2">
+              <div className="rounded-xl border border-border/40 bg-muted/30 px-3.5 py-2 hover:bg-muted/50 transition-colors duration-200">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                   Subtotal Excl. Tax
                 </p>
-                <p className="mt-1 text-xl font-black">
+                <p className="mt-0.5 text-base font-black">
                   ₹{formatMoney(totals.subtotalExclTax)}
                 </p>
               </div>
-              <div className="rounded-2xl bg-muted/40 px-4 py-3">
-                <p className="text-xs font-semibold text-muted-foreground uppercase">
+              <div className="rounded-xl border border-border/40 bg-muted/30 px-3.5 py-2 hover:bg-muted/50 transition-colors duration-200">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                   Total Tax
                 </p>
-                <p className="mt-1 text-xl font-black">
+                <p className="mt-0.5 text-base font-black">
                   ₹{formatMoney(totals.totalTax)}
                 </p>
               </div>
-              <div className="rounded-2xl bg-muted/40 px-4 py-3">
-                <p className="text-xs font-semibold text-muted-foreground uppercase">
+              <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 px-3.5 py-2 hover:bg-emerald-500/10 transition-colors duration-200">
+                <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
                   Total Discount
                 </p>
-                <p className="mt-1 text-xl font-black text-emerald-600 dark:text-emerald-400">
+                <p className="mt-0.5 text-base font-black text-emerald-600 dark:text-emerald-400">
                   -₹{formatMoney(totals.totalDiscountAmount)}
                 </p>
               </div>
-              <div className="rounded-2xl bg-primary/10 px-4 py-3 text-primary">
-                <p className="text-xs font-semibold text-primary/70 uppercase">
+              <div className="rounded-xl border border-primary/20 bg-primary/10 px-3.5 py-2 hover:bg-primary/15 transition-colors duration-200 text-primary">
+                <p className="text-[10px] font-bold text-primary/70 uppercase tracking-wider">
                   Net Payable
                 </p>
-                <p className="mt-1 text-xl font-black">
+                <p className="mt-0.5 text-base font-black">
                   ₹{formatMoney(totals.netPayable)}
                 </p>
               </div>
             </div>
 
-            <div className="mt-5 space-y-4">
-              <div className="grid gap-3 sm:grid-cols-3">
-                <div className="rounded-2xl border border-border/60 bg-muted/30 px-4 py-3">
-                  <p className="text-xs font-semibold uppercase text-muted-foreground">
+            <div className="mt-3.5 space-y-3.5">
+              <div className="grid gap-2.5 sm:grid-cols-3">
+                <div className="rounded-xl border border-border/50 bg-muted/40 px-3 py-2 hover:border-primary/25 transition-all duration-200">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                     Paid So Far
                   </p>
-                  <p className="mt-1 text-xl font-black">
+                  <p className="mt-0.5 text-base font-black text-foreground">
                     ₹{formatMoney(totalPaidSoFar)}
                   </p>
                 </div>
-                <div className="rounded-2xl border border-border/60 bg-muted/30 px-4 py-3">
-                  <p className="text-xs font-semibold uppercase text-muted-foreground">
+                <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-3 py-2 hover:border-amber-500/40 transition-all duration-200 text-amber-700 dark:text-amber-400">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-500">
                     Outstanding
                   </p>
-                  <p className="mt-1 text-xl font-black">
+                  <p className="mt-0.5 text-base font-black">
                     ₹{formatMoney(outstandingAmount)}
                   </p>
                 </div>
-                <div className="rounded-2xl border border-border/60 bg-muted/30 px-4 py-3">
-                  <p className="text-xs font-semibold uppercase text-muted-foreground">
+                <div className="rounded-xl border border-border/50 bg-muted/40 px-3 py-2 hover:border-primary/25 transition-all duration-200">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                     Last Payment
                   </p>
-                  <p className="mt-1 text-xl font-black">
+                  <p className="mt-0.5 text-base font-black text-foreground">
                     {lastPayment ? `₹${formatMoney(lastPayment.amount)}` : "—"}
                   </p>
                 </div>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold text-muted-foreground">
+              <div className="grid gap-3 md:grid-cols-2">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-muted-foreground">
                     Payment Mode
                   </label>
                   <select
                     {...register("paymentMode")}
-                    className="h-11 w-full rounded-2xl border border-border/60 bg-background px-4 text-sm font-semibold text-foreground outline-none focus:ring-2 focus:ring-primary/20"
+                    className="h-10 w-full rounded-lg border border-border/60 bg-background px-3 text-xs font-semibold text-foreground outline-none hover:border-primary/30 focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all duration-200"
                   >
                     {PAYMENT_MODE_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -903,34 +905,34 @@ export default function OrderConfirmFormDialog({
                   </select>
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold text-muted-foreground">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-muted-foreground">
                     Payment Details
                   </label>
                   <Input
                     {...register("paymentDetails")}
-                    placeholder="Cash memo, UPI reference, debit note, etc."
-                    className="h-11 rounded-2xl border-border/60"
+                    placeholder="Reference notes"
+                    className="h-10 rounded-lg border-border/50 focus-visible:border-primary/50 focus-visible:ring-4 focus-visible:ring-primary/10 transition-all duration-200 text-xs"
                   />
                 </div>
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold text-muted-foreground">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-muted-foreground">
                     Is Udhar?
                   </label>
                   <select
                     {...register("isUdhar")}
-                    className="h-11 w-full rounded-2xl border border-border/60 bg-background px-4 text-sm font-semibold text-foreground outline-none focus:ring-2 focus:ring-primary/20"
+                    className="h-10 w-full rounded-lg border border-border/60 bg-background px-3 text-xs font-semibold text-foreground outline-none hover:border-primary/30 focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all duration-200"
                   >
                     <option value="NO">No</option>
                     <option value="YES">Yes</option>
                   </select>
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold text-muted-foreground">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-muted-foreground">
                     Paid Amount
                   </label>
                   <Input
@@ -940,76 +942,76 @@ export default function OrderConfirmFormDialog({
                     {...register("paidAmount", { valueAsNumber: true })}
                     placeholder="0.00"
                     readOnly={isUdhar === "NO"}
-                    className={`h-11 rounded-2xl border-border/60 ${isUdhar === "NO" ? "bg-muted/40" : ""}`}
+                    className={`h-10 rounded-lg border-border/60 text-xs hover:border-primary/30 focus-visible:border-primary/50 focus-visible:ring-4 focus-visible:ring-primary/10 transition-all duration-200 ${isUdhar === "NO" ? "bg-muted/40 cursor-not-allowed opacity-80" : ""}`}
                   />
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-[10px] text-muted-foreground leading-4 mt-1">
                     {isUdhar === "NO"
-                      ? "Auto-filled only when no paid amount exists yet."
-                      : "Enter the total amount paid so far for this order."}
+                      ? "Auto-filled to clear the remaining balance."
+                      : "Enter the additional amount paid now for this order."}
                   </p>
                 </div>
               </div>
 
-              <div className="rounded-3xl border border-border/60 bg-background/80 p-4">
+              <div className="rounded-xl border border-border/50 bg-muted/10 p-3">
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-sm font-semibold text-muted-foreground">
+                    <p className="text-xs font-bold text-foreground">
                       Payment History
                     </p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-[10px] text-muted-foreground">
                       {paymentHistory.length
                         ? `${paymentHistory.length} payment${paymentHistory.length === 1 ? "" : "s"} recorded`
                         : "No payment history yet."}
                     </p>
                   </div>
-                  <div className="inline-flex items-center gap-2 rounded-full bg-muted/60 px-3 py-1 text-xs font-semibold text-muted-foreground">
-                    <Clock3 className="size-3.5" />
+                  <div className="inline-flex items-center gap-1.5 rounded-full bg-muted/60 px-2.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                    <Clock3 className="size-3" />
                     {paymentHistory.length ? "Latest at top" : "Empty"}
                   </div>
                 </div>
 
-                <div className="mt-4 max-h-60 space-y-3 overflow-auto pr-1">
+                <div className="mt-3 max-h-36 space-y-2.5 overflow-auto pr-1">
                   {paymentHistory.length > 0 ? (
                     paymentHistory.map((entry) => (
                       <div
                         key={entry.id || `${entry.amount}-${entry.paidAt}`}
-                        className="rounded-2xl border border-border/60 bg-card px-4 py-3"
+                        className="rounded-xl border border-border/40 bg-card px-3.5 py-2.5 hover:border-primary/20 hover:shadow-xs transition-all duration-200"
                       >
-                        <div className="flex flex-wrap items-start justify-between gap-3">
-                          <div className="space-y-1">
+                        <div className="flex flex-wrap items-start justify-between gap-2">
+                          <div className="space-y-0.5">
                             <div className="flex flex-wrap items-center gap-2">
-                              <span className="text-sm font-black text-card-foreground">
+                              <span className="text-xs font-black text-foreground">
                                 ₹{formatMoney(entry.amount)}
                               </span>
                               {entry.paymentMode ? (
-                                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold uppercase text-primary">
+                                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-primary">
                                   {entry.paymentMode}
                                 </span>
                               ) : null}
                             </div>
-                            <p className="text-xs text-muted-foreground">
+                            <p className="text-[10px] text-muted-foreground">
                               {formatDateTime(entry.paidAt || entry.createdAt)}
                             </p>
                           </div>
                           {entry.isUdhar ? (
-                            <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[11px] font-semibold uppercase text-amber-600">
+                            <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
                               Udhar
                             </span>
                           ) : null}
                         </div>
                         {(entry.paymentDetails || entry.notes) && (
-                          <p className="mt-2 text-xs leading-5 text-muted-foreground">
+                          <p className="mt-1.5 text-[10px] leading-4 text-muted-foreground border-t border-border/20 pt-1.5">
                             {entry.paymentDetails || entry.notes}
                           </p>
                         )}
                       </div>
                     ))
                   ) : (
-                    <div className="rounded-2xl border border-dashed border-border/60 px-4 py-8 text-center">
-                      <p className="text-sm font-semibold text-card-foreground">
+                    <div className="rounded-xl border border-dashed border-border/50 px-4 py-6 text-center">
+                      <p className="text-xs font-bold text-foreground">
                         No payments recorded yet
                       </p>
-                      <p className="mt-1 text-xs text-muted-foreground">
+                      <p className="mt-0.5 text-[10px] text-muted-foreground">
                         Save the order once to start tracking payment history.
                       </p>
                     </div>
