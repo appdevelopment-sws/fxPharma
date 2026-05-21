@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react"
+import { useEffect, useMemo, useRef } from "react"
 import { useFieldArray, useForm, useWatch } from "react-hook-form"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import {
@@ -248,6 +248,14 @@ export default function OrderConfirmFormDialog({
     () => normalizePaymentHistory(order, savedPaidAmount),
     [order, savedPaidAmount]
   )
+  const totalPaidSoFar = useMemo(
+    () =>
+      paymentHistory.reduce(
+        (sum, entry) => sum + toNumber(entry.amount),
+        0
+      ),
+    [paymentHistory]
+  )
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -276,10 +284,10 @@ export default function OrderConfirmFormDialog({
       paymentMode: order?.paymentMode || "cash",
       paymentDetails: order?.paymentDetails || "",
       isUdhar: normalizedIsUdhar ? "YES" : "NO",
-      paidAmount: savedPaidAmount,
+      paidAmount: 0,
       items,
     })
-  }, [open, order, reset, savedPaidAmount])
+  }, [open, order, reset])
 
   const totals = useMemo(() => {
     const totalProducts = items.length
@@ -316,7 +324,7 @@ export default function OrderConfirmFormDialog({
       0,
       subtotalExclTax - totalDiscountAmount + totalTax
     )
-    const balanceDue = Math.max(0, netPayable - toNumber(paidAmount))
+    const balanceDue = Math.max(0, netPayable - totalPaidSoFar - toNumber(paidAmount))
 
     return {
       totalProducts,
@@ -327,20 +335,31 @@ export default function OrderConfirmFormDialog({
       netPayable,
       balanceDue,
     }
-  }, [items, paidAmount])
+  }, [items, paidAmount, totalPaidSoFar])
 
   const isAlreadyReceived = order?.status === "PENDING" || order?.status === "COMPLETED"
 
+  const remainingAmount = useMemo(() => {
+    return Math.max(0, totals.netPayable - totalPaidSoFar)
+  }, [totals.netPayable, totalPaidSoFar])
+
+  const prevIsUdharRef = useRef(isUdhar)
   useEffect(() => {
     if (!open) return
 
-    if (isUdhar === "NO" && savedPaidAmount <= 0 && totals.netPayable > 0) {
-      setValue("paidAmount", totals.netPayable, {
+    if (isUdhar === "NO") {
+      setValue("paidAmount", remainingAmount, {
+        shouldDirty: true,
+        shouldTouch: true,
+      })
+    } else if (isUdhar === "YES" && prevIsUdharRef.current === "NO") {
+      setValue("paidAmount", 0, {
         shouldDirty: true,
         shouldTouch: true,
       })
     }
-  }, [open, isUdhar, savedPaidAmount, setValue, totals.netPayable])
+    prevIsUdharRef.current = isUdhar
+  }, [open, isUdhar, remainingAmount, setValue])
 
   const saveMutation = useMutation({
     mutationFn: async (values: OrderConfirmFormValues) => {
@@ -349,10 +368,12 @@ export default function OrderConfirmFormDialog({
       }
 
       const balanceDue = Math.max(0, totals.netPayable - toNumber(values.paidAmount))
-      const determinedStatus = balanceDue === 0 ? "COMPLETED" : "PENDING"
+      const determinedStatus = balanceDue < 0.01 ? "COMPLETED" : "PENDING"
+      const isUdharValue = determinedStatus === "COMPLETED" ? "NO" : values.isUdhar
 
       return ordersApi.update(order.id, {
         ...values,
+        isUdhar: isUdharValue,
         status: determinedStatus,
         items: values.items,
       })
@@ -374,17 +395,13 @@ export default function OrderConfirmFormDialog({
   const onSubmit = (values: OrderConfirmFormValues) => {
     saveMutation.mutate({
       ...values,
-      paidAmount: toNumber(values.paidAmount),
+      paidAmount: totalPaidSoFar + toNumber(values.paidAmount),
     })
   }
 
   const paidAmountValue = toNumber(paidAmount)
-  const outstandingAmount = Math.max(0, totals.netPayable - paidAmountValue)
+  const outstandingAmount = Math.max(0, totals.netPayable - totalPaidSoFar - paidAmountValue)
   const lastPayment = paymentHistory[0]
-  const totalPaidSoFar = paymentHistory.reduce(
-    (sum, entry) => sum + toNumber(entry.amount),
-    0
-  )
 
   const originalPoUrl =
     order?.originalPoUrl || order?.poUrl || order?.documentUrl
@@ -926,8 +943,8 @@ export default function OrderConfirmFormDialog({
                   />
                   <p className="text-xs text-muted-foreground">
                     {isUdhar === "NO"
-                      ? "Auto-filled only when no paid amount exists yet."
-                      : "Enter the total amount paid so far for this order."}
+                      ? "Auto-filled to clear the remaining balance."
+                      : "Enter the additional amount paid now for this order."}
                   </p>
                 </div>
               </div>
