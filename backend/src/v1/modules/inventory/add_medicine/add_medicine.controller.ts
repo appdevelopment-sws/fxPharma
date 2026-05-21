@@ -47,6 +47,9 @@ export class InventoryController {
             brand: true,
             category: true,
             manufacturer: true,
+            batches: {
+              orderBy: [{ expiryDate: "asc" }, { receivedAt: "asc" }],
+            },
           },
           orderBy: { createdAt: "desc" },
           ...(skip !== undefined && { skip }),

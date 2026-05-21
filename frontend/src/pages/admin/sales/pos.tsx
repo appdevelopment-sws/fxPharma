@@ -1,4 +1,5 @@
-import { useState } from "react"
+import { useMemo, useState } from "react"
+import { useQuery } from "@tanstack/react-query"
 import {
   Plus,
   Minus,
@@ -21,100 +22,136 @@ import {
 
 import FilterPointofSale from "@/components/dialog/admin/FilterPointofSale"
 import { cn } from "@/lib/utils"
+import { queryKeys } from "@/lib/queryKeys"
+import {
+  CategoryApi,
+  ManufacturerApi,
+} from "@/services/attributesApi"
+import InventoryApi from "@/services/inventoryApi"
 
-// Mock Data Restructured for Batch Management
-const CATEGORIES = [
-  "All Categories",
-  "Rx Only",
-  "OTC",
-  "Antibiotics",
-  "Analgesics",
-  "Syrups",
-]
-const MANUFACTURERS = [
-  "All Manufacturers",
-  "Cipla Ltd.",
-  "Sun Pharma",
-  "Micro Labs",
-  "Abbott",
-]
+type PosBatch = {
+  id: string
+  number: string
+  expiry: string
+  stock: number
+  price: number
+  isNearExpiry?: boolean
+}
 
-const DUMMY_PRODUCTS = [
-  {
-    id: 1,
-    name: "Amoxicillin 500mg Cap",
-    type: "Rx",
-    composition: "Amoxicillin Trihydrate IP",
-    mfg: "Cipla Ltd.",
-    rack: "A-04",
-    totalStock: 450,
-    formulation: "tablet_capsule",
-    batches: [
-      { id: "1-b1", number: "AMX-23A", expiry: "10/25", stock: 150, price: 12.5, isNearExpiry: true },
-      { id: "1-b2", number: "AMX-24B", expiry: "12/26", stock: 300, price: 13.0 },
-    ],
-  },
-  {
-    id: 2,
-    name: "Cetirizine 10mg Tab",
-    type: "OTC",
-    composition: "Cetirizine Hydrochloride IP",
-    mfg: "Sun Pharma",
-    rack: "B-12",
-    totalStock: 85,
-    formulation: "tablet_capsule",
-    batches: [
-      { id: "2-b1", number: "CET-24A", expiry: "01/27", stock: 85, price: 4.5 },
-    ],
-  },
-  {
-    id: 3,
-    name: "Dolo 650mg Tab",
-    type: "OTC",
-    composition: "Paracetamol IP 650mg",
-    mfg: "Micro Labs",
-    rack: "C-05",
-    totalStock: 0,
-    formulation: "tablet_capsule",
-    batches: [
-      { id: "3-b1", number: "DOL-23C", expiry: "10/25", stock: 0, price: 3.0, isNearExpiry: true },
-    ],
-  },
-  {
-    id: 4,
-    name: "Azithromycin 250mg",
-    type: "Rx",
-    composition: "Azithromycin IP",
-    mfg: "Cipla Ltd.",
-    rack: "A-09",
-    totalStock: 120,
-    formulation: "tablet_capsule",
-    batches: [
-      { id: "4-b1", number: "AZI-24", expiry: "11/26", stock: 120, price: 22.0 },
-    ],
-  },
-  {
-    id: 5,
-    name: "Cough Syrup 100ml",
-    type: "OTC",
-    composition: "Diphenhydramine",
-    mfg: "Sun Pharma",
-    rack: "S-02",
-    totalStock: 40,
-    formulation: "syrup_suspension",
-    batches: [
-      { id: "5-b1", number: "SYR-23", expiry: "08/25", stock: 40, price: 45.0, isNearExpiry: true },
-    ],
-  },
-]
+type PosProduct = {
+  id: string
+  name: string
+  composition: string
+  mfg: string
+  category: string
+  totalStock: number
+  type: string
+  formulation: string
+  batches: PosBatch[]
+}
+
+type CartItem = {
+  product: PosProduct
+  batch: PosBatch
+  qty: number
+}
+
+const formatExpiry = (value?: string | null) => {
+  if (!value) return "-"
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) return value
+  return parsed.toLocaleDateString("en-IN", {
+    month: "2-digit",
+    year: "2-digit",
+  })
+}
+
+const isNearExpiry = (value?: string | null) => {
+  if (!value) return false
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) return false
+
+  const daysUntilExpiry =
+    (parsed.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
+  return daysUntilExpiry <= 180
+}
+
+const toNumber = (value: unknown) => {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : 0
+}
+
+const getRelationName = (value: unknown) => {
+  if (typeof value === "string" || typeof value === "number") {
+    return String(value) || "-"
+  }
+
+  if (value && typeof value === "object" && "name" in value) {
+    const name = (value as { name?: unknown }).name
+    if (typeof name === "string" || typeof name === "number") {
+      return String(name) || "-"
+    }
+  }
+
+  return "-"
+}
+
+const buildPosProduct = (inventoryItem: any): PosProduct => {
+  const batches = Array.isArray(inventoryItem?.batches)
+    ? inventoryItem.batches.map((batch: any) => {
+        const price = toNumber(batch.mrp ?? batch.purchaseRate ?? 0)
+        const stock = toNumber(batch.availableQty ?? batch.receivedQty ?? 0)
+
+        return {
+          id: batch.id,
+          number: batch.batchNo || batch.number || "-",
+          expiry: formatExpiry(batch.expiryDate || batch.expiry),
+          stock,
+          price,
+          isNearExpiry: isNearExpiry(batch.expiryDate || batch.expiry),
+        }
+      })
+    : []
+
+  const fallbackStock = toNumber(inventoryItem?.availableStock ?? 0)
+  const resolvedBatches =
+    batches.length > 0
+      ? batches
+      : [
+          {
+            id: `${inventoryItem.id}-batch`,
+            number: "N/A",
+            expiry: "-",
+            stock: fallbackStock,
+            price: toNumber(
+              inventoryItem?.mrp ?? inventoryItem?.purchaseRate ?? 0
+            ),
+            isNearExpiry: false,
+          },
+        ]
+
+  return {
+    id: inventoryItem.id,
+    name: inventoryItem.name || "-",
+    composition: inventoryItem.saltComposition || "-",
+    mfg: getRelationName(inventoryItem.manufacturer),
+    category: getRelationName(inventoryItem.category),
+    totalStock:
+      batches.length > 0
+        ? batches.reduce((sum: number, batch: PosBatch) => sum + batch.stock, 0)
+        : fallbackStock,
+    type: inventoryItem.itemType || inventoryItem.type || "OTC",
+    formulation: inventoryItem.formulation || inventoryItem.itemType || "all",
+    batches: resolvedBatches,
+  }
+}
 
 const POS = () => {
-  const [cart, setCart] = useState<{ product: any; batch: any; qty: number }[]>([])
+  const [cart, setCart] = useState<CartItem[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [category, setCategory] = useState("All Categories")
   const [manufacturer, setManufacturer] = useState("All Manufacturers")
 
-  // Filter Dialog State
   const [isFilterOpen, setIsFilterOpen] = useState(false)
   const [posFilters, setPosFilters] = useState<any>({
     stockStatus: "all",
@@ -123,21 +160,143 @@ const POS = () => {
     manufacturers: [],
   })
 
-  // Invoice state
   const [discountPercent, setDiscountPercent] = useState(0)
   const [paymentMode, setPaymentMode] = useState("Cash")
   const [tendered, setTendered] = useState("")
 
-  const addToCart = (product: any, batch: any) => {
+  const { data: categoriesData } = useQuery({
+    queryKey: queryKeys.categories.list({ limit: 1000 }),
+    queryFn: () => CategoryApi.getCategories({ limit: 1000 }),
+  })
+
+  const { data: manufacturersData } = useQuery({
+    queryKey: queryKeys.manufacturers.list({ limit: 1000 }),
+    queryFn: () => ManufacturerApi.getManufacturers({ limit: 1000 }),
+  })
+
+  const { data: productsData } = useQuery({
+    queryKey: queryKeys.inventory.list({ limit: 1000 }),
+    queryFn: () => InventoryApi.getAll({ limit: 1000 }),
+  })
+
+  const categoryOptions = useMemo(
+    () => [
+      { label: "All Categories", value: "All Categories" },
+      ...(categoriesData?.data || []).map((item: any) => ({
+        label: item.name,
+        value: item.name,
+      })),
+    ],
+    [categoriesData]
+  )
+
+  const manufacturerOptions = useMemo(
+    () => [
+      { label: "All Manufacturers", value: "All Manufacturers" },
+      ...(manufacturersData?.data || []).map((item: any) => ({
+        label: item.name,
+        value: item.name,
+      })),
+    ],
+    [manufacturersData]
+  )
+
+  const manufacturerFilterOptions = useMemo(
+    () =>
+      (manufacturersData?.data || []).map((item: any) => ({
+        label: item.name,
+        value: item.name,
+      })),
+    [manufacturersData]
+  )
+
+  const products = useMemo(
+    () => (productsData?.data || []).map(buildPosProduct),
+    [productsData]
+  )
+
+  const filteredProducts = useMemo(() => {
+    return products.filter((product) => {
+      const search = searchTerm.trim().toLowerCase()
+      const matchesSearch =
+        !search ||
+        product.name.toLowerCase().includes(search) ||
+        product.composition.toLowerCase().includes(search) ||
+        product.mfg.toLowerCase().includes(search) ||
+        product.category.toLowerCase().includes(search)
+      if (!matchesSearch) return false
+
+      const matchesCategory =
+        category === "All Categories" || product.category === category
+      if (!matchesCategory) return false
+
+      const matchesManufacturer =
+        manufacturer === "All Manufacturers" || product.mfg === manufacturer
+      if (!matchesManufacturer) return false
+
+      if (posFilters.stockStatus !== "all") {
+        if (posFilters.stockStatus === "in_stock" && product.totalStock <= 0) {
+          return false
+        }
+        if (
+          posFilters.stockStatus === "out_of_stock" &&
+          product.totalStock > 0
+        ) {
+          return false
+        }
+        if (
+          posFilters.stockStatus === "low_stock" &&
+          (product.totalStock <= 0 || product.totalStock > 50)
+        ) {
+          return false
+        }
+      }
+
+      if (posFilters.itemType !== "all") {
+        const normalizedType = product.type.toLowerCase()
+        if (posFilters.itemType === "rx" && !normalizedType.includes("rx")) {
+          return false
+        }
+        if (posFilters.itemType === "otc" && !normalizedType.includes("otc")) {
+          return false
+        }
+        if (
+          posFilters.itemType === "generics" &&
+          normalizedType.includes("rx")
+        ) {
+          return false
+        }
+      }
+
+      if (
+        posFilters.formulation.length > 0 &&
+        !posFilters.formulation.includes(product.formulation)
+      ) {
+        return false
+      }
+
+      if (posFilters.manufacturers.length > 0) {
+        const matchesAnyMfg = posFilters.manufacturers.includes(product.mfg)
+        if (!matchesAnyMfg) return false
+      }
+
+      return true
+    })
+  }, [category, manufacturer, posFilters, products, searchTerm])
+
+  const addToCart = (product: PosProduct, batch: PosBatch) => {
     if (batch.stock <= 0) return
 
     setCart((prev) => {
       const existing = prev.find((item) => item.batch.id === batch.id)
       if (existing) {
         return prev.map((item) =>
-          item.batch.id === batch.id ? { ...item, qty: item.qty + 1 } : item
+          item.batch.id === batch.id
+            ? { ...item, qty: Math.min(item.qty + 1, batch.stock) }
+            : item
         )
       }
+
       return [...prev, { product, batch, qty: 1 }]
     })
   }
@@ -145,11 +304,12 @@ const POS = () => {
   const updateQty = (batchId: string, delta: number) => {
     setCart((prev) =>
       prev.map((item) => {
-        if (item.batch.id === batchId) {
-          const newQty = Math.max(1, item.qty + delta)
-          return { ...item, qty: newQty }
-        }
-        return item
+        if (item.batch.id !== batchId) return item
+        const newQty = Math.min(
+          item.batch.stock,
+          Math.max(1, item.qty + delta)
+        )
+        return { ...item, qty: newQty }
       })
     )
   }
@@ -158,14 +318,13 @@ const POS = () => {
     setCart((prev) => prev.filter((item) => item.batch.id !== batchId))
   }
 
-  // Calculations
   const grossTotal = cart.reduce(
     (sum, item) => sum + item.batch.price * item.qty,
     0
   )
   const discountAmount = (grossTotal * discountPercent) / 100
   const taxableAmount = grossTotal - discountAmount
-  const tax = taxableAmount * 0.12 // 12% GST example
+  const tax = taxableAmount * 0.12
   const netPayable = taxableAmount + tax
   const roundedNet = Math.round(netPayable)
   const rounding = roundedNet - netPayable
@@ -174,69 +333,9 @@ const POS = () => {
   const changeAmount =
     tenderedAmount > roundedNet ? tenderedAmount - roundedNet : 0
 
-  const filteredProducts = DUMMY_PRODUCTS.filter((p) => {
-    // 1. Search filter
-    const matchesSearch =
-      p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.composition.toLowerCase().includes(searchTerm.toLowerCase())
-    if (!matchesSearch) return false
-
-    // 2. Simple top filters (Category & Manufacturer)
-    const matchesCat = category === "All Categories" || p.type === category
-    if (!matchesCat) return false
-
-    const matchesMfg =
-      manufacturer === "All Manufacturers" || p.mfg === manufacturer
-    if (!matchesMfg) return false
-
-    // 3. Advanced Dialog Filters
-    // Stock Status
-    if (posFilters.stockStatus !== "all") {
-      if (posFilters.stockStatus === "in_stock" && p.totalStock <= 0) return false
-      if (posFilters.stockStatus === "out_of_stock" && p.totalStock > 0) return false
-      if (posFilters.stockStatus === "low_stock" && (p.totalStock <= 0 || p.totalStock > 50))
-        return false
-    }
-
-    // Item Type
-    if (posFilters.itemType !== "all") {
-      if (posFilters.itemType === "rx" && p.type !== "Rx") return false
-      if (posFilters.itemType === "otc" && p.type !== "OTC") return false
-      if (posFilters.itemType === "generics" && p.type === "Rx") return false
-    }
-
-    // Formulation
-    if (
-      posFilters.formulation.length > 0 &&
-      !posFilters.formulation.includes(p.formulation)
-    ) {
-      return false
-    }
-
-    // Manufacturers
-    if (posFilters.manufacturers.length > 0) {
-      const mfgMap: any = {
-        cipla: "Cipla Ltd.",
-        sun_pharma: "Sun Pharma",
-        abbott: "Abbott",
-        mankind: "Mankind",
-        gsk: "GSK",
-        torrent: "Torrent",
-      }
-      const matchesAnyMfg = posFilters.manufacturers.some(
-        (val: string) => mfgMap[val] === p.mfg
-      )
-      if (!matchesAnyMfg) return false
-    }
-
-    return true
-  })
-
   return (
     <div className="flex h-screen overflow-hidden bg-background font-sans text-foreground">
-      {/* LEFT PANE - PRODUCTS */}
       <div className="flex flex-1 flex-col overflow-hidden p-4">
-        {/* Top Filters */}
         <div className="mb-4 flex gap-3">
           <div className="relative flex-1">
             <select
@@ -244,9 +343,9 @@ const POS = () => {
               onChange={(e) => setCategory(e.target.value)}
               className="w-full appearance-none rounded-lg border border-border bg-background px-4 py-2.5 text-sm text-foreground shadow-sm outline-none focus:border-ring focus:ring-1 focus:ring-ring"
             >
-              {CATEGORIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
+              {categoryOptions.map((c) => (
+                <option key={c.value} value={c.value}>
+                  {c.label}
                 </option>
               ))}
             </select>
@@ -258,9 +357,9 @@ const POS = () => {
               onChange={(e) => setManufacturer(e.target.value)}
               className="w-full appearance-none rounded-lg border border-border bg-background px-4 py-2.5 text-sm text-foreground shadow-sm outline-none focus:border-ring focus:ring-1 focus:ring-ring"
             >
-              {MANUFACTURERS.map((m) => (
-                <option key={m} value={m}>
-                  {m}
+              {manufacturerOptions.map((m) => (
+                <option key={m.value} value={m.value}>
+                  {m.label}
                 </option>
               ))}
             </select>
@@ -268,7 +367,6 @@ const POS = () => {
           </div>
         </div>
 
-        {/* Search Bar */}
         <div className="mb-6 flex gap-2">
           <div className="relative flex-1">
             <ScanLine className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
@@ -292,116 +390,134 @@ const POS = () => {
           </button>
         </div>
 
-        {/* Product List - Redesigned Cards */}
-        <div className="custom-scrollbar flex-1 overflow-y-auto pr-2 pb-20 space-y-4">
-          {filteredProducts.map((product) => (
-            <div
-              key={product.id}
-              className="rounded-2xl border border-blue-100 bg-white overflow-hidden shadow-sm transition-all hover:shadow-md dark:bg-slate-900/50 dark:border-slate-800"
-            >
-              {/* Card Header */}
-              <div className="p-5 flex items-start gap-4">
-                <div className={cn(
-                  "h-16 w-16 rounded-2xl flex items-center justify-center flex-shrink-0",
-                  product.type === "Rx" ? "bg-red-50 text-red-500" : "bg-blue-50 text-blue-500"
-                )}>
-                  <Pill className="h-8 w-8" />
-                </div>
-
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="text-xl font-bold text-slate-900 truncate dark:text-white">
-                      {product.name}
-                    </h3>
-                    {product.type === "Rx" && (
-                      <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded uppercase">
-                        Rx
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-sm text-slate-500 mb-2 truncate dark:text-slate-400">
-                    {product.composition}
-                  </p>
-                  <div className="flex flex-wrap gap-4 text-xs font-medium text-slate-400">
-                    <span className="flex items-center gap-1">
-                      <Building2 className="h-3.5 w-3.5" />
-                      {product.mfg}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <MapPin className="h-3.5 w-3.5" />
-                      Rack: {product.rack}
-                    </span>
-                  </div>
-                </div>
-
-                <div className={cn(
-                  "px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap",
-                  product.totalStock > 0 ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"
-                )}>
-                  {product.totalStock} IN STOCK
-                </div>
-              </div>
-
-              {/* Batches Table */}
-              <div className="border-t border-slate-100 bg-slate-50/30 dark:border-slate-800 dark:bg-transparent">
-                <table className="w-full text-left text-xs">
-                  <thead>
-                    <tr className="text-slate-400 font-bold tracking-wider border-b border-slate-100 dark:border-slate-800">
-                      <th className="px-6 py-3">BATCH NO.</th>
-                      <th className="px-6 py-3">EXPIRY</th>
-                      <th className="px-6 py-3">AVAILABLE STOCK</th>
-                      <th className="px-6 py-3">UNIT PRICE</th>
-                      <th className="px-6 py-3 text-right">ACTION</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                    {product.batches.map((batch) => (
-                      <tr key={batch.id} className="group hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                        <td className="px-6 py-4 font-bold text-slate-700 dark:text-slate-300">
-                          {batch.number}
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className={cn(
-                            "flex items-center gap-1.5 font-bold",
-                            batch.isNearExpiry ? "text-red-500" : "text-slate-600 dark:text-slate-400"
-                          )}>
-                            {batch.isNearExpiry && <AlertCircle className="h-3.5 w-3.5" />}
-                            {batch.expiry}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 font-semibold text-slate-600 dark:text-slate-400">
-                          {batch.stock} Strips
-                        </td>
-                        <td className="px-6 py-4 font-black text-slate-900 text-sm dark:text-white">
-                          ₹{batch.price.toFixed(2)}
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <button
-                            onClick={() => addToCart(product, batch)}
-                            disabled={batch.stock <= 0}
-                            className={cn(
-                              "h-9 w-9 rounded-xl flex items-center justify-center transition-all",
-                              batch.stock > 0
-                                ? "bg-white border border-blue-200 text-blue-600 hover:bg-blue-600 hover:text-white hover:border-blue-600 shadow-sm"
-                                : "bg-slate-100 text-slate-400 cursor-not-allowed"
-                            )}
-                          >
-                            <Plus className="h-5 w-5" />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+        <div className="custom-scrollbar flex-1 space-y-4 overflow-y-auto pr-2 pb-20">
+          {filteredProducts.length === 0 ? (
+            <div className="flex h-full items-center justify-center rounded-2xl border border-dashed border-border bg-muted/20 p-10 text-center text-muted-foreground">
+              No products found for the selected filters.
             </div>
-          ))}
+          ) : (
+            filteredProducts.map((product) => (
+              <div
+                key={product.id}
+                className="overflow-hidden rounded-2xl border border-blue-100 bg-white shadow-sm transition-all hover:shadow-md dark:border-slate-800 dark:bg-slate-900/50"
+              >
+                <div className="flex items-start gap-4 p-5">
+                  <div
+                    className={cn(
+                      "flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-2xl",
+                      product.type.toLowerCase().includes("rx")
+                        ? "bg-red-50 text-red-500"
+                        : "bg-blue-50 text-blue-500"
+                    )}
+                  >
+                    <Pill className="h-8 w-8" />
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <div className="mb-1 flex items-center gap-2">
+                      <h3 className="truncate text-xl font-bold text-slate-900 dark:text-white">
+                        {product.name}
+                      </h3>
+                      {product.type && product.type !== "NORMAL" && (
+                        <span className="rounded bg-red-500 px-1.5 py-0.5 text-[10px] font-bold text-white uppercase">
+                          {product.type}
+                        </span>
+                      )}
+                    </div>
+                    <p className="mb-2 truncate text-sm text-slate-500 dark:text-slate-400">
+                      {product.composition}
+                    </p>
+                    <div className="flex flex-wrap gap-4 text-xs font-medium text-slate-400">
+                      <span className="flex items-center gap-1">
+                        <Building2 className="h-3.5 w-3.5" />
+                        {product.mfg}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <MapPin className="h-3.5 w-3.5" />
+                        {product.category}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div
+                    className={cn(
+                      "rounded-lg px-3 py-1.5 text-xs font-bold whitespace-nowrap",
+                      product.totalStock > 0
+                        ? "bg-emerald-50 text-emerald-600"
+                        : "bg-red-50 text-red-600"
+                    )}
+                  >
+                    {product.totalStock} IN STOCK
+                  </div>
+                </div>
+
+                <div className="border-t border-slate-100 bg-slate-50/30 dark:border-slate-800 dark:bg-transparent">
+                  <table className="w-full text-left text-xs">
+                    <thead>
+                      <tr className="border-b border-slate-100 font-bold tracking-wider text-slate-400 dark:border-slate-800">
+                        <th className="px-6 py-3">BATCH NO.</th>
+                        <th className="px-6 py-3">EXPIRY</th>
+                        <th className="px-6 py-3">AVAILABLE STOCK</th>
+                        <th className="px-6 py-3">UNIT PRICE</th>
+                        <th className="px-6 py-3 text-right">ACTION</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                      {product.batches.map((batch) => (
+                        <tr
+                          key={batch.id}
+                          className="group transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                        >
+                          <td className="px-6 py-4 font-bold text-slate-700 dark:text-slate-300">
+                            {batch.number}
+                          </td>
+                          <td className="px-6 py-4">
+                            <div
+                              className={cn(
+                                "flex items-center gap-1.5 font-bold",
+                                batch.isNearExpiry
+                                  ? "text-red-500"
+                                  : "text-slate-600 dark:text-slate-400"
+                              )}
+                            >
+                              {batch.isNearExpiry && (
+                                <AlertCircle className="h-3.5 w-3.5" />
+                              )}
+                              {batch.expiry}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 font-semibold text-slate-600 dark:text-slate-400">
+                            {batch.stock} Strips
+                          </td>
+                          <td className="px-6 py-4 text-sm font-black text-slate-900 dark:text-white">
+                            ₹{batch.price.toFixed(2)}
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <button
+                              onClick={() => addToCart(product, batch)}
+                              disabled={batch.stock <= 0}
+                              className={cn(
+                                "flex h-9 w-9 items-center justify-center rounded-xl transition-all",
+                                batch.stock > 0
+                                  ? "border border-blue-200 bg-white text-blue-600 shadow-sm hover:border-blue-600 hover:bg-blue-600 hover:text-white"
+                                  : "cursor-not-allowed bg-slate-100 text-slate-400"
+                              )}
+                            >
+                              <Plus className="h-5 w-5" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
 
-      {/* RIGHT PANE - CART & PAYMENT */}
       <div className="z-10 flex w-[400px] flex-col border-l border-border bg-card shadow-[-10px_0_30px_rgba(0,0,0,0.02)] xl:w-[480px]">
-        {/* Cart Header */}
         <div className="flex items-center justify-between border-b border-border bg-muted/50 p-4">
           <div className="flex items-center gap-2">
             <ShoppingCart className="h-5 w-5 text-foreground" />
@@ -414,7 +530,6 @@ const POS = () => {
           </span>
         </div>
 
-        {/* Customer & Doctor Info */}
         <div className="space-y-3 border-b border-border bg-card p-4">
           <div className="flex gap-2">
             <div className="relative flex-1">
@@ -435,9 +550,7 @@ const POS = () => {
               />
             </div>
           </div>
-          <p className="flex items-center gap-1 px-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">
-            <GiftIcon /> 450 Reward Points Available
-          </p>
+
           <div className="relative">
             <Stethoscope className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <input
@@ -449,7 +562,6 @@ const POS = () => {
           </div>
         </div>
 
-        {/* Cart Items */}
         <div className="custom-scrollbar flex-1 overflow-y-auto bg-muted/30 p-4">
           {cart.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center space-y-3 text-muted-foreground">
@@ -471,11 +583,6 @@ const POS = () => {
                     <div>
                       <h4 className="flex items-center gap-1.5 text-sm font-semibold text-card-foreground">
                         {item.product.name}
-                        {item.product.type === "Rx" && (
-                          <span className="text-destructive-foreground rounded bg-destructive px-1 text-[9px] font-bold uppercase">
-                            Rx
-                          </span>
-                        )}
                       </h4>
                       <div className="mt-0.5 flex gap-2 text-[11px] text-muted-foreground">
                         <span>Batch: {item.batch.number}</span>
@@ -534,9 +641,7 @@ const POS = () => {
           )}
         </div>
 
-        {/* Totals & Payment (Bottom fixed area) */}
         <div className="z-10 border-t border-border bg-card">
-          {/* Subtotals */}
           <div className="space-y-2.5 border-b border-border p-4 text-sm">
             <div className="flex justify-between text-muted-foreground">
               <span>
@@ -583,7 +688,6 @@ const POS = () => {
             </div>
           </div>
 
-          {/* Net Payable */}
           <div className="flex items-center justify-between bg-accent/50 px-4 py-3">
             <div>
               <h3 className="font-bold text-foreground">Net Payable</h3>
@@ -596,7 +700,6 @@ const POS = () => {
             </span>
           </div>
 
-          {/* Payment Methods */}
           <div className="p-4">
             <div className="mb-4 grid grid-cols-3 gap-2">
               {["Cash", "Card / POS", "UPI / QR"].map((mode) => (
@@ -619,9 +722,7 @@ const POS = () => {
                   Tendered
                 </label>
                 <div className="flex items-center overflow-hidden rounded-lg border border-border transition-all focus-within:border-ring focus-within:ring-1 focus-within:ring-ring">
-                  <span className="pl-3 font-bold text-muted-foreground">
-                    ₹
-                  </span>
+                  <span className="pl-3 font-bold text-muted-foreground">₹</span>
                   <input
                     type="number"
                     value={tendered}
@@ -663,30 +764,10 @@ const POS = () => {
         onClose={setIsFilterOpen}
         initialFilters={posFilters}
         onFilter={setPosFilters}
+        manufacturerOptions={manufacturerFilterOptions}
       />
     </div>
   )
 }
-
-// Mini internal icon since lucide-react doesn't have Gift by default in our list
-const GiftIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="12"
-    height="12"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <polyline points="20 12 20 22 4 22 4 12"></polyline>
-    <rect x="2" y="7" width="20" height="5"></rect>
-    <line x1="12" y1="22" x2="12" y2="7"></line>
-    <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path>
-    <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path>
-  </svg>
-)
 
 export default POS

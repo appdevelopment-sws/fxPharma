@@ -367,8 +367,6 @@ export class OrdersController {
         paidAmount: true,
       },
     });
-    console.log("Existing order for update:", existing);
-    console.log("Update data:", items);
     if (!existing) {
       return res
         .status(404)
