@@ -94,6 +94,24 @@ const toDateInputValue = (value?: string | Date) => {
   return date.toISOString().slice(0, 10)
 }
 
+const toExpiryInputValue = (value?: string | Date) => {
+  if (!value) return ""
+
+  if (typeof value === "string") {
+    const trimmed = value.trim()
+    if (/^\d{1,2}\/\d{2,4}$/.test(trimmed)) {
+      return trimmed
+    }
+  }
+
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ""
+
+  return `${String(date.getMonth() + 1).padStart(2, "0")}/${String(
+    date.getFullYear()
+  ).slice(-2)}`
+}
+
 const toNumber = (value: unknown) => {
   const parsed = Number(value)
   return Number.isFinite(parsed) ? parsed : 0
@@ -114,7 +132,7 @@ const buildRowFromItem = (item: any): OrderConfirmItem => ({
   qty: toNumber(item.qty || item.ordQty || 1),
   freeQty: toNumber(item.freeQty || item.free || 0),
   batchNo: item.batchNo || item.batch || "",
-  expiry: item.inventory?.daysLimit || "",
+  expiry: toExpiryInputValue(item.expiry || item.inventory?.daysLimit),
   purchaseRate: toNumber(item.purchaseRate),
   mrp: toNumber(item.inventory?.mrp),
   rate1: toNumber(item.inventory?.rateA),

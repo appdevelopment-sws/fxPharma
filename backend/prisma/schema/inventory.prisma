@@ -67,6 +67,7 @@ model Inventory {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
   orderItems OrderItem[]
+  batches InventoryBatch[]
   // Relations
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   branch       Branch?      @relation(fields: [branchId], references: [id], onDelete: SetNull)
@@ -77,6 +78,48 @@ model Inventory {
   @@index([organizationId])
   @@index([branchId])
   @@index([name])
+}
+
+model InventoryBatch {
+  id            String   @id @default(cuid())
+  organizationId String  @map("organization_id")
+  branchId      String?  @map("branch_id")
+  inventoryId   String   @map("inventory_id")
+  orderId       String?  @map("order_id")
+  orderItemId   String?  @map("order_item_id")
+
+  batchNo       String   @map("batch_no")
+  expiry        String?  @map("expiry")
+  expiryDate    DateTime? @map("expiry_date")
+
+  unit          String?
+  receivedQty   Int      @default(0) @map("received_qty")
+  availableQty  Int      @default(0) @map("available_qty")
+  purchaseRate  Decimal? @default(0.0) @map("purchase_rate")
+  mrp           Decimal? @default(0.0)
+  rateA         Decimal? @default(0.0) @map("rate_a")
+  rateB         Decimal? @default(0.0) @map("rate_b")
+  rateC         Decimal? @default(0.0) @map("rate_c")
+  cgst          Decimal? @default(0.0)
+  sgst          Decimal? @default(0.0)
+
+  receivedAt    DateTime @default(now()) @map("received_at")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  inventory     Inventory @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
+  order         Order?    @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  orderItem     OrderItem? @relation(fields: [orderItemId], references: [id], onDelete: SetNull)
+  organization  Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  branch        Branch?   @relation(fields: [branchId], references: [id], onDelete: SetNull)
+
+  @@index([inventoryId])
+  @@index([organizationId])
+  @@index([branchId])
+  @@index([orderId])
+  @@index([orderItemId])
+  @@index([batchNo])
+  @@index([expiryDate])
 }
 
 enum InventoryStatus {

@@ -58,6 +58,25 @@ type InventoryRelation = {
   name?: string | null
 }
 
+export type InventoryBatch = {
+  id: string
+  batchNo?: string
+  expiry?: string | null
+  expiryDate?: string | null
+  availableQty?: number
+  receivedQty?: number
+  purchaseRate?: number | string | null
+  mrp?: number | string | null
+  rateA?: number | string | null
+  rateB?: number | string | null
+  rateC?: number | string | null
+  cgst?: number | string | null
+  sgst?: number | string | null
+  receivedAt?: string
+  createdAt?: string
+  updatedAt?: string
+}
+
 export type InventoryItem = {
   id: string
   name: string
@@ -110,6 +129,7 @@ export type InventoryItem = {
   hideProduct?: boolean
   negativeStock?: boolean
   editRates?: boolean
+  batches?: InventoryBatch[]
   createdAt?: string
   updatedAt?: string
 }

@@ -19,6 +19,7 @@ interface FilterPointofSaleProps {
   onClose: (open: boolean) => void
   onFilter: (filters: any) => void
   initialFilters?: any
+  manufacturerOptions?: Array<{ label: string; value: string }>
 }
 
 export default function FilterPointofSale({
@@ -26,6 +27,7 @@ export default function FilterPointofSale({
   onClose,
   onFilter,
   initialFilters,
+  manufacturerOptions,
 }: FilterPointofSaleProps) {
   const { handleSubmit, control, reset } = useForm({
     defaultValues: initialFilters || {
@@ -59,6 +61,11 @@ export default function FilterPointofSale({
     onFilter(defaultVals)
     onClose(false)
   }
+
+  const resolvedManufacturerOptions =
+    manufacturerOptions && manufacturerOptions.length > 0
+      ? manufacturerOptions
+      : MANUFACTURER_FILTER_OPTIONS
 
   return (
     <FormContainer
@@ -130,7 +137,7 @@ export default function FilterPointofSale({
             <div className="space-y-4">
               <Label className="text-xs font-bold text-muted-foreground uppercase">Manufacturers</Label>
               <div className="grid grid-cols-2 gap-y-4 gap-x-8">
-                {MANUFACTURER_FILTER_OPTIONS.map((mfg) => (
+                {resolvedManufacturerOptions.map((mfg) => (
                   <Controller
                     key={mfg.value}
                     control={control}

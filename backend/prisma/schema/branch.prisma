@@ -34,6 +34,7 @@ model Branch {
   suppliers       Supplier[]
   auditLogs       AuditLog[]
   inventory Inventory[]
+  inventoryBatches InventoryBatch[]
   newCompounds NewCompound[]
   brands Brand[]
   units Unit[]
@@ -44,4 +45,3 @@ model Branch {
 
   @@unique([organizationId, code])
 }
-

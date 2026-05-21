@@ -21,6 +21,9 @@ const orderItemSchema = z.object({
 
 export const createOrderSchema = z.object({
   supplierId: z.string().optional().nullable(),
+  invoiceNo: z.string().optional().nullable(),
+  receivedAt: z.string().optional().nullable(),
+  notes: z.string().optional().nullable(),
   status: z
     .enum([
       "DRAFT",
