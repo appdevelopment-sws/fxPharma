@@ -296,10 +296,10 @@ export default function OrderConfirmFormDialog({
       0
     )
     const subtotalExclTax = items.reduce((sum, item) => {
-      return sum + toNumber(item.qty) * toNumber(item.purchaseRate)
+      return sum + toNumber(item.purchaseRate)
     }, 0)
     const totalDiscountAmount = items.reduce((sum, item) => {
-      const lineBase = toNumber(item.qty) * toNumber(item.purchaseRate)
+      const lineBase = toNumber(item.purchaseRate)
       const discountValue = toNumber(item.discount)
 
       if ((item.discount_type || "flat") === "percentage") {
@@ -309,7 +309,7 @@ export default function OrderConfirmFormDialog({
       return sum + discountValue
     }, 0)
     const totalTax = items.reduce((sum, item) => {
-      const lineBase = toNumber(item.qty) * toNumber(item.purchaseRate)
+      const lineBase = toNumber(item.purchaseRate)
       const discountValue = toNumber(item.discount)
       const discountAmount =
         (item.discount_type || "flat") === "percentage"
