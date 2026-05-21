@@ -12,6 +12,9 @@ const orderItemSchema = z.object({
   rate1: z.coerce.number().optional().nullable(),
   rate2: z.coerce.number().optional().nullable(),
   rate3: z.coerce.number().optional().nullable(),
+  discount: z.coerce.number().min(0).optional().nullable(),
+  discountType: z.enum(["flat", "percentage"]).optional(),
+  discount_type: z.enum(["flat", "percentage"]).optional(),
   cgst: z.coerce.number().optional().nullable(),
   sgst: z.coerce.number().optional().nullable(),
 });
