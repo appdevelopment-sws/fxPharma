@@ -201,10 +201,16 @@ export class OrdersController {
     const { organizationId, branchId } = getRequestScope(req);
     const { items, ...orderData } = req.body;
 
+    const cleanedOrderData = {
+      ...orderData,
+      supplierId: orderData.supplierId === "" ? null : orderData.supplierId,
+      branchId: orderData.branchId === "" ? null : orderData.branchId,
+    };
+
     const order = await rootPrisma.order.create({
       data: {
-        ...orderData,
-        status: normalizeOrderStatus(orderData.status) || undefined,
+        ...cleanedOrderData,
+        status: normalizeOrderStatus(cleanedOrderData.status) || undefined,
         organizationId,
         branchId,
         items: {
@@ -226,12 +232,15 @@ export class OrdersController {
   static update = catchAsync(async (req: Request, res: Response) => {
     const { organizationId, branchId } = getRequestScope(req);
     const { items, ...orderData } = req.body;
+
+    console.log("Received :", { organizationId, branchId });
     console.log("Received order update request:", { organizationId });
     const existing = await rootPrisma.order.findUnique({
       where: { id: req.params.id as string },
-      select: { id: true, organizationId: true, branchId: true },
+      select: { id: true, organizationId: true, branchId: true, status: true },
     });
-
+    console.table(orderData);
+    console.log(items);
     if (!existing) {
       return res
         .status(404)
@@ -244,8 +253,17 @@ export class OrdersController {
         .json({ success: false, message: "Order not found" });
     }
 
+    const cleanedOrderData = {
+      ...orderData,
+      supplierId: orderData.supplierId === "" ? null : orderData.supplierId,
+      branchId: orderData.branchId === "" ? null : orderData.branchId,
+    };
+
     const order = await rootPrisma.$transaction(async (tx) => {
-      if (Array.isArray(items)) {
+      const shouldUpdateInventory =
+        existing.status !== "PENDING" && existing.status !== "COMPLETED";
+
+      if (shouldUpdateInventory && Array.isArray(items)) {
         for (const item of items) {
           if (!item?.inventoryId) continue;
           console.log("Processing inventory update for item:", item);
@@ -278,8 +296,8 @@ export class OrdersController {
       return tx.order.update({
         where: { id: req.params.id as string },
         data: {
-          ...orderData,
-          status: normalizeOrderStatus(orderData.status) || undefined,
+          ...cleanedOrderData,
+          status: normalizeOrderStatus(cleanedOrderData.status) || undefined,
           organizationId,
           branchId: existing.branchId ?? branchId,
           ...(items && {

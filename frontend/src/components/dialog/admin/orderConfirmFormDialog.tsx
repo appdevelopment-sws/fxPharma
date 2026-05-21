@@ -111,7 +111,10 @@ const buildRowFromItem = (item: any): OrderConfirmItem => ({
   sgst: toNumber(item.inventory?.sgst),
   freeUnit: item.freeUnit || item.freeUnit || "strips",
   discount: toNumber(item.discount || 0),
-  discount_type: item.discount_type || "flat",
+  discount_type:
+    item.discount_type ||
+    item.discountType ||
+    "flat",
 })
 
 const buildBlankRow = (): OrderConfirmItem => ({
@@ -185,6 +188,9 @@ export default function OrderConfirmFormDialog({
       Array.isArray(order?.items) && order.items.length > 0
         ? order.items.map(buildRowFromItem)
         : [buildBlankRow()]
+
+
+    console.table(items)
     const normalizedIsUdhar =
       order?.isUdhar === true ||
       order?.isUdhar === "YES" ||
@@ -254,6 +260,8 @@ export default function OrderConfirmFormDialog({
     }
   }, [items, paidAmount])
 
+  const isAlreadyReceived = order?.status === "PENDING" || order?.status === "COMPLETED"
+
   useEffect(() => {
     if (!open) return
 
@@ -271,15 +279,22 @@ export default function OrderConfirmFormDialog({
         throw new Error("Order id is missing")
       }
 
+      const balanceDue = Math.max(0, totals.netPayable - toNumber(values.paidAmount))
+      const determinedStatus = balanceDue === 0 ? "COMPLETED" : "PENDING"
+
       return ordersApi.update(order.id, {
         ...values,
-        status: "COMPLETED",
+        status: determinedStatus,
         items: values.items,
       })
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.orders.all })
-      toast.success("Order received and inventory updated")
+      if (isAlreadyReceived) {
+        toast.success("Order payment details updated")
+      } else {
+        toast.success("Order received and inventory updated")
+      }
       onClose(false)
     },
     onError: () => {
@@ -306,8 +321,12 @@ export default function OrderConfirmFormDialog({
       variant="modal"
       open={open}
       onOpenChange={(isOpen) => onClose(isOpen)}
-      title="Receive Order"
-      description="Confirm the received stock, batches, expiry, and rates before updating inventory."
+      title={isAlreadyReceived ? "Update Payment Details" : "Receive Order"}
+      description={
+        isAlreadyReceived
+          ? "Update payment details and outstanding balance for this order."
+          : "Confirm the received stock, batches, expiry, and rates before updating inventory."
+      }
       size="extrafull"
       height="extrafull"
       footer={null}
@@ -358,7 +377,11 @@ export default function OrderConfirmFormDialog({
               disabled={saveMutation.isPending}
             >
               <CircleDollarSign className="mr-2 size-4" />
-              {saveMutation.isPending ? "Saving..." : "Save & Update Inventory"}
+              {saveMutation.isPending
+                ? "Saving..."
+                : isAlreadyReceived
+                  ? "Save & Update Payment"
+                  : "Save & Update Inventory"}
             </Button>
           </div>
         </div>

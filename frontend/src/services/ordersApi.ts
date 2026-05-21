@@ -35,7 +35,7 @@ export interface OrderFormValues {
 
 const mapToApi = (data: any) => {
   return {
-    supplierId: data.supplierId,
+    supplierId: data.supplierId || undefined,
     status: data.status || "DRAFT",
     receivedAt: data.receivedAt || undefined,
     invoiceNo: data.invoiceNo || undefined,
@@ -85,6 +85,11 @@ const mapToApi = (data: any) => {
         item.sgst === undefined || item.sgst === null
           ? undefined
           : Number(item.sgst),
+      discount:
+        item.discount === undefined || item.discount === null
+          ? undefined
+          : Number(item.discount),
+      discountType: item.discount_type || item.discountType || "flat",
     })),
   }
 }
