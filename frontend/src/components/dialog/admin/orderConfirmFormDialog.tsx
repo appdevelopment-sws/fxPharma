@@ -5,6 +5,7 @@ import {
   CalendarDays,
   CircleDollarSign,
   FileText,
+  Clock3,
   Package,
   Plus,
   Trash2,
@@ -48,6 +49,17 @@ type OrderConfirmItem = {
   freeUnit: string
 }
 
+type OrderPaymentHistoryItem = {
+  id?: string
+  amount: number
+  paymentMode?: string | null
+  paymentDetails?: string | null
+  isUdhar?: boolean
+  notes?: string | null
+  paidAt?: string
+  createdAt?: string
+}
+
 type OrderConfirmFormValues = {
   supplierId: string
   status: string
@@ -59,6 +71,7 @@ type OrderConfirmFormValues = {
   isUdhar: string
   paidAmount: number
   items: OrderConfirmItem[]
+  paymentHistory?: OrderPaymentHistoryItem[]
 }
 
 interface OrderConfirmFormDialogProps {
@@ -139,6 +152,60 @@ const buildBlankRow = (): OrderConfirmItem => ({
   discount_type: "flat",
 })
 
+const formatDateTime = (value?: string) => {
+  if (!value) return "Unknown date"
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? "Unknown date" : date.toLocaleString()
+}
+
+const normalizePaymentHistory = (
+  order: any,
+  fallbackPaidAmount: number
+): OrderPaymentHistoryItem[] => {
+  const history = Array.isArray(order?.paymentHistory)
+    ? order.paymentHistory
+    : []
+
+  if (history.length > 0) {
+    return history
+      .map((entry: any) => ({
+        id: entry.id,
+        amount: toNumber(entry.amount),
+        paymentMode: entry.paymentMode || null,
+        paymentDetails: entry.paymentDetails || null,
+        isUdhar: Boolean(entry.isUdhar),
+        notes: entry.notes || null,
+        paidAt: entry.paidAt || entry.createdAt,
+        createdAt: entry.createdAt,
+      }))
+      .sort((a, b) => {
+        const aTime = new Date(a.paidAt || a.createdAt || 0).getTime()
+        const bTime = new Date(b.paidAt || b.createdAt || 0).getTime()
+        return bTime - aTime
+      })
+  }
+
+  if (fallbackPaidAmount <= 0) {
+    return []
+  }
+
+  return [
+    {
+      id: "legacy-paid-amount",
+      amount: fallbackPaidAmount,
+      paymentMode: order?.paymentMode || null,
+      paymentDetails: order?.paymentDetails || null,
+      isUdhar:
+        order?.isUdhar === true ||
+        order?.isUdhar === "YES" ||
+        order?.isUdhar === "yes",
+      notes: order?.notes || null,
+      paidAt: order?.updatedAt || order?.createdAt,
+      createdAt: order?.createdAt,
+    },
+  ]
+}
+
 export default function OrderConfirmFormDialog({
   open,
   onClose,
@@ -176,6 +243,12 @@ export default function OrderConfirmFormDialog({
     name: "isUdhar",
   })
 
+  const savedPaidAmount = toNumber(order?.paidAmount)
+  const paymentHistory = useMemo(
+    () => normalizePaymentHistory(order, savedPaidAmount),
+    [order, savedPaidAmount]
+  )
+
   const { fields, append, remove } = useFieldArray({
     control,
     name: "items",
@@ -183,19 +256,15 @@ export default function OrderConfirmFormDialog({
 
   useEffect(() => {
     if (!open) return
-    // console.table(order?.items)
     const items =
       Array.isArray(order?.items) && order.items.length > 0
         ? order.items.map(buildRowFromItem)
         : [buildBlankRow()]
 
-
-    console.table(items)
     const normalizedIsUdhar =
       order?.isUdhar === true ||
       order?.isUdhar === "YES" ||
       order?.isUdhar === "yes"
-    console.table(items)
     reset({
       supplierId: order?.supplierId || order?.supplier?.id || "",
       status: order?.status || "DELIVERED",
@@ -207,10 +276,10 @@ export default function OrderConfirmFormDialog({
       paymentMode: order?.paymentMode || "cash",
       paymentDetails: order?.paymentDetails || "",
       isUdhar: normalizedIsUdhar ? "YES" : "NO",
-      paidAmount: toNumber(order?.paidAmount),
+      paidAmount: savedPaidAmount,
       items,
     })
-  }, [open, order, reset])
+  }, [open, order, reset, savedPaidAmount])
 
   const totals = useMemo(() => {
     const totalProducts = items.length
@@ -265,13 +334,13 @@ export default function OrderConfirmFormDialog({
   useEffect(() => {
     if (!open) return
 
-    if (isUdhar === "NO") {
+    if (isUdhar === "NO" && savedPaidAmount <= 0 && totals.netPayable > 0) {
       setValue("paidAmount", totals.netPayable, {
         shouldDirty: true,
         shouldTouch: true,
       })
     }
-  }, [open, isUdhar, setValue, totals.netPayable])
+  }, [open, isUdhar, savedPaidAmount, setValue, totals.netPayable])
 
   const saveMutation = useMutation({
     mutationFn: async (values: OrderConfirmFormValues) => {
@@ -310,8 +379,12 @@ export default function OrderConfirmFormDialog({
   }
 
   const paidAmountValue = toNumber(paidAmount)
-  const changeAmount = Math.max(0, paidAmountValue - totals.netPayable)
   const outstandingAmount = Math.max(0, totals.netPayable - paidAmountValue)
+  const lastPayment = paymentHistory[0]
+  const totalPaidSoFar = paymentHistory.reduce(
+    (sum, entry) => sum + toNumber(entry.amount),
+    0
+  )
 
   const originalPoUrl =
     order?.originalPoUrl || order?.poUrl || order?.documentUrl
@@ -768,31 +841,60 @@ export default function OrderConfirmFormDialog({
             </div>
 
             <div className="mt-5 space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-muted-foreground">
-                  Payment Mode
-                </label>
-                <select
-                  {...register("paymentMode")}
-                  className="h-11 w-full rounded-2xl border border-border/60 bg-background px-4 text-sm font-semibold text-foreground outline-none focus:ring-2 focus:ring-primary/20"
-                >
-                  {PAYMENT_MODE_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div className="rounded-2xl border border-border/60 bg-muted/30 px-4 py-3">
+                  <p className="text-xs font-semibold uppercase text-muted-foreground">
+                    Paid So Far
+                  </p>
+                  <p className="mt-1 text-xl font-black">
+                    ₹{formatMoney(totalPaidSoFar)}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-border/60 bg-muted/30 px-4 py-3">
+                  <p className="text-xs font-semibold uppercase text-muted-foreground">
+                    Outstanding
+                  </p>
+                  <p className="mt-1 text-xl font-black">
+                    ₹{formatMoney(outstandingAmount)}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-border/60 bg-muted/30 px-4 py-3">
+                  <p className="text-xs font-semibold uppercase text-muted-foreground">
+                    Last Payment
+                  </p>
+                  <p className="mt-1 text-xl font-black">
+                    {lastPayment ? `₹${formatMoney(lastPayment.amount)}` : "—"}
+                  </p>
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-muted-foreground">
-                  Payment Details
-                </label>
-                <Input
-                  {...register("paymentDetails")}
-                  placeholder="Cash memo, UPI reference, debit note, etc."
-                  className="h-11 rounded-2xl border-border/60"
-                />
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-muted-foreground">
+                    Payment Mode
+                  </label>
+                  <select
+                    {...register("paymentMode")}
+                    className="h-11 w-full rounded-2xl border border-border/60 bg-background px-4 text-sm font-semibold text-foreground outline-none focus:ring-2 focus:ring-primary/20"
+                  >
+                    {PAYMENT_MODE_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-muted-foreground">
+                    Payment Details
+                  </label>
+                  <Input
+                    {...register("paymentDetails")}
+                    placeholder="Cash memo, UPI reference, debit note, etc."
+                    className="h-11 rounded-2xl border-border/60"
+                  />
+                </div>
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
@@ -811,7 +913,7 @@ export default function OrderConfirmFormDialog({
 
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-muted-foreground">
-                    {isUdhar === "NO" ? "Final Amount" : "Amount Paid"}
+                    Paid Amount
                   </label>
                   <Input
                     type="number"
@@ -824,37 +926,76 @@ export default function OrderConfirmFormDialog({
                   />
                   <p className="text-xs text-muted-foreground">
                     {isUdhar === "NO"
-                      ? "Auto-filled from net payable."
-                      : "Enter how much was actually paid."}
+                      ? "Auto-filled only when no paid amount exists yet."
+                      : "Enter the total amount paid so far for this order."}
                   </p>
                 </div>
               </div>
 
-              <div className="grid gap-3 md:grid-cols-2">
-                {/* <div className="rounded-2xl border border-border/60 bg-muted/30 px-4 py-3 text-sm">
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Change</span>
-                    <span className="font-black text-foreground">
-                      ₹{formatMoney(changeAmount)}
-                    </span>
+              <div className="rounded-3xl border border-border/60 bg-background/80 p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-muted-foreground">
+                      Payment History
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {paymentHistory.length
+                        ? `${paymentHistory.length} payment${paymentHistory.length === 1 ? "" : "s"} recorded`
+                        : "No payment history yet."}
+                    </p>
                   </div>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Cash to return if the amount paid is higher than payable.
-                  </p>
-                </div> */}
+                  <div className="inline-flex items-center gap-2 rounded-full bg-muted/60 px-3 py-1 text-xs font-semibold text-muted-foreground">
+                    <Clock3 className="size-3.5" />
+                    {paymentHistory.length ? "Latest at top" : "Empty"}
+                  </div>
+                </div>
 
-                <div className="rounded-2xl border border-border/60 bg-muted/30 px-4 py-3 text-sm">
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Outstanding</span>
-                    <span className="font-black text-foreground">
-                      ₹{formatMoney(outstandingAmount)}
-                    </span>
-                  </div>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {isUdhar === "YES"
-                      ? "Remaining amount will stay as udhar."
-                      : "This should stay at zero for a fully paid order."}
-                  </p>
+                <div className="mt-4 max-h-60 space-y-3 overflow-auto pr-1">
+                  {paymentHistory.length > 0 ? (
+                    paymentHistory.map((entry) => (
+                      <div
+                        key={entry.id || `${entry.amount}-${entry.paidAt}`}
+                        className="rounded-2xl border border-border/60 bg-card px-4 py-3"
+                      >
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                          <div className="space-y-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="text-sm font-black text-card-foreground">
+                                ₹{formatMoney(entry.amount)}
+                              </span>
+                              {entry.paymentMode ? (
+                                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold uppercase text-primary">
+                                  {entry.paymentMode}
+                                </span>
+                              ) : null}
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              {formatDateTime(entry.paidAt || entry.createdAt)}
+                            </p>
+                          </div>
+                          {entry.isUdhar ? (
+                            <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[11px] font-semibold uppercase text-amber-600">
+                              Udhar
+                            </span>
+                          ) : null}
+                        </div>
+                        {(entry.paymentDetails || entry.notes) && (
+                          <p className="mt-2 text-xs leading-5 text-muted-foreground">
+                            {entry.paymentDetails || entry.notes}
+                          </p>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="rounded-2xl border border-dashed border-border/60 px-4 py-8 text-center">
+                      <p className="text-sm font-semibold text-card-foreground">
+                        No payments recorded yet
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Save the order once to start tracking payment history.
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
