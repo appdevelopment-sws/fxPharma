@@ -24,10 +24,14 @@ export const createOrderSchema = z.object({
       "SENT",
       "PENDING",
       "COMPLETED",
-      "CANCELLED",
-      "DELIVERED",
-    ])
-    .optional(),
+    "CANCELLED",
+    "DELIVERED",
+  ])
+  .optional(),
+  paymentMode: z.enum(["cash", "debit", "upi"]).optional().nullable(),
+  paymentDetails: z.string().optional().nullable(),
+  isUdhar: z.boolean().optional(),
+  paidAmount: z.coerce.number().min(0).optional(),
   items: z.array(orderItemSchema).min(1, "At least one item is required"),
 });
 

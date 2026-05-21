@@ -18,6 +18,13 @@ import { Input } from "@/components/ui/input"
 import { ordersApi } from "@/services/ordersApi"
 import { queryKeys } from "@/lib/queryKeys"
 import { PACKAGING_TYPE_OPTIONS } from "@/constants/page/admin/inventory"
+import { DISCOUNT_TYPE_OPTIONS } from "@/constants/shared/discountTypes"
+
+const PAYMENT_MODE_OPTIONS = [
+  { label: "Cash", value: "cash" },
+  { label: "Debit", value: "debit" },
+  { label: "UPI", value: "upi" },
+]
 
 type OrderConfirmItem = {
   tempId: string
@@ -34,7 +41,8 @@ type OrderConfirmItem = {
   rate1: number
   rate2: number
   rate3: number
-
+  discount: number
+  discount_type: string
   cgst: number
   sgst: number
   freeUnit: string
@@ -46,6 +54,10 @@ type OrderConfirmFormValues = {
   receivedAt: string
   invoiceNo: string
   notes: string
+  paymentMode: string
+  paymentDetails: string
+  isUdhar: string
+  paidAmount: number
   items: OrderConfirmItem[]
 }
 
@@ -74,6 +86,12 @@ const toNumber = (value: unknown) => {
   return Number.isFinite(parsed) ? parsed : 0
 }
 
+const formatMoney = (value: number) =>
+  value.toLocaleString("en-IN", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })
+
 const buildRowFromItem = (item: any): OrderConfirmItem => ({
   tempId: item.tempId || item.id || createTempId(),
   inventoryId: item.inventoryId || item.inventory?.id,
@@ -92,6 +110,11 @@ const buildRowFromItem = (item: any): OrderConfirmItem => ({
   cgst: toNumber(item.inventory?.cgst),
   sgst: toNumber(item.inventory?.sgst),
   freeUnit: item.freeUnit || item.freeUnit || "strips",
+  discount: toNumber(item.discount || 0),
+  discount_type:
+    item.discount_type ||
+    item.discountType ||
+    "flat",
 })
 
 const buildBlankRow = (): OrderConfirmItem => ({
@@ -112,6 +135,8 @@ const buildBlankRow = (): OrderConfirmItem => ({
   cgst: 0,
   sgst: 0,
   freeUnit: "strips",
+  discount: 0,
+  discount_type: "flat",
 })
 
 export default function OrderConfirmFormDialog({
@@ -129,6 +154,10 @@ export default function OrderConfirmFormDialog({
         receivedAt: toDateInputValue(new Date()),
         invoiceNo: "",
         notes: "",
+        paymentMode: "cash",
+        paymentDetails: "",
+        isUdhar: "NO",
+        paidAmount: 0,
         items: [buildBlankRow()],
       },
     })
@@ -138,6 +167,14 @@ export default function OrderConfirmFormDialog({
       control,
       name: "items",
     }) || []
+  const paidAmount = useWatch({
+    control,
+    name: "paidAmount",
+  })
+  const isUdhar = useWatch({
+    control,
+    name: "isUdhar",
+  })
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -151,6 +188,13 @@ export default function OrderConfirmFormDialog({
       Array.isArray(order?.items) && order.items.length > 0
         ? order.items.map(buildRowFromItem)
         : [buildBlankRow()]
+
+
+    console.table(items)
+    const normalizedIsUdhar =
+      order?.isUdhar === true ||
+      order?.isUdhar === "YES" ||
+      order?.isUdhar === "yes"
     console.table(items)
     reset({
       supplierId: order?.supplierId || order?.supplier?.id || "",
@@ -160,6 +204,10 @@ export default function OrderConfirmFormDialog({
       ),
       invoiceNo: order?.invoiceNo || "",
       notes: order?.notes || "",
+      paymentMode: order?.paymentMode || "cash",
+      paymentDetails: order?.paymentDetails || "",
+      isUdhar: normalizedIsUdhar ? "YES" : "NO",
+      paidAmount: toNumber(order?.paidAmount),
       items,
     })
   }, [open, order, reset])
@@ -170,17 +218,60 @@ export default function OrderConfirmFormDialog({
       (sum, item) => sum + toNumber(item.qty) + toNumber(item.freeQty),
       0
     )
-    const estimatedValue = items.reduce(
-      (sum, item) => sum + toNumber(item.qty) * toNumber(item.purchaseRate),
-      0
+    const subtotalExclTax = items.reduce((sum, item) => {
+      return sum + toNumber(item.qty) * toNumber(item.purchaseRate)
+    }, 0)
+    const totalDiscountAmount = items.reduce((sum, item) => {
+      const lineBase = toNumber(item.qty) * toNumber(item.purchaseRate)
+      const discountValue = toNumber(item.discount)
+
+      if ((item.discount_type || "flat") === "percentage") {
+        return sum + (lineBase * discountValue) / 100
+      }
+
+      return sum + discountValue
+    }, 0)
+    const totalTax = items.reduce((sum, item) => {
+      const lineBase = toNumber(item.qty) * toNumber(item.purchaseRate)
+      const discountValue = toNumber(item.discount)
+      const discountAmount =
+        (item.discount_type || "flat") === "percentage"
+          ? (lineBase * discountValue) / 100
+          : discountValue
+      const taxableAmount = Math.max(0, lineBase - discountAmount)
+      const lineTaxPercent = toNumber(item.cgst) + toNumber(item.sgst)
+
+      return sum + (taxableAmount * lineTaxPercent) / 100
+    }, 0)
+    const netPayable = Math.max(
+      0,
+      subtotalExclTax - totalDiscountAmount + totalTax
     )
+    const balanceDue = Math.max(0, netPayable - toNumber(paidAmount))
 
     return {
       totalProducts,
       totalUnitsReceived,
-      estimatedValue,
+      subtotalExclTax,
+      totalTax,
+      totalDiscountAmount,
+      netPayable,
+      balanceDue,
     }
-  }, [items])
+  }, [items, paidAmount])
+
+  const isAlreadyReceived = order?.status === "PENDING" || order?.status === "COMPLETED"
+
+  useEffect(() => {
+    if (!open) return
+
+    if (isUdhar === "NO") {
+      setValue("paidAmount", totals.netPayable, {
+        shouldDirty: true,
+        shouldTouch: true,
+      })
+    }
+  }, [open, isUdhar, setValue, totals.netPayable])
 
   const saveMutation = useMutation({
     mutationFn: async (values: OrderConfirmFormValues) => {
@@ -188,15 +279,22 @@ export default function OrderConfirmFormDialog({
         throw new Error("Order id is missing")
       }
 
+      const balanceDue = Math.max(0, totals.netPayable - toNumber(values.paidAmount))
+      const determinedStatus = balanceDue === 0 ? "COMPLETED" : "PENDING"
+
       return ordersApi.update(order.id, {
         ...values,
-        status: "COMPLETED",
+        status: determinedStatus,
         items: values.items,
       })
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.orders.all })
-      toast.success("Order received and inventory updated")
+      if (isAlreadyReceived) {
+        toast.success("Order payment details updated")
+      } else {
+        toast.success("Order received and inventory updated")
+      }
       onClose(false)
     },
     onError: () => {
@@ -205,14 +303,15 @@ export default function OrderConfirmFormDialog({
   })
 
   const onSubmit = (values: OrderConfirmFormValues) => {
-    saveMutation.mutate(values)
-  }
-  const updateUnit = (index: number, unit: string) => {
-    setValue(`items.${index}.unit`, unit, {
-      shouldDirty: true,
-      shouldTouch: true,
+    saveMutation.mutate({
+      ...values,
+      paidAmount: toNumber(values.paidAmount),
     })
   }
+
+  const paidAmountValue = toNumber(paidAmount)
+  const changeAmount = Math.max(0, paidAmountValue - totals.netPayable)
+  const outstandingAmount = Math.max(0, totals.netPayable - paidAmountValue)
 
   const originalPoUrl =
     order?.originalPoUrl || order?.poUrl || order?.documentUrl
@@ -222,8 +321,12 @@ export default function OrderConfirmFormDialog({
       variant="modal"
       open={open}
       onOpenChange={(isOpen) => onClose(isOpen)}
-      title="Receive Order"
-      description="Confirm the received stock, batches, expiry, and rates before updating inventory."
+      title={isAlreadyReceived ? "Update Payment Details" : "Receive Order"}
+      description={
+        isAlreadyReceived
+          ? "Update payment details and outstanding balance for this order."
+          : "Confirm the received stock, batches, expiry, and rates before updating inventory."
+      }
       size="extrafull"
       height="extrafull"
       footer={null}
@@ -274,7 +377,11 @@ export default function OrderConfirmFormDialog({
               disabled={saveMutation.isPending}
             >
               <CircleDollarSign className="mr-2 size-4" />
-              {saveMutation.isPending ? "Saving..." : "Save & Update Inventory"}
+              {saveMutation.isPending
+                ? "Saving..."
+                : isAlreadyReceived
+                  ? "Save & Update Payment"
+                  : "Save & Update Inventory"}
             </Button>
           </div>
         </div>
@@ -319,10 +426,10 @@ export default function OrderConfirmFormDialog({
               </div>
               <div>
                 <p className="text-sm font-semibold text-muted-foreground">
-                  Estimated Value
+                  Subtotal Excl. Tax
                 </p>
                 <p className="text-3xl font-black text-card-foreground">
-                  ₹{totals.estimatedValue.toLocaleString("en-IN")}
+                  ₹{formatMoney(totals.subtotalExclTax)}
                 </p>
               </div>
             </div>
@@ -358,14 +465,15 @@ export default function OrderConfirmFormDialog({
                 <div className="col-span-1 text-center">Ord Qty</div>
                 <div className="col-span-1 text-center">Free</div>
                 <div className="col-span-1">Batch No.</div>
-                <div className="col-span-1">Expiry</div>
+                <div className="col-span-1">Expiry</div>{" "}
                 <div className="col-span-1">Purchase</div>
                 <div className="col-span-1">MRP/Sell</div>
                 <div className="col-span-1">Rate 1</div>
                 <div className="col-span-1">Rate 2</div>
                 <div className="col-span-1">Rate 3</div>
                 <div className="col-span-1">CGST</div>
-                <div className="col-span-1">SGST</div>
+                <div className="col-span-1">SGST</div>{" "}
+                <div className="col-span-1">discount</div>
                 <div className="col-span-1 text-right">Action</div>
               </div>
 
@@ -393,7 +501,7 @@ export default function OrderConfirmFormDialog({
                       <div className="flex items-center overflow-hidden rounded-2xl border border-border/60 bg-background focus-within:ring-2 focus-within:ring-primary/20">
                         {/* Qty Input */}
                         <Input
-                          type="number"
+                          type="text"
                           min={0}
                           step="1"
                           {...register(`items.${index}.qty`, {
@@ -421,7 +529,7 @@ export default function OrderConfirmFormDialog({
                       <div className="flex items-center overflow-hidden rounded-2xl border border-border/60 bg-background focus-within:ring-2 focus-within:ring-primary/20">
                         {/* Qty Input */}
                         <Input
-                          type="number"
+                          type="text"
                           min={0}
                           step="1"
                           {...register(`items.${index}.freeQty`, {
@@ -463,7 +571,7 @@ export default function OrderConfirmFormDialog({
                     </div>
                     <div className="col-span-1">
                       <Input
-                        type="number"
+                        type="text"
                         min={0}
                         step="0.01"
                         {...register(`items.${index}.purchaseRate`, {
@@ -474,7 +582,7 @@ export default function OrderConfirmFormDialog({
                     </div>
                     <div className="col-span-1">
                       <Input
-                        type="number"
+                        type="text"
                         min={0}
                         step="0.01"
                         {...register(`items.${index}.mrp`, {
@@ -485,7 +593,7 @@ export default function OrderConfirmFormDialog({
                     </div>
                     <div className="col-span-1">
                       <Input
-                        type="number"
+                        type="text"
                         min={0}
                         step="0.01"
                         {...register(`items.${index}.rate1`, {
@@ -496,7 +604,7 @@ export default function OrderConfirmFormDialog({
                     </div>
                     <div className="col-span-1">
                       <Input
-                        type="number"
+                        type="text"
                         min={0}
                         step="0.01"
                         {...register(`items.${index}.rate2`, {
@@ -507,7 +615,7 @@ export default function OrderConfirmFormDialog({
                     </div>
                     <div className="col-span-1">
                       <Input
-                        type="number"
+                        type="text"
                         min={0}
                         step="0.01"
                         {...register(`items.${index}.rate3`, {
@@ -518,7 +626,7 @@ export default function OrderConfirmFormDialog({
                     </div>{" "}
                     <div className="col-span-1">
                       <Input
-                        type="number"
+                        type="text"
                         {...register(`items.${index}.cgst`, {
                           valueAsNumber: true,
                         })}
@@ -527,12 +635,40 @@ export default function OrderConfirmFormDialog({
                     </div>
                     <div className="col-span-1">
                       <Input
-                        type="number"
+                        type="text"
                         {...register(`items.${index}.sgst`, {
                           valueAsNumber: true,
                         })}
                         className="h-10 rounded-2xl border-border/60 text-right font-semibold text-foreground"
                       />
+                    </div>{" "}
+                    <div className="col-span-1">
+                      <div className="flex items-center overflow-hidden rounded-2xl border border-border/60 bg-background focus-within:ring-2 focus-within:ring-primary/20">
+                        {/* Qty Input */}
+                        <Input
+                          type="text"
+                          min={0}
+                          step="1"
+                          {...register(`items.${index}.discount`, {
+                            valueAsNumber: true,
+                          })}
+                          className="h-10 w-20 border-0 bg-transparent text-center font-semibold shadow-none focus-visible:ring-0"
+                        />
+
+                        {/* Divider */}
+                        <div className="h-6 w-px bg-border/60" />
+                        {/* Unit Select */}
+                        <select
+                          {...register(`items.${index}.discount_type`)}
+                          className="flex-1 bg-transparent px-3 text-sm font-medium outline-none"
+                        >
+                          {DISCOUNT_TYPE_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
                     <div className="col-span-1 flex justify-end">
                       <Button
@@ -595,31 +731,131 @@ export default function OrderConfirmFormDialog({
           </div>
 
           <div className="rounded-[28px] border border-border/60 bg-card p-6 text-card-foreground shadow-sm">
-            <h4 className="text-lg font-black">Quick Summary</h4>
-            <div className="mt-5 space-y-4 text-sm">
-              <div className="flex items-center justify-between rounded-2xl bg-muted/40 px-4 py-3">
-                <span className="text-muted-foreground">Supplier</span>
-                <span className="font-semibold">
-                  {order?.supplier?.name ||
-                    order?.supplier?.companyName ||
-                    "N/A"}
-                </span>
+            <h4 className="text-lg font-black">Payment & Totals</h4>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              <div className="rounded-2xl bg-muted/40 px-4 py-3">
+                <p className="text-xs font-semibold text-muted-foreground uppercase">
+                  Subtotal Excl. Tax
+                </p>
+                <p className="mt-1 text-xl font-black">
+                  ₹{formatMoney(totals.subtotalExclTax)}
+                </p>
               </div>
-              <div className="flex items-center justify-between rounded-2xl bg-muted/40 px-4 py-3">
-                <span className="text-muted-foreground">Order Items</span>
-                <span className="font-semibold">{totals.totalProducts}</span>
+              <div className="rounded-2xl bg-muted/40 px-4 py-3">
+                <p className="text-xs font-semibold text-muted-foreground uppercase">
+                  Total Tax
+                </p>
+                <p className="mt-1 text-xl font-black">
+                  ₹{formatMoney(totals.totalTax)}
+                </p>
               </div>
-              <div className="flex items-center justify-between rounded-2xl bg-muted/40 px-4 py-3">
-                <span className="text-muted-foreground">Units</span>
-                <span className="font-semibold">
-                  {totals.totalUnitsReceived}
-                </span>
+              <div className="rounded-2xl bg-muted/40 px-4 py-3">
+                <p className="text-xs font-semibold text-muted-foreground uppercase">
+                  Total Discount
+                </p>
+                <p className="mt-1 text-xl font-black text-emerald-600 dark:text-emerald-400">
+                  -₹{formatMoney(totals.totalDiscountAmount)}
+                </p>
               </div>
-              <div className="flex items-center justify-between rounded-2xl bg-primary/10 px-4 py-3 text-primary">
-                <span className="font-semibold">Estimated Value</span>
-                <span className="text-lg font-black">
-                  ₹{totals.estimatedValue.toLocaleString("en-IN")}
-                </span>
+              <div className="rounded-2xl bg-primary/10 px-4 py-3 text-primary">
+                <p className="text-xs font-semibold text-primary/70 uppercase">
+                  Net Payable
+                </p>
+                <p className="mt-1 text-xl font-black">
+                  ₹{formatMoney(totals.netPayable)}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-5 space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-muted-foreground">
+                  Payment Mode
+                </label>
+                <select
+                  {...register("paymentMode")}
+                  className="h-11 w-full rounded-2xl border border-border/60 bg-background px-4 text-sm font-semibold text-foreground outline-none focus:ring-2 focus:ring-primary/20"
+                >
+                  {PAYMENT_MODE_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-muted-foreground">
+                  Payment Details
+                </label>
+                <Input
+                  {...register("paymentDetails")}
+                  placeholder="Cash memo, UPI reference, debit note, etc."
+                  className="h-11 rounded-2xl border-border/60"
+                />
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-muted-foreground">
+                    Is Udhar?
+                  </label>
+                  <select
+                    {...register("isUdhar")}
+                    className="h-11 w-full rounded-2xl border border-border/60 bg-background px-4 text-sm font-semibold text-foreground outline-none focus:ring-2 focus:ring-primary/20"
+                  >
+                    <option value="NO">No</option>
+                    <option value="YES">Yes</option>
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-muted-foreground">
+                    {isUdhar === "NO" ? "Final Amount" : "Amount Paid"}
+                  </label>
+                  <Input
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    {...register("paidAmount", { valueAsNumber: true })}
+                    placeholder="0.00"
+                    readOnly={isUdhar === "NO"}
+                    className={`h-11 rounded-2xl border-border/60 ${isUdhar === "NO" ? "bg-muted/40" : ""}`}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {isUdhar === "NO"
+                      ? "Auto-filled from net payable."
+                      : "Enter how much was actually paid."}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid gap-3 md:grid-cols-2">
+                {/* <div className="rounded-2xl border border-border/60 bg-muted/30 px-4 py-3 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Change</span>
+                    <span className="font-black text-foreground">
+                      ₹{formatMoney(changeAmount)}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Cash to return if the amount paid is higher than payable.
+                  </p>
+                </div> */}
+
+                <div className="rounded-2xl border border-border/60 bg-muted/30 px-4 py-3 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Outstanding</span>
+                    <span className="font-black text-foreground">
+                      ₹{formatMoney(outstandingAmount)}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {isUdhar === "YES"
+                      ? "Remaining amount will stay as udhar."
+                      : "This should stay at zero for a fully paid order."}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
