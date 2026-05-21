@@ -54,6 +54,8 @@ const buildOrderItemData = (item: any) => ({
       ? null
       : toNumber(item.purchaseRate),
   receivedQty: Math.max(0, toNumber(item.qty) + toNumber(item.freeQty)),
+  discount: toNumber(item.discount || 0),
+  discountType: item.discount_type || item.discountType || "flat",
 });
 
 const buildInventoryUpdateData = (item: any) => {
@@ -256,7 +258,10 @@ export class OrdersController {
               },
               data: {
                 ...inventoryUpdateData,
-                availableStock: item.qty,
+                // increase availablestock + whhatw it was hhaving earlierr
+                availableStock: {
+                  increment: item.qty + (item.freeQuantity || 0),
+                },
                 purchaseRate: item.purchaseRate / item.qty,
               },
             });

@@ -808,7 +808,7 @@ export default function OrderConfirmFormDialog({
               </div>
 
               <div className="grid gap-3 md:grid-cols-2">
-                <div className="rounded-2xl border border-border/60 bg-muted/30 px-4 py-3 text-sm">
+                {/* <div className="rounded-2xl border border-border/60 bg-muted/30 px-4 py-3 text-sm">
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Change</span>
                     <span className="font-black text-foreground">
@@ -818,7 +818,7 @@ export default function OrderConfirmFormDialog({
                   <p className="mt-1 text-xs text-muted-foreground">
                     Cash to return if the amount paid is higher than payable.
                   </p>
-                </div>
+                </div> */}
 
                 <div className="rounded-2xl border border-border/60 bg-muted/30 px-4 py-3 text-sm">
                   <div className="flex items-center justify-between">

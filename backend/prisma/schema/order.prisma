@@ -39,6 +39,9 @@ model OrderItem {
   purchaseRate  Decimal? @map("purchase_rate")
 
   receivedQty   Int      @default(0) @map("received_qty")
+  
+  discount      Decimal  @default(0)
+  discountType  String   @default("flat") @map("discount_type")
 
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
