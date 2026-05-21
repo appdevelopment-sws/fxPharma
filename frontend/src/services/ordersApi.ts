@@ -26,6 +26,10 @@ export interface OrderFormValues {
   id?: string
   supplierId: string
   status: string
+  paymentMode?: string
+  paymentDetails?: string
+  isUdhar?: string | boolean
+  paidAmount?: number
   items: OrderItem[]
 }
 
@@ -36,6 +40,18 @@ const mapToApi = (data: any) => {
     receivedAt: data.receivedAt || undefined,
     invoiceNo: data.invoiceNo || undefined,
     notes: data.notes || undefined,
+    paymentMode: data.paymentMode || undefined,
+    paymentDetails: data.paymentDetails || undefined,
+    isUdhar:
+      data.isUdhar === "YES" || data.isUdhar === true
+        ? true
+        : data.isUdhar === "NO" || data.isUdhar === false
+          ? false
+          : undefined,
+    paidAmount:
+      data.paidAmount === undefined || data.paidAmount === null
+        ? undefined
+        : Number(data.paidAmount),
     items: (data.items || []).map((item: any) => ({
       inventoryId: item.inventoryId || undefined,
       qty: Math.max(1, Number(item.qty) || 1),
@@ -80,6 +96,10 @@ const mapFromApi = (data: any) => {
     receivedAt: data.receivedAt,
     invoiceNo: data.invoiceNo,
     notes: data.notes,
+    paymentMode: data.paymentMode,
+    paymentDetails: data.paymentDetails,
+    isUdhar: Boolean(data.isUdhar),
+    paidAmount: data.paidAmount,
     items: (data.items || []).map((item: any) => ({
       ...item,
       inventoryId: item.inventoryId,
