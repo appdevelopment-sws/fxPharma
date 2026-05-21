@@ -852,13 +852,13 @@ export default function MedicineStockDialog({
                 inputType="number"
                 step="0.01"
               />
-              <FormField
+              {/* <FormField
                 control={control}
                 name="purchase_discount"
                 label="Purc. Disc."
                 inputType="number"
                 step="0.01"
-              />
+              /> */}
             </div>
           </div>
         </div>
