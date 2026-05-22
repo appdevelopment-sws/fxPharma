@@ -1,5 +1,5 @@
-import { useCallback, useMemo } from "react"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useCallback, useMemo, useState } from "react"
+import { useQuery } from "@tanstack/react-query"
 import {
   Eye,
   Printer,
@@ -16,6 +16,13 @@ import DataTable, { type DataTableColumn } from "@/components/data-table"
 import { FilterBar } from "@/components/filter-bar"
 import SectionCard from "@/components/SectionCard"
 import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import useSearchFilter from "@/hooks/useSearchFilter"
 import { queryKeys } from "@/lib/queryKeys"
 import InvoiceApi, { type Invoice } from "@/services/invoiceApi"
@@ -31,8 +38,10 @@ import {
   INVOICE_COLUMNS,
 } from "@/constants/page/admin/invoices"
 
+const formatCurrency = (value: number) => `\u20B9${value.toFixed(2)}`
+
 export default function RecentInvoicesPage() {
-  const queryClient = useQueryClient()
+  const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null)
   const { filter, handleFilter } = useSearchFilter(INITIAL_INVOICE_FILTERS)
 
   const { data: invoicesData, isLoading: isLoadingInvoices } = useQuery({
@@ -58,6 +67,16 @@ export default function RecentInvoicesPage() {
   })
 
   const stats = statsData.data
+  const { data: invoiceDetailsData, isFetching: isLoadingInvoiceDetails } =
+    useQuery({
+      queryKey: selectedInvoiceId
+        ? queryKeys.invoices.detail(selectedInvoiceId)
+        : queryKeys.invoices.detail(""),
+      queryFn: () => InvoiceApi.getInvoice(selectedInvoiceId as string),
+      enabled: Boolean(selectedInvoiceId),
+    })
+
+  const selectedInvoice = invoiceDetailsData?.data
 
   const handleFilterChange = useCallback(
     (updates: Record<string, any>) => {
@@ -87,9 +106,13 @@ export default function RecentInvoicesPage() {
               <FileText className="size-4" />
             </div>
             <div className="space-y-0.5">
-              <div className="cursor-pointer font-bold text-primary hover:underline">
+              <button
+                type="button"
+                onClick={() => setSelectedInvoiceId(row.id)}
+                className="cursor-pointer p-0 text-left font-bold text-primary hover:underline"
+              >
                 {row.invoice_id}
-              </div>
+              </button>
               <div className="text-xs text-muted-foreground">
                 {row.createdAt}
               </div>
@@ -162,6 +185,7 @@ export default function RecentInvoicesPage() {
             <Button
               size="icon-sm"
               variant="ghost"
+              onClick={() => setSelectedInvoiceId(row.id)}
               className="text-muted-foreground hover:text-foreground"
             >
               <Eye className="size-4" />
@@ -184,7 +208,7 @@ export default function RecentInvoicesPage() {
         ),
       },
     ]
-  }, [])
+  }, [filter.page, filter.perPage])
 
   return (
     <div className="space-y-6">
@@ -193,21 +217,25 @@ export default function RecentInvoicesPage() {
         <StatCard
           title="Today's Sales"
           value={`₹${stats.todays_sales.toLocaleString()}`}
+          helper={stats.todays_sales_trend}
           icon={<CreditCard className="size-5" />}
         />
         <StatCard
           title="Total Invoices"
           value={String(stats.total_invoices)}
+          helper={stats.total_invoices_trend}
           icon={<FileText className="size-5" />}
         />
         <StatCard
           title="Average Order Value"
           value={`₹${stats.avg_order_value.toFixed(2)}`}
+          helper={stats.avg_order_value_trend}
           icon={<CreditCard className="size-5" />}
         />
         <StatCard
           title="Refunds Issued"
           value={`₹${stats.refunds_issued.toFixed(2)}`}
+          helper={stats.refunds_issued_trend}
           icon={<RotateCcw className="size-5" />}
         />
       </div>
@@ -274,6 +302,123 @@ export default function RecentInvoicesPage() {
           />
         </div>
       </SectionCard>
+
+      <Dialog
+        open={Boolean(selectedInvoiceId)}
+        onOpenChange={(open) => {
+          if (!open) setSelectedInvoiceId(null)
+        }}
+      >
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              Invoice {selectedInvoice?.invoice_id || ""}
+            </DialogTitle>
+            <DialogDescription>
+              Sale details and billed items.
+            </DialogDescription>
+          </DialogHeader>
+
+          {isLoadingInvoiceDetails ? (
+            <div className="py-8 text-center text-sm text-muted-foreground">
+              Loading invoice...
+            </div>
+          ) : selectedInvoice ? (
+            <div className="space-y-4">
+              <div className="grid gap-3 rounded-lg border border-border/60 p-3 text-sm sm:grid-cols-2">
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground">
+                    Customer
+                  </p>
+                  <p className="font-semibold">
+                    {selectedInvoice.customer_name || "Walk-in Customer"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground">
+                    Phone
+                  </p>
+                  <p className="font-semibold">
+                    {selectedInvoice.customer_phone || "-"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground">
+                    Payment
+                  </p>
+                  <p className="font-semibold capitalize">
+                    {selectedInvoice.payment_mode.toLowerCase()}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground">
+                    Date
+                  </p>
+                  <p className="font-semibold">{selectedInvoice.createdAt}</p>
+                </div>
+              </div>
+
+              <div className="max-h-64 overflow-auto rounded-lg border border-border/60">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/40 text-left text-xs text-muted-foreground">
+                    <tr>
+                      <th className="px-3 py-2 font-semibold">Item</th>
+                      <th className="px-3 py-2 font-semibold">Batch</th>
+                      <th className="px-3 py-2 text-right font-semibold">
+                        Qty
+                      </th>
+                      <th className="px-3 py-2 text-right font-semibold">
+                        Amount
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(selectedInvoice.items || []).map((item) => (
+                      <tr key={item.id} className="border-t border-border/60">
+                        <td className="px-3 py-2 font-medium">
+                          {item.inventory_name}
+                        </td>
+                        <td className="px-3 py-2 text-muted-foreground">
+                          {item.batch_no || "-"}
+                        </td>
+                        <td className="px-3 py-2 text-right">
+                          {item.qty} {item.sell_unit}
+                        </td>
+                        <td className="px-3 py-2 text-right font-semibold">
+                          {formatCurrency(item.sub_total)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="ml-auto w-full max-w-xs space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Gross</span>
+                  <span>{formatCurrency(selectedInvoice.gross_amount)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Discount</span>
+                  <span>{formatCurrency(selectedInvoice.discount_amount)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">GST</span>
+                  <span>{formatCurrency(selectedInvoice.tax_amount)}</span>
+                </div>
+                <div className="flex justify-between border-t border-border/60 pt-2 text-base font-bold">
+                  <span>Total</span>
+                  <span>{formatCurrency(selectedInvoice.total_amount)}</span>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="py-8 text-center text-sm text-muted-foreground">
+              Invoice not found.
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

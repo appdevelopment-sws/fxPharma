@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect } from "react"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import InvoiceApi from "@/services/invoiceApi"
 import {
   Plus,
   Minus,
@@ -391,6 +392,8 @@ const POS = () => {
   const [receiveAmount, setReceiveAmount] = useState("")
   const [deliveryCost, setDeliveryCost] = useState(0)
   const [binValue, setBinValue] = useState(0)
+  const [customerName, setCustomerName] = useState("")
+  const [customerPhone, setCustomerPhone] = useState("")
 
   // Success modal
   const [successModalOpen, setSuccessModalOpen] = useState(false)
@@ -416,6 +419,39 @@ const POS = () => {
   }, [])
 
   // ── Data queries ──────────────────────────────────────────────────────────
+
+  const queryClient = useQueryClient()
+
+  const createInvoiceMutation = useMutation({
+    mutationFn: (payload: any) => InvoiceApi.createInvoice(payload),
+    onSuccess: (response) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.invoices.all })
+      queryClient.invalidateQueries({ queryKey: queryKeys.inventory.all })
+      
+      const responseData = response.data
+      setSuccessInvoiceDetails({
+        id: responseData.invoice_id || responseData.id,
+        customerName: responseData.customer_name,
+        customerPhone: responseData.customer_phone,
+        items: responseData.items || cart,
+        grossTotal: responseData.gross_amount,
+        itemDiscounts: responseData.discount_amount,
+        overallDiscount: responseData.discount_amount,
+        tax: responseData.tax_amount,
+        netPayable: responseData.total_amount,
+        tendered: responseData.tendered_amount,
+        change: responseData.change_amount,
+        paymentMode: responseData.payment_mode,
+        date: new Date(responseData.createdAt).toLocaleString("en-IN"),
+      })
+      setSuccessModalOpen(true)
+      toast.success("Invoice saved and stock updated!")
+    },
+    onError: (error: any) => {
+      const errMsg = error?.response?.data?.message || error?.message || "Failed to save invoice."
+      toast.error(errMsg)
+    },
+  })
 
   const { data: categoriesData } = useQuery({
     queryKey: queryKeys.categories.list({ limit: 1000 }),
@@ -616,29 +652,51 @@ const POS = () => {
 
   // ── Payment ───────────────────────────────────────────────────────────────
 
-  const handleCompletePayment = () => {
+  const handleCompletePayment = (printOnSuccess = false) => {
     if (cart.length === 0) return
-    const invId = `INV-${Date.now().toString().slice(-6)}`
-    setSuccessInvoiceDetails({
-      id: invId,
-      items: cart,
-      grossTotal,
-      itemDiscounts: totalItemDiscountAmount,
-      overallDiscount: discountAmount,
-      tax: totalTaxAmount,
-      netPayable: roundedNet,
-      tendered: tenderedAmount || roundedNet,
-      change: changeAmount,
-      paymentMode,
-      date: new Date().toLocaleString("en-IN"),
+
+    const payload = {
+      customerName: customerName.trim() || undefined,
+      customerPhone: customerPhone.trim() || undefined,
+      paymentMode: paymentMode === "Cash" ? "CASH" : paymentMode === "UPI / QR" ? "UPI" : "CARD",
+      grossAmount: grossTotal,
+      discountAmount: discountAmount,
+      taxAmount: totalTaxAmount,
+      deliveryCost: deliveryCost,
+      totalAmount: roundedNet,
+      tenderedAmount: tenderedAmount || roundedNet,
+      changeAmount: changeAmount,
+      items: cart.map((item) => {
+        const subTotal = item.rateValue * item.qty - (item.rateValue * item.qty * item.itemDiscount) / 100
+        return {
+          inventoryId: item.product.id,
+          inventoryName: item.product.name,
+          batchId: item.batch.id.endsWith("-batch") ? null : item.batch.id,
+          batchNo: item.batch.number === "N/A" ? null : item.batch.number,
+          qty: item.qty,
+          sellUnit: item.sellUnit,
+          rateType: item.rateType,
+          rateValue: item.rateValue,
+          itemDiscount: item.itemDiscount,
+          subTotal: subTotal,
+        }
+      }),
+    }
+
+    createInvoiceMutation.mutate(payload, {
+      onSuccess: () => {
+        if (printOnSuccess) {
+          toast.info("Preparing print...")
+        }
+      }
     })
-    setSuccessModalOpen(true)
-    toast.success("Payment completed successfully!")
   }
 
   const resetPos = () => {
     setCart([])
     setSearchTerm("")
+    setCustomerName("")
+    setCustomerPhone("")
     setDiscountPercent(0)
     setDiscountType("percent")
     setReceiveAmount("")
@@ -950,6 +1008,34 @@ const POS = () => {
 
             {/* ── Left column ── */}
             <div className="space-y-2.5">
+              {/* Customer Name */}
+              <div className="flex items-center gap-2">
+                <label className="w-28 flex-shrink-0 text-xs font-semibold text-gray-500">
+                  Cust. Name
+                </label>
+                <input
+                  type="text"
+                  placeholder="Walk-in Customer"
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                  className="flex-1 min-w-0 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-xs outline-none focus:border-teal-400 focus:ring-1 focus:ring-teal-300/20 transition-all"
+                />
+              </div>
+
+              {/* Customer Phone */}
+              <div className="flex items-center gap-2">
+                <label className="w-28 flex-shrink-0 text-xs font-semibold text-gray-500">
+                  Cust. Phone
+                </label>
+                <input
+                  type="text"
+                  placeholder="Phone number"
+                  value={customerPhone}
+                  onChange={(e) => setCustomerPhone(e.target.value)}
+                  className="flex-1 min-w-0 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-xs outline-none focus:border-teal-400 focus:ring-1 focus:ring-teal-300/20 transition-all"
+                />
+              </div>
+
               {/* Receive Amount */}
               <div className="flex items-center gap-2">
                 <label className="w-28 flex-shrink-0 text-xs font-semibold text-gray-500">
@@ -1094,27 +1180,24 @@ const POS = () => {
         <div className="grid grid-cols-3 gap-2.5 border-t border-gray-200 bg-gray-50/80 px-4 py-3 flex-shrink-0">
           <button
             onClick={resetPos}
-            className="rounded-lg border border-amber-300 bg-white py-2.5 text-sm font-bold text-amber-600 hover:bg-amber-50 transition-colors active:scale-95"
+            disabled={createInvoiceMutation.isPending}
+            className="rounded-lg border border-amber-300 bg-white py-2.5 text-sm font-bold text-amber-600 hover:bg-amber-50 transition-colors active:scale-95 disabled:opacity-40"
           >
             Reset
           </button>
           <button
-            onClick={handleCompletePayment}
-            disabled={cart.length === 0}
+            onClick={() => handleCompletePayment(false)}
+            disabled={cart.length === 0 || createInvoiceMutation.isPending}
             className="rounded-lg border border-teal-300 bg-white py-2.5 text-sm font-bold text-teal-600 hover:bg-teal-50 transition-colors active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            Save
+            {createInvoiceMutation.isPending ? "Saving..." : "Save"}
           </button>
           <button
-            onClick={() => {
-              if (cart.length === 0) return
-              handleCompletePayment()
-              toast.info("Preparing print...")
-            }}
-            disabled={cart.length === 0}
+            onClick={() => handleCompletePayment(true)}
+            disabled={cart.length === 0 || createInvoiceMutation.isPending}
             className="rounded-lg border border-teal-500 bg-white py-2.5 text-sm font-bold text-teal-700 hover:bg-teal-50 transition-colors active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            Save &amp; Print
+            {createInvoiceMutation.isPending ? "Saving..." : "Save & Print"}
           </button>
         </div>
       </div>
@@ -1161,6 +1244,18 @@ const POS = () => {
                   <span>Invoice ID</span>
                   <span className="text-gray-800 font-extrabold">{successInvoiceDetails.id}</span>
                 </div>
+                {successInvoiceDetails.customerName && (
+                  <div className="flex justify-between">
+                    <span>Customer Name</span>
+                    <span className="text-gray-800 font-extrabold">{successInvoiceDetails.customerName}</span>
+                  </div>
+                )}
+                {successInvoiceDetails.customerPhone && (
+                  <div className="flex justify-between">
+                    <span>Customer Phone</span>
+                    <span className="text-gray-800 font-extrabold">{successInvoiceDetails.customerPhone}</span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span>Date &amp; Time</span>
                   <span className="text-gray-800 font-extrabold">{successInvoiceDetails.date}</span>
