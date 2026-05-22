@@ -10,6 +10,7 @@ import { useDisclosure } from "@/hooks/useDisclosure"
 import useSearchFilter from "@/hooks/useSearchFilter"
 import { queryKeys } from "@/lib/queryKeys"
 import ProductApi from "@/services/masterProductApi"
+import InventoryApi from "@/services/inventoryApi"
 
 import {
   ACTIVE_MASTER_PRODUCT_STATUS,
@@ -42,6 +43,31 @@ export default function ImportInventoryPage() {
     queryKey: queryKeys.masterProducts.list(masterProductFilter),
     queryFn: () => ProductApi.getMasterProducts(masterProductFilter),
   })
+
+  const { data: inventoryData } = useQuery({
+    queryKey: queryKeys.inventory.list({ allForImport: true }),
+    queryFn: async () => {
+      let allData: any[] = []
+      let page = 1
+      let hasNextPage = true
+      while (hasNextPage && page <= 10) {
+        const res = await InventoryApi.getAll({ limit: 100, page })
+        if (res?.data) {
+          allData = [...allData, ...res.data]
+        }
+        hasNextPage = !!res?.meta?.hasNextPage
+        page++
+      }
+      return { data: allData }
+    },
+  })
+
+  const importedProductNames = useMemo(() => {
+    if (!inventoryData?.data) return new Set<string>()
+    return new Set<string>(
+      inventoryData.data.map((item: any) => item.name?.trim().toLowerCase())
+    )
+  }, [inventoryData])
 
   const handleFilterChange = useCallback(
     (updates: Record<string, any>) => {
@@ -118,15 +144,39 @@ export default function ImportInventoryPage() {
         header:
           MEDICINE_IMPORT_COLUMNS.find((c) => c.key === "action")?.label ||
           "Import",
-        render: (row) => (
-          <Button type="button" size="sm" onClick={() => handleImportOpen(row)}>
-            <ArrowDownToLine className="mr-2 size-4" />
-            Import
-          </Button>
-        ),
+        render: (row) => {
+          const isImported = importedProductNames.has(
+            row.name?.trim().toLowerCase()
+          )
+          return isImported ? (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled
+              className="border-emerald-200/50 bg-emerald-50/50 text-emerald-600 dark:border-emerald-950/20 dark:bg-emerald-950/10 dark:text-emerald-400 opacity-90 cursor-not-allowed font-bold"
+            >
+              Imported
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => handleImportOpen(row)}
+            >
+              <ArrowDownToLine className="mr-2 size-4" />
+              Import
+            </Button>
+          )
+        },
       },
     ]
-  }, [handleImportOpen, masterProductFilter.perPage, masterProductFilter.page])
+  }, [
+    handleImportOpen,
+    masterProductFilter.perPage,
+    masterProductFilter.page,
+    importedProductNames,
+  ])
 
   return (
     <div className="space-y-6">
