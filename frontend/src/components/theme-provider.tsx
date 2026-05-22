@@ -139,42 +139,42 @@ export function ThemeProvider({
     }
   }, [theme, applyTheme])
 
-  React.useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.repeat) {
-        return
-      }
-
-      if (event.metaKey || event.ctrlKey || event.altKey) {
-        return
-      }
-
-      if (isEditableTarget(event.target)) {
-        return
-      }
-
-      if (event.key.toLowerCase() !== "d") {
-        return
-      }
-
-      setThemeState((currentTheme) => {
-        const currentIndex = THEMES.indexOf(
-          currentTheme === "system" ? getSystemTheme() : currentTheme
-        )
-
-        const nextTheme = THEMES[(currentIndex + 1) % THEMES.length]
-
-        localStorage.setItem(storageKey, nextTheme)
-        return nextTheme
-      })
-    }
-
-    window.addEventListener("keydown", handleKeyDown)
-
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown)
-    }
-  }, [storageKey])
+  // React.useEffect(() => {
+  //   const handleKeyDown = (event: KeyboardEvent) => {
+  //     if (event.repeat) {
+  //       return
+  //     }
+  // 
+  //     if (event.metaKey || event.ctrlKey || event.altKey) {
+  //       return
+  //     }
+  // 
+  //     if (isEditableTarget(event.target)) {
+  //       return
+  //     }
+  // 
+  //     if (event.key.toLowerCase() !== "d") {
+  //       return
+  //     }
+  // 
+  //     setThemeState((currentTheme) => {
+  //       const currentIndex = THEMES.indexOf(
+  //         currentTheme === "system" ? getSystemTheme() : currentTheme
+  //       )
+  // 
+  //       const nextTheme = THEMES[(currentIndex + 1) % THEMES.length]
+  // 
+  //       localStorage.setItem(storageKey, nextTheme)
+  //       return nextTheme
+  //     })
+  //   }
+  // 
+  //   window.addEventListener("keydown", handleKeyDown)
+  // 
+  //   return () => {
+  //     window.removeEventListener("keydown", handleKeyDown)
+  //   }
+  // }, [storageKey])
 
   React.useEffect(() => {
     const handleStorageChange = (event: StorageEvent) => {
