@@ -65,6 +65,24 @@ export default function ReturnsPage() {
 
   const stats = statsData.data
 
+  const updateStatusMutation = useMutation({
+    mutationFn: ({ id, status }: { id: string; status: "REFUNDED" }) =>
+      ReturnApi.updateStatus(id, status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.returns.all })
+      queryClient.invalidateQueries({ queryKey: queryKeys.invoices.all })
+      queryClient.invalidateQueries({ queryKey: queryKeys.inventory.all })
+      toast.success("Return status updated")
+    },
+    onError: (error: any) => {
+      const errMsg =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Failed to update return status"
+      toast.error(errMsg)
+    },
+  })
+
   const handleFilterChange = useCallback(
     (updates: Record<string, any>) => {
       handleFilter({ ...updates, page: 1 })
@@ -162,6 +180,10 @@ export default function ReturnsPage() {
               <Button
                 size="icon-sm"
                 variant="ghost"
+                onClick={() =>
+                  updateStatusMutation.mutate({ id: row.id, status: "REFUNDED" })
+                }
+                disabled={updateStatusMutation.isPending}
                 className="text-primary hover:bg-primary/10"
               >
                 <CheckCircle2 className="size-4" />

@@ -3,6 +3,7 @@ import { useForm, type SubmitHandler, useFieldArray } from "react-hook-form"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Search, Minus, Plus, CheckCircle2, X, Trash2 } from "lucide-react"
 import { queryKeys } from "@/lib/queryKeys"
+import InvoiceApi, { type Invoice } from "@/services/invoiceApi"
 import ReturnApi from "@/services/returnApi"
 import { FormContainer } from "@/components/formContainer"
 import {
@@ -31,49 +32,28 @@ export default function ProcessReturnDrawer({
 }: ProcessReturnDrawerProps) {
   const [invoiceSearch, setInvoiceSearch] = useState("")
   const [isInvoiceFound, setIsInvoiceFound] = useState(false)
+  const [isSearchingInvoice, setIsSearchingInvoice] = useState(false)
+  const [foundInvoice, setFoundInvoice] = useState<Invoice | null>(null)
   const queryClient = useQueryClient()
 
-  const { handleSubmit, control, watch, setValue, reset } = useForm({
+  const { handleSubmit, control, watch, setValue, reset } = useForm<any>({
     defaultValues: {
       invoice_number: "",
       reason_for_return: "",
       refund_method: "upi",
       note: "",
-      items: [
-        {
-          id: "1",
-          selected: true,
-          name: "Augmentin 625 Duo Tablet",
-          batch: "B-102",
-          expiry: "12/2025",
-          unit_price: 150,
-          purchased_qty: 2,
-          return_qty: 1,
-          reason: "wrong_item",
-        },
-        {
-          id: "2",
-          selected: false,
-          name: "Dolo 650 Tablet (Strip of 15)",
-          batch: "C-405",
-          expiry: "Exp:",
-          unit_price: 30,
-          purchased_qty: 5,
-          return_qty: 0,
-          reason: "",
-        },
-      ],
+      items: [],
       restocking_fee: 0,
     },
   })
 
-  const { fields } = useFieldArray({
+  const { fields, replace } = useFieldArray({
     control,
     name: "items",
   })
 
   const items = watch("items")
-  const restockingFee = watch("restocking_fee")
+  const restockingFee = Number(watch("restocking_fee")) || 0
 
   const summary = useMemo(() => {
     const selectedItems = items.filter((item) => item.selected)
@@ -92,12 +72,59 @@ export default function ProcessReturnDrawer({
     }
   }, [items, restockingFee])
 
-  const handleSearch = () => {
-    if (invoiceSearch === "INV-2023-086") {
+  const handleSearch = async () => {
+    const search = invoiceSearch.trim()
+    if (!search) {
+      toast.error("Please enter an invoice number")
+      return
+    }
+
+    try {
+      setIsSearchingInvoice(true)
+      const result = await InvoiceApi.getInvoices({ search, page: 1, perPage: 1 })
+      const matchedInvoice =
+        result.data.find((invoice) => invoice.invoice_id === search) || result.data[0]
+
+      if (!matchedInvoice) {
+        setIsInvoiceFound(false)
+        setFoundInvoice(null)
+        replace([])
+        toast.error("Invoice not found")
+        return
+      }
+
+      const details = await InvoiceApi.getInvoice(matchedInvoice.id)
+      const invoice = details.data
+      const returnItems = (invoice.items || []).map((item) => {
+        const unitPrice =
+          item.qty > 0 ? item.sub_total / item.qty : item.rate_value
+        return {
+          id: item.id,
+          invoice_item_id: item.id,
+          inventory_id: item.inventory_id,
+          batch_id: item.batch_id,
+          selected: true,
+          name: item.inventory_name,
+          batch: item.batch_no || "-",
+          expiry: "-",
+          unit_price: unitPrice,
+          purchased_qty: item.qty,
+          return_qty: item.qty > 0 ? 1 : 0,
+          reason: "",
+        }
+      })
+
+      setValue("invoice_number", invoice.invoice_id)
+      replace(returnItems)
+      setFoundInvoice(invoice)
       setIsInvoiceFound(true)
       toast.success("Invoice Found")
-    } else {
-      toast.error("Invoice not found")
+    } catch (error: any) {
+      const errMsg =
+        error?.response?.data?.message || error?.message || "Invoice not found"
+      toast.error(errMsg)
+    } finally {
+      setIsSearchingInvoice(false)
     }
   }
 
@@ -105,16 +132,32 @@ export default function ProcessReturnDrawer({
     mutationFn: (data: any) => ReturnApi.processReturn(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.returns.all })
+      queryClient.invalidateQueries({ queryKey: queryKeys.invoices.all })
+      queryClient.invalidateQueries({ queryKey: queryKeys.inventory.all })
       toast.success("Return processed successfully")
       onClose(false)
       reset()
       setIsInvoiceFound(false)
+      setFoundInvoice(null)
       setInvoiceSearch("")
+    },
+    onError: (error: any) => {
+      const errMsg =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Failed to process return"
+      toast.error(errMsg)
     },
   })
 
   const onSubmit: SubmitHandler<any> = (data) => {
-    const selectedItems = data.items.filter((i: any) => i.selected)
+    const selectedItems = data.items.filter(
+      (i: any) => i.selected && Number(i.return_qty) > 0
+    )
+    if (!data.invoice_number) {
+      toast.error("Please search and select an invoice")
+      return
+    }
     if (selectedItems.length === 0) {
       toast.error("Please select at least one item to return")
       return
@@ -142,7 +185,7 @@ export default function ProcessReturnDrawer({
             {isInvoiceFound && (
               <div className="flex items-center gap-1.5 rounded-full bg-blue-500/10 px-3 py-1 text-xs font-medium text-blue-600">
                 <CheckCircle2 className="size-3.5" />
-                INV-2023-086 FOUND
+                {foundInvoice?.invoice_id} FOUND
               </div>
             )}
           </div>
@@ -157,8 +200,8 @@ export default function ProcessReturnDrawer({
                 onChange={(e) => setInvoiceSearch(e.target.value)}
               />
             </div>
-            <Button type="button" onClick={handleSearch}>
-              Search
+            <Button type="button" onClick={handleSearch} disabled={isSearchingInvoice}>
+              {isSearchingInvoice ? "Searching..." : "Search"}
             </Button>
           </div>
         </div>
