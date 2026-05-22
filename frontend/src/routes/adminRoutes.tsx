@@ -10,6 +10,7 @@ import PublicOnlyRoute from "@/components/auth/PublicOnlyRoute"
 import { PERMISSIONS, ROLES } from "@/lib/access"
 import AllInventory from "@/pages/admin/inventory/AllInventory"
 import AllCompound from "@/pages/admin/compound/AllCompound"
+import InventoryBatch from "@/pages/admin/inventory/InventoryBatch"
 import Orders from "@/pages/admin/orders/Orders"
 import Suppliers from "@/pages/admin/supplier/suppliers"
 import ReturnsPage from "@/pages/admin/returns/ReturnsPage"
@@ -46,6 +47,7 @@ export const AdminRoutes = () => {
 
           <Route path="all-inventory" element={<AllInventory />} />
           <Route path="all-compound" element={<AllCompound />} />
+          <Route path="inventory-batch" element={<InventoryBatch />} />
           <Route path="import-inventory" element={<ImportInventory />} />
           <Route
             path="inter-store-transfer"
