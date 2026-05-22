@@ -26,6 +26,7 @@ model Invoice {
   updatedAt      DateTime      @updatedAt @map("updated_at")
 
   items          InvoiceItem[]
+  returns        SalesReturn[]
 
   organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   branch         Branch?       @relation(fields: [branchId], references: [id], onDelete: SetNull)
