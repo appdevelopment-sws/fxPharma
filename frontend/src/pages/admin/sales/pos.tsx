@@ -1,33 +1,38 @@
-import { useMemo, useState } from "react"
+import { useMemo, useState, useEffect } from "react"
 import { useQuery } from "@tanstack/react-query"
 import {
   Plus,
   Minus,
   Trash2,
-  Receipt,
   ShoppingCart,
-  User,
   Pill,
   ScanLine,
   Filter,
-  FileText,
   ChevronDown,
-  Phone,
-  Stethoscope,
   CheckCircle2,
-  MapPin,
-  Building2,
-  AlertCircle,
+  Clock,
+  Printer,
+  Search,
 } from "lucide-react"
+import { toast } from "sonner"
 
 import FilterPointofSale from "@/components/dialog/admin/FilterPointofSale"
+import ConfigureSaleItemDialog from "@/components/dialog/admin/ConfigureSaleItemDialog"
 import { cn } from "@/lib/utils"
 import { queryKeys } from "@/lib/queryKeys"
-import {
-  CategoryApi,
-  ManufacturerApi,
-} from "@/services/attributesApi"
+import { CategoryApi, ManufacturerApi } from "@/services/attributesApi"
 import InventoryApi from "@/services/inventoryApi"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 type PosBatch = {
   id: string
@@ -36,6 +41,13 @@ type PosBatch = {
   stock: number
   price: number
   isNearExpiry?: boolean
+  rateA: number
+  rateB: number
+  rateC: number
+  mrp: number
+  purchaseRate: number
+  cgst: number
+  sgst: number
 }
 
 type PosProduct = {
@@ -48,32 +60,41 @@ type PosProduct = {
   type: string
   formulation: string
   batches: PosBatch[]
+  packing?: string
+  unit1st?: string
+  unit2nd?: string
+  packQty1?: number
+  packQty2?: number
+  packQty3?: number
+  convStri?: number
+  convCas?: number
 }
 
 type CartItem = {
+  id: string
   product: PosProduct
   batch: PosBatch
   qty: number
+  sellUnit: "strip" | "piece"
+  rateType: "mrp" | "rateA" | "rateB" | "rateC"
+  rateValue: number
+  itemDiscount: number
 }
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const formatExpiry = (value?: string | null) => {
   if (!value) return "-"
   const parsed = new Date(value)
   if (Number.isNaN(parsed.getTime())) return value
-  return parsed.toLocaleDateString("en-IN", {
-    month: "2-digit",
-    year: "2-digit",
-  })
+  return parsed.toLocaleDateString("en-IN", { month: "2-digit", year: "2-digit" })
 }
 
 const isNearExpiry = (value?: string | null) => {
   if (!value) return false
   const parsed = new Date(value)
   if (Number.isNaN(parsed.getTime())) return false
-
-  const daysUntilExpiry =
-    (parsed.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
-  return daysUntilExpiry <= 180
+  return (parsed.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24) <= 180
 }
 
 const toNumber = (value: unknown) => {
@@ -82,35 +103,40 @@ const toNumber = (value: unknown) => {
 }
 
 const getRelationName = (value: unknown) => {
-  if (typeof value === "string" || typeof value === "number") {
-    return String(value) || "-"
-  }
-
+  if (typeof value === "string" || typeof value === "number") return String(value) || "-"
   if (value && typeof value === "object" && "name" in value) {
     const name = (value as { name?: unknown }).name
-    if (typeof name === "string" || typeof name === "number") {
-      return String(name) || "-"
-    }
+    if (typeof name === "string" || typeof name === "number") return String(name) || "-"
   }
-
   return "-"
 }
 
 const buildPosProduct = (inventoryItem: any): PosProduct => {
   const batches = Array.isArray(inventoryItem?.batches)
     ? inventoryItem.batches.map((batch: any) => {
-        const price = toNumber(batch.mrp ?? batch.purchaseRate ?? 0)
-        const stock = toNumber(batch.availableQty ?? batch.receivedQty ?? 0)
-
-        return {
-          id: batch.id,
-          number: batch.batchNo || batch.number || "-",
-          expiry: formatExpiry(batch.expiryDate || batch.expiry),
-          stock,
-          price,
-          isNearExpiry: isNearExpiry(batch.expiryDate || batch.expiry),
-        }
-      })
+      const mrp = toNumber(batch.mrp ?? 0)
+      const rateA = toNumber(batch.rateA ?? batch.rate_a ?? 0)
+      const rateB = toNumber(batch.rateB ?? batch.rate_b ?? 0)
+      const rateC = toNumber(batch.rateC ?? batch.rate_c ?? 0)
+      const purchaseRate = toNumber(batch.purchaseRate ?? batch.purchase_rate ?? 0)
+      const price = mrp || purchaseRate || 0
+      const stock = toNumber(batch.availableQty ?? batch.receivedQty ?? 0)
+      return {
+        id: batch.id,
+        number: batch.batchNo || batch.number || "-",
+        expiry: formatExpiry(batch.expiryDate || batch.expiry),
+        stock,
+        price,
+        isNearExpiry: isNearExpiry(batch.expiryDate || batch.expiry),
+        rateA,
+        rateB,
+        rateC,
+        mrp,
+        purchaseRate,
+        cgst: toNumber(batch.cgst ?? 0),
+        sgst: toNumber(batch.sgst ?? 0),
+      }
+    })
     : []
 
   const fallbackStock = toNumber(inventoryItem?.availableStock ?? 0)
@@ -118,17 +144,22 @@ const buildPosProduct = (inventoryItem: any): PosProduct => {
     batches.length > 0
       ? batches
       : [
-          {
-            id: `${inventoryItem.id}-batch`,
-            number: "N/A",
-            expiry: "-",
-            stock: fallbackStock,
-            price: toNumber(
-              inventoryItem?.mrp ?? inventoryItem?.purchaseRate ?? 0
-            ),
-            isNearExpiry: false,
-          },
-        ]
+        {
+          id: `${inventoryItem.id}-batch`,
+          number: "N/A",
+          expiry: "-",
+          stock: fallbackStock,
+          price: toNumber(inventoryItem?.mrp ?? inventoryItem?.purchaseRate ?? 0),
+          isNearExpiry: false,
+          rateA: toNumber(inventoryItem?.rateA ?? 0),
+          rateB: toNumber(inventoryItem?.rateB ?? 0),
+          rateC: toNumber(inventoryItem?.rateC ?? 0),
+          mrp: toNumber(inventoryItem?.mrp ?? 0),
+          purchaseRate: toNumber(inventoryItem?.purchaseRate ?? 0),
+          cgst: toNumber(inventoryItem?.cgst ?? 0),
+          sgst: toNumber(inventoryItem?.sgst ?? 0),
+        },
+      ]
 
   return {
     id: inventoryItem.id,
@@ -138,20 +169,213 @@ const buildPosProduct = (inventoryItem: any): PosProduct => {
     category: getRelationName(inventoryItem.category),
     totalStock:
       batches.length > 0
-        ? batches.reduce((sum: number, batch: PosBatch) => sum + batch.stock, 0)
+        ? batches.reduce((sum: number, b: PosBatch) => sum + b.stock, 0)
         : fallbackStock,
     type: inventoryItem.itemType || inventoryItem.type || "OTC",
     formulation: inventoryItem.formulation || inventoryItem.itemType || "all",
     batches: resolvedBatches,
+    packing: inventoryItem.packing || "",
+    unit1st: inventoryItem.unit1st || "",
+    unit2nd: inventoryItem.unit2nd || "",
+    packQty1: toNumber(inventoryItem.packQty1 ?? 0),
+    packQty2: toNumber(inventoryItem.packQty2 ?? 0),
+    packQty3: toNumber(inventoryItem.packQty3 ?? 0),
+    convStri: toNumber(inventoryItem.convStri ?? 0),
+    convCas: toNumber(inventoryItem.convCas ?? 0),
   }
 }
 
+const getQtyPerStrip = (product: PosProduct) => {
+  if (product.convStri && product.convStri > 0) return product.convStri
+  if (product.packQty3 && product.packQty3 > 0) return product.packQty3
+  const packingStr = String(product.packing || "").toLowerCase()
+  const matches = packingStr.match(/(\d+)\s*(tablet|capsule|piece|tab|cap|'s|s)/)
+  if (matches && matches[1]) {
+    const parsed = parseInt(matches[1], 10)
+    if (parsed > 0) return parsed
+  }
+  const ratioMatches = packingStr.match(/1\s*x\s*(\d+)/)
+  if (ratioMatches && ratioMatches[1]) {
+    const parsed = parseInt(ratioMatches[1], 10)
+    if (parsed > 0) return parsed
+  }
+  const numMatches = packingStr.match(/(\d+)/)
+  if (numMatches && numMatches[1]) {
+    const parsed = parseInt(numMatches[1], 10)
+    if (parsed > 0) return parsed
+  }
+  return 10
+}
+
+const getRateValue = (
+  batch: PosBatch,
+  rateType: "mrp" | "rateA" | "rateB" | "rateC",
+  sellUnit: "strip" | "piece",
+  qtyPerStrip: number
+) => {
+  let baseRate = 0
+  if (rateType === "mrp") baseRate = batch.mrp || batch.price || 0
+  else if (rateType === "rateA") baseRate = batch.rateA || batch.mrp || batch.price || 0
+  else if (rateType === "rateB") baseRate = batch.rateB || batch.mrp || batch.price || 0
+  else if (rateType === "rateC") baseRate = batch.rateC || batch.mrp || batch.price || 0
+  if (sellUnit === "piece" && qtyPerStrip > 0) return baseRate / qtyPerStrip
+  return baseRate
+}
+
+// ─── Product illustration helper ─────────────────────────────────────────────
+
+const getProductGradient = (productId: string) => {
+  const gradients = [
+    { from: "#fb7185", to: "#f43f5e", bg: "bg-rose-50" },
+    { from: "#60a5fa", to: "#2563eb", bg: "bg-blue-50" },
+    { from: "#fbbf24", to: "#d97706", bg: "bg-amber-50" },
+    { from: "#34d399", to: "#059669", bg: "bg-emerald-50" },
+    { from: "#c084fc", to: "#7c3aed", bg: "bg-purple-50" },
+    { from: "#22d3ee", to: "#0891b2", bg: "bg-cyan-50" },
+    { from: "#f472b6", to: "#db2777", bg: "bg-pink-50" },
+  ]
+  let hash = 0
+  for (let i = 0; i < productId.length; i++) {
+    hash = productId.charCodeAt(i) + ((hash << 5) - hash)
+  }
+  return gradients[Math.abs(hash) % gradients.length]
+}
+
+const getProductIllustration = (product: PosProduct, size: "sm" | "md" = "md") => {
+  const name = product.name.toLowerCase()
+  const form = (product.formulation || "").toLowerCase()
+  const grad = getProductGradient(product.id)
+  const svgClass = size === "sm" ? "w-7 h-7" : "w-14 h-14"
+  const wrapClass = size === "sm" ? "h-8 w-8" : "h-full w-full"
+
+  const wrap = (child: React.ReactNode) => (
+    <div className={cn("flex items-center justify-center rounded", wrapClass, grad.bg)}>
+      {child}
+    </div>
+  )
+
+  if (name.includes("elvive") || name.includes("shampoo") || name.includes("body wash")) {
+    return wrap(
+      <svg viewBox="0 0 64 64" className={svgClass} fill="none">
+        <defs>
+          <linearGradient id={`sg-${product.id}`} x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor={grad.from} />
+            <stop offset="100%" stopColor={grad.to} />
+          </linearGradient>
+        </defs>
+        <path d="M26 12h12v4H26z" fill="#94a3b8" />
+        <path d="M22 16h20v6H22z" fill="#64748b" />
+        <rect x="18" y="22" width="28" height="34" rx="6" fill={`url(#sg-${product.id})`} />
+        <rect x="22" y="30" width="20" height="16" rx="2" fill="white" opacity="0.8" />
+        <path d="M26 34h12v2H26zm0 4h8v2H26z" fill={grad.to} />
+      </svg>
+    )
+  }
+
+  if (
+    name.includes("vitalzin") ||
+    name.includes("drop") ||
+    name.includes("syrup") ||
+    form.includes("syrup") ||
+    form.includes("suspension")
+  ) {
+    return wrap(
+      <svg viewBox="0 0 64 64" className={svgClass} fill="none">
+        <defs>
+          <linearGradient id={`bg-${product.id}`} x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor={grad.from} />
+            <stop offset="100%" stopColor={grad.to} />
+          </linearGradient>
+        </defs>
+        <rect x="8" y="12" width="22" height="42" rx="2" fill={`url(#bg-${product.id})`} />
+        <rect x="12" y="20" width="14" height="24" fill="white" opacity="0.3" />
+        <rect x="36" y="24" width="18" height="30" rx="3" fill="#64748b" />
+        <path d="M41 20h8v4h-8z" fill="#475569" />
+        <path d="M43 14h4v6h-4z" fill="#94a3b8" />
+        <rect x="40" y="32" width="10" height="14" fill="white" opacity="0.8" />
+      </svg>
+    )
+  }
+
+  if (
+    name.includes("curafin") ||
+    name.includes("gel") ||
+    name.includes("cream") ||
+    name.includes("ointment")
+  ) {
+    return wrap(
+      <svg viewBox="0 0 64 64" className={svgClass} fill="none">
+        <defs>
+          <linearGradient id={`tg-${product.id}`} x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor={grad.from} />
+            <stop offset="100%" stopColor={grad.to} />
+          </linearGradient>
+        </defs>
+        <path d="M12 48 L22 14 C23 11 27 11 28 14 L38 48 Z" fill={`url(#tg-${product.id})`} />
+        <rect x="10" y="48" width="30" height="4" fill="#475569" />
+        <rect x="22" y="10" width="6" height="4" fill="#94a3b8" />
+        <rect x="19" y="30" width="12" height="8" transform="rotate(-15 19 30)" fill="white" opacity="0.8" />
+      </svg>
+    )
+  }
+
+  if (name.includes("avaspray") || name.includes("spray") || name.includes("inhaler")) {
+    return wrap(
+      <svg viewBox="0 0 64 64" className={svgClass} fill="none">
+        <defs>
+          <linearGradient id={`spg-${product.id}`} x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor={grad.from} />
+            <stop offset="100%" stopColor={grad.to} />
+          </linearGradient>
+        </defs>
+        <rect x="20" y="24" width="24" height="32" rx="4" fill={`url(#spg-${product.id})`} />
+        <path d="M28 12h8v12h-8z" fill="#94a3b8" />
+        <path d="M36 14h6v4h-6z" fill="#475569" />
+        <circle cx="40" cy="16" r="1.5" fill="#f43f5e" />
+        <rect x="25" y="32" width="14" height="12" rx="1" fill="white" opacity="0.8" />
+      </svg>
+    )
+  }
+
+  // Generic medicine box (default)
+  return wrap(
+    <svg viewBox="0 0 64 64" className={svgClass} fill="none">
+      <defs>
+        <linearGradient id={`bxg-${product.id}`} x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor={grad.from} />
+          <stop offset="100%" stopColor={grad.to} />
+        </linearGradient>
+      </defs>
+      <rect x="10" y="16" width="44" height="32" rx="4" fill={`url(#bxg-${product.id})`} />
+      <rect x="14" y="22" width="36" height="8" fill="white" opacity="0.8" />
+      <circle cx="20" cy="38" r="4" fill="white" opacity="0.5" />
+      <circle cx="28" cy="38" r="4" fill="white" opacity="0.5" />
+      <line x1="36" y1="38" x2="48" y2="38" stroke="white" strokeWidth="2" opacity="0.5" />
+      <line x1="36" y1="42" x2="44" y2="42" stroke="white" strokeWidth="2" opacity="0.5" />
+    </svg>
+  )
+}
+
+// ─── POS Component ────────────────────────────────────────────────────────────
+
 const POS = () => {
+  // Cart
   const [cart, setCart] = useState<CartItem[]>([])
+
+  // Search / filter
   const [searchTerm, setSearchTerm] = useState("")
   const [category, setCategory] = useState("All Categories")
   const [manufacturer, setManufacturer] = useState("All Manufacturers")
 
+  // Selected card highlight
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(null)
+
+  // Configure modal
+  const [configModalOpen, setConfigModalOpen] = useState(false)
+  const [configProduct, setConfigProduct] = useState<PosProduct | null>(null)
+  const [configBatch, setConfigBatch] = useState<PosBatch | null>(null)
+
+  // Filter drawer
   const [isFilterOpen, setIsFilterOpen] = useState(false)
   const [posFilters, setPosFilters] = useState<any>({
     stockStatus: "all",
@@ -160,9 +384,38 @@ const POS = () => {
     manufacturers: [],
   })
 
+  // Invoice fields
   const [discountPercent, setDiscountPercent] = useState(0)
+  const [discountType, setDiscountType] = useState<"flat" | "percent">("percent")
   const [paymentMode, setPaymentMode] = useState("Cash")
-  const [tendered, setTendered] = useState("")
+  const [receiveAmount, setReceiveAmount] = useState("")
+  const [deliveryCost, setDeliveryCost] = useState(0)
+  const [binValue, setBinValue] = useState(0)
+
+  // Success modal
+  const [successModalOpen, setSuccessModalOpen] = useState(false)
+  const [successInvoiceDetails, setSuccessInvoiceDetails] = useState<any>(null)
+
+  // Live clock
+  const [liveTime, setLiveTime] = useState(
+    new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit" })
+  )
+  useEffect(() => {
+    const t = setInterval(
+      () =>
+        setLiveTime(
+          new Date().toLocaleTimeString("en-IN", {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+          })
+        ),
+      1000
+    )
+    return () => clearInterval(t)
+  }, [])
+
+  // ── Data queries ──────────────────────────────────────────────────────────
 
   const { data: categoriesData } = useQuery({
     queryKey: queryKeys.categories.list({ limit: 1000 }),
@@ -218,130 +471,217 @@ const POS = () => {
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
       const search = searchTerm.trim().toLowerCase()
-      const matchesSearch =
-        !search ||
-        product.name.toLowerCase().includes(search) ||
-        product.composition.toLowerCase().includes(search) ||
-        product.mfg.toLowerCase().includes(search) ||
-        product.category.toLowerCase().includes(search)
-      if (!matchesSearch) return false
+      if (
+        search &&
+        !product.name.toLowerCase().includes(search) &&
+        !product.composition.toLowerCase().includes(search) &&
+        !product.mfg.toLowerCase().includes(search) &&
+        !product.category.toLowerCase().includes(search)
+      )
+        return false
 
-      const matchesCategory =
-        category === "All Categories" || product.category === category
-      if (!matchesCategory) return false
-
-      const matchesManufacturer =
-        manufacturer === "All Manufacturers" || product.mfg === manufacturer
-      if (!matchesManufacturer) return false
+      if (category !== "All Categories" && product.category !== category) return false
+      if (manufacturer !== "All Manufacturers" && product.mfg !== manufacturer) return false
 
       if (posFilters.stockStatus !== "all") {
-        if (posFilters.stockStatus === "in_stock" && product.totalStock <= 0) {
+        if (posFilters.stockStatus === "in_stock" && product.totalStock <= 0) return false
+        if (posFilters.stockStatus === "out_of_stock" && product.totalStock > 0) return false
+        if (posFilters.stockStatus === "low_stock" && (product.totalStock <= 0 || product.totalStock > 50))
           return false
-        }
-        if (
-          posFilters.stockStatus === "out_of_stock" &&
-          product.totalStock > 0
-        ) {
-          return false
-        }
-        if (
-          posFilters.stockStatus === "low_stock" &&
-          (product.totalStock <= 0 || product.totalStock > 50)
-        ) {
-          return false
-        }
       }
 
       if (posFilters.itemType !== "all") {
-        const normalizedType = product.type.toLowerCase()
-        if (posFilters.itemType === "rx" && !normalizedType.includes("rx")) {
-          return false
-        }
-        if (posFilters.itemType === "otc" && !normalizedType.includes("otc")) {
-          return false
-        }
-        if (
-          posFilters.itemType === "generics" &&
-          normalizedType.includes("rx")
-        ) {
-          return false
-        }
+        const t = product.type.toLowerCase()
+        if (posFilters.itemType === "rx" && !t.includes("rx")) return false
+        if (posFilters.itemType === "otc" && !t.includes("otc")) return false
+        if (posFilters.itemType === "generics" && t.includes("rx")) return false
       }
 
-      if (
-        posFilters.formulation.length > 0 &&
-        !posFilters.formulation.includes(product.formulation)
-      ) {
+      if (posFilters.formulation.length > 0 && !posFilters.formulation.includes(product.formulation))
         return false
-      }
-
-      if (posFilters.manufacturers.length > 0) {
-        const matchesAnyMfg = posFilters.manufacturers.includes(product.mfg)
-        if (!matchesAnyMfg) return false
-      }
+      if (posFilters.manufacturers.length > 0 && !posFilters.manufacturers.includes(product.mfg))
+        return false
 
       return true
     })
   }, [category, manufacturer, posFilters, products, searchTerm])
 
-  const addToCart = (product: PosProduct, batch: PosBatch) => {
-    if (batch.stock <= 0) return
+  // ── Cart actions ──────────────────────────────────────────────────────────
+
+  const handleAddConfiguredToCart = (config: {
+    rateType: "mrp" | "rateA" | "rateB" | "rateC"
+    sellUnit: "strip" | "piece"
+    qty: number
+    itemDiscount: number
+    batch: PosBatch
+  }) => {
+    if (!configProduct) return
+    const b = config.batch
+    const qtyPerStrip = getQtyPerStrip(configProduct)
+    const maxStock = config.sellUnit === "strip" ? b.stock : b.stock * qtyPerStrip
+
+    if (config.qty <= 0) {
+      toast.error("Please enter a valid quantity.")
+      return
+    }
+    if (config.qty > maxStock) {
+      toast.error(
+        `Insufficient stock! Max available is ${maxStock} ${config.sellUnit === "strip" ? "Strips" : "Pieces"}.`
+      )
+      return
+    }
+
+    const rateVal = getRateValue(b, config.rateType, config.sellUnit, qtyPerStrip)
+    const cartItemId = `${b.id}-${config.sellUnit}-${config.rateType}`
 
     setCart((prev) => {
-      const existing = prev.find((item) => item.batch.id === batch.id)
-      if (existing) {
-        return prev.map((item) =>
-          item.batch.id === batch.id
-            ? { ...item, qty: Math.min(item.qty + 1, batch.stock) }
-            : item
-        )
+      const existingIdx = prev.findIndex((item) => item.id === cartItemId)
+      if (existingIdx > -1) {
+        const existing = prev[existingIdx]
+        const newQty = Math.min(existing.qty + config.qty, maxStock)
+        const updated = [...prev]
+        updated[existingIdx] = { ...existing, qty: newQty, itemDiscount: config.itemDiscount }
+        return updated
       }
-
-      return [...prev, { product, batch, qty: 1 }]
+      return [
+        ...prev,
+        {
+          id: cartItemId,
+          product: configProduct,
+          batch: b,
+          qty: config.qty,
+          sellUnit: config.sellUnit,
+          rateType: config.rateType,
+          rateValue: rateVal,
+          itemDiscount: config.itemDiscount,
+        },
+      ]
     })
+
+    setConfigModalOpen(false)
+    toast.success(`${configProduct.name} added to invoice.`)
   }
 
-  const updateQty = (batchId: string, delta: number) => {
+  const updateQty = (cartItemId: string, delta: number) => {
     setCart((prev) =>
       prev.map((item) => {
-        if (item.batch.id !== batchId) return item
-        const newQty = Math.min(
-          item.batch.stock,
-          Math.max(1, item.qty + delta)
-        )
+        if (item.id !== cartItemId) return item
+        const qtyPerStrip = getQtyPerStrip(item.product)
+        const maxStock =
+          item.sellUnit === "strip" ? item.batch.stock : item.batch.stock * qtyPerStrip
+        const newQty = Math.min(maxStock, Math.max(1, item.qty + delta))
         return { ...item, qty: newQty }
       })
     )
   }
 
-  const removeFromCart = (batchId: string) => {
-    setCart((prev) => prev.filter((item) => item.batch.id !== batchId))
+  const removeFromCart = (cartItemId: string) => {
+    setCart((prev) => prev.filter((item) => item.id !== cartItemId))
   }
 
-  const grossTotal = cart.reduce(
-    (sum, item) => sum + item.batch.price * item.qty,
+  const updateItemDiscount = (cartItemId: string, disc: number) => {
+    setCart((prev) =>
+      prev.map((item) =>
+        item.id !== cartItemId ? item : { ...item, itemDiscount: Math.min(100, Math.max(0, disc)) }
+      )
+    )
+  }
+
+  // ── Calculations ──────────────────────────────────────────────────────────
+
+  const grossTotal = cart.reduce((sum, item) => sum + item.rateValue * item.qty, 0)
+
+  const totalItemDiscountAmount = cart.reduce(
+    (sum, item) => sum + (item.rateValue * item.qty * item.itemDiscount) / 100,
     0
   )
-  const discountAmount = (grossTotal * discountPercent) / 100
-  const taxableAmount = grossTotal - discountAmount
-  const tax = taxableAmount * 0.12
-  const netPayable = taxableAmount + tax
-  const roundedNet = Math.round(netPayable)
-  const rounding = roundedNet - netPayable
 
-  const tenderedAmount = parseFloat(tendered) || 0
-  const changeAmount =
-    tenderedAmount > roundedNet ? tenderedAmount - roundedNet : 0
+  const totalTaxAmount = cart.reduce((sum, item) => {
+    const itemTaxable = item.rateValue * item.qty * (1 - item.itemDiscount / 100)
+    return sum + (itemTaxable * (toNumber(item.batch.cgst) + toNumber(item.batch.sgst))) / 100
+  }, 0)
+
+  const totalAfterItemDiscount = grossTotal - totalItemDiscountAmount
+  const discountAmount =
+    discountType === "flat"
+      ? Math.min(discountPercent, totalAfterItemDiscount)
+      : (totalAfterItemDiscount * discountPercent) / 100
+  const taxableAmount = totalAfterItemDiscount - discountAmount
+  const netPayable = taxableAmount + totalTaxAmount + deliveryCost - binValue
+  const roundedNet = Math.max(0, Math.round(netPayable))
+
+  const tenderedAmount = parseFloat(receiveAmount) || 0
+  const changeAmount = tenderedAmount > roundedNet ? tenderedAmount - roundedNet : 0
+  const dueAmount = tenderedAmount < roundedNet ? roundedNet - tenderedAmount : 0
+
+  // ── Payment ───────────────────────────────────────────────────────────────
+
+  const handleCompletePayment = () => {
+    if (cart.length === 0) return
+    const invId = `INV-${Date.now().toString().slice(-6)}`
+    setSuccessInvoiceDetails({
+      id: invId,
+      items: cart,
+      grossTotal,
+      itemDiscounts: totalItemDiscountAmount,
+      overallDiscount: discountAmount,
+      tax: totalTaxAmount,
+      netPayable: roundedNet,
+      tendered: tenderedAmount || roundedNet,
+      change: changeAmount,
+      paymentMode,
+      date: new Date().toLocaleString("en-IN"),
+    })
+    setSuccessModalOpen(true)
+    toast.success("Payment completed successfully!")
+  }
+
+  const resetPos = () => {
+    setCart([])
+    setSearchTerm("")
+    setDiscountPercent(0)
+    setDiscountType("percent")
+    setReceiveAmount("")
+    setDeliveryCost(0)
+    setBinValue(0)
+    setSelectedProductId(null)
+    setSuccessModalOpen(false)
+    setSuccessInvoiceDetails(null)
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  //  RENDER
+  // ─────────────────────────────────────────────────────────────────────────
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background font-sans text-foreground">
-      <div className="flex flex-1 flex-col overflow-hidden p-4">
-        <div className="mb-4 flex gap-3">
-          <div className="relative flex-1">
+    <div className="flex h-screen w-full overflow-hidden bg-gray-100 font-sans text-gray-900 select-none">
+
+      {/* ══════════════════════════════════════════════
+          LEFT PANEL — Product Catalog
+      ══════════════════════════════════════════════ */}
+      <div className="flex flex-1 flex-col overflow-hidden">
+
+        {/* ── Top bar: search + filters ── */}
+        <div className="flex items-center gap-2.5 border-b border-gray-200 bg-white px-4 py-3 shadow-sm flex-shrink-0">
+          {/* Search */}
+          <div className="relative min-w-0 flex-1 max-w-72">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search / Scan medicine..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full rounded-lg border border-gray-200 bg-gray-50 py-2 pl-9 pr-9 text-sm outline-none focus:border-teal-400 focus:ring-1 focus:ring-teal-300/30 transition-all"
+            />
+            <ScanLine className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-300" />
+          </div>
+
+          {/* Category */}
+          <div className="relative">
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="w-full appearance-none rounded-lg border border-border bg-background px-4 py-2.5 text-sm text-foreground shadow-sm outline-none focus:border-ring focus:ring-1 focus:ring-ring"
+              className="appearance-none rounded-lg border border-gray-200 bg-gray-50 py-2 pl-3 pr-8 text-sm outline-none focus:border-teal-400 transition-all"
             >
               {categoryOptions.map((c) => (
                 <option key={c.value} value={c.value}>
@@ -349,13 +689,15 @@ const POS = () => {
                 </option>
               ))}
             </select>
-            <ChevronDown className="pointer-events-none absolute top-3 right-3 h-4 w-4 text-muted-foreground" />
+            <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
           </div>
-          <div className="relative flex-1">
+
+          {/* Manufacturer */}
+          <div className="relative hidden md:block">
             <select
               value={manufacturer}
               onChange={(e) => setManufacturer(e.target.value)}
-              className="w-full appearance-none rounded-lg border border-border bg-background px-4 py-2.5 text-sm text-foreground shadow-sm outline-none focus:border-ring focus:ring-1 focus:ring-ring"
+              className="appearance-none rounded-lg border border-gray-200 bg-gray-50 py-2 pl-3 pr-8 text-sm outline-none focus:border-teal-400 transition-all"
             >
               {manufacturerOptions.map((m) => (
                 <option key={m.value} value={m.value}>
@@ -363,401 +705,423 @@ const POS = () => {
                 </option>
               ))}
             </select>
-            <ChevronDown className="pointer-events-none absolute top-3 right-3 h-4 w-4 text-muted-foreground" />
+            <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
           </div>
-        </div>
 
-        <div className="mb-6 flex gap-2">
-          <div className="relative flex-1">
-            <ScanLine className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Scan barcode or search by item name, composition..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full rounded-lg border border-border bg-background py-3 pr-4 pl-10 text-sm text-foreground shadow-sm transition-all outline-none placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring"
-            />
-            <div className="absolute top-1/2 right-3 -translate-y-1/2 rounded border border-border bg-muted px-2 py-1 text-xs font-medium text-muted-foreground">
-              F2
-            </div>
-          </div>
+          {/* Filter button */}
           <button
+            type="button"
             onClick={() => setIsFilterOpen(true)}
-            className="flex items-center gap-2 rounded-lg border border-border bg-background px-4 py-3 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground"
+            className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors active:scale-95"
           >
-            <Filter className="h-4 w-4" />
-            Filters
+            <Filter className="h-3.5 w-3.5 text-teal-500" />
+            Filter
           </button>
+
+          {/* Spacer + count */}
+          <span className="ml-auto hidden sm:block text-xs text-gray-400 font-semibold whitespace-nowrap">
+            {filteredProducts.length} items
+          </span>
+
+          {/* Clock */}
+          <div className="hidden lg:flex items-center gap-1 text-xs font-bold text-gray-400">
+            <Clock className="h-3.5 w-3.5" />
+            {liveTime}
+          </div>
         </div>
 
-        <div className="custom-scrollbar flex-1 space-y-4 overflow-y-auto pr-2 pb-20">
+        {/* ── Product Grid ── */}
+        <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
           {filteredProducts.length === 0 ? (
-            <div className="flex h-full items-center justify-center rounded-2xl border border-dashed border-border bg-muted/20 p-10 text-center text-muted-foreground">
-              No products found for the selected filters.
+            <div className="flex h-full flex-col items-center justify-center gap-3 text-gray-300">
+              <Pill className="h-12 w-12 animate-bounce" />
+              <p className="text-sm font-semibold">No products found.</p>
             </div>
           ) : (
-            filteredProducts.map((product) => (
-              <div
-                key={product.id}
-                className="overflow-hidden rounded-2xl border border-blue-100 bg-white shadow-sm transition-all hover:shadow-md dark:border-slate-800 dark:bg-slate-900/50"
-              >
-                <div className="flex items-start gap-4 p-5">
-                  <div
+            <div
+              className="grid gap-3"
+              style={{ gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))" }}
+            >
+              {filteredProducts.map((product) => {
+                const firstBatch = product.batches[0] || null
+                const basePrice = firstBatch ? firstBatch.mrp || firstBatch.price || 0 : 0
+                const isOutOfStock = product.totalStock <= 0
+                const isSelected = selectedProductId === product.id
+
+                return (
+                  <button
+                    key={product.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedProductId(product.id)
+                      setConfigProduct(product)
+                      setConfigBatch(firstBatch)
+                      setConfigModalOpen(true)
+                    }}
                     className={cn(
-                      "flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-2xl",
-                      product.type.toLowerCase().includes("rx")
-                        ? "bg-red-50 text-red-500"
-                        : "bg-blue-50 text-blue-500"
+                      "relative flex flex-col items-center rounded-lg border bg-white p-2.5 text-left transition-all duration-150 active:scale-[0.97] cursor-pointer hover:shadow-md",
+                      isSelected
+                        ? "border-teal-500 ring-1 ring-teal-400/40 shadow-sm bg-teal-50/30"
+                        : isOutOfStock
+                          ? "border-gray-200 opacity-50 cursor-not-allowed"
+                          : "border-gray-200 hover:border-teal-300"
                     )}
                   >
-                    <Pill className="h-8 w-8" />
-                  </div>
-
-                  <div className="min-w-0 flex-1">
-                    <div className="mb-1 flex items-center gap-2">
-                      <h3 className="truncate text-xl font-bold text-slate-900 dark:text-white">
-                        {product.name}
-                      </h3>
-                      {product.type && product.type !== "NORMAL" && (
-                        <span className="rounded bg-red-500 px-1.5 py-0.5 text-[10px] font-bold text-white uppercase">
-                          {product.type}
-                        </span>
-                      )}
+                    {/* Illustration */}
+                    <div className="flex h-[100px] w-full items-center justify-center overflow-hidden rounded-md bg-gray-50 mb-2.5">
+                      {getProductIllustration(product, "md")}
                     </div>
-                    <p className="mb-2 truncate text-sm text-slate-500 dark:text-slate-400">
-                      {product.composition}
+
+                    {/* Name */}
+                    <p className="w-full text-center text-xs font-semibold leading-tight text-gray-800 line-clamp-2">
+                      {product.name}
                     </p>
-                    <div className="flex flex-wrap gap-4 text-xs font-medium text-slate-400">
-                      <span className="flex items-center gap-1">
-                        <Building2 className="h-3.5 w-3.5" />
-                        {product.mfg}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <MapPin className="h-3.5 w-3.5" />
-                        {product.category}
-                      </span>
-                    </div>
-                  </div>
 
-                  <div
-                    className={cn(
-                      "rounded-lg px-3 py-1.5 text-xs font-bold whitespace-nowrap",
-                      product.totalStock > 0
-                        ? "bg-emerald-50 text-emerald-600"
-                        : "bg-red-50 text-red-600"
+                    {/* Price */}
+                    <p className="mt-1 text-xs font-bold text-gray-500">
+                      {basePrice > 0 ? `${basePrice.toFixed(2)}` : "0"}
+                      <span className="text-[10px] font-semibold text-gray-400"></span>
+                    </p>
+
+                    {/* Out of stock badge */}
+                    {isOutOfStock && (
+                      <span className="absolute top-1.5 right-1.5 rounded bg-red-500 px-1.5 py-0.5 text-[9px] font-bold uppercase text-white">
+                        Out
+                      </span>
                     )}
-                  >
-                    {product.totalStock} IN STOCK
-                  </div>
-                </div>
+                  </button>
+                )
+              })}
 
-                <div className="border-t border-slate-100 bg-slate-50/30 dark:border-slate-800 dark:bg-transparent">
-                  <table className="w-full text-left text-xs">
-                    <thead>
-                      <tr className="border-b border-slate-100 font-bold tracking-wider text-slate-400 dark:border-slate-800">
-                        <th className="px-6 py-3">BATCH NO.</th>
-                        <th className="px-6 py-3">EXPIRY</th>
-                        <th className="px-6 py-3">AVAILABLE STOCK</th>
-                        <th className="px-6 py-3">UNIT PRICE</th>
-                        <th className="px-6 py-3 text-right">ACTION</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                      {product.batches.map((batch) => (
-                        <tr
-                          key={batch.id}
-                          className="group transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50"
-                        >
-                          <td className="px-6 py-4 font-bold text-slate-700 dark:text-slate-300">
-                            {batch.number}
-                          </td>
-                          <td className="px-6 py-4">
-                            <div
-                              className={cn(
-                                "flex items-center gap-1.5 font-bold",
-                                batch.isNearExpiry
-                                  ? "text-red-500"
-                                  : "text-slate-600 dark:text-slate-400"
-                              )}
-                            >
-                              {batch.isNearExpiry && (
-                                <AlertCircle className="h-3.5 w-3.5" />
-                              )}
-                              {batch.expiry}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 font-semibold text-slate-600 dark:text-slate-400">
-                            {batch.stock} Strips
-                          </td>
-                          <td className="px-6 py-4 text-sm font-black text-slate-900 dark:text-white">
-                            ₹{batch.price.toFixed(2)}
-                          </td>
-                          <td className="px-6 py-4 text-right">
-                            <button
-                              onClick={() => addToCart(product, batch)}
-                              disabled={batch.stock <= 0}
-                              className={cn(
-                                "flex h-9 w-9 items-center justify-center rounded-xl transition-all",
-                                batch.stock > 0
-                                  ? "border border-blue-200 bg-white text-blue-600 shadow-sm hover:border-blue-600 hover:bg-blue-600 hover:text-white"
-                                  : "cursor-not-allowed bg-slate-100 text-slate-400"
-                              )}
-                            >
-                              <Plus className="h-5 w-5" />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+              {/* Empty placeholder cards to maintain grid shape */}
+              {Array.from({
+                length: Math.max(
+                  0,
+                  filteredProducts.length % 5 === 0
+                    ? 0
+                    : 5 - (filteredProducts.length % 5)
+                ),
+              }).map((_, i) => (
+                <div
+                  key={`empty-${i}`}
+                  className="flex flex-col items-center rounded-lg border border-dashed border-gray-200 bg-white/60 p-2.5 opacity-40"
+                >
+                  <div className="flex h-[100px] w-full items-center justify-center rounded-md bg-gray-50 mb-2.5">
+                    <ShoppingCart className="h-8 w-8 text-gray-200" />
+                  </div>
+                  <p className="text-xs font-semibold text-gray-300">—</p>
+                  <p className="text-xs text-gray-200">---</p>
                 </div>
-              </div>
-            ))
+              ))}
+            </div>
           )}
         </div>
       </div>
 
-      <div className="z-10 flex w-[400px] flex-col border-l border-border bg-card shadow-[-10px_0_30px_rgba(0,0,0,0.02)] xl:w-[480px]">
-        <div className="flex items-center justify-between border-b border-border bg-muted/50 p-4">
-          <div className="flex items-center gap-2">
-            <ShoppingCart className="h-5 w-5 text-foreground" />
-            <h2 className="text-lg font-bold text-foreground">
-              Current Invoice
-            </h2>
-          </div>
-          <span className="rounded-md bg-primary/10 px-2.5 py-1 text-xs font-bold text-primary">
-            #INV-2023-089
-          </span>
+      {/* ══════════════════════════════════════════════
+          RIGHT PANEL — Invoice
+      ══════════════════════════════════════════════ */}
+      <div className="flex w-[540px] xl:w-[600px] flex-col border-l border-gray-200 bg-white shadow-xl flex-shrink-0">
+
+        {/* ── Table header ── */}
+        <div
+          className="grid flex-shrink-0 items-center border-b border-gray-200 bg-gray-50 px-3 py-2.5 text-xs font-bold uppercase tracking-wider text-gray-500"
+          style={{ gridTemplateColumns: "40px 1fr 70px 56px 108px 84px 76px" }}
+        >
+          <span>Image</span>
+          <span>Items</span>
+          <span>Batch</span>
+          <span>Price</span>
+          <span>Discount</span>
+          <span className="text-center">Qty</span>
+          <span className="text-right pr-1">Sub Total</span>
         </div>
 
-        <div className="space-y-3 border-b border-border bg-card p-4">
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <Phone className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <input
-                type="text"
-                placeholder="Mobile Number"
-                className="w-full rounded-lg border border-border bg-background py-2 pr-3 pl-9 text-sm text-foreground transition-colors outline-none placeholder:text-muted-foreground focus:border-ring"
-              />
-            </div>
-            <div className="relative flex-[1.5]">
-              <User className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <input
-                type="text"
-                placeholder="Customer Name"
-                defaultValue="Rahul Sharma"
-                className="w-full rounded-lg border border-border bg-background py-2 pr-3 pl-9 text-sm text-foreground transition-colors outline-none placeholder:text-muted-foreground focus:border-ring"
-              />
-            </div>
-          </div>
-
-          <div className="relative">
-            <Stethoscope className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Prescribing Doctor"
-              defaultValue="Dr. A. K. Singh (Reg: 45892)"
-              className="w-full rounded-lg border border-border bg-background py-2 pr-3 pl-9 text-sm text-foreground transition-colors outline-none placeholder:text-muted-foreground focus:border-ring"
-            />
-          </div>
-        </div>
-
-        <div className="custom-scrollbar flex-1 overflow-y-auto bg-muted/30 p-4">
+        {/* ── Cart rows ── */}
+        <div className="flex-1 overflow-y-auto custom-scrollbar divide-y divide-gray-50">
           {cart.length === 0 ? (
-            <div className="flex h-full flex-col items-center justify-center space-y-3 text-muted-foreground">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-                <ShoppingCart className="h-8 w-8 text-muted-foreground/50" />
-              </div>
-              <p className="text-sm font-medium">
-                Cart is empty. Scan or select items.
-              </p>
+            <div className="flex h-full flex-col items-center justify-center gap-2 p-6 text-center text-gray-300">
+              <ShoppingCart className="h-10 w-10" />
+              <p className="text-xs font-semibold text-gray-400">No items added yet</p>
+              <p className="text-[10px] text-gray-300">Click a product on the left to add</p>
             </div>
           ) : (
-            <div className="space-y-3">
-              {cart.map((item) => (
+            cart.map((item) => {
+              const totalItemPrice = item.rateValue * item.qty
+              const itemDiscountAmt = (totalItemPrice * item.itemDiscount) / 100
+              const finalItemPrice = totalItemPrice - itemDiscountAmt
+
+              return (
                 <div
-                  key={item.batch.id}
-                  className="flex flex-col gap-2 rounded-xl border border-border bg-card p-3 shadow-sm"
+                  key={item.id}
+                  className="grid items-center px-3 py-3 hover:bg-gray-50/70 transition-colors border-b border-gray-50"
+                  style={{ gridTemplateColumns: "40px 1fr 70px 56px 108px 84px 76px" }}
                 >
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h4 className="flex items-center gap-1.5 text-sm font-semibold text-card-foreground">
-                        {item.product.name}
-                      </h4>
-                      <div className="mt-0.5 flex gap-2 text-[11px] text-muted-foreground">
-                        <span>Batch: {item.batch.number}</span>
-                        <span>Exp: {item.batch.expiry}</span>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-bold text-card-foreground">
-                        ₹{(item.batch.price * item.qty).toFixed(2)}
-                      </p>
-                      <p className="text-[10px] text-muted-foreground">
-                        ₹{item.batch.price.toFixed(2)} / unit
-                      </p>
-                    </div>
+                  {/* Thumbnail */}
+                  <div className="h-9 w-9 overflow-hidden rounded-md bg-gray-100 flex items-center justify-center flex-shrink-0">
+                    {getProductIllustration(item.product, "sm")}
                   </div>
 
-                  <div className="mt-1 flex items-center justify-between border-t border-border/50 pt-2">
-                    <div className="flex items-center overflow-hidden rounded-lg border border-border bg-muted">
-                      <button
-                        onClick={() => updateQty(item.batch.id, -1)}
-                        className="px-2 py-1 text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
-                      >
-                        <Minus className="h-3.5 w-3.5" />
-                      </button>
-                      <input
-                        type="text"
-                        readOnly
-                        value={item.qty}
-                        className="w-8 border-x border-border bg-transparent py-1 text-center text-sm font-bold text-foreground outline-none"
-                      />
-                      <button
-                        onClick={() => updateQty(item.batch.id, 1)}
-                        className="px-2 py-1 text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
-                      >
-                        <Plus className="h-3.5 w-3.5" />
-                      </button>
+                  {/* Name + remove */}
+                  <div className="flex items-center gap-1.5 pr-1.5 min-w-0">
+                    <p className="flex-1 truncate font-semibold text-gray-800 text-xs leading-tight">
+                      {item.product.name}
+                    </p>
+                    <button
+                      onClick={() => removeFromCart(item.id)}
+                      className="flex-shrink-0 rounded p-1 text-gray-300 hover:bg-red-50 hover:text-red-500 transition-colors"
+                      title="Remove"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </div>
+
+                  {/* Batch */}
+                  <div className="font-mono text-xs text-gray-500 truncate">
+                    {item.batch.number}
+                  </div>
+
+                  {/* Price */}
+                  <div className="text-xs font-semibold text-gray-700">
+                    {item.rateValue.toFixed(2)}
+                  </div>
+
+                  {/* Discount: type dropdown + value */}
+                  <div className="flex items-center gap-1">
+                    <div className="relative">
+                      <select className="appearance-none rounded border border-gray-200 bg-white pl-2 pr-5 py-1 text-xs outline-none focus:border-teal-400 h-7 text-gray-600 cursor-pointer">
+                        <option>Flat</option>
+                        <option>%</option>
+                      </select>
+                      <ChevronDown className="pointer-events-none absolute right-1 top-1/2 h-3 w-3 -translate-y-1/2 text-gray-400" />
                     </div>
-                    <div className="flex gap-1">
-                      <button
-                        className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
-                        title="Add Discount"
-                      >
-                        <span className="text-xs font-bold">%</span>
-                      </button>
-                      <button
-                        onClick={() => removeFromCart(item.batch.id)}
-                        className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={item.itemDiscount}
+                      onChange={(e) => updateItemDiscount(item.id, Number(e.target.value))}
+                      className="w-9 rounded border border-gray-200 bg-gray-50 px-1 py-1 text-xs text-center outline-none focus:border-teal-400 h-7"
+                    />
+                  </div>
+
+                  {/* Qty controls */}
+                  <div className="flex items-center justify-center gap-1">
+                    <button
+                      onClick={() => updateQty(item.id, -1)}
+                      className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded border border-gray-200 bg-gray-50 text-gray-500 hover:bg-gray-100 transition-colors"
+                    >
+                      <Minus className="h-3 w-3" />
+                    </button>
+                    <span className="w-6 text-center text-xs font-bold text-gray-800 tabular-nums">
+                      {item.qty}
+                    </span>
+                    <button
+                      onClick={() => updateQty(item.id, 1)}
+                      className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded border border-gray-200 bg-gray-50 text-gray-500 hover:bg-gray-100 transition-colors"
+                    >
+                      <Plus className="h-3 w-3" />
+                    </button>
+                  </div>
+
+                  {/* Sub Total */}
+                  <div className="text-right pr-1">
+                    <span className="text-xs font-bold text-gray-800 tabular-nums">
+                      {finalItemPrice.toFixed(2)}
+                    </span>
+                    <span className="text-[10px] font-semibold text-gray-400"></span>
                   </div>
                 </div>
-              ))}
-            </div>
+              )
+            })
           )}
         </div>
 
-        <div className="z-10 border-t border-border bg-card">
-          <div className="space-y-2.5 border-b border-border p-4 text-sm">
-            <div className="flex justify-between text-muted-foreground">
-              <span>
-                Gross Total ({cart.reduce((a, b) => a + b.qty, 0)} Items)
-              </span>
-              <span className="font-semibold text-foreground">
-                ₹{grossTotal.toFixed(2)}
-              </span>
+        {/* Thin scroll decoration bar */}
+        <div className="flex h-2 flex-shrink-0 items-center border-t border-gray-100 bg-gray-100 px-1">
+          <div className="h-1 flex-1 rounded-full overflow-hidden bg-gray-200">
+            <div className="h-full w-1/3 rounded-full bg-gray-400 opacity-50" />
+          </div>
+        </div>
+
+        {/* ── Payment fields ── */}
+        <div className="flex-shrink-0 border-t border-gray-200 bg-white px-4 pt-3.5 pb-2.5">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-2.5">
+
+            {/* ── Left column ── */}
+            <div className="space-y-2.5">
+              {/* Receive Amount */}
+              <div className="flex items-center gap-2">
+                <label className="w-28 flex-shrink-0 text-xs font-semibold text-gray-500">
+                  Receive Amount
+                </label>
+                <input
+                  type="number"
+                  value={receiveAmount}
+                  onChange={(e) => setReceiveAmount(e.target.value)}
+                  placeholder="0"
+                  className="flex-1 min-w-0 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-xs text-right outline-none focus:border-teal-400 focus:ring-1 focus:ring-teal-300/20 transition-all"
+                />
+              </div>
+
+              {/* Change Amount */}
+              <div className="flex items-center gap-2">
+                <label className="w-28 flex-shrink-0 text-xs font-semibold text-gray-500">
+                  Change Amount
+                </label>
+                <input
+                  readOnly
+                  value={changeAmount.toFixed(0)}
+                  className="flex-1 min-w-0 rounded-lg border border-gray-100 bg-gray-50 px-2.5 py-1.5 text-xs text-right text-gray-500 outline-none"
+                />
+              </div>
+
+              {/* Due Amount */}
+              <div className="flex items-center gap-2">
+                <label className="w-28 flex-shrink-0 text-xs font-semibold text-gray-500">
+                  Due Amount
+                </label>
+                <input
+                  readOnly
+                  value={dueAmount > 0 ? dueAmount.toFixed(2) : roundedNet.toFixed(2)}
+                  className="flex-1 min-w-0 rounded-lg border border-gray-100 bg-gray-50 px-2.5 py-1.5 text-xs text-right font-semibold text-gray-700 outline-none"
+                />
+              </div>
+
+              {/* Payment Type */}
+              <div className="flex items-center gap-2">
+                <label className="w-28 flex-shrink-0 text-xs font-semibold text-gray-500">
+                  Payment Type
+                </label>
+                <div className="relative flex-1 min-w-0">
+                  <select
+                    value={paymentMode}
+                    onChange={(e) => setPaymentMode(e.target.value)}
+                    className="w-full appearance-none rounded-lg border border-gray-200 bg-gray-50 py-1.5 pl-2.5 pr-7 text-xs outline-none focus:border-teal-400 transition-all"
+                  >
+                    <option>Cash</option>
+                    <option>Card / POS</option>
+                    <option>UPI / QR</option>
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
+                </div>
+              </div>
             </div>
 
-            <div className="flex items-center justify-between text-muted-foreground">
-              <span>Overall Discount</span>
-              <div className="flex items-center gap-2">
-                <div className="flex h-7 w-20 items-center overflow-hidden rounded border border-border">
-                  <input
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={discountPercent}
-                    onChange={(e) => setDiscountPercent(Number(e.target.value))}
-                    className="w-full bg-muted px-2 text-right text-sm text-foreground outline-none"
-                  />
-                  <span className="border-l border-border bg-muted px-1.5 text-xs text-muted-foreground">
-                    %
-                  </span>
-                </div>
-                <span className="min-w-[50px] text-right font-semibold text-emerald-600 dark:text-emerald-400">
-                  -₹{discountAmount.toFixed(2)}
+            {/* ── Right column ── */}
+            <div className="space-y-2.5">
+              {/* Total */}
+              <div className="flex items-baseline justify-between">
+                <span className="text-base font-black text-gray-800">Total</span>
+                <span className="text-base font-black text-gray-800 tabular-nums">
+                  {roundedNet.toFixed(2)}
+                  <span className="text-xs font-semibold text-gray-500"></span>
                 </span>
               </div>
-            </div>
 
-            <div className="flex justify-between text-muted-foreground">
-              <span>CGST + SGST (12%)</span>
-              <span className="font-semibold text-foreground">
-                ₹{tax.toFixed(2)}
-              </span>
-            </div>
-            <div className="flex justify-between text-muted-foreground">
-              <span>Rounding</span>
-              <span className="font-semibold text-foreground">
-                {rounding >= 0 ? "+" : ""}₹{rounding.toFixed(2)}
-              </span>
+              {/* BIN */}
+              <div className="flex items-center gap-1.5">
+                <label className="w-9 flex-shrink-0 text-xs font-semibold text-gray-500">BIN</label>
+                <div className="relative">
+                  <select className="appearance-none rounded-lg border border-gray-200 bg-gray-50 py-1.5 pl-2.5 pr-7 text-xs outline-none focus:border-teal-400">
+                    <option>Select</option>
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute right-1.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
+                </div>
+                <input
+                  type="number"
+                  value={binValue}
+                  onChange={(e) => setBinValue(Number(e.target.value))}
+                  placeholder="0.00"
+                  className="flex-1 min-w-0 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-xs text-right outline-none focus:border-teal-400 transition-all"
+                />
+              </div>
+
+              {/* Discount */}
+              <div className="flex items-center gap-1.5">
+                <label className="w-9 flex-shrink-0 text-xs font-semibold text-gray-500">
+                  Discount
+                </label>
+                <div className="relative">
+                  <select
+                    value={discountType}
+                    onChange={(e) => setDiscountType(e.target.value as "flat" | "percent")}
+                    className="appearance-none rounded-lg border border-gray-200 bg-gray-50 py-1.5 pl-2.5 pr-7 text-xs outline-none focus:border-teal-400"
+                  >
+                    <option value="percent">Select</option>
+                    <option value="flat">Flat</option>
+                    <option value="percent">%</option>
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute right-1.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
+                </div>
+                <input
+                  type="number"
+                  min="0"
+                  value={discountPercent}
+                  onChange={(e) =>
+                    setDiscountPercent(Math.min(100, Math.max(0, Number(e.target.value))))
+                  }
+                  className="flex-1 min-w-0 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-xs text-right outline-none focus:border-teal-400 transition-all"
+                />
+              </div>
+
+              {/* Delivery Cost */}
+              <div className="flex items-center gap-1.5">
+                <label className="w-16 flex-shrink-0 text-xs font-semibold text-gray-500">
+                  Delivery Cost
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={deliveryCost}
+                  onChange={(e) => setDeliveryCost(Math.max(0, Number(e.target.value)))}
+                  className="flex-1 min-w-0 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-xs text-right outline-none focus:border-teal-400 transition-all"
+                  placeholder="0"
+                />
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center justify-between bg-accent/50 px-4 py-3">
-            <div>
-              <h3 className="font-bold text-foreground">Net Payable</h3>
-              <p className="text-[10px] text-muted-foreground uppercase">
-                Includes all taxes
-              </p>
-            </div>
-            <span className="text-2xl font-black tracking-tight text-primary">
-              ₹{roundedNet.toFixed(2)}
-            </span>
-          </div>
-
-          <div className="p-4">
-            <div className="mb-4 grid grid-cols-3 gap-2">
-              {["Cash", "Card / POS", "UPI / QR"].map((mode) => (
-                <button
-                  key={mode}
-                  onClick={() => setPaymentMode(mode)}
-                  className={`flex flex-col items-center justify-center gap-1.5 rounded-lg border px-1 py-2 text-xs font-semibold transition-all ${paymentMode === mode ? "border-ring bg-primary/10 text-primary shadow-sm" : "border-border bg-card text-muted-foreground hover:bg-accent hover:text-accent-foreground"}`}
-                >
-                  {mode === "Cash" && <FileText className="h-4 w-4" />}
-                  {mode === "Card / POS" && <Receipt className="h-4 w-4" />}
-                  {mode === "UPI / QR" && <ScanLine className="h-4 w-4" />}
-                  {mode}
-                </button>
-              ))}
-            </div>
-
-            <div className="mb-4 flex gap-3">
-              <div className="relative flex-1">
-                <label className="absolute -top-2 left-2 bg-card px-1 text-[10px] font-bold text-muted-foreground uppercase">
-                  Tendered
-                </label>
-                <div className="flex items-center overflow-hidden rounded-lg border border-border transition-all focus-within:border-ring focus-within:ring-1 focus-within:ring-ring">
-                  <span className="pl-3 font-bold text-muted-foreground">₹</span>
-                  <input
-                    type="number"
-                    value={tendered}
-                    onChange={(e) => setTendered(e.target.value)}
-                    className="w-full bg-transparent px-2 py-2.5 font-bold text-foreground outline-none placeholder:text-muted-foreground"
-                    placeholder="0.00"
-                  />
-                </div>
-              </div>
-              <div className="relative flex-1">
-                <label className="absolute -top-2 left-2 bg-card px-1 text-[10px] font-bold text-destructive uppercase">
-                  Change
-                </label>
-                <div className="flex items-center overflow-hidden rounded-lg border border-destructive/30 bg-destructive/10">
-                  <span className="pl-3 font-bold text-destructive">₹</span>
-                  <input
-                    type="text"
-                    readOnly
-                    value={changeAmount.toFixed(2)}
-                    className="w-full bg-transparent px-2 py-2.5 font-bold text-destructive outline-none"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <button
-              disabled={cart.length === 0}
-              className={`flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-bold shadow-md transition-all ${cart.length === 0 ? "cursor-not-allowed bg-muted text-muted-foreground shadow-none" : "bg-primary text-primary-foreground hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-lg"}`}
-            >
-              <CheckCircle2 className="h-5 w-5" />
-              Complete Payment (Enter)
+          {/* + Add Payment */}
+          <div className="pt-2.5">
+            <button className="text-xs font-semibold text-teal-600 hover:text-teal-700 transition-colors">
+              + Add Payment
             </button>
           </div>
         </div>
+
+        {/* ── Action buttons ── */}
+        <div className="grid grid-cols-3 gap-2.5 border-t border-gray-200 bg-gray-50/80 px-4 py-3 flex-shrink-0">
+          <button
+            onClick={resetPos}
+            className="rounded-lg border border-amber-300 bg-white py-2.5 text-sm font-bold text-amber-600 hover:bg-amber-50 transition-colors active:scale-95"
+          >
+            Reset
+          </button>
+          <button
+            onClick={handleCompletePayment}
+            disabled={cart.length === 0}
+            className="rounded-lg border border-teal-300 bg-white py-2.5 text-sm font-bold text-teal-600 hover:bg-teal-50 transition-colors active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            Save
+          </button>
+          <button
+            onClick={() => {
+              if (cart.length === 0) return
+              handleCompletePayment()
+              toast.info("Preparing print...")
+            }}
+            disabled={cart.length === 0}
+            className="rounded-lg border border-teal-500 bg-white py-2.5 text-sm font-bold text-teal-700 hover:bg-teal-50 transition-colors active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            Save &amp; Print
+          </button>
+        </div>
       </div>
+
+      {/* ══════════════════════════════════════════════
+          MODALS
+      ══════════════════════════════════════════════ */}
 
       <FilterPointofSale
         open={isFilterOpen}
@@ -766,6 +1130,92 @@ const POS = () => {
         onFilter={setPosFilters}
         manufacturerOptions={manufacturerFilterOptions}
       />
+
+      <ConfigureSaleItemDialog
+        open={configModalOpen}
+        onClose={setConfigModalOpen}
+        product={configProduct}
+        batch={configBatch}
+        onAdd={handleAddConfiguredToCart}
+      />
+
+      {/* Success / Receipt modal */}
+      <Dialog open={successModalOpen} onOpenChange={setSuccessModalOpen}>
+        <DialogContent className="sm:max-w-md font-sans p-6 rounded-2xl text-center">
+          <DialogHeader className="items-center">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500 mb-2 mx-auto">
+              <CheckCircle2 className="h-9 w-9" />
+            </div>
+            <DialogTitle className="text-base font-black tracking-tight text-slate-900 uppercase">
+              Transaction Success
+            </DialogTitle>
+            <DialogDescription className="text-slate-400 font-semibold text-xs">
+              Invoice generated and stock updated.
+            </DialogDescription>
+          </DialogHeader>
+
+          {successInvoiceDetails && (
+            <div className="space-y-3 py-2 text-left">
+              <div className="rounded-xl border border-gray-100 bg-gray-50 p-4 text-[10px] font-bold text-gray-400 space-y-1.5">
+                <div className="flex justify-between">
+                  <span>Invoice ID</span>
+                  <span className="text-gray-800 font-extrabold">{successInvoiceDetails.id}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Date &amp; Time</span>
+                  <span className="text-gray-800 font-extrabold">{successInvoiceDetails.date}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Payment Mode</span>
+                  <span className="text-teal-600 font-black uppercase">
+                    {successInvoiceDetails.paymentMode}
+                  </span>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-gray-100 bg-white p-4 space-y-1.5 text-[10px] font-bold">
+                <div className="flex justify-between text-gray-500">
+                  <span>Gross Total</span>
+                  <span>₹{successInvoiceDetails.grossTotal.toFixed(2)}</span>
+                </div>
+                {successInvoiceDetails.overallDiscount > 0 && (
+                  <div className="flex justify-between text-emerald-600">
+                    <span>Discount</span>
+                    <span>−₹{successInvoiceDetails.overallDiscount.toFixed(2)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-gray-500">
+                  <span>GST</span>
+                  <span>₹{successInvoiceDetails.tax.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between border-t border-gray-100 pt-2 text-xs font-black text-gray-800">
+                  <span>Net Paid</span>
+                  <span className="text-emerald-600 font-mono">
+                    ₹{successInvoiceDetails.netPayable.toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="gap-2 border-t pt-4 -mx-6 -mb-6 bg-gray-50 p-4 rounded-b-2xl">
+            <Button
+              variant="outline"
+              onClick={() => toast.success("Printing invoice...")}
+              className="flex-1 font-extrabold text-xs uppercase flex items-center justify-center gap-1.5"
+            >
+              <Printer className="h-4 w-4" />
+              Print
+            </Button>
+            <Button
+              onClick={resetPos}
+              className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs uppercase"
+            >
+              New Sale
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

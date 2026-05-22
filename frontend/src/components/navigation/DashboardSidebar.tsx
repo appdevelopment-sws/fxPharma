@@ -18,7 +18,7 @@ interface DashboardSidebarProps {
   activePath: string
   isLoggingOut: boolean
   onLogout: () => void
-  onNavigate?: () => void
+  onNavigate?: (to?: string) => void
 }
 
 export function DashboardSidebar({
@@ -151,7 +151,7 @@ function SidebarItem({
   activePath: string
   isExpanded: boolean
   onToggleExpanded: (title: string) => void
-  onNavigate?: () => void
+  onNavigate?: (to?: string) => void
   isCollapsed: boolean
 }) {
   const Icon = item.icon
@@ -201,7 +201,7 @@ function SidebarItem({
                 <NavLink
                   key={child.to}
                   to={child.to ?? "#"}
-                  onClick={onNavigate}
+                  onClick={() => onNavigate?.(child.to)}
                   className={cn(
                     "flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium transition-all duration-200",
                     childIsActive
@@ -223,7 +223,7 @@ function SidebarItem({
   }
 
   return (
-    <NavLink to={item.to ?? "#"} onClick={onNavigate} className={baseStyles}>
+    <NavLink to={item.to ?? "#"} onClick={() => onNavigate?.(item.to)} className={baseStyles}>
       <Icon className="size-5 shrink-0" />
       {!isCollapsed && (
         <span className="truncate text-sm font-medium">{item.title}</span>
