@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState, useRef } from "react"
 import {
   useFieldArray,
   useForm,
@@ -118,6 +118,23 @@ export default function OrderDialog({
 
   const queryClient = useQueryClient()
   const [productSearch, setProductSearch] = useState("")
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsDropdownOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside)
+    }
+  }, [])
 
   const {
     handleSubmit,
@@ -146,16 +163,16 @@ export default function OrderDialog({
   })
 
   const { data: inventoryData, isLoading: isLoadingInventory } = useQuery({
-    queryKey: queryKeys.inventory.list({ limit: 4 }),
-    queryFn: () => InventoryApi.getAll({ limit: 4 }),
+    queryKey: queryKeys.inventory.list({ limit: 15 }),
+    queryFn: () => InventoryApi.getAll({ limit: 15 }),
     enabled: open,
   })
 
   const { data: searchResultsData, isLoading: isSearchingInventory } = useQuery(
     {
-      queryKey: queryKeys.inventory.list({ search: productSearch, limit: 5 }),
-      queryFn: () => InventoryApi.getAll({ search: productSearch, limit: 5 }),
-      enabled: open && productSearch.length > 2,
+      queryKey: queryKeys.inventory.list({ search: productSearch, limit: 20 }),
+      queryFn: () => InventoryApi.getAll({ search: productSearch, limit: 20 }),
+      enabled: open && productSearch.trim().length > 0,
     }
   )
 
@@ -174,12 +191,14 @@ export default function OrderDialog({
   useEffect(() => {
     if (!open) {
       setProductSearch("")
+      setIsDropdownOpen(false)
       reset(buildFormValues())
       return
     }
 
     reset(buildFormValues(order))
     setProductSearch("")
+    setIsDropdownOpen(false)
   }, [open, order, reset])
 
   const saveMutation = useMutation({
@@ -257,8 +276,8 @@ export default function OrderDialog({
       onOpenChange={(isOpen) => onClose(isOpen)}
       title={isEditMode ? "Edit Order" : "Create New Order"}
       description="Create a supplier order, add medicines, and keep the purchase list ready for confirmation."
-      size="extrafull"
-      height="extrafull"
+      size="xl"
+      height="full"
       scrollable={false}
       footer={
         <div className="flex justify-end gap-3">
@@ -290,73 +309,66 @@ export default function OrderDialog({
       <form
         id="order-dialog-form"
         onSubmit={handleSubmit(onSubmit)}
-        className="max-w-[1860px] space-y-4"
+        className="mx-auto max-w-[1800px] space-y-4"
       >
-        <div className="flex flex-col gap-3 rounded-2xl lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between border-b border-border/20 pb-3">
           <div className="space-y-1">
             <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-              <span className="inline-flex items-center gap-1.5">
-                <Truck className="size-4 text-primary" />
-                <span className="font-semibold text-foreground">
-                  {selectedSupplier?.companyName || "Supplier not selected"}
-                </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 font-semibold text-primary">
+                <Truck className="size-3.5" />
+                {selectedSupplier?.companyName || "Supplier not selected"}
               </span>
-              <span className="hidden text-muted-foreground/40 sm:inline">
-                |
-              </span>
-              <span className="inline-flex items-center gap-1.5">
-                <Clock className="size-4 text-muted-foreground" />
-                <span className="font-semibold text-foreground">
-                  Status: {status || "DRAFT"}
-                </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-muted/60 px-2.5 py-1 font-semibold text-muted-foreground">
+                <Clock className="size-3.5" />
+                Status: {status || "DRAFT"}
               </span>
             </div>
           </div>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-3">
-          <div className="rounded-2xl border border-border/60 bg-gradient-to-br from-card via-card to-primary/5 p-4 shadow-xs hover:-translate-y-0.5 hover:shadow-sm hover:shadow-primary/5 hover:border-primary/20 transition-all duration-300">
+          <div className="relative overflow-hidden rounded-xl border border-border/40 bg-gradient-to-br from-card via-card to-primary/5 p-3 shadow-xs hover:-translate-y-0.5 hover:shadow-xs transition-all duration-300">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
                 <Clock className="size-4.5" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                   Total Items
                 </p>
-                <p className="text-2xl font-black text-foreground mt-0.5">
-                  {totalItems} Items
+                <p className="text-base font-extrabold text-foreground truncate mt-0.5">
+                  {totalItems} Lines
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="rounded-2xl border border-border/60 bg-gradient-to-br from-card via-card to-violet-500/5 p-4 shadow-xs hover:-translate-y-0.5 hover:shadow-sm hover:shadow-violet-500/5 hover:border-violet-500/20 transition-all duration-300">
+          <div className="relative overflow-hidden rounded-xl border border-border/40 bg-gradient-to-br from-card via-card to-violet-500/5 p-3 shadow-xs hover:-translate-y-0.5 hover:shadow-xs transition-all duration-300">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-500/10 text-violet-600">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-violet-500/10 text-violet-600">
                 <Plus className="size-4.5" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                  Total Qty
+                  Total Quantity
                 </p>
-                <p className="text-2xl font-black text-foreground mt-0.5">
-                  {totalQty}
+                <p className="text-base font-extrabold text-foreground truncate mt-0.5">
+                  {totalQty} Units
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="rounded-2xl border border-border/60 bg-gradient-to-br from-card via-card to-emerald-500/5 p-4 shadow-xs hover:-translate-y-0.5 hover:shadow-sm hover:shadow-emerald-500/5 hover:border-emerald-500/20 transition-all duration-300">
+          <div className="relative overflow-hidden rounded-xl border border-border/40 bg-gradient-to-br from-card via-card to-emerald-500/5 p-3 shadow-xs hover:-translate-y-0.5 hover:shadow-xs transition-all duration-300">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600">
                 <Truck className="size-4.5" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                   Supplier
                 </p>
-                <p className="text-sm font-bold text-foreground mt-1 truncate max-w-[200px]">
+                <p className="text-xs font-bold text-foreground mt-0.5 truncate max-w-[240px]">
                   {selectedSupplier?.companyName || "Not selected"}
                 </p>
               </div>
@@ -364,19 +376,276 @@ export default function OrderDialog({
           </div>
         </div>
 
-        <div className="grid gap-4 xl:grid-cols-3">
-          <div className="space-y-4 xl:col-span-2">
-            <div className="rounded-xl border border-border/50 bg-card p-4.5 shadow-xs">
-              <div className="mb-4 flex items-center justify-between">
+        <div className="grid gap-4 md:grid-cols-3">
+          <div className="space-y-4 md:col-span-2">
+            {/* Order Items Table Card */}
+            <div className="rounded-xl border border-border/50 bg-card overflow-hidden shadow-xs">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-border/40 bg-muted/5 p-4">
                 <div>
-                  <h3 className="text-sm font-bold text-foreground">Order Details</h3>
+                  <h3 className="text-sm font-bold text-foreground">Order Items</h3>
                   <p className="text-[11px] text-muted-foreground">
-                    Choose a supplier and set the order status.
+                    Search existing medicines and add them to the purchase list.
+                  </p>
+                </div>
+                <div className="w-full max-w-sm">
+                  <div ref={dropdownRef} className="relative w-full">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1 block">
+                      Medicine
+                    </span>
+                    <button
+                      type="button"
+                      disabled={isViewMode}
+                      onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                      className="flex h-9 w-full items-center justify-between rounded-lg border border-border/60 bg-background px-3 text-xs font-semibold text-foreground hover:border-primary/30 focus:outline-none focus:ring-4 focus:ring-primary/10 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <span className="text-muted-foreground">Search...</span>
+                      <span className="text-[9px] text-muted-foreground font-mono">
+                        {isDropdownOpen ? "▲" : "▼"}
+                      </span>
+                    </button>
+
+                    {isDropdownOpen && (
+                      <div className="absolute top-full left-0 right-0 z-30 mt-1 rounded-xl border border-border/60 bg-card shadow-lg flex flex-col overflow-hidden backdrop-blur-md bg-card/95">
+                        <div className="p-2 border-b border-border/40 bg-muted/5">
+                          <input
+                            type="text"
+                            value={productSearch}
+                            onChange={(e) => setProductSearch(e.target.value)}
+                            placeholder=""
+                            autoFocus
+                            className="h-8 w-full rounded-lg border border-border/60 bg-background px-2.5 text-xs text-foreground focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all duration-200"
+                          />
+                        </div>
+
+                        <div className="max-h-60 overflow-y-auto p-1 space-y-0.5">
+                          <div className="flex items-center px-3 py-1.5 text-xs font-semibold rounded-md bg-primary text-primary-foreground">
+                            Search...
+                          </div>
+
+                          {isSearchingInventory || isLoadingInventory ? (
+                            <div className="p-3 text-xs text-muted-foreground text-center">
+                              Searching...
+                            </div>
+                          ) : (
+                            (() => {
+                              const listToDisplay =
+                                productSearch.trim().length > 0
+                                  ? searchResults
+                                  : suggestedProducts
+                              if (listToDisplay.length === 0) {
+                                return (
+                                  <div className="p-3 text-xs text-muted-foreground text-center">
+                                    No medicines found.
+                                  </div>
+                                )
+                              }
+                              return listToDisplay.map((prod: any) => (
+                                <button
+                                  key={prod.id}
+                                  type="button"
+                                  onClick={() => {
+                                    addItem(prod)
+                                    setProductSearch("")
+                                    setIsDropdownOpen(false)
+                                  }}
+                                  className="flex w-full items-center justify-between rounded-lg px-3 py-1.5 text-left text-xs font-semibold text-foreground transition-colors hover:bg-muted/80 hover:text-foreground"
+                                >
+                                  <div className="truncate pr-2">
+                                    <span>{prod.name}</span>
+                                    <span className="text-muted-foreground font-normal ml-1.5">
+                                      (Stk: {prod.availableStock ?? 0})
+                                    </span>
+                                  </div>
+                                  <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-150">
+                                    <Plus className="size-3" />
+                                  </div>
+                                </button>
+                              ))
+                            })()
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-12 px-4 py-2 text-[10px] font-bold tracking-wider text-muted-foreground uppercase bg-muted/15 border-b border-border/40">
+                <div className="col-span-6">Medicine</div>
+                <div className="col-span-3 text-center">Quantity</div>
+                <div className="col-span-2 text-center">Unit</div>
+                <div className="col-span-1 text-right">Action</div>
+              </div>
+
+              <div className="divide-y divide-border/40 max-h-[30vh] overflow-y-auto pr-1">
+                {fields.length === 0 ? (
+                  <div className="p-8 text-center text-xs text-muted-foreground bg-muted/5">
+                    No medicines added yet. Use search or suggestions to compile order.
+                  </div>
+                ) : (
+                  fields.map((field, index) => {
+                    const item = items[index]
+
+                    return (
+                      <div
+                        key={field.id}
+                        className="grid grid-cols-12 items-center gap-3 px-4 py-2.5 hover:bg-muted/10 transition-colors duration-150"
+                      >
+                        <div className="col-span-6">
+                          <p className="text-xs font-bold text-foreground">
+                            {item?.inventory?.name || item?.name || "Medicine"}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground line-clamp-1">
+                            {item?.description ||
+                              item?.inventory?.saltComposition ||
+                              "No description"}
+                          </p>
+                        </div>
+
+                        <div className="col-span-3 flex justify-center">
+                          <div className="flex items-center overflow-hidden rounded-lg border border-border/60 bg-background hover:border-primary/30 focus-within:border-primary/50 focus-within:ring-4 focus-within:ring-primary/10 transition-all duration-200">
+                            <button
+                              type="button"
+                              onClick={() => updateQty(index, -1)}
+                              className="flex h-8 w-8 items-center justify-center bg-muted/20 hover:bg-muted/50 text-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed border-r border-border/60"
+                              disabled={isViewMode}
+                            >
+                              <Minus className="size-3" />
+                            </button>
+                            <input
+                              type="number"
+                              value={item?.qty ?? 1}
+                              onChange={(e) =>
+                                setValue(
+                                  `items.${index}.qty`,
+                                  Math.max(1, toNumber(e.target.value) || 1),
+                                  {
+                                    shouldDirty: true,
+                                    shouldTouch: true,
+                                  }
+                                )
+                              }
+                              className="h-8 w-12 border-0 bg-transparent text-center text-xs font-semibold focus:outline-none focus:ring-0 text-foreground [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                              readOnly={isViewMode}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => updateQty(index, 1)}
+                              className="flex h-8 w-8 items-center justify-center bg-muted/20 hover:bg-muted/50 text-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed border-l border-border/60"
+                              disabled={isViewMode}
+                            >
+                              <Plus className="size-3" />
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="col-span-2">
+                          <select
+                            value={item?.unit || "strip"}
+                            onChange={(e) => updateUnit(index, e.target.value)}
+                            disabled={isViewMode}
+                            className="h-8 w-full rounded-lg border border-border/60 bg-background px-2 text-xs font-semibold text-foreground outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 disabled:cursor-not-allowed disabled:opacity-80 transition-all duration-200"
+                          >
+                            {PACKAGING_TYPE_OPTIONS.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="col-span-1 flex justify-end">
+                          {!isViewMode ? (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => removeItem(index)}
+                              className="h-8 w-8 rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors duration-200"
+                            >
+                              <Trash2 className="size-4" />
+                            </Button>
+                          ) : null}
+                        </div>
+                      </div>
+                    )
+                  })
+                )}
+              </div>
+            </div>
+
+            {/* Suggested to Order Card */}
+            <div className="rounded-xl border border-border/50 bg-card overflow-hidden shadow-xs">
+              <div className="flex items-center gap-3 border-b border-border/40 bg-muted/5 p-4">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <CheckCircle2 className="size-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-foreground">Suggested to Order</h3>
+                  <p className="text-[11px] text-muted-foreground">
+                    Quick-add medicines that are currently low in stock.
                   </p>
                 </div>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="p-4 bg-muted/5">
+                <div className="grid gap-2 sm:grid-cols-2 max-h-[160px] overflow-y-auto pr-1">
+                  {isLoadingInventory ? (
+                    <p className="col-span-2 p-4 text-center text-xs text-muted-foreground">
+                      Loading suggestions...
+                    </p>
+                  ) : suggestedProducts.length === 0 ? (
+                    <p className="col-span-2 p-4 text-center text-xs text-muted-foreground">
+                      No suggestions available.
+                    </p>
+                  ) : (
+                    suggestedProducts.map((item: any) => (
+                      <div
+                        key={item.id}
+                        className="flex items-center justify-between rounded-lg border border-border/40 bg-card p-2.5 hover:border-primary/20 hover:bg-muted/10 transition-all duration-150"
+                      >
+                        <div className="space-y-0.5 truncate mr-2">
+                          <p className="text-xs font-semibold text-foreground truncate">
+                            {item.name}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground truncate">
+                            {item.manufacturer?.name || "Manufacturer"}
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7 rounded-md bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-200 shrink-0"
+                          onClick={() => addItem(item)}
+                          disabled={isViewMode}
+                        >
+                          <Plus className="size-3.5" />
+                        </Button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Sidebar Area: Supplier Selection and contact summary */}
+          <div className="space-y-4">
+            <div className="rounded-xl border border-border/50 bg-card overflow-hidden shadow-xs">
+              <div className="flex items-center gap-3 border-b border-border/40 bg-muted/5 p-4">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-500/10 text-orange-500">
+                  <Truck className="size-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-foreground">Supplier Details</h3>
+                  <p className="text-[11px] text-muted-foreground">
+                    Select a supplier and review contact details.
+                  </p>
+                </div>
+              </div>
+
+              <div className="p-4.5 space-y-4">
                 <FormSelectField
                   control={control}
                   name="supplierId"
@@ -393,317 +662,52 @@ export default function OrderDialog({
                   required
                   readOnly={isViewMode}
                 />
-                {/* <FormSelectField
-                  control={control}
-                  name="status"
-                  label="STATUS"
-                  options={ORDER_STATUS_OPTIONS}
-                  readOnly={isViewMode}
-                /> */}
-              </div>
-            </div>
 
-            <div className="rounded-xl border border-border/50 bg-card p-4.5 shadow-xs">
-              <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
-                <div>
-                  <h3 className="text-sm font-bold text-foreground">Order Items</h3>
-                  <p className="text-[11px] text-muted-foreground">
-                    Search existing medicines and add them to the purchase list.
-                  </p>
-                </div>
-                <div className="w-full max-w-md">
-                  <div className="relative">
-                    <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      value={productSearch}
-                      onChange={(e) => setProductSearch(e.target.value)}
-                      placeholder="Search medicines to add..."
-                      className="h-9 pl-9 text-xs rounded-lg border-border/60 hover:border-primary/30 focus-visible:border-primary/50 focus-visible:ring-4 focus-visible:ring-primary/10 transition-all duration-200"
-                      disabled={isViewMode}
-                    />
-                    {productSearch.length > 2 && (
-                      <div className="absolute top-full right-0 left-0 z-20 mt-1.5 rounded-xl border border-border/60 bg-card shadow-lg max-h-60 overflow-y-auto">
-                        {isSearchingInventory ? (
-                          <div className="p-3 text-xs text-muted-foreground">
-                            Searching...
-                          </div>
-                        ) : searchResults.length === 0 ? (
-                          <div className="p-3 text-xs text-muted-foreground">
-                            No medicines found.
-                          </div>
-                        ) : (
-                          <div className="p-1">
-                            {searchResults.map((prod: any) => (
-                              <button
-                                key={prod.id}
-                                type="button"
-                                onClick={() => {
-                                  addItem(prod)
-                                  setProductSearch("")
-                                }}
-                                className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left transition-colors hover:bg-primary/5"
-                              >
-                                <div>
-                                  <p className="text-xs font-semibold text-foreground">
-                                    {prod.name}
-                                  </p>
-                                  <p className="text-[10px] text-muted-foreground">
-                                    {prod.saltComposition ||
-                                      prod.category?.name ||
-                                      "Inventory item"}
-                                  </p>
-                                </div>
-                                <Plus className="size-3.5 text-primary" />
-                              </button>
-                            ))}
-                          </div>
-                        )}
+                <div className="border-t border-border/20 pt-4">
+                  {selectedSupplier ? (
+                    <div className="space-y-3 text-xs">
+                      <div className="flex justify-between gap-4">
+                        <span className="text-muted-foreground font-medium">Company Name</span>
+                        <span className="text-right font-semibold text-foreground">
+                          {selectedSupplier.companyName || "—"}
+                        </span>
                       </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-12 px-4 py-2 text-[10px] font-bold tracking-wider text-muted-foreground uppercase bg-muted/10 rounded-lg">
-                <div className="col-span-6">Medicine</div>
-                <div className="col-span-3 text-center">Quantity</div>
-                <div className="col-span-2 text-center">Unit</div>
-                <div className="col-span-1 text-right">Action</div>
-              </div>
-
-              <div className="mt-2 space-y-2 max-h-[30vh] overflow-y-auto pr-1">
-                {fields.length === 0 ? (
-                  <div className="rounded-xl border border-dashed border-border/60 p-6 text-center text-xs text-muted-foreground bg-muted/5">
-                    No medicines added yet. Use search or suggested items to add
-                    order lines.
-                  </div>
-                ) : (
-                  fields.map((field, index) => {
-                    const item = items[index]
-
-                    return (
-                      <div
-                        key={field.id}
-                        className="grid grid-cols-12 items-center gap-3 rounded-xl border border-border/60 bg-muted/5 p-3 hover:bg-muted/10 hover:border-primary/20 transition-all duration-200"
-                      >
-                        <div className="col-span-6">
-                          <p className="text-xs font-bold text-foreground">
-                            {item?.inventory?.name || item?.name || "Medicine"}
-                          </p>
-                          <p className="text-[10px] text-muted-foreground line-clamp-1">
-                            {item?.description ||
-                              item?.inventory?.saltComposition ||
-                              "No description"}
-                          </p>
-                        </div>
-
-                        <div className="col-span-3 flex justify-center">
-                          <div className="flex items-center gap-0.5 rounded-lg border border-border/60 bg-background p-0.5 hover:border-primary/30 transition-all duration-200">
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon-sm"
-                              onClick={() => updateQty(index, -1)}
-                              className="h-7 w-7 rounded-md"
-                              disabled={isViewMode}
-                            >
-                              <Minus className="size-3" />
-                            </Button>
-                            <Input
-                              type="number"
-                              value={item?.qty ?? 1}
-                              onChange={(e) =>
-                                setValue(
-                                  `items.${index}.qty`,
-                                  Math.max(1, toNumber(e.target.value) || 1),
-                                  {
-                                    shouldDirty: true,
-                                    shouldTouch: true,
-                                  }
-                                )
-                              }
-                              className="h-7 w-12 border-none bg-transparent p-0 text-center text-xs font-bold focus-visible:ring-0"
-                              readOnly={isViewMode}
-                            />
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon-sm"
-                              onClick={() => updateQty(index, 1)}
-                              className="h-7 w-7 rounded-md"
-                              disabled={isViewMode}
-                            >
-                              <Plus className="size-3" />
-                            </Button>
-                          </div>
-                        </div>
-
-                        <div className="col-span-2">
-                          <select
-                            value={item?.unit || "strip"}
-                            onChange={(e) => updateUnit(index, e.target.value)}
-                            disabled={isViewMode}
-                            className="h-8 w-full rounded-lg border border-border/60 bg-background px-2 text-xs font-medium text-foreground outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 disabled:cursor-not-allowed disabled:opacity-80 transition-all duration-200"
-                          >
-                            {PACKAGING_TYPE_OPTIONS.map((option) => (
-                              <option key={option.value} value={option.value}>
-                                {option.label}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-
-                        <div className="col-span-1 flex justify-end">
-                          {!isViewMode ? (
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon-sm"
-                              onClick={() => removeItem(index)}
-                              className="h-8 w-8 rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors duration-200"
-                            >
-                              <Trash2 className="size-4" />
-                            </Button>
-                          ) : null}
-                        </div>
+                      <div className="flex justify-between gap-4">
+                        <span className="text-muted-foreground font-medium">Supplier Email</span>
+                        <span className="text-right font-semibold text-foreground select-all">
+                          {selectedSupplier.email || "—"}
+                        </span>
                       </div>
-                    )
-                  })
-                )}
-              </div>
-            </div>
-
-            <div className="rounded-xl border border-border/50 bg-muted/5 p-4.5">
-              <div className="mb-4 flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                  <CheckCircle2 className="size-4.5" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-foreground">Suggested to Order</h3>
-                  <p className="text-[11px] text-muted-foreground">
-                    Quick-add medicines that are currently low in stock.
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-2 max-h-[22vh] overflow-y-auto pr-1">
-                {isLoadingInventory ? (
-                  <p className="text-xs text-muted-foreground">
-                    Loading suggestions...
-                  </p>
-                ) : suggestedProducts.length === 0 ? (
-                  <p className="text-xs text-muted-foreground">
-                    No suggestions available.
-                  </p>
-                ) : (
-                  suggestedProducts.map((item: any) => (
-                    <div
-                      key={item.id}
-                      className="flex items-center justify-between rounded-xl border border-border/50 bg-card p-3 hover:border-primary/20 transition-all duration-200"
-                    >
-                      <div className="space-y-0.5">
-                        <p className="text-xs font-semibold text-foreground">
-                          {item.name}
-                        </p>
-                        <p className="text-[10px] text-muted-foreground">
-                          {item.manufacturer?.name || "Manufacturer"}
-                        </p>
+                      <div className="flex justify-between gap-4">
+                        <span className="text-muted-foreground font-medium">Supplier Phone</span>
+                        <span className="text-right font-semibold text-foreground select-all">
+                          {selectedSupplier.phone || "—"}
+                        </span>
                       </div>
-                      <Button
-                        type="button"
-                        size="icon-sm"
-                        variant="outline"
-                        className="h-8 w-8 rounded-lg hover:bg-primary/5 hover:text-primary transition-all duration-200"
-                        onClick={() => addItem(item)}
-                        disabled={isViewMode}
-                      >
-                        <Plus className="size-4" />
-                      </Button>
+                      <div className="flex justify-between gap-4">
+                        <span className="text-muted-foreground font-medium">Preferred Status</span>
+                        <span className="text-right font-semibold text-foreground">
+                          {selectedSupplier.isPreferred
+                            ? "Preferred supplier"
+                            : "Standard supplier"}
+                        </span>
+                      </div>
+                      <div className="flex justify-between gap-4 border-t border-border/20 pt-2.5">
+                        <span className="text-muted-foreground font-medium">Total Unique Items</span>
+                        <span className="text-right font-bold text-foreground">
+                          {totalItems}
+                        </span>
+                      </div>
                     </div>
-                  ))
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div className="rounded-xl border border-border/50 bg-card p-4.5 shadow-xs space-y-4 bg-gradient-to-br from-card to-muted/5">
-              <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-orange-500/10 text-orange-500">
-                  <Truck className="size-4.5" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-foreground">Supplier Summary</h3>
-                  <p className="text-[11px] text-muted-foreground">
-                    Selected supplier contact details and status.
-                  </p>
+                  ) : (
+                    <div className="rounded-lg border border-dashed border-border/60 p-5 text-center bg-muted/5">
+                      <p className="text-xs text-muted-foreground">
+                        Select a supplier above to view contact details
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
-
-              <div className="space-y-2.5 text-xs">
-                <div className="flex justify-between gap-4 py-1.5 border-b border-border/20">
-                  <span className="text-muted-foreground font-medium">Company Name</span>
-                  <span className="text-right font-bold text-foreground">
-                    {selectedSupplier?.companyName || "N/A"}
-                  </span>
-                </div>
-                <div className="flex justify-between gap-4 py-1.5 border-b border-border/20">
-                  <span className="text-muted-foreground font-medium">Supplier Email</span>
-                  <span className="text-right font-bold text-foreground">
-                    {selectedSupplier?.email || "N/A"}
-                  </span>
-                </div>
-                <div className="flex justify-between gap-4 py-1.5 border-b border-border/20">
-                  <span className="text-muted-foreground font-medium">Supplier Phone</span>
-                  <span className="text-right font-bold text-foreground">
-                    {selectedSupplier?.phone || "N/A"}
-                  </span>
-                </div>
-                <div className="flex justify-between gap-4 py-1.5 border-b border-border/20">
-                  <span className="text-muted-foreground font-medium">Preferred Status</span>
-                  <span className="text-right font-bold text-foreground">
-                    {selectedSupplier?.isPreferred
-                      ? "Preferred supplier"
-                      : "Standard supplier"}
-                  </span>
-                </div>
-                <div className="flex justify-between gap-4 py-1.5">
-                  <span className="text-muted-foreground font-medium">Total Unique Items</span>
-                  <span className="text-right font-bold text-foreground">
-                    {totalItems}
-                  </span>
-                </div>
-              </div>
-
-              {/* <div className="my-4 border-t border-dashed" />
-
-              <div className="flex items-center justify-between">
-                <p className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">
-                  Order Status
-                </p>
-                <p className="text-lg font-black tracking-tighter text-cyan-400 italic">
-                  {status || "DRAFT"}
-                </p>
-              </div>
-
-              <div className="mt-4 space-y-2">
-                <Button
-                  type="button"
-                  className="h-10 w-full rounded-xl bg-emerald-500 text-xs font-bold shadow-xs hover:bg-emerald-600 transition-all duration-200"
-                  disabled={!selectedSupplier?.phone}
-                >
-                  <MessageCircle className="mr-2 size-4" />
-                  Send Order via WhatsApp
-                </Button>
-                <Button
-                  type="button"
-                  className="h-10 w-full rounded-xl bg-cyan-400 text-xs font-bold shadow-xs hover:bg-cyan-500 transition-all duration-200"
-                  disabled={!selectedSupplier?.email}
-                >
-                  <Mail className="mr-2 size-4" />
-                  Send Order via Email
-                </Button>
-              </div> */}
             </div>
           </div>
         </div>

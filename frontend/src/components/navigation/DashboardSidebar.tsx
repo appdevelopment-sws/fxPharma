@@ -56,7 +56,7 @@ export function DashboardSidebar({
   }
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full flex-col bg-[#2563EB] text-white">
       {/* Brand Section */}
       <div
         className={cn(
@@ -64,15 +64,15 @@ export function DashboardSidebar({
           isCollapsed ? "justify-center" : "gap-3"
         )}
       >
-        <div className="rounded-x flex size-10 shrink-0 items-center justify-center">
+        <div className="rounded-xl flex size-10 shrink-0 items-center justify-center bg-white/10 text-white">
           {brandIcon}
         </div>
         {!isCollapsed && (
           <div className="min-w-0">
-            <h2 className="truncate text-base font-bold tracking-tight">
+            <h2 className="truncate text-base font-bold tracking-tight text-white">
               {workspaceTitle}
             </h2>
-            <p className="truncate text-xs font-medium tracking-widest uppercase">
+            <p className="truncate text-xs font-medium tracking-widest uppercase text-white">
               {workspaceSubtitle}
             </p>
           </div>
@@ -82,7 +82,7 @@ export function DashboardSidebar({
       {/* Navigation section */}
       <nav
         className={cn(
-          "scrollbar-thin flex-1 space-y-8 overflow-y-auto px-3 py-4",
+          "no-scrollbar flex-1 space-y-8 overflow-y-auto px-3 py-4",
           isCollapsed ? "items-center" : ""
         )}
       >
@@ -119,7 +119,7 @@ export function DashboardSidebar({
           type="button"
           variant="ghost"
           className={cn(
-            "w-full transition-all duration-200 hover:bg-white/10",
+            "w-full transition-all duration-200 text-white hover:bg-white/10",
             isCollapsed
               ? "h-10 w-10 justify-center p-0"
               : "justify-start gap-3 px-4"
@@ -160,7 +160,9 @@ function SidebarItem({
   const baseStyles = cn(
     "group flex w-full items-center rounded-lg transition-all duration-300 ease-out",
     isCollapsed ? "mx-auto justify-center p-3" : "gap-x-2 px-3 py-2",
-    (isActive || isExpanded) && "bg-primary/10 text-primary" // 👈 apply bg to main item
+    isActive || isExpanded
+      ? "bg-white/20 text-white font-semibold"
+      : "text-white hover:bg-white/10"
   )
   if (hasChildren) {
     return (
@@ -172,7 +174,7 @@ function SidebarItem({
         >
           {/* LEFT GROUP */}
           <div className="flex items-center gap-2">
-            <Icon className={cn("size-5", isActive ? "text-primary" : "")} />
+            <Icon className="size-5 shrink-0" />
             {!isCollapsed && (
               <span className="text-sm font-medium whitespace-nowrap">
                 {item.title}
@@ -184,7 +186,7 @@ function SidebarItem({
           {!isCollapsed && (
             <ChevronDown
               className={cn(
-                "ml-auto size-4 opacity-50 transition-transform duration-200",
+                "ml-auto size-4 transition-transform duration-200",
                 isExpanded && "rotate-180"
               )}
             />
@@ -201,7 +203,9 @@ function SidebarItem({
                   onClick={onNavigate}
                   className={cn(
                     "block rounded-lg px-3 py-2 text-xs font-medium transition-colors",
-                    childIsActive ? "text-primary" : " "
+                    childIsActive
+                      ? "bg-white/15 text-white"
+                      : "text-white hover:bg-white/5"
                   )}
                 >
                   {child.title}
@@ -216,7 +220,7 @@ function SidebarItem({
 
   return (
     <NavLink to={item.to ?? "#"} onClick={onNavigate} className={baseStyles}>
-      <Icon className={cn("size-5", isActive ? "text-primary" : "")} />
+      <Icon className="size-5 shrink-0" />
       {!isCollapsed && (
         <span className="truncate text-sm font-medium">{item.title}</span>
       )}
