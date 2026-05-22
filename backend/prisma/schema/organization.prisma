@@ -43,6 +43,7 @@ model Organization {
   categories Category[]
   manufacturers Manufacturer[]
   settings Setting[]
+  invoices Invoice[]
   @@index([slug])
 }
 

@@ -35,6 +35,7 @@ import SupplierRoutes from "./v1/modules/suppliers/suppliers.routes.js";
 import OrdersRoutes from "./v1/modules/orders/orders.routes.js";
 import MedicineRoutes from "./v1/modules/inventory/add_medicine/add_medicine.routes.js";
 import CompoundRoutes from "./v1/modules/inventory/new_compound/new_compound.routes.js";
+import InvoicesRoutes from "./v1/modules/invoices/invoices.routes.js";
 
 const app = express();
 
@@ -92,6 +93,7 @@ app.use("/api/v1/users", generalLimiter, usersRoutes);
 app.use("/api/v1/suppliers", generalLimiter, SupplierRoutes);
 app.use("/api/v1/roles", generalLimiter, rolesRoutes);
 app.use("/api/v1/orders", generalLimiter, OrdersRoutes);
+app.use("/api/v1/invoices", generalLimiter, InvoicesRoutes);
 app.use("/api/v1/inventory/add-medicine", generalLimiter, MedicineRoutes);
 app.use("/api/v1/compound", generalLimiter, categoryRoutes);
 app.get("/", (_req: Request, res: Response) => {
