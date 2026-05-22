@@ -19,6 +19,7 @@ import {
   Receipt,
   CalendarX,
   KeyRound,
+  Layers,
 } from "lucide-react"
 import type { AuthUser } from "@/context/authContext"
 import {
@@ -80,6 +81,13 @@ export const adminNavigationGroups: SidebarNavigationGroup[] = [
             to: "/admin/all-compound",
             description: "Manage prescription compounding",
             icon: FlaskConical,
+            permissions: [PERMISSIONS.INVENTORY_VIEW],
+          },
+          {
+            title: "Inventory Batch",
+            to: "/admin/inventory-batch",
+            description: "View inventory batch details",
+            icon: Layers,
             permissions: [PERMISSIONS.INVENTORY_VIEW],
           },
           {
