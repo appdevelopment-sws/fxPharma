@@ -12,6 +12,8 @@ import {
   SubscriptIcon,
   UserCog,
   type LucideProps,
+  Boxes,
+  Tag,
 } from "lucide-react"
 import type { AuthUser } from "@/context/authContext"
 import {
@@ -92,14 +94,14 @@ export const superAdminNavigationGroups: SidebarNavigationGroup[] = [
             title: "Master Product",
             to: "/super-admin/master-products",
             description: "Platform-wide tenant oversight and health monitoring",
-            icon: Box,
+            icon: Boxes,
             roles: [ROLES.SUPER_ADMIN],
           },
           {
             title: "Attributes",
             to: "/super-admin/attributes",
             description: "Attributes management for master products",
-            icon: Barcode,
+            icon: Tag,
             roles: [ROLES.SUPER_ADMIN],
           },
           // {

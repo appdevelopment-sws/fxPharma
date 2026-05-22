@@ -196,19 +196,23 @@ function SidebarItem({
           <div className="mt-1 ml-5 space-y-1 border-l border-white/10 py-1 pl-4">
             {item.children?.map((child) => {
               const childIsActive = isNavigationItemActive(child, activePath)
+              const ChildIcon = child.icon
               return (
                 <NavLink
                   key={child.to}
                   to={child.to ?? "#"}
                   onClick={onNavigate}
                   className={cn(
-                    "block rounded-lg px-3 py-2 text-xs font-medium transition-colors",
+                    "flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium transition-all duration-200",
                     childIsActive
-                      ? "bg-white/15 text-white"
-                      : "text-white hover:bg-white/5"
+                      ? "bg-white/15 text-white shadow-sm"
+                      : "text-white/90 hover:text-white hover:bg-white/5"
                   )}
                 >
-                  {child.title}
+                  {ChildIcon && (
+                    <ChildIcon className="size-3.5 shrink-0 opacity-90" />
+                  )}
+                  <span className="truncate">{child.title}</span>
                 </NavLink>
               )
             })}
