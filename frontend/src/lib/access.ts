@@ -25,7 +25,7 @@ export const PERMISSIONS = {
   INVENTORY_MANAGE: "inventory.manage",
   MEDICINE_VIEW: "medicine.view",
   MEDICINE_MANAGE: "medicine.manage",
-  
+
   // Sales & Orders
   ORDER_VIEW: "orders.view",
   ORDER_CREATE: "orders.create",
@@ -38,6 +38,10 @@ export const PERMISSIONS = {
   // Global Catalog
   MASTER_PRODUCT_VIEW: "master-products.view",
   MASTER_PRODUCT_MANAGE: "master-products.manage",
+
+  REPORTS_VIEW: "reports.view",
+  DAILY_TRANSACTION_REPORT_VIEW: "reports.daily-transaction.view",
+  EXPIRY_REPORT_VIEW: "expiry-reports.view",
 } as const
 
 export type PermissionName = (typeof PERMISSIONS)[keyof typeof PERMISSIONS]

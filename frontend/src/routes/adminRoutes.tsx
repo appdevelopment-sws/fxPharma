@@ -44,7 +44,6 @@ export const AdminRoutes = () => {
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="profile" element={<AdminProfilePage />} />
           <Route path="role" element={<AdminRolePage />} />
-
           <Route path="all-inventory" element={<AllInventory />} />
           <Route path="all-compound" element={<AllCompound />} />
           <Route path="inventory-batch" element={<InventoryBatch />} />
@@ -72,7 +71,6 @@ export const AdminRoutes = () => {
             <Route path="manufacturers" element={<Manufacturers />} />
             <Route path="units" element={<Units />} />
           </Route>
-
           <Route
             element={
               <ProtectedRoute allowedPermissions={[PERMISSIONS.USER_VIEW]} />
@@ -91,7 +89,15 @@ export const AdminRoutes = () => {
             path="reports/daily-transaction-report"
             element={<DailyTransactionReport />}
           />
-          <Route path="reports/expiry-reports" element={<ExpiryReports />} />
+          <Route
+            element={
+              <ProtectedRoute
+                allowedPermissions={[PERMISSIONS.EXPIRY_REPORT_VIEW]}
+              />
+            }
+          >
+            <Route path="reports/expiry-reports" element={<ExpiryReports />} />
+          </Route>{" "}
         </Route>
       </Route>
     </>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useForm, type SubmitHandler } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query"
@@ -44,7 +44,7 @@ export default function ManageStoreDialog({
     () => createStoreFormSchema(isEditMode),
     [isEditMode]
   )
-
+  const [isvisiblePassword, setIsVisiblePassword] = useState(false)
   const {
     handleSubmit,
     control,
@@ -362,7 +362,7 @@ export default function ManageStoreDialog({
                     ? "Leave blank to keep the current password"
                     : "Min 8 characters"
                 }
-                inputType="password"
+                inputType={isvisiblePassword ? "text" : "password"}
                 readOnly={isViewMode}
                 error={getError("password")}
               />
@@ -391,7 +391,7 @@ export default function ManageStoreDialog({
               />
             </div>
           </div>
-          {/*
+
           <div className="rounded-xl border p-6">
             {sectionHeader("04", "Role Assignment")}
 
@@ -410,9 +410,9 @@ export default function ManageStoreDialog({
                   : "Select a role to auto-fill the permissions this store owner receives."}
               </p>
             </div>
-          </div> */}
+          </div>
 
-          {/* <div className="rounded-xl border p-6">
+          <div className="rounded-xl border p-6">
             {sectionHeader("05", "Owner Permissions")}
 
             <PermissionMultiSelectField
@@ -424,7 +424,7 @@ export default function ManageStoreDialog({
               selectAllLabel="Select all permissions"
               readOnly={isViewMode}
             />
-          </div> */}
+          </div>
 
           {/* ADDRESS */}
           <div className="rounded-xl border p-6">

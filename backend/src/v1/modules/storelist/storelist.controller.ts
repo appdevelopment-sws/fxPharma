@@ -162,6 +162,7 @@ const mapOrganizationToStore = (organization: any) => {
   const ownerMembership = getOwnerMembership(organization.members ?? []);
   const owner = ownerMembership?.user;
   const role = ownerMembership?.role;
+
   const permissions =
     role?.permissions
       ?.filter((item: any) => item.permission)
@@ -533,7 +534,6 @@ export class StoreListController {
           currency: req.body.currency ?? existing.currency,
           ownerEmail: req.body.ownerEmail ?? existing.ownerEmail,
 
-          
           planId: req.body.planId ?? existing.planId,
           isActive:
             req.body.isActive ??
