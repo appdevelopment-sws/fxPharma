@@ -158,6 +158,10 @@ const InvoiceApi = {
     const res = await api.post<{ success: boolean; data: Invoice }>(BASE_URL, data)
     return { data: mapInvoice(res.data) }
   },
+
+  getGstSummary: async (params?: { startDate?: string; endDate?: string }): Promise<any> => {
+    return api.get(`${BASE_URL}/gst-summary`, { params })
+  },
 }
 
 export default InvoiceApi
