@@ -12,26 +12,13 @@ export const INITIAL_EXPIRY_FILTERS = {
   page: 1,
   perPage: 10,
   search: "",
-  timeline: "all",
   status: "all",
+  category: "all",
 }
 
 export const EXPIRY_STATUS_OPTIONS = [
+  { label: "All Stock", value: "all" },
   { label: "Expired Only", value: "EXPIRED" },
-  { label: "Near Expire", value: "EXPIRING_SOON" },
-
+  { label: "Expiring Soon", value: "EXPIRING_SOON" },
+  { label: "Healthy Stock", value: "ACTIVE" },
 ]
-
-export const SUPPLIER_OPTIONS = [
-  { label: "Supplier 1", value: "supplier1" },
-  { label: "Supplier 2", value: "supplier2" },
-  { label: "Supplier 3", value: "supplier3" },
-]
-
-export const CATEGORY_OPTIONS = [
-  { label: "Tablets", value: "tablets" },
-  { label: "Capsules", value: "capsules" },
-  { label: "Syrups", value: "syrups" },
-  { label: "Injections", value: "injections" },
-]
-
