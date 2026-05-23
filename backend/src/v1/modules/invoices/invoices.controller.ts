@@ -261,4 +261,139 @@ export class InvoicesController {
 
     res.json({ success: true, data: invoice });
   });
+
+  static getGstSummary = catchAsync(async (req: Request, res: Response) => {
+    const { organizationId, branchId } = getRequestScope(req);
+    const { startDate, endDate } = req.query;
+
+    const start = startDate ? new Date(startDate as string) : new Date(new Date().setDate(new Date().getDate() - 30));
+    const end = endDate ? new Date(endDate as string) : new Date();
+
+    const invoices = await rootPrisma.invoice.findMany({
+      where: {
+        organizationId,
+        ...(branchId ? { branchId } : {}),
+        createdAt: { gte: start, lte: end },
+        status: "PAID",
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    const batches = await rootPrisma.inventoryBatch.findMany({
+      where: {
+        organizationId,
+        ...(branchId ? { branchId } : {}),
+        receivedAt: { gte: start, lte: end },
+      },
+      include: {
+        inventory: {
+          select: {
+            name: true,
+          },
+        },
+      },
+      orderBy: { receivedAt: "desc" },
+    });
+
+    let totalSalesGross = 0;
+    let totalSalesTax = 0;
+    let totalSalesNet = 0;
+
+    const salesList = invoices.map((inv) => {
+      const gross = Number(inv.grossAmount);
+      const tax = Number(inv.taxAmount);
+      const net = Number(inv.totalAmount);
+      totalSalesGross += gross;
+      totalSalesTax += tax;
+      totalSalesNet += net;
+
+      return {
+        id: inv.id,
+        invoiceId: inv.invoiceId,
+        customerName: inv.customerName || "Walk-in Customer",
+        customerPhone: inv.customerPhone || null,
+        createdAt: inv.createdAt,
+        grossAmount: gross,
+        taxAmount: tax,
+        cgst: tax / 2,
+        sgst: tax / 2,
+        totalAmount: net,
+      };
+    });
+
+    const salesCgst = totalSalesTax / 2;
+    const salesSgst = totalSalesTax / 2;
+
+    let totalPurchaseGross = 0;
+    let totalPurchaseTax = 0;
+    let totalPurchaseNet = 0;
+
+    const purchasesList = batches.map((batch) => {
+      const qty = batch.receivedQty;
+      const rate = Number(batch.purchaseRate || 0);
+      const cgstRate = Number(batch.cgst || 0);
+      const sgstRate = Number(batch.sgst || 0);
+
+      const taxableAmount = qty * rate;
+      const cgst = taxableAmount * (cgstRate / 100);
+      const sgst = taxableAmount * (sgstRate / 100);
+      const totalGst = cgst + sgst;
+
+      totalPurchaseGross += taxableAmount;
+      totalPurchaseTax += totalGst;
+      totalPurchaseNet += (taxableAmount + totalGst);
+
+      return {
+        id: batch.id,
+        batchNo: batch.batchNo,
+        itemName: batch.inventory?.name || "Unknown Item",
+        receivedAt: batch.receivedAt,
+        qty,
+        rate,
+        taxableAmount,
+        cgst,
+        sgst,
+        totalGst,
+        totalAmount: taxableAmount + totalGst,
+      };
+    });
+
+    const purchaseCgst = totalPurchaseTax / 2;
+    const purchaseSgst = totalPurchaseTax / 2;
+
+    const netCgstPayable = Math.max(0, salesCgst - purchaseCgst);
+    const netSgstPayable = Math.max(0, salesSgst - purchaseSgst);
+    const netTotalPayable = netCgstPayable + netSgstPayable;
+
+    res.json({
+      success: true,
+      data: {
+        period: {
+          start,
+          end,
+        },
+        sales: {
+          taxableAmount: totalSalesGross,
+          cgst: salesCgst,
+          sgst: salesSgst,
+          totalGst: totalSalesTax,
+          totalAmount: totalSalesNet,
+        },
+        purchases: {
+          taxableAmount: totalPurchaseGross,
+          cgst: purchaseCgst,
+          sgst: purchaseSgst,
+          totalGst: totalPurchaseTax,
+          totalAmount: totalPurchaseNet,
+        },
+        payable: {
+          cgst: netCgstPayable,
+          sgst: netSgstPayable,
+          totalGst: netTotalPayable,
+        },
+        salesList,
+        purchasesList,
+      },
+    });
+  });
 }

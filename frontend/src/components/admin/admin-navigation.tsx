@@ -180,6 +180,12 @@ export const adminNavigationGroups: SidebarNavigationGroup[] = [
             description: "Identify expiring stock",
             icon: CalendarX,
           },
+          {
+            title: "GST Report",
+            to: "/admin/reports/gst-report",
+            description: "Input and Output GST summary",
+            icon: FileText,
+          },
         ],
       },
     ],
