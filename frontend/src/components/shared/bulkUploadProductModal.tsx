@@ -4,6 +4,10 @@ import { Download, FileSpreadsheet } from "lucide-react"
 import { FormContainer } from "@/components/formContainer"
 import { Button } from "@/components/ui/button"
 import { FormFileUpload } from "@/components/ui/form-fields"
+import { useQueryClient } from "@tanstack/react-query"
+import { queryKeys } from "@/lib/queryKeys"
+import ProductApi from "@/services/masterProductApi"
+import { toast } from "sonner"
 
 interface BulkUploadProductModalProps {
   open: boolean
@@ -15,6 +19,7 @@ export default function BulkUploadProductModal({
   onClose,
 }: BulkUploadProductModalProps) {
   const [isUploading, setIsUploading] = useState(false)
+  const queryClient = useQueryClient()
   const { control, handleSubmit, watch, reset } = useForm({
     defaultValues: {
       file: null as File | null,
@@ -23,22 +28,46 @@ export default function BulkUploadProductModal({
 
   const selectedFile = watch("file")
 
-  const handleDownloadSample = () => {
-    // TODO: Implement download logic
-    console.log("Downloading sample template...")
+  const handleDownloadSample = async () => {
+    const toastId = toast.loading("Downloading template...")
+    try {
+      const blob = await ProductApi.downloadTemplate()
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.href = url
+      link.setAttribute("download", "product_import_template.xlsx")
+      document.body.appendChild(link)
+      link.click()
+      link.parentNode?.removeChild(link)
+      window.URL.revokeObjectURL(url)
+      toast.success("Template downloaded successfully!", { id: toastId })
+    } catch (error) {
+      console.error("Error downloading template:", error)
+      toast.error("Failed to download template.", { id: toastId })
+    }
   }
 
   const onSubmit = async (data: any) => {
     if (!data.file) return
     setIsUploading(true)
+    const toastId = toast.loading("Uploading and importing products...")
     try {
-      console.log("Uploading file...", data.file)
-      await new Promise((resolve) => setTimeout(resolve, 2000)) // Mock API call
-
-      onClose(false)
-      reset()
-    } catch (error) {
+      const res = await ProductApi.bulkImport(data.file)
+      
+      if (res.success) {
+        toast.success(res.message || "Products imported successfully!", { id: toastId })
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.masterProducts.all,
+        })
+        onClose(false)
+        reset()
+      } else {
+        toast.error(res.message || "Failed to import products.", { id: toastId })
+      }
+    } catch (error: any) {
       console.error("Error uploading file:", error)
+      const errorMsg = error.response?.data?.message || error.message || "Error importing products."
+      toast.error(errorMsg, { id: toastId })
     } finally {
       setIsUploading(false)
     }
