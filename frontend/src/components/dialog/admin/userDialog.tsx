@@ -54,17 +54,20 @@ export default function UserDialog({
   })
 
   const { data: branchesData, isLoading: isLoadingBranches } = useQuery({
-    queryKey: ["branches", activeOrganizationId],
+    queryKey: ["branches", activeOrganizationId, "ACTIVE"],
     queryFn: () =>
       BranchApi.getBranches({
         organizationId: activeOrganizationId,
         perPage: 100,
+        status: "ACTIVE",
       }),
     enabled: open && Boolean(activeOrganizationId),
   })
 
   const roles = rolesData?.data || []
-  const branches = branchesData?.data || []
+  const branches = (branchesData?.data || []).filter(
+    (b: any) => b.status === "ACTIVE"
+  )
 
   const selectedRoleId = useWatch({ control, name: "roleId" })
   const selectedRole = useMemo(

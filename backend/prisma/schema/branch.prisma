@@ -1,49 +1,55 @@
-
 //////////////////////////////////////////////////////
 // BRANCH
 //////////////////////////////////////////////////////
 
 model Branch {
-  id              String    @id @default(cuid())
+  id String @id @default(cuid())
 
-  organizationId  String
-  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
-  name            String
+  name String
 
-  code            String?
+  code String?
 
-  address         String?
+  address String?
 
-  phone           String?
+  phone String?
 
-  email           String?
+  email String?
 
-  isMainBranch    Boolean   @default(false)
+  status Status @default(ACTIVE)
 
-  isActive        Boolean   @default(true)
+  isMainBranch Boolean @default(false)
 
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   //////////////////////////////////////////////////////
   // RELATIONS
   //////////////////////////////////////////////////////
   orders           Order[]
-  members         MemberBranch[]
-  suppliers       Supplier[]
-  auditLogs       AuditLog[]
-  inventory Inventory[]
+  members          MemberBranch[]
+  suppliers        Supplier[]
+  auditLogs        AuditLog[]
+  inventory        Inventory[]
   inventoryBatches InventoryBatch[]
-  newCompounds NewCompound[]
-  brands Brand[]
-  units Unit[]
-  categories Category[]
-  settings Setting[]
-  manufacturers Manufacturer[]
-  invoices Invoice[]
-  salesReturns SalesReturn[]
-  @@index([organizationId])
+  newCompounds     NewCompound[]
+  brands           Brand[]
+  units            Unit[]
+  categories       Category[]
+  settings         Setting[]
+  manufacturers    Manufacturer[]
+  invoices         Invoice[]
+  salesReturns     SalesReturn[]
 
   @@unique([organizationId, code])
+  @@index([organizationId])
+}
+
+enum Status {
+  ACTIVE
+  INACTIVE
 }
