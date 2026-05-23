@@ -109,7 +109,7 @@ const buildInventoryBatchData = ({
   item: any;
 }) => {
   const receivedQty = Math.max(0, toNumber(item.qty) + toNumber(item.freeQty));
-  const expiryDate = parseExpiryDate(item.expiry);
+  const expiryDate = item.expiry;
   const batchNo = String(item.batchNo ?? "").trim();
 
   if (!batchNo) {

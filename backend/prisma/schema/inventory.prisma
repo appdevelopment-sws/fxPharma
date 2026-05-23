@@ -43,7 +43,7 @@ model Inventory {
   minQty          Int?     @default(0) @map("min_qty")
   maxQty          Int?     @default(0) @map("max_qty")
   reorderQty      Int?     @default(0) @map("reorder_qty")
-  daysLimit       DateTime?     @map("days_limit")
+  daysLimit       String?     @map("days_limit")
   temperatureLimit Decimal? @default(0.0) @map("temperature_limit")
   convStri        Decimal? @default(0.0) @map("conv_stri")
   convCas         Decimal? @default(0.0) @map("conv_cas")
@@ -90,7 +90,7 @@ model InventoryBatch {
 
   batchNo       String   @map("batch_no")
   expiry        String?  @map("expiry")
-  expiryDate    DateTime? @map("expiry_date")
+  expiryDate    String? @map("expiry_date")
 
   unit          String?
   receivedQty   Int      @default(0) @map("received_qty")

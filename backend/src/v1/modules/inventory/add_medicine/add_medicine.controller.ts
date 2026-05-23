@@ -95,7 +95,7 @@ export class InventoryController {
         ...req.body,
         organizationId,
         branchId,
-        daysLimit: req.body.daysLimit ? new Date(req.body.daysLimit) : null,
+        daysLimit: req.body.daysLimit ? req.body.daysLimit : null,
       },
     });
 
@@ -126,7 +126,7 @@ export class InventoryController {
       where: { id: req.params.id as string },
       data: {
         ...data,
-        daysLimit: data.daysLimit ? new Date(data.daysLimit) : null,
+        daysLimit: data.daysLimit ? data.daysLimit : null,
       },
     });
     res.json({ success: true, data: inventory });
