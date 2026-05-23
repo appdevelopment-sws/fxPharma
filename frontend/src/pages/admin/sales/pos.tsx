@@ -512,7 +512,8 @@ const POS = () => {
         !product.name.toLowerCase().includes(search) &&
         !product.composition.toLowerCase().includes(search) &&
         !product.mfg.toLowerCase().includes(search) &&
-        !product.category.toLowerCase().includes(search)
+        !product.category.toLowerCase().includes(search) &&
+        !product.batches.some((batch) => batch.number.toLowerCase().includes(search))
       )
         return false
 
