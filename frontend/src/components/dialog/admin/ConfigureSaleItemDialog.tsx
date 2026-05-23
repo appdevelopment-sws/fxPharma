@@ -58,7 +58,7 @@ interface ConfigureSaleItemDialogProps {
 const getQtyPerStrip = (product: PosProduct) => {
   if (product.convStri && product.convStri > 0) return product.convStri
   if (product.packQty3 && product.packQty3 > 0) return product.packQty3
-  
+
   const packingStr = String(product.packing || "").toLowerCase()
   const matches = packingStr.match(/(\d+)\s*(tablet|capsule|piece|tab|cap|'s|s)/)
   if (matches && matches[1]) {
@@ -377,15 +377,15 @@ export default function ConfigureSaleItemDialog({
         </div>
 
         {/* Subtotal cost estimation panel (premium dark bg) */}
-        <div className="rounded-xl border border-slate-800 bg-slate-900 text-slate-150 p-4 space-y-3">
+        <div className="rounded-xl border border-slate-800 bg-primary-400 text-slate-150 p-4 space-y-3">
           <div className="flex items-center gap-1.5 text-slate-300">
-            <Sparkles className="h-3.5 w-3.5 text-blue-400" />
-            <h5 className="text-[9px] font-black uppercase tracking-widest">
+            <Sparkles className="h-3.5 w-3.5 text-slate-900 dark:text-slate-100" />
+            <h5 className="text-[9px] font-semibold uppercase tracking-widest">
               Cost Summary Preview
             </h5>
           </div>
           <div className="space-y-1.5 text-xs font-semibold">
-            <div className="flex justify-between text-slate-400">
+            <div className="flex justify-between text-slate-900 dark:text-slate-100">
               <span>Base Value</span>
               <span>₹{totalBeforeDiscount.toFixed(2)}</span>
             </div>
