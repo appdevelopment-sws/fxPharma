@@ -54,9 +54,9 @@ export default function RecentInvoicesPage() {
     queryFn: () => InvoiceApi.getInvoiceStats(),
     initialData: {
       data: {
-        todays_sales: 14250.0,
+        todays_sales: 0,
         todays_sales_trend: "12% vs yesterday",
-        total_invoices: 45,
+        total_invoices: 0,
         total_invoices_trend: "8% vs yesterday",
         avg_order_value: 316.5,
         avg_order_value_trend: "3% vs yesterday",
