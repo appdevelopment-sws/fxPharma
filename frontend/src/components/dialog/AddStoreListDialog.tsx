@@ -71,7 +71,7 @@ export default function ManageStoreDialog({
     queryFn: () => StoreListApi.getStoreFormMeta(),
     enabled: open,
   })
-
+  console.table(formMetaResponse?.data)
   const roleOptions =
     formMetaResponse?.data.roles.map((role) => ({
       label: role.name,
@@ -104,6 +104,7 @@ export default function ManageStoreDialog({
             store?.subscription_plan_id || store?.plan?.id || "2",
           role_key:
             store?.role_key || store?.owner?.role?.key || defaultRoleKey,
+          password: store?.password ?? "",
           permissions: store?.permissions?.length
             ? store.permissions
             : (store?.owner?.permissions
@@ -115,6 +116,7 @@ export default function ManageStoreDialog({
         reset({
           ...STORE_FORM_INITIAL_DATA,
           role_key: defaultRoleKey,
+          password: "",
           permissions:
             formMetaResponse?.data.roles
               .find((role) => role.key === defaultRoleKey)

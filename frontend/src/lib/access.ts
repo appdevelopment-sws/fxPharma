@@ -41,7 +41,7 @@ export const PERMISSIONS = {
 
   REPORTS_VIEW: "reports.view",
   DAILY_TRANSACTION_REPORT_VIEW: "reports.daily-transaction.view",
-  EXPIRY_REPORT_VIEW: "expiry-reports.view",
+  EXPIRY_REPORT_VIEW: "reports.expiry-reports",
 } as const
 
 export type PermissionName = (typeof PERMISSIONS)[keyof typeof PERMISSIONS]
