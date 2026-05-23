@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import { catchAsync } from "../../../utils/catchAsync.js";
 import { paginate } from "../../../utils/pagination.js";
 import ErrorHandler from "../../../utils/ErrorHandler.js";
@@ -276,6 +277,12 @@ export class MasterProductController {
   });
 
   static downloadTemplate = catchAsync(async (req: Request, res: Response) => {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Product Template");
+
+    // Enable gridlines
+    worksheet.views = [{ showGridLines: true }];
+
     const headers = [
       "Product Name",
       "Industry Segment",
@@ -310,16 +317,70 @@ export class MasterProductController {
       "No",
     ];
 
-    const worksheetData = [headers, sampleRow];
-    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+    // Add headers
+    worksheet.addRow(headers);
+    const headerRow = worksheet.getRow(1);
+    headerRow.height = 32;
 
-    const colWidths = headers.map((h) => ({ wch: Math.max(h.length + 4, 15) }));
-    worksheet["!cols"] = colWidths;
+    headerRow.eachCell((cell) => {
+      cell.font = {
+        name: "Segoe UI",
+        size: 11,
+        bold: true,
+        color: { argb: "FFFFFFFF" },
+      };
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FF4F46E5" }, // Indigo-600
+      };
+      cell.alignment = { vertical: "middle", horizontal: "center", wrapText: true };
+      cell.border = {
+        top: { style: "thin", color: { argb: "FFC7D2FE" } },
+        left: { style: "thin", color: { argb: "FFC7D2FE" } },
+        bottom: { style: "medium", color: { argb: "FF312E81" } },
+        right: { style: "thin", color: { argb: "FFC7D2FE" } },
+      };
+    });
 
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Template");
+    // Add sample row
+    worksheet.addRow(sampleRow);
+    const sampleDataRow = worksheet.getRow(2);
+    sampleDataRow.height = 24;
 
-    const buffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
+    sampleDataRow.eachCell((cell) => {
+      cell.font = {
+        name: "Segoe UI",
+        size: 10,
+        color: { argb: "FF374151" }, // slate-700
+      };
+      cell.alignment = { vertical: "middle", horizontal: "left" };
+      cell.border = {
+        top: { style: "thin", color: { argb: "FFE5E7EB" } },
+        left: { style: "thin", color: { argb: "FFE5E7EB" } },
+        bottom: { style: "thin", color: { argb: "FFE5E7EB" } },
+        right: { style: "thin", color: { argb: "FFE5E7EB" } },
+      };
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FFF9FAFB" }, // slate-50
+      };
+    });
+
+    // Auto-fit column widths
+    worksheet.columns.forEach((column) => {
+      let maxLen = 12;
+      column.eachCell!({ includeEmpty: true }, (cell) => {
+        if (cell.value) {
+          const len = String(cell.value).length;
+          if (len > maxLen) maxLen = len;
+        }
+      });
+      column.width = Math.min(maxLen + 6, 35);
+    });
+
+    const buffer = await workbook.xlsx.writeBuffer() as any;
 
     res.setHeader(
       "Content-Disposition",
