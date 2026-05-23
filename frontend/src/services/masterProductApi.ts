@@ -71,6 +71,23 @@ const ProductApi = {
   deleteProduct: async (id: string | number): Promise<{ success: boolean }> => {
     return api.delete(`${BASE_URL}/${id}`)
   },
+
+  downloadTemplate: async (): Promise<Blob> => {
+    const res = await api.get<any>(`${BASE_URL}/import-template`, {
+      responseType: "blob",
+    })
+    return res.data
+  },
+
+  bulkImport: async (file: File): Promise<any> => {
+    const formData = new FormData()
+    formData.append("file", file)
+    return api.post(`${BASE_URL}/bulk-import`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    })
+  },
 }
 
 export default ProductApi

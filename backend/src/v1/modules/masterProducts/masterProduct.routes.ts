@@ -1,4 +1,5 @@
 import { Router } from "express";
+import multer from "multer";
 import { MasterProductController } from "./masterProduct.controller.js";
 import { validate } from "@/middlewares/validate.js";
 import {
@@ -33,6 +34,21 @@ const router = Router();
  *         description: Success
  */
 router.get("/", isAuthenticated, MasterProductController.getAll);
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB
+  },
+});
+
+router.get("/import-template", isAuthenticated, MasterProductController.downloadTemplate);
+router.post(
+  "/bulk-import",
+  isAuthenticated,
+  upload.single("file"),
+  MasterProductController.bulkImport
+);
 
 /**
  * @swagger
