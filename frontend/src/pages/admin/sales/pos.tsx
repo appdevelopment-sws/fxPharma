@@ -427,7 +427,7 @@ const POS = () => {
     onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.invoices.all })
       queryClient.invalidateQueries({ queryKey: queryKeys.inventory.all })
-      
+
       const responseData = response.data
       setSuccessInvoiceDetails({
         id: responseData.invoice_id || responseData.id,
@@ -1168,12 +1168,7 @@ const POS = () => {
             </div>
           </div>
 
-          {/* + Add Payment */}
-          <div className="pt-2.5">
-            <button className="text-xs font-semibold text-teal-600 hover:text-teal-700 transition-colors">
-              + Add Payment
-            </button>
-          </div>
+
         </div>
 
         {/* ── Action buttons ── */}
