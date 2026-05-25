@@ -80,6 +80,19 @@ const HsnList = () => {
     },
     [handleFilter]
   )
+  const handlePageChange = useCallback(
+    (page: number) => {
+      handleFilter({ page })
+    },
+    [handleFilter]
+  )
+
+  const handlePageSizeChange = useCallback(
+    (limit: number) => {
+      handleFilter({ limit, page: 1 })
+    },
+    [handleFilter]
+  )
 
   const columns: DataTableColumn<HsnCode>[] = useMemo(
     () => [
@@ -197,10 +210,8 @@ const HsnList = () => {
           pageSize={filter.perPage || 10}
           totalRecords={hsnData?.meta?.total || 0}
           isLoading={isLoadingHsn}
-          onPageChange={(page) => handleFilterChange({ page })}
-          onPageSizeChange={(perPage) =>
-            handleFilterChange({ perPage, page: 1 })
-          }
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
           emptyTitle="No HSN codes found"
           emptyDescription="Create an HSN code to see it listed here."
         />

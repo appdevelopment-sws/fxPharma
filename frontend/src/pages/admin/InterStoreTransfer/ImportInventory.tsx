@@ -80,7 +80,19 @@ export default function ImportInventoryPage() {
     },
     [handleFilter]
   )
+const handlePageChange = useCallback(
+    (page: number) => {
+      handleFilter({ page })
+    },
+    [handleFilter]
+  )
 
+  const handlePageSizeChange = useCallback(
+    (limit: number) => {
+      handleFilter({ limit, page: 1 })
+    },
+    [handleFilter]
+  )
   const handleImportOpen = useCallback(
     (product: any) => {
       openDrawer({
@@ -232,16 +244,8 @@ export default function ImportInventoryPage() {
             pageSize={masterProductFilter.perPage || 10}
             totalRecords={productData?.meta?.total || 0}
             isLoading={isLoadingProducts}
-            onPageChange={(page) =>
-              handleFilterChange({ page, status: ACTIVE_MASTER_PRODUCT_STATUS })
-            }
-            onPageSizeChange={(perPage) =>
-              handleFilterChange({
-                perPage,
-                page: 1,
-                status: ACTIVE_MASTER_PRODUCT_STATUS,
-              })
-            }
+onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
             emptyTitle="No active master products found"
             emptyDescription="Try a different search term or create an active master product first."
           />

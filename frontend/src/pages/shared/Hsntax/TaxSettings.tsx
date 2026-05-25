@@ -81,6 +81,19 @@ const TaxSettings = () => {
     },
     [handleFilter]
   )
+  const handlePageChange = useCallback(
+    (page: number) => {
+      handleFilter({ page })
+    },
+    [handleFilter]
+  )
+
+  const handlePageSizeChange = useCallback(
+    (limit: number) => {
+      handleFilter({ limit, page: 1 })
+    },
+    [handleFilter]
+  )
 
   const columns: DataTableColumn<TaxRate>[] = useMemo(
     () => [
@@ -197,10 +210,9 @@ const TaxSettings = () => {
           pageSize={filter.perPage || 10}
           totalRecords={taxesData?.data?.length || 0}
           isLoading={isLoadingTaxes}
-          onPageChange={(page) => handleFilterChange({ page })}
-          onPageSizeChange={(perPage) =>
-            handleFilterChange({ perPage, page: 1 })
-          }
+                      onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
+
           emptyTitle="No tax rules found"
           emptyDescription="Create a tax rule to see it listed here."
         />

@@ -52,6 +52,19 @@ const Categories = () => {
     },
     [handleFilter]
   )
+  const handlePageChange = useCallback(
+    (page: number) => {
+      handleFilter({ page })
+    },
+    [handleFilter]
+  )
+
+  const handlePageSizeChange = useCallback(
+    (limit: number) => {
+      handleFilter({ limit, page: 1 })
+    },
+    [handleFilter]
+  )
 
   // ✅ SAME STYLE AS YOUR BRAND TABLE
   const columns: DataTableColumn<any>[] = useMemo(() => {
@@ -193,10 +206,9 @@ const Categories = () => {
             pageSize={filter.perPage || 10}
             totalRecords={data?.meta?.total || 0}
             isLoading={isLoading}
-            onPageChange={(page) => handleFilterChange({ page })}
-            onPageSizeChange={(perPage) =>
-              handleFilterChange({ perPage, page: 1 })
-            }
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
+
             emptyTitle="No categories found"
             emptyDescription="Add a category to get started."
           />

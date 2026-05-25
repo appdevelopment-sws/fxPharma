@@ -70,6 +70,21 @@ export default function ManageSubscriptionPage() {
     },
     [handleFilter]
   )
+
+    const handlePageChange = useCallback(
+    (page: number) => {
+      handleFilter({ page })
+    },
+    [handleFilter]
+  )
+
+  const handlePageSizeChange = useCallback(
+    (limit: number) => {
+      handleFilter({ limit, page: 1 })
+    },
+    [handleFilter]
+  )
+
   const columns: DataTableColumn<any>[] = useMemo(() => {
     return [
       {
@@ -225,10 +240,9 @@ export default function ManageSubscriptionPage() {
             pageSize={filter.perPage || 10}
             totalRecords={storesData?.meta?.total || 0}
             isLoading={isLoadingStores}
-            onPageChange={(page) => handleFilterChange({ page })}
-            onPageSizeChange={(perPage) =>
-              handleFilterChange({ perPage, page: 1 })
-            }
+                        onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
+
             emptyTitle="No stores found"
             emptyDescription="Create a store or adjust the filters to see matching records."
           />

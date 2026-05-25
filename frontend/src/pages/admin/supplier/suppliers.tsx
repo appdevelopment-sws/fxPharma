@@ -60,6 +60,19 @@ export default function Suppliers() {
     },
     [handleFilter]
   )
+  const handlePageChange = useCallback(
+    (page: number) => {
+      handleFilter({ page })
+    },
+    [handleFilter]
+  )
+
+  const handlePageSizeChange = useCallback(
+    (limit: number) => {
+      handleFilter({ limit, page: 1 })
+    },
+    [handleFilter]
+  )
 
   const columns: DataTableColumn<Supplier>[] = useMemo(() => {
     return [
@@ -209,10 +222,8 @@ export default function Suppliers() {
             pageSize={filter.perPage || 10}
             totalRecords={suppliersData?.meta?.total || 0}
             isLoading={isLoadingSuppliers}
-            onPageChange={(page) => handleFilterChange({ page })}
-            onPageSizeChange={(perPage) =>
-              handleFilterChange({ perPage, page: 1 })
-            }
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
             emptyTitle="No suppliers found"
             emptyDescription="Add a new supplier or adjust the filters to see matching records."
           />

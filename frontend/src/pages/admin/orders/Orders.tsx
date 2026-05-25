@@ -66,7 +66,22 @@ const Orders = () => {
       handleFilter({ ...updates, page: 1 })
     },
     [handleFilter]
+  ) 
+  
+  const handlePageChange = useCallback(
+    (page: number) => {
+      handleFilter({ page })
+    },
+    [handleFilter]
   )
+
+  const handlePageSizeChange = useCallback(
+    (limit: number) => {
+      handleFilter({ limit, page: 1 })
+    },
+    [handleFilter]
+  )
+
 
   const columns: DataTableColumn<any>[] = useMemo(() => {
     return [
@@ -224,10 +239,9 @@ const Orders = () => {
             pageSize={filter.perPage || 10}
             totalRecords={data?.meta?.total || 0}
             isLoading={isLoading}
-            onPageChange={(page) => handleFilterChange({ page })}
-            onPageSizeChange={(perPage) =>
-              handleFilterChange({ perPage, page: 1 })
-            }
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
+
           />
         </div>
       </SectionCard>

@@ -99,6 +99,19 @@ const HsnMappingPage = () => {
     },
     [handleFilter]
   )
+  const handlePageChange = useCallback(
+    (page: number) => {
+      handleFilter({ page })
+    },
+    [handleFilter]
+  )
+
+  const handlePageSizeChange = useCallback(
+    (limit: number) => {
+      handleFilter({ limit, page: 1 })
+    },
+    [handleFilter]
+  )
 
   const columns: DataTableColumn<HsnMapping>[] = useMemo(
     () => [
@@ -233,10 +246,8 @@ const HsnMappingPage = () => {
           pageSize={filter.perPage || 10}
           totalRecords={mappingData?.meta?.total || 0}
           isLoading={isLoadingMapping}
-          onPageChange={(page) => handleFilterChange({ page })}
-          onPageSizeChange={(perPage) =>
-            handleFilterChange({ perPage, page: 1 })
-          }
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
           emptyTitle="No HSN mappings found"
           emptyDescription="Link an HSN code to a tax rule to see it listed here."
         />

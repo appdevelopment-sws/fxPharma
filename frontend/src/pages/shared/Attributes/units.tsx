@@ -53,6 +53,19 @@ const Units = () => {
     },
     [handleFilter]
   )
+  const handlePageChange = useCallback(
+    (page: number) => {
+      handleFilter({ page })
+    },
+    [handleFilter]
+  )
+
+  const handlePageSizeChange = useCallback(
+    (limit: number) => {
+      handleFilter({ limit, page: 1 })
+    },
+    [handleFilter]
+  )
 
   const columns: DataTableColumn<any>[] = useMemo(() => {
     return [
@@ -188,10 +201,9 @@ const Units = () => {
             pageSize={filter.perPage || 10}
             totalRecords={data?.meta?.total || 0}
             isLoading={isLoading}
-            onPageChange={(page) => handleFilterChange({ page })}
-            onPageSizeChange={(perPage) =>
-              handleFilterChange({ perPage, page: 1 })
-            }
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
+
             emptyTitle="No units found"
             emptyDescription="Add a unit to get started."
           />

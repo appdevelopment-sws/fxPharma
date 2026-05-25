@@ -96,7 +96,7 @@ export default function AdminDashboard() {
         </ChartCard>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
+      {/* <div className="grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
         <ChartCard
           title="Accessible Modules"
           description="Navigation visibility is derived from the same permission model that guards your routes."
@@ -144,7 +144,7 @@ export default function AdminDashboard() {
             </div>
           )}
         </ChartCard>
-      </div>
+      </div> */}
     </div>
   )
 }

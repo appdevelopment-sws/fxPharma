@@ -81,7 +81,21 @@ export default function DailyTransactionReport() {
       handleFilter({ ...updates, page: 1 })
     },
     [handleFilter]
+  )  
+  const handlePageChange = useCallback(
+    (page: number) => {
+      handleFilter({ page })
+    },
+    [handleFilter]
   )
+
+  const handlePageSizeChange = useCallback(
+    (limit: number) => {
+      handleFilter({ limit, page: 1 })
+    },
+    [handleFilter]
+  )
+
 
   const columns: DataTableColumn<Invoice>[] = useMemo(() => {
     return [
@@ -419,10 +433,9 @@ export default function DailyTransactionReport() {
             pageSize={filter.perPage || 10}
             totalRecords={invoicesData?.meta?.total || 0}
             isLoading={isLoadingInvoices}
-            onPageChange={(page) => handleFilterChange({ page })}
-            onPageSizeChange={(perPage) =>
-              handleFilterChange({ perPage, page: 1 })
-            }
+                        onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
+
             emptyTitle="No invoices found"
             emptyDescription="Create a new sale or adjust your filters."
           />

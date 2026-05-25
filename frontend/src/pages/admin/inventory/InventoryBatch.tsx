@@ -89,6 +89,19 @@ export default function InventoryBatchPage() {
     },
     [handleFilter]
   )
+  const handlePageChange = useCallback(
+    (page: number) => {
+      handleFilter({ page })
+    },
+    [handleFilter]
+  )
+
+  const handlePageSizeChange = useCallback(
+    (limit: number) => {
+      handleFilter({ limit, page: 1 })
+    },
+    [handleFilter]
+  )
 
   // Flat-map batches for the medicines on the current page
   const batches = useMemo(() => {
@@ -298,10 +311,8 @@ export default function InventoryBatchPage() {
             pageSize={filter.perPage || 10}
             totalRecords={inventoryData?.meta?.total || 0}
             isLoading={isLoadingInventory}
-            onPageChange={(page) => handleFilterChange({ page })}
-            onPageSizeChange={(perPage) =>
-              handleFilterChange({ perPage, page: 1 })
-            }
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
             emptyTitle="No inventory batches found"
             emptyDescription="Create an inventory medicine with batches or adjust filters to see matching records."
           />

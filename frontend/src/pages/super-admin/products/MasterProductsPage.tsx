@@ -73,6 +73,21 @@ export default function MasterProductsPage() {
     [handleFilter]
   )
 
+   const handlePageChange = useCallback(
+    (page: number) => {
+      handleFilter({ page })
+    },
+    [handleFilter]
+  )
+
+  const handlePageSizeChange = useCallback(
+    (limit: number) => {
+      handleFilter({ limit, page: 1 })
+    },
+    [handleFilter]
+  )
+
+
   const brandOptions = useMemo(
     () => [
       { label: "All Brands", value: "all" },
@@ -294,8 +309,9 @@ export default function MasterProductsPage() {
             pageSize={filter.limit || 10}
             totalRecords={productsData?.meta?.total || 0}
             isLoading={isLoadingProducts}
-            onPageChange={(page) => handleFilterChange({ page })}
-            onPageSizeChange={(limit) => handleFilterChange({ limit, page: 1 })}
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
+
             emptyTitle="No master products found"
             emptyDescription="Create a master product or adjust the filters to see matching records."
           />
