@@ -277,7 +277,7 @@ export default function ReturnsPage() {
               name="reason"
               placeholder="All Reasons"
               options={[
-                { label: "All Reasons", value: "all" },
+
                 ...RETURN_REASON_OPTIONS,
               ]}
             />
@@ -285,7 +285,7 @@ export default function ReturnsPage() {
               name="status"
               placeholder="All Status"
               options={[
-                { label: "All Status", value: "all" },
+
                 ...RETURN_STATUS_OPTIONS,
               ]}
             />

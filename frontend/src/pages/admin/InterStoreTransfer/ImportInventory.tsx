@@ -17,6 +17,7 @@ import {
   INITIAL_MASTER_PRODUCT_IMPORT_FILTERS,
   MEDICINE_IMPORT_COLUMNS,
 } from "@/constants/page/admin/importinventory"
+import { CATEGORY_TYPE_OPTIONS } from "@/constants/page/super-admin/master-products"
 import AddMedicineDialog from "@/components/dialog/admin/AddMedicineDialog"
 
 export default function ImportInventoryPage() {
@@ -196,6 +197,7 @@ export default function ImportInventoryPage() {
           <FilterBar
             values={{
               search: filter.search || "",
+              categoryType: filter.categoryType || "all",
             }}
             onChange={handleFilterChange}
           >
@@ -203,6 +205,14 @@ export default function ImportInventoryPage() {
               name="search"
               className="w-full md:w-[30%]"
               placeholder="Search active master products..."
+            />
+            <FilterBar.Select
+              name="categoryType"
+              placeholder="All Types"
+              options={[
+
+                ...CATEGORY_TYPE_OPTIONS,
+              ]}
             />
           </FilterBar>
 
@@ -215,7 +225,7 @@ export default function ImportInventoryPage() {
               productData?.meta?.totalPages ||
               Math.ceil(
                 (productData?.meta?.total || 0) /
-                  (masterProductFilter.perPage || 10)
+                (masterProductFilter.perPage || 10)
               ) ||
               1
             }
