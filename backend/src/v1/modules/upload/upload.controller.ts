@@ -1,44 +1,44 @@
-import { Request, Response } from "express";
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
+import type { Request, Response } from "express";
+import { catchAsync } from "../../../utils/catchAsync.js";
+import { uploadService } from "./upload.service.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+type UploadQuery = {
+  fileName?: string;
+  fileType?: string;
+};
+
+type UploadRequest = Request & {
+  file?: Express.Multer.File;
+  query: UploadQuery;
+};
 
 export class UploadController {
-  static uploadSingle = async (req: Request, res: Response) => {
-    try {
-      if (!req.file) {
-        return res
-          .status(400)
-          .json({ success: false, message: "No file uploaded" });
-      }
+  getPresignedUrl = catchAsync(async (req: UploadRequest, res: Response) => {
+    const data = await uploadService.generatePresignedUrl(req.query);
 
-      const fileName = `${Date.now()}-${req.file.originalname.replace(/\s+/g, "-")}`;
-      // Path to src/uploads
-      const uploadDir = path.join(process.cwd(), "src/uploads");
+    res.json({
+      success: true,
+      data,
+      message: "Presigned URL generated successfully",
+    });
+  });
 
-      if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir, { recursive: true });
-      }
-
-      const uploadPath = path.join(uploadDir, fileName);
-
-      fs.writeFileSync(uploadPath, req.file.buffer);
-
-      const fileUrl = `/uploads/${fileName}`;
-
-      res.status(200).json({
-        success: true,
-        data: {
-          url: fileUrl,
-          path: fileUrl,
-          fileName: fileName,
-        },
+  uploadSingle = catchAsync(async (req: UploadRequest, res: Response) => {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "No file uploaded",
       });
-    } catch (error: any) {
-      res.status(500).json({ success: false, message: error.message });
     }
-  };
+
+    const data = await uploadService.uploadLocalFile(req.file);
+
+    res.status(200).json({
+      success: true,
+      data,
+      message: "File uploaded successfully",
+    });
+  });
 }
+
+export const uploadController = new UploadController();

@@ -79,13 +79,13 @@ export const AdminRoutes = () => {
           >
             <Route path="users" element={<AdminUsersPage />} />
           </Route>
-          <Route
+          {/* <Route
             element={
               <ProtectedRoute allowedPermissions={[PERMISSIONS.ROLE_MANAGE]} />
             }
           >
             <Route path="roles" element={<AdminRolesPage />} />
-          </Route>
+          </Route> */}
           <Route
             path="reports/daily-transaction-report"
             element={<DailyTransactionReport />}

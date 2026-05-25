@@ -192,32 +192,32 @@ export const adminNavigationGroups: SidebarNavigationGroup[] = [
       },
     ],
   },
-  {
-    title: "Workspace",
-    items: [
-      {
-        title: "Access Control",
-        description: "Govern workspace members, roles, and permissions",
-        icon: ShieldCheck,
-        children: [
-          {
-            title: "Users",
-            to: "/admin/users",
-            description: "Tenant users directory",
-            icon: Users,
-            permissions: [PERMISSIONS.USER_VIEW],
-          },
-          {
-            title: "Roles & Permissions",
-            to: "/admin/roles",
-            description: "Role governance and permission matrix",
-            icon: KeyRound,
-            permissions: [PERMISSIONS.ROLE_MANAGE],
-          },
-        ],
-      },
-    ],
-  },
+  // {
+  //   title: "Workspace",
+  //   items: [
+  //     {
+  //       title: "Access Control",
+  //       description: "Govern workspace members, roles, and permissions",
+  //       icon: ShieldCheck,
+  //       children: [
+  //         {
+  //           title: "Users",
+  //           to: "/admin/users",
+  //           description: "Tenant users directory",
+  //           icon: Users,
+  //           permissions: [PERMISSIONS.USER_VIEW],
+  //         },
+  //         {
+  //           title: "Roles & Permissions",
+  //           to: "/admin/roles",
+  //           description: "Role governance and permission matrix",
+  //           icon: KeyRound,
+  //           permissions: [PERMISSIONS.ROLE_MANAGE],
+  //         },
+  //       ],
+  //     },
+  //   ],
+  // },
 ]
 
 export function getVisibleAdminNavigation(user: AuthUser | null) {

@@ -3,8 +3,33 @@ import { catchAsync } from "../../../utils/catchAsync.js";
 import { paginate } from "../../../utils/pagination.js";
 import { rootPrisma } from "@/lib/prisma.js";
 import { getRequestScope } from "@/helpers/requestScope.js";
+import ErrorHandler from "../../../utils/ErrorHandler.js";
+import { invoiceTemplateService } from "./invoice-template.service.js";
 
 export class InvoicesController {
+  private static async getAccessibleInvoice(
+    id: string,
+    organizationId: string,
+    branchId?: string | null,
+  ) {
+    const invoice = await rootPrisma.invoice.findUnique({
+      where: { id },
+      include: {
+        items: true,
+      },
+    });
+
+    if (!invoice) {
+      throw new ErrorHandler("Invoice not found.", 404);
+    }
+
+    if (invoice.organizationId !== organizationId || (branchId && invoice.branchId !== branchId)) {
+      throw new ErrorHandler("Access denied.", 403);
+    }
+
+    return invoice;
+  }
+
   static create = catchAsync(async (req: Request, res: Response) => {
     const { organizationId, branchId } = getRequestScope(req);
     const {
@@ -240,26 +265,57 @@ export class InvoicesController {
     });
   });
 
+  static getTemplates = catchAsync(async (_req: Request, res: Response) => {
+    const templates = await invoiceTemplateService.getAvailableTemplates();
+
+    res.json({
+      success: true,
+      data: {
+        templates,
+        defaultTemplate: invoiceTemplateService.getSafeTemplateName(),
+      },
+    });
+  });
+
   static getById = catchAsync(async (req: Request, res: Response) => {
     const { organizationId, branchId } = getRequestScope(req);
     const id = req.params.id as string;
 
-    const invoice = await rootPrisma.invoice.findUnique({
-      where: { id },
-      include: {
-        items: true,
-      },
-    });
-
-    if (!invoice) {
-      return res.status(404).json({ success: false, message: "Invoice not found." });
-    }
-
-    if (invoice.organizationId !== organizationId || (branchId && invoice.branchId !== branchId)) {
-      return res.status(403).json({ success: false, message: "Access denied." });
-    }
+    const invoice = await InvoicesController.getAccessibleInvoice(id, organizationId, branchId);
 
     res.json({ success: true, data: invoice });
+  });
+
+  static download = catchAsync(async (req: Request, res: Response) => {
+    const { organizationId, branchId } = getRequestScope(req);
+    const id = req.params.id as string;
+    const templateName =
+      (req.query.template as string | undefined) ||
+      (req.query.templateName as string | undefined) ||
+      undefined;
+    const format = req.query.format === "html" ? "html" : "pdf";
+
+    const invoice = await InvoicesController.getAccessibleInvoice(id, organizationId, branchId);
+
+    if (format === "html") {
+      const html = await invoiceTemplateService.renderInvoiceHtml(invoice, templateName);
+      res.setHeader("Content-Type", "text/html; charset=utf-8");
+      res.setHeader(
+        "Content-Disposition",
+        `inline; filename="${invoice.invoiceId}-${invoiceTemplateService.getSafeTemplateName(templateName)}.html"`,
+      );
+      return res.status(200).send(html);
+    }
+
+    const pdfBuffer = await invoiceTemplateService.renderInvoicePdf(invoice, templateName);
+    const safeTemplateName = invoiceTemplateService.getSafeTemplateName(templateName);
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${invoice.invoiceId}-${safeTemplateName}.pdf"`,
+    );
+    return res.status(200).send(pdfBuffer);
   });
 
   static getGstSummary = catchAsync(async (req: Request, res: Response) => {

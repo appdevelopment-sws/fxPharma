@@ -1,9 +1,10 @@
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useForm, type SubmitHandler } from "react-hook-form"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 import { queryKeys } from "@/lib/queryKeys"
 import SupplierApi, { type SupplierFormValues } from "@/services/supplierApi"
+import { uploadApi } from "@/services/uploadApi"
 import { FormContainer } from "@/components/formContainer"
 import {
   FormField,
@@ -28,6 +29,7 @@ export default function SupplierDrawer({
   const isViewMode = !!supplier?.viewMode
   const isEditMode = !!supplier?.id
   const supplierId = supplier?.id
+  const [isUploading, setIsUploading] = useState(false)
 
   const {
     handleSubmit,
@@ -64,22 +66,10 @@ export default function SupplierDrawer({
   const queryClient = useQueryClient()
 
   const handleMutation = useMutation({
-    mutationFn: async (submitData: SupplierFormValues & { isActive?: boolean }) => {
-      // Handle file upload if a new file is selected
-      if (
-        submitData.registrationDocuments &&
-        submitData.registrationDocuments instanceof File
-      ) {
-        const filePath = await SupplierApi.uploadFile(
-          submitData.registrationDocuments as File
-        )
-        submitData.registrationDocuments = filePath
-      }
-
-      return isEditMode
+    mutationFn: async (submitData: SupplierFormValues & { isActive?: boolean }) =>
+      isEditMode
         ? SupplierApi.updateSupplier(supplierId, submitData)
-        : SupplierApi.createSupplier(submitData)
-    },
+        : SupplierApi.createSupplier(submitData),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.suppliers.all,
@@ -130,9 +120,9 @@ export default function SupplierDrawer({
             <Button
               type="submit"
               form="supplier-dialog-form"
-              disabled={handleMutation.isPending || isSubmitting}
+              disabled={handleMutation.isPending || isSubmitting || isUploading}
             >
-              {handleMutation.isPending || isSubmitting
+              {handleMutation.isPending || isSubmitting || isUploading
                 ? "Saving..."
                 : isEditMode
                   ? "Update Supplier"
@@ -188,6 +178,14 @@ export default function SupplierDrawer({
               maxSizeText="PDF, PNG, JPG up to 5MB"
               disabled={isViewMode}
               error={errors.registrationDocuments?.message as string}
+              uploadFile={async (file) =>
+                (await uploadApi.uploadImage(file)).publicUrl
+              }
+              onUploadingChange={setIsUploading}
+              onUploadError={() => {
+                setIsUploading(false)
+                toast.error("Failed to upload registration document.")
+              }}
             />
           </div>
         </div>
