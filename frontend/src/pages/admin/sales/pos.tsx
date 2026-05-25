@@ -84,17 +84,40 @@ type CartItem = {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
+const MONTH_YEAR_PATTERN = /^(0[1-9]|1[0-2])\/(\d{4})$/
+
+const parseExpiryValue = (value?: string | null) => {
+  if (!value) return null
+
+  const trimmed = value.trim()
+  const monthYearMatch = trimmed.match(MONTH_YEAR_PATTERN)
+  if (monthYearMatch) {
+    const month = Number(monthYearMatch[1])
+    const year = Number(monthYearMatch[2])
+    return new Date(year, month, 0)
+  }
+
+  const parsed = new Date(trimmed)
+  return Number.isNaN(parsed.getTime()) ? null : parsed
+}
+
 const formatExpiry = (value?: string | null) => {
   if (!value) return "-"
-  const parsed = new Date(value)
-  if (Number.isNaN(parsed.getTime())) return value
-  return parsed.toLocaleDateString("en-IN", { month: "2-digit", year: "2-digit" })
+  const trimmed = value.trim()
+  const monthYearMatch = trimmed.match(MONTH_YEAR_PATTERN)
+  if (monthYearMatch) {
+    return `${monthYearMatch[1]}/${monthYearMatch[2]}`
+  }
+
+  const parsed = parseExpiryValue(trimmed)
+  if (!parsed) return value
+  return parsed.toLocaleDateString("en-IN", { month: "2-digit", year: "numeric" })
 }
 
 const isNearExpiry = (value?: string | null) => {
   if (!value) return false
-  const parsed = new Date(value)
-  if (Number.isNaN(parsed.getTime())) return false
+  const parsed = parseExpiryValue(value)
+  if (!parsed) return false
   return (parsed.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24) <= 180
 }
 

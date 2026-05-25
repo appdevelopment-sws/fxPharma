@@ -7,12 +7,18 @@ import ErrorHandler from "../../../../utils/ErrorHandler.js";
 
 type ExpiryReportStatus = "ACTIVE" | "EXPIRING_SOON" | "EXPIRED";
 
+const MONTH_YEAR_PATTERN = /^(0[1-9]|1[0-2])\/(\d{4})$/;
+
 const toNumber = (value: unknown) => {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : 0;
 };
 
 const parseDate = (value: unknown) => {
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value;
+  }
+
   if (!value || typeof value !== "string") return null;
 
   const parsed = new Date(value);
@@ -21,6 +27,26 @@ const parseDate = (value: unknown) => {
   }
 
   return parsed;
+};
+
+const parseExpiryMonthYear = (value: unknown) => {
+  if (typeof value !== "string") return null;
+
+  const match = value.trim().match(MONTH_YEAR_PATTERN);
+  if (!match) return null;
+
+  const month = Number(match[1]);
+  const year = Number(match[2]);
+  return new Date(year, month - 1, 1);
+};
+
+const getExpiryDateValue = (value: unknown) => {
+  const monthYearDate = parseExpiryMonthYear(value);
+  if (monthYearDate) {
+    return monthYearDate;
+  }
+
+  return parseDate(value);
 };
 
 const normalizeDateOnly = (value: Date) =>
@@ -34,11 +60,15 @@ const formatDateOnly = (value: Date) => {
 };
 
 const getDaysRemaining = (expiry: unknown) => {
-  const parsed = parseDate(expiry);
+  const parsed = getExpiryDateValue(expiry);
   if (!parsed) return null;
 
   const today = normalizeDateOnly(new Date());
-  const expiryDay = normalizeDateOnly(parsed);
+  const expiryDay = parseExpiryMonthYear(expiry)
+    ? normalizeDateOnly(
+        new Date(parsed.getFullYear(), parsed.getMonth() + 1, 0),
+      )
+    : normalizeDateOnly(parsed);
   return Math.round((expiryDay.getTime() - today.getTime()) / 86400000);
 };
 
@@ -70,12 +100,31 @@ const getStatusLabel = (status: ExpiryReportStatus) => {
 };
 
 const formatExpiryValue = (value: unknown) => {
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (MONTH_YEAR_PATTERN.test(trimmed)) {
+      return trimmed;
+    }
+  }
+
   const parsed = parseDate(value);
   if (!parsed) {
     return typeof value === "string" ? value : null;
   }
 
   return formatDateOnly(normalizeDateOnly(parsed));
+};
+
+const getExpiryComparableDate = (value: unknown) => {
+  const monthYearDate = parseExpiryMonthYear(value);
+  if (monthYearDate) {
+    return normalizeDateOnly(
+      new Date(monthYearDate.getFullYear(), monthYearDate.getMonth() + 1, 0),
+    );
+  }
+
+  const parsed = parseDate(value);
+  return parsed ? normalizeDateOnly(parsed) : null;
 };
 
 const buildExpiryReportRow = (batch: any) => {
@@ -192,11 +241,14 @@ export class InventoryController {
       1,
       Math.min(100, parseInt((req.query.limit as string) || "10") || 10),
     );
-    const search = typeof req.query.search === "string" ? req.query.search.trim() : "";
+    const search =
+      typeof req.query.search === "string" ? req.query.search.trim() : "";
     const statusFilter =
       typeof req.query.status === "string" ? req.query.status.trim() : "all";
     const categoryFilter =
-      typeof req.query.category === "string" ? req.query.category.trim() : "all";
+      typeof req.query.category === "string"
+        ? req.query.category.trim()
+        : "all";
     const from = parseDate(req.query.from);
     const to = parseDate(req.query.to);
 
@@ -289,14 +341,14 @@ export class InventoryController {
       .map(buildExpiryReportRow)
       .filter((row: ReturnType<typeof buildExpiryReportRow>) => {
         if (from) {
-          const expiry = parseDate(row.expiryDate);
+          const expiry = getExpiryComparableDate(row.expiryDate);
           if (!expiry || expiry < normalizeDateOnly(from)) {
             return false;
           }
         }
 
         if (to) {
-          const expiry = parseDate(row.expiryDate);
+          const expiry = getExpiryComparableDate(row.expiryDate);
           if (!expiry || expiry > normalizeDateOnly(to)) {
             return false;
           }

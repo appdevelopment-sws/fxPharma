@@ -20,10 +20,16 @@ import InventoryApi, { type ExpiryReportItem } from "@/services/inventoryApi"
 import { INITIAL_EXPIRY_FILTERS, EXPIRY_STATUS_OPTIONS } from "@/constants/page/admin/expiry"
 import useSearchFilter from "@/hooks/useSearchFilter"
 
+const MONTH_YEAR_PATTERN = /^(0[1-9]|1[0-2])\/(\d{4})$/
+
 const formatDate = (value?: string | null) => {
   if (!value) return "-"
 
-  const parsed = new Date(value)
+  const trimmed = value.trim()
+  const monthYearMatch = trimmed.match(MONTH_YEAR_PATTERN)
+  if (monthYearMatch) return `${monthYearMatch[1]}/${monthYearMatch[2]}`
+
+  const parsed = new Date(trimmed)
   if (Number.isNaN(parsed.getTime())) return value
 
   return format(parsed, "dd MMM yyyy")
