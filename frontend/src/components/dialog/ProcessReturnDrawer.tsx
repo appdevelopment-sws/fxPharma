@@ -1,59 +1,110 @@
-import { useState, useMemo } from "react"
-import { useForm, type SubmitHandler, useFieldArray } from "react-hook-form"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { Search, Minus, Plus, CheckCircle2, X, Trash2 } from "lucide-react"
+import { useEffect, useMemo } from "react"
+import {
+  useForm,
+  type SubmitHandler,
+  useFieldArray,
+  useWatch,
+} from "react-hook-form"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { CheckCircle2, Minus, Plus } from "lucide-react"
+import { toast } from "sonner"
+
 import { queryKeys } from "@/lib/queryKeys"
-import InvoiceApi, { type Invoice } from "@/services/invoiceApi"
+import InvoiceApi from "@/services/invoiceApi"
 import ReturnApi from "@/services/returnApi"
 import { FormContainer } from "@/components/formContainer"
 import {
-  FormField,
   FormSelectField,
   FormTextarea,
 } from "@/components/ui/form-fields"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import {
   RETURN_REASON_OPTIONS,
   REFUND_METHOD_OPTIONS,
 } from "@/constants/page/admin/returns"
 import { Checkbox } from "@/components/ui/checkbox"
-import { toast } from "sonner"
 import { cn } from "@/lib/utils"
+
+import { buildReturnItems, type ReturnFormItem } from "./returnFormUtils"
 
 interface ProcessReturnDrawerProps {
   open: boolean
   onClose: (open: boolean) => void
+  invoiceId?: string | null
+}
+
+type ReturnFormValues = {
+  invoice_number: string
+  reason_for_return: string
+  refund_method: string
+  note: string
+  items: ReturnFormItem[]
+  restocking_fee: number
+}
+
+const defaultValues: ReturnFormValues = {
+  invoice_number: "",
+  reason_for_return: "",
+  refund_method: "upi",
+  note: "",
+  items: [],
+  restocking_fee: 0,
 }
 
 export default function ProcessReturnDrawer({
   open,
   onClose,
+  invoiceId,
 }: ProcessReturnDrawerProps) {
-  const [invoiceSearch, setInvoiceSearch] = useState("")
-  const [isInvoiceFound, setIsInvoiceFound] = useState(false)
-  const [isSearchingInvoice, setIsSearchingInvoice] = useState(false)
-  const [foundInvoice, setFoundInvoice] = useState<Invoice | null>(null)
   const queryClient = useQueryClient()
 
-  const { handleSubmit, control, watch, setValue, reset } = useForm<any>({
-    defaultValues: {
-      invoice_number: "",
-      reason_for_return: "",
-      refund_method: "upi",
-      note: "",
-      items: [],
-      restocking_fee: 0,
-    },
-  })
+  const { handleSubmit, control, getValues, setValue, reset } =
+    useForm<ReturnFormValues>({
+      defaultValues,
+    })
 
   const { fields, replace } = useFieldArray({
     control,
     name: "items",
   })
 
-  const items = watch("items")
-  const restockingFee = Number(watch("restocking_fee")) || 0
+  const {
+    data: invoiceData,
+    isLoading: isLoadingInvoice,
+    isFetching: isFetchingInvoice,
+    isError: isInvoiceError,
+  } = useQuery({
+    queryKey: invoiceId ? queryKeys.invoices.detail(invoiceId) : queryKeys.invoices.detail(""),
+    queryFn: () => InvoiceApi.getInvoice(invoiceId as string),
+    enabled: open && Boolean(invoiceId),
+  })
+
+  const invoice = invoiceData?.data
+  const watchedItems = useWatch({ control, name: "items" })
+  const items = useMemo(() => watchedItems ?? [], [watchedItems])
+  const restockingFee = Number(useWatch({ control, name: "restocking_fee" })) || 0
+
+  useEffect(() => {
+    if (!open) {
+      reset(defaultValues)
+      replace([])
+      return
+    }
+
+    if (invoice) {
+      reset({
+        ...defaultValues,
+        invoice_number: invoice.invoice_id,
+      })
+      replace(buildReturnItems(invoice))
+      return
+    }
+
+    if (!invoiceId) {
+      reset(defaultValues)
+      replace([])
+    }
+  }, [invoice, invoiceId, open, replace, reset])
 
   const summary = useMemo(() => {
     const selectedItems = items.filter((item) => item.selected)
@@ -61,7 +112,7 @@ export default function ProcessReturnDrawer({
       (acc, item) => acc + item.unit_price * item.return_qty,
       0
     )
-    const tax = subtotal * 0.12 // Example tax
+    const tax = subtotal * 0.12
     const total = subtotal + tax - restockingFee
 
     return {
@@ -72,96 +123,47 @@ export default function ProcessReturnDrawer({
     }
   }, [items, restockingFee])
 
-  const handleSearch = async () => {
-    const search = invoiceSearch.trim()
-    if (!search) {
-      toast.error("Please enter an invoice number")
-      return
-    }
-
-    try {
-      setIsSearchingInvoice(true)
-      const result = await InvoiceApi.getInvoices({ search, page: 1, perPage: 1 })
-      const matchedInvoice =
-        result.data.find((invoice) => invoice.invoice_id === search) || result.data[0]
-
-      if (!matchedInvoice) {
-        setIsInvoiceFound(false)
-        setFoundInvoice(null)
-        replace([])
-        toast.error("Invoice not found")
-        return
-      }
-
-      const details = await InvoiceApi.getInvoice(matchedInvoice.id)
-      const invoice = details.data
-      const returnItems = (invoice.items || []).map((item) => {
-        const unitPrice =
-          item.qty > 0 ? item.sub_total / item.qty : item.rate_value
-        return {
-          id: item.id,
-          invoice_item_id: item.id,
-          inventory_id: item.inventory_id,
-          batch_id: item.batch_id,
-          selected: true,
-          name: item.inventory_name,
-          batch: item.batch_no || "-",
-          expiry: "-",
-          unit_price: unitPrice,
-          purchased_qty: item.qty,
-          return_qty: item.qty > 0 ? 1 : 0,
-          reason: "",
-        }
-      })
-
-      setValue("invoice_number", invoice.invoice_id)
-      replace(returnItems)
-      setFoundInvoice(invoice)
-      setIsInvoiceFound(true)
-      toast.success("Invoice Found")
-    } catch (error: any) {
-      const errMsg =
-        error?.response?.data?.message || error?.message || "Invoice not found"
-      toast.error(errMsg)
-    } finally {
-      setIsSearchingInvoice(false)
-    }
-  }
-
   const processMutation = useMutation({
-    mutationFn: (data: any) => ReturnApi.processReturn(data),
+    mutationFn: (data: ReturnFormValues) => ReturnApi.processReturn(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.returns.all })
       queryClient.invalidateQueries({ queryKey: queryKeys.invoices.all })
       queryClient.invalidateQueries({ queryKey: queryKeys.inventory.all })
       toast.success("Return processed successfully")
       onClose(false)
-      reset()
-      setIsInvoiceFound(false)
-      setFoundInvoice(null)
-      setInvoiceSearch("")
+      reset(defaultValues)
+      replace([])
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       const errMsg =
-        error?.response?.data?.message ||
-        error?.message ||
+        (typeof error === "object" &&
+          error !== null &&
+          "response" in error &&
+          typeof (error as { response?: { data?: { message?: string } } }).response
+            ?.data?.message === "string" &&
+          (error as { response?: { data?: { message?: string } } }).response?.data
+            ?.message) ||
+        (error instanceof Error ? error.message : null) ||
         "Failed to process return"
       toast.error(errMsg)
     },
   })
 
-  const onSubmit: SubmitHandler<any> = (data) => {
-    const selectedItems = data.items.filter(
-      (i: any) => i.selected && Number(i.return_qty) > 0
-    )
-    if (!data.invoice_number) {
-      toast.error("Please search and select an invoice")
+  const onSubmit: SubmitHandler<ReturnFormValues> = (data) => {
+    if (!invoiceId || !invoice) {
+      toast.error("Please select an invoice first")
       return
     }
+
+    const selectedItems = data.items.filter(
+      (item) => item.selected && Number(item.return_qty) > 0
+    )
+
     if (selectedItems.length === 0) {
       toast.error("Please select at least one item to return")
       return
     }
+
     processMutation.mutate({ ...data, items: selectedItems })
   }
 
@@ -171,44 +173,70 @@ export default function ProcessReturnDrawer({
       open={open}
       onOpenChange={(isOpen) => onClose(isOpen)}
       title="Process Return"
-      description="Create a sales return by searching for an original invoice."
+      description="Process a sales return for a selected invoice."
       size="xl"
       footer={null}
     >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        {/* Invoice Details */}
         <div className="space-y-4 rounded-xl border bg-card p-6 shadow-sm">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-semibold tracking-wider text-muted-foreground uppercase">
               Invoice Details
             </h3>
-            {isInvoiceFound && (
+            {invoice && (
               <div className="flex items-center gap-1.5 rounded-full bg-blue-500/10 px-3 py-1 text-xs font-medium text-blue-600">
                 <CheckCircle2 className="size-3.5" />
-                {foundInvoice?.invoice_id} FOUND
+                {invoice.invoice_id} FOUND
               </div>
             )}
           </div>
 
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Search Invoice ID (e.g. INV-2023-086)"
-                className="pl-10"
-                value={invoiceSearch}
-                onChange={(e) => setInvoiceSearch(e.target.value)}
-              />
+          {isLoadingInvoice || isFetchingInvoice ? (
+            <div className="py-4 text-sm text-muted-foreground">
+              Loading invoice...
             </div>
-            <Button type="button" onClick={handleSearch} disabled={isSearchingInvoice}>
-              {isSearchingInvoice ? "Searching..." : "Search"}
-            </Button>
-          </div>
+          ) : invoice ? (
+            <div className="grid gap-3 text-sm sm:grid-cols-2">
+              <div className="rounded-lg border border-border/60 p-3">
+                <p className="text-xs font-medium text-muted-foreground">
+                  Invoice Number
+                </p>
+                <p className="font-semibold">{invoice.invoice_id}</p>
+              </div>
+              <div className="rounded-lg border border-border/60 p-3">
+                <p className="text-xs font-medium text-muted-foreground">
+                  Customer
+                </p>
+                <p className="font-semibold">
+                  {invoice.customer_name || "Walk-in Customer"}
+                </p>
+              </div>
+              <div className="rounded-lg border border-border/60 p-3">
+                <p className="text-xs font-medium text-muted-foreground">
+                  Phone
+                </p>
+                <p className="font-semibold">{invoice.customer_phone || "-"}</p>
+              </div>
+              <div className="rounded-lg border border-border/60 p-3">
+                <p className="text-xs font-medium text-muted-foreground">
+                  Date
+                </p>
+                <p className="font-semibold">{invoice.createdAt}</p>
+              </div>
+            </div>
+          ) : isInvoiceError ? (
+            <div className="py-4 text-sm text-destructive">
+              Invoice could not be loaded.
+            </div>
+          ) : (
+            <div className="py-4 text-sm text-muted-foreground">
+              Open this dialog with an invoice ID to begin processing.
+            </div>
+          )}
         </div>
 
-        {isInvoiceFound && (
+        {invoice && (
           <>
-            {/* Select Items */}
             <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
               <div className="border-b bg-muted/30 p-4">
                 <h3 className="text-sm font-semibold tracking-wider text-muted-foreground uppercase">
@@ -264,9 +292,13 @@ export default function ProcessReturnDrawer({
                               variant="outline"
                               size="icon-xs"
                               onClick={() => {
-                                const val = watch(`items.${index}.return_qty`)
-                                if (val > 0)
-                                  setValue(`items.${index}.return_qty`, val - 1)
+                                const val = getValues(`items.${index}.return_qty`)
+                                if (val > 0) {
+                                  setValue(
+                                    `items.${index}.return_qty`,
+                                    val - 1
+                                  )
+                                }
                               }}
                             >
                               <Minus className="size-3" />
@@ -279,9 +311,13 @@ export default function ProcessReturnDrawer({
                               variant="outline"
                               size="icon-xs"
                               onClick={() => {
-                                const val = watch(`items.${index}.return_qty`)
-                                if (val < field.purchased_qty)
-                                  setValue(`items.${index}.return_qty`, val + 1)
+                                const val = getValues(`items.${index}.return_qty`)
+                                if (val < field.purchased_qty) {
+                                  setValue(
+                                    `items.${index}.return_qty`,
+                                    val + 1
+                                  )
+                                }
                               }}
                             >
                               <Plus className="size-3" />
@@ -310,7 +346,6 @@ export default function ProcessReturnDrawer({
               </div>
             </div>
 
-            {/* Refund Processing */}
             <div className="grid gap-6 lg:grid-cols-3">
               <div className="space-y-6 rounded-xl border bg-card p-6 shadow-sm lg:col-span-2">
                 <h3 className="border-b pb-2 text-sm font-semibold tracking-wider text-muted-foreground uppercase">
@@ -352,9 +387,7 @@ export default function ProcessReturnDrawer({
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Tax (GST)</span>
-                    <span className="font-medium">
-                      ₹{summary.tax.toFixed(2)}
-                    </span>
+                    <span className="font-medium">₹{summary.tax.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-sm text-destructive">
                     <span>Restocking Fee</span>

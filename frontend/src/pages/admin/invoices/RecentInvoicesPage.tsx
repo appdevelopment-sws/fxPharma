@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import {
   Eye,
@@ -9,6 +9,7 @@ import {
   ArrowUpRight,
   Download,
   RotateCcw,
+  Printer,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -37,6 +38,8 @@ import {
   INVOICE_STATUS_OPTIONS,
   INVOICE_COLUMNS,
 } from "@/constants/page/admin/invoices"
+import ProcessReturnDrawer from "@/components/dialog/ProcessReturnDrawer"
+import { useDisclosure } from "@/hooks/useDisclosure"
 
 const formatCurrency = (value: number) => `\u20B9${value.toFixed(2)}`
 
@@ -78,21 +81,15 @@ export default function RecentInvoicesPage() {
     })
 
   const stats = statsData.data
-  const invoiceTemplates = invoiceTemplatesData?.data.templates || []
+  const invoiceTemplates = useMemo(
+    () => invoiceTemplatesData?.data.templates ?? [],
+    [invoiceTemplatesData]
+  )
   const defaultTemplate =
     invoiceTemplatesData?.data.defaultTemplate || "template1"
-
-  useEffect(() => {
-    if (!invoiceTemplatesData?.data.templates?.length) return
-
-    const nextTemplate = invoiceTemplates.includes(selectedTemplate)
-      ? selectedTemplate
-      : defaultTemplate
-
-    if (nextTemplate !== selectedTemplate) {
-      setSelectedTemplate(nextTemplate)
-    }
-  }, [defaultTemplate, invoiceTemplates, invoiceTemplatesData, selectedTemplate])
+  const activeTemplate = invoiceTemplates.includes(selectedTemplate)
+    ? selectedTemplate
+    : defaultTemplate
 
   const { data: invoiceDetailsData, isFetching: isLoadingInvoiceDetails } =
     useQuery({
@@ -121,169 +118,166 @@ export default function RecentInvoicesPage() {
       try {
         const blob = await InvoiceApi.downloadInvoicePdf(
           invoice.id,
-          selectedTemplate
+          activeTemplate
         )
-        downloadBlob(
-          blob,
-          `${invoice.invoice_id}-${selectedTemplate}.pdf`
-        )
-        toast.success(`Downloaded ${invoice.invoice_id} as ${selectedTemplate}.pdf`)
-      } catch (error: any) {
-        toast.error(
-          error?.response?.data?.message ||
-            "Could not download invoice PDF. Please try again."
-        )
+        downloadBlob(blob, `${invoice.invoice_id}-${activeTemplate}.pdf`)
+        toast.success(`Downloaded ${invoice.invoice_id} as ${activeTemplate}.pdf`)
+      } catch (error: unknown) {
+        const errMsg =
+          (typeof error === "object" &&
+            error !== null &&
+            "response" in error &&
+            typeof (error as { response?: { data?: { message?: string } } }).response
+              ?.data?.message === "string" &&
+            (error as { response?: { data?: { message?: string } } }).response?.data
+              ?.message) ||
+          "Could not download invoice PDF. Please try again."
+        toast.error(errMsg)
       }
     },
-    [downloadBlob, selectedTemplate]
+    [downloadBlob, activeTemplate]
   )
 
   const handlePreviewInvoice = useCallback((invoice: Invoice) => {
     try {
-      InvoiceApi.openInvoiceHtml(invoice.id, selectedTemplate)
+      InvoiceApi.openInvoiceHtml(invoice.id, activeTemplate)
       toast.success(`Opened ${invoice.invoice_id} preview`)
     } catch {
       toast.error("Could not open invoice preview.")
     }
-  }, [selectedTemplate])
+  }, [activeTemplate])
 
   const handleFilterChange = useCallback(
-    (updates: Record<string, any>) => {
+    (updates: Record<string, unknown>) => {
       handleFilter({ ...updates, page: 1 })
     },
     [handleFilter]
   )
+  const returnDrawer = useDisclosure<Invoice>()
 
-  const columns: DataTableColumn<Invoice>[] = useMemo(() => {
-    return [
-      {
-        key: "serial",
-        header: INVOICE_COLUMNS.find((c) => c.key === "serial")?.label || "#",
-        render: (_, index) => {
-          const currentPage = filter.page || 1
-          const perPage = filter.perPage || 10
-          return (currentPage - 1) * perPage + index + 1
-        },
+  const columns: DataTableColumn<Invoice>[] = [
+    {
+      key: "serial",
+      header: INVOICE_COLUMNS.find((c) => c.key === "serial")?.label || "#",
+      render: (_, index) => {
+        const currentPage = filter.page || 1
+        const perPage = filter.perPage || 10
+        return (currentPage - 1) * perPage + index + 1
       },
-      {
-        key: "invoice_details",
-        header: "INVOICE DETAILS",
-        render: (row) => (
-          <div className="flex items-center gap-3">
-            <div className="flex size-8 items-center justify-center rounded bg-primary/10 text-primary">
-              <FileText className="size-4" />
-            </div>
-            <div className="space-y-0.5">
-              <button
-                type="button"
-                onClick={() => setSelectedInvoiceId(row.id)}
-                className="cursor-pointer p-0 text-left font-bold text-primary hover:underline"
-              >
-                {row.invoice_id}
-              </button>
-              <div className="text-xs text-muted-foreground">
-                {row.createdAt}
-              </div>
-            </div>
+    },
+    {
+      key: "invoice_details",
+      header: "INVOICE DETAILS",
+      render: (row) => (
+        <div className="flex items-center gap-3">
+          <div className="flex size-8 items-center justify-center rounded bg-primary/10 text-primary">
+            <FileText className="size-4" />
           </div>
-        ),
-      },
-      {
-        key: "customer_info",
-        header: "CUSTOMER INFO",
-        render: (row) => (
-          <div className="space-y-0.5 text-sm">
-            <div className="font-semibold">{row.customer_name}</div>
-            <div className="text-xs text-muted-foreground">
-              {row.customer_phone || "-"}
-            </div>
-          </div>
-        ),
-      },
-      {
-        key: "items",
-        header: "ITEMS",
-        render: (row) => (
-          <Badge
-            variant="secondary"
-            className="border-none bg-muted/50 font-medium text-muted-foreground"
-          >
-            {row.item_count} Items
-          </Badge>
-        ),
-      },
-      {
-        key: "total_amount",
-        header: "TOTAL AMOUNT",
-        render: (row) => (
-          <span className="font-bold">₹{row.total_amount.toFixed(2)}</span>
-        ),
-      },
-      {
-        key: "payment_mode",
-        header: "PAYMENT MODE",
-        render: (row) => (
-          <div className="flex items-center gap-2 text-muted-foreground">
-            {row.payment_mode === "CASH" && <Banknote className="size-4" />}
-            {row.payment_mode === "UPI" && <QrCode className="size-4" />}
-            {row.payment_mode === "CARD" && <CreditCard className="size-4" />}
-            <span className="capitalize">{row.payment_mode.toLowerCase()}</span>
-          </div>
-        ),
-      },
-      {
-        key: "status",
-        header: "STATUS",
-        render: (row) => (
-          <StatusBadge
-            status={row.status}
-            className={cn(
-              "px-3 py-1 font-bold",
-              row.status === "PAID" && "bg-emerald-500/10 text-emerald-600",
-              row.status === "REFUNDED" && "bg-red-500/10 text-red-600"
-            )}
-          />
-        ),
-      },
-      {
-        key: "action",
-        header: "ACTIONS",
-        render: (row) => (
-          <div className="flex items-center gap-2">
-            <Button
-              size="icon-sm"
-              variant="ghost"
+          <div className="space-y-0.5">
+            <button
+              type="button"
               onClick={() => setSelectedInvoiceId(row.id)}
-              className="text-muted-foreground hover:text-foreground"
+              className="cursor-pointer p-0 text-left font-bold text-primary hover:underline"
             >
-              <Eye className="size-4" />
-            </Button>
-            <Button
-              size="icon-sm"
-              variant="ghost"
-              onClick={() => handlePreviewInvoice(row)}
-              className="text-muted-foreground hover:text-foreground"
-            >
-              <ArrowUpRight className="size-4" />
-            </Button>
-            <Button
-              size="icon-sm"
-              variant="ghost"
-              onClick={() => handleDownloadInvoice(row)}
-              className="text-muted-foreground hover:text-foreground"
-            >
-              <Download className="size-4" />
-            </Button>
+              {row.invoice_id}
+            </button>
+            <div className="text-xs text-muted-foreground">{row.createdAt}</div>
           </div>
-        ),
-      },
-    ]
-  }, [
-    filter.page,
-    filter.perPage,
-    handleDownloadInvoice,
-    handlePreviewInvoice,
-  ])
+        </div>
+      ),
+    },
+    {
+      key: "customer_info",
+      header: "CUSTOMER INFO",
+      render: (row) => (
+        <div className="space-y-0.5 text-sm">
+          <div className="font-semibold">{row.customer_name}</div>
+          <div className="text-xs text-muted-foreground">
+            {row.customer_phone || "-"}
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: "items",
+      header: "ITEMS",
+      render: (row) => (
+        <Badge
+          variant="secondary"
+          className="border-none bg-muted/50 font-medium text-muted-foreground"
+        >
+          {row.item_count} Items
+        </Badge>
+      ),
+    },
+    {
+      key: "total_amount",
+      header: "TOTAL AMOUNT",
+      render: (row) => (
+        <span className="font-bold">₹{row.total_amount.toFixed(2)}</span>
+      ),
+    },
+    {
+      key: "payment_mode",
+      header: "PAYMENT MODE",
+      render: (row) => (
+        <div className="flex items-center gap-2 text-muted-foreground">
+          {row.payment_mode === "CASH" && <Banknote className="size-4" />}
+          {row.payment_mode === "UPI" && <QrCode className="size-4" />}
+          {row.payment_mode === "CARD" && <CreditCard className="size-4" />}
+          <span className="capitalize">{row.payment_mode.toLowerCase()}</span>
+        </div>
+      ),
+    },
+    {
+      key: "status",
+      header: "STATUS",
+      render: (row) => (
+        <StatusBadge
+          status={row.status}
+          className={cn(
+            "px-3 py-1 font-bold",
+            row.status === "PAID" && "bg-emerald-500/10 text-emerald-600",
+            row.status === "REFUNDED" && "bg-red-500/10 text-red-600"
+          )}
+        />
+      ),
+    },
+    {
+      key: "action",
+      header: "ACTIONS",
+      render: (row) => (
+        <div className="flex items-center gap-2">
+          <Button
+            size="icon-sm"
+            variant="ghost"
+            onClick={() => setSelectedInvoiceId(row.id)}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <Eye className="size-4" />
+          </Button>
+          <Button
+            size="icon-sm"
+            variant="ghost"
+            onClick={() => handleDownloadInvoice(row)}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <Printer className="size-4" />
+
+            {/* <ArrowUpRight className="size-4" /> */}
+          </Button>
+          <Button
+            size="icon-sm"
+            variant="ghost"
+            onClick={() => returnDrawer.onOpen(row)}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <RotateCcw className="size-4" />
+          </Button>
+        </div>
+      ),
+    },
+  ]
 
   const sectionAction = (
     <div className="flex flex-col gap-3 xl:flex-row xl:items-end">
@@ -333,6 +327,12 @@ export default function RecentInvoicesPage() {
   return (
     <div className="space-y-6">
       {/* Stats Cards */}
+
+      <ProcessReturnDrawer
+        open={returnDrawer.isOpen}
+        onClose={returnDrawer.onClose}
+        invoiceId={returnDrawer.data?.id ?? null}
+      />
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Today's Sales"
