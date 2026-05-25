@@ -52,6 +52,7 @@ export default function RecentInvoicesPage() {
   const { data: statsData } = useQuery({
     queryKey: queryKeys.invoices.stats(),
     queryFn: () => InvoiceApi.getInvoiceStats(),
+    staleTime: 0,
     initialData: {
       data: {
         todays_sales: 0,
