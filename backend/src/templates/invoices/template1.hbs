@@ -1,325 +1,197 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{{invoiceId}} - {{brandName}}</title>
-    <!-- Premium Typography -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>Bill - {{invoiceId}}</title>
     <style>
-      :root {
-        color-scheme: light;
-        --primary: #0f766e;
-        --border-color: #000000;
-        --text-color: #000000;
-        --slate-500: #64748b;
-      }
-
-      * {
-        box-sizing: border-box;
+      body {
+        font-family: Arial, sans-serif;
+        font-size: 12px;
+        background: #f1f5f9;
+        color: #222;
+        line-height: 1.3;
         margin: 0;
         padding: 0;
-      }
-
-      body {
-        background-color: #f1f5f9;
-        color: var(--text-color);
-        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        font-size: 11px;
-        line-height: 1.4;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
       }
-
       .page {
         width: 210mm;
         min-height: 297mm;
         margin: 0 auto;
-        padding: 10mm;
         background: #ffffff;
+        padding: 12mm;
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
         display: flex;
         flex-direction: column;
         justify-content: space-between;
       }
-
-      .header-grid {
-        display: grid;
-        grid-template-columns: 1.2fr 1.2fr 1fr;
-        margin-bottom: 8px;
+      .bill-container {
+        position: relative;
+        background: #fff;
+        overflow: hidden;
       }
-
-      .header-box {
-        border: 1px solid var(--border-color);
-        padding: 8px;
-        min-height: 145px;
-      }
-
-      .header-box:not(:first-child) {
-        border-left: none;
-      }
-
-      .seller-name {
-        font-size: 15px;
-        font-weight: 800;
-        color: var(--primary);
+      .section-title {
+        font-size: 14px;
+        font-weight: bold;
+        margin-top: 15px;
+        margin-bottom: 5px;
+        color: #333;
         text-transform: uppercase;
-        margin-bottom: 2px;
-      }
-
-      .seller-tagline {
-        font-size: 10px;
-        font-weight: 600;
-        color: var(--slate-500);
-        margin-bottom: 6px;
-        text-transform: uppercase;
-      }
-
-      .seller-details {
-        font-size: 10.5px;
-        line-height: 1.5;
-      }
-
-      .box-title {
-        font-weight: 700;
-        font-size: 11px;
-        text-transform: uppercase;
-        border-bottom: 1px solid var(--border-color);
-        padding-bottom: 2px;
-        margin-bottom: 6px;
-      }
-
-      .buyer-name {
-        font-size: 12px;
-        font-weight: 700;
-        margin-bottom: 4px;
-      }
-
-      .buyer-details {
-        font-size: 10.5px;
-        line-height: 1.5;
-      }
-
-      .invoice-title-bar {
-        background-color: var(--primary);
-        color: #ffffff;
-        text-align: center;
-        font-weight: 800;
-        padding: 4px;
-        margin: -8px -8px 8px -8px;
-        font-size: 12px;
         letter-spacing: 0.05em;
       }
-
-      .invoice-details-grid {
-        padding-top: 2px;
+      .info-table,
+      .charges-table,
+      .account-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 10px;
       }
-
-      .info-row {
-        display: flex;
-        margin-bottom: 3px;
-        font-size: 10.5px;
+      .info-table td,
+      .account-table td {
+        padding: 4px 6px;
+        vertical-align: top;
       }
-
-      .info-label {
-        width: 80px;
-        font-weight: 600;
+      .charges-table th,
+      .charges-table td,
+      .account-table th,
+      .account-table td {
+        border: 1px solid #ccc;
+        padding: 6px;
+        color: black;
+        vertical-align: top;
       }
-
-      .info-sep {
-        width: 12px;
+      .charges-table th {
+        background: #f8f8f8;
+        text-align: left;
       }
-
-      .info-val {
-        flex: 1;
-        font-weight: 600;
+      .charges-table td {
+        text-align: right;
       }
-
+      .charges-table td.description,
+      .charges-table th.description {
+        text-align: left;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        word-break: normal;
+      }
+      .charges-table td.amount {
+        white-space: nowrap;
+      }
+      
       .table-container {
-        border: 1px solid var(--border-color);
-        margin-bottom: 8px;
-        min-height: 520px;
-        background-color: #ffffff;
+        border: 1px solid #ccc;
+        margin-bottom: 10px;
+        height: 480px;
         display: flex;
+        background-color: #ffffff;
       }
-
-      .items-table {
+      
+      .charges-table-fixed {
         width: 100%;
         border-collapse: collapse;
         height: 100%;
       }
-
-      .items-table th {
-        background-color: var(--primary);
-        color: #ffffff;
-        font-size: 10.5px;
-        font-weight: 700;
-        padding: 6px 8px;
-        border: 1px solid var(--border-color);
-        text-transform: uppercase;
-        text-align: left;
-      }
-
-      .items-table td {
-        padding: 6px 8px;
-        font-size: 11px;
-        border-right: 1px solid var(--border-color);
+      
+      .charges-table-fixed th,
+      .charges-table-fixed td {
+        border: 1px solid #ccc;
+        padding: 6px;
+        color: black;
         vertical-align: top;
       }
-
-      .items-table td:last-child {
-        border-right: none;
+      
+      .charges-table-fixed th {
+        background-color: #0d47a1;
+        color: #ffffff;
+        text-align: left;
+        font-size: 12px;
+        font-weight: bold;
       }
-
-      .items-table tr {
-        border-bottom: 1px solid #e2e8f0;
+      
+      .charges-table-fixed td {
+        text-align: right;
+        font-size: 11.5px;
       }
-
-      .items-table tr:last-child {
-        border-bottom: none;
-      }
-
-      .items-table tr.spacer-row {
-        height: 100%;
-        border-bottom: none;
-      }
-
-      .items-table tr.spacer-row td {
-        border-bottom: none;
-        border-right: 1px solid var(--border-color);
-        padding: 0;
-      }
-
-      .items-table tr.spacer-row td:last-child {
-        border-right: none;
-      }
-
-      .items-table td.cell-center,
-      .items-table th.cell-center {
+      
+      .charges-table-fixed td.cell-center,
+      .charges-table-fixed th.cell-center {
         text-align: center;
       }
-
-      .items-table td.cell-right,
-      .items-table th.cell-right {
+      
+      .charges-table-fixed td.cell-right,
+      .charges-table-fixed th.cell-right {
         text-align: right;
-        font-variant-numeric: tabular-nums;
+      }
+      
+      .charges-table-fixed tr.spacer-row {
+        height: 100%;
+      }
+      
+      .charges-table-fixed tr.spacer-row td {
+        border-top: none;
+        border-bottom: none;
+        padding: 0;
       }
 
       .item-title {
-        font-weight: 700;
-        color: var(--text-color);
+        font-weight: bold;
+        text-align: left;
       }
-
+      
       .item-meta {
+        font-size: 10px;
+        color: #555;
         display: flex;
         gap: 8px;
         margin-top: 3px;
-        font-size: 9.5px;
-        color: var(--slate-500);
-      }
-
-      .bottom-grid {
-        display: grid;
-        grid-template-columns: 1.2fr 1.2fr 1fr;
-        margin-bottom: 8px;
-      }
-
-      .bottom-box {
-        border: 1px solid var(--border-color);
-        padding: 8px;
-        min-height: 130px;
-      }
-
-      .bottom-box:not(:first-child) {
-        border-left: none;
-      }
-
-      .box-section-title {
-        font-weight: 700;
-        text-decoration: underline;
-        margin-bottom: 3px;
-      }
-
-      .bank-details-text,
-      .terms-text {
-        line-height: 1.4;
-      }
-
-      .notes {
-        border: none;
-        background: none;
-        padding: 0;
-      }
-
-      .notes-label {
-        font-weight: 700;
-        text-decoration: underline;
-        color: var(--text-color);
-        margin-bottom: 4px;
-        text-transform: none;
-      }
-
-      .notes-value {
-        font-size: 10.5px;
-        line-height: 1.4;
       }
 
       .summary-table {
         width: 100%;
         border-collapse: collapse;
       }
-
+      
       .summary-table td {
-        padding: 3px 0;
-        font-size: 10.5px;
-        color: var(--text-color);
-        border: none;
+        padding: 4px 6px;
+        font-size: 11.5px;
+        color: black;
+        border: none !important;
+        text-align: left;
       }
-
+      
       .summary-table td.cell-right {
         text-align: right;
-        font-weight: 700;
-        font-variant-numeric: tabular-nums;
+        font-weight: bold;
       }
-
-      /* Style the Net Amount row (5th child: Total Amount) */
+      
+      /* Style Net Amount row (5th child: Total Amount) */
       .summary-table tr:nth-child(5) td {
-        border-top: 1px dashed var(--border-color);
-        border-bottom: 1px dashed var(--border-color);
-        font-weight: 800;
-        font-size: 11px;
-        padding: 5px 0;
-        background-color: transparent !important;
-        color: var(--text-color) !important;
+        border-top: 1px solid #ccc !important;
+        border-bottom: 1px solid #ccc !important;
+        font-weight: bold;
       }
-
-      .summary-table tr:nth-child(5) td.cell-right {
-        font-size: 12px;
+      /* Hide Change row */
+      .summary-table tr:nth-child(7) {
+        display: none;
       }
 
       .signature-section {
         display: flex;
         justify-content: space-between;
-        align-items: flex-end;
-        margin-top: 8px;
-        font-size: 10.5px;
+        margin-top: 30px;
+        padding-top: 10px;
+        font-size: 11px;
       }
-
-      .sig-left {
-        color: var(--slate-500);
+      .footer {
+        text-align: center;
+        padding: 10px;
+        border-top: 1px solid #0d47a1;
+        margin-top: 20px;
+        font-size: 11px;
       }
-
-      .sig-right {
-        text-align: right;
-        width: 200px;
-      }
-
-      .sig-space {
-        height: 35px;
-      }
-
+      
       @page {
         size: A4;
         margin: 0;
@@ -336,140 +208,124 @@
           width: 100% !important;
           min-height: 0 !important;
         }
-        .header-box,
-        .bottom-box,
-        .table-container {
-          border-color: #000000 !important;
-        }
-        .items-table th {
-          background-color: var(--primary) !important;
-          -webkit-print-color-adjust: exact;
-          print-color-adjust: exact;
-        }
       }
     </style>
   </head>
+
   <body>
     <main class="page">
-      <div class="content-wrapper">
-        <!-- Header 3-Column Grid -->
-        <div class="header-grid">
-          <div class="header-box seller-box">
-            <div class="seller-name">{{brandName}}</div>
-            <div class="seller-tagline">{{brandTagline}}</div>
-            <div class="seller-details">
-              <div>{{brandAddress}}</div>
-              <div>Ph. : {{companyContactBlock}}</div>
-              <div class="brand-gstin">GSTIN : {{brandGstin}}</div>
-            </div>
-          </div>
-          
-          <div class="header-box buyer-box">
-            <div class="box-title">Buyer's Detail</div>
-            <div class="buyer-name">{{customerName}}</div>
-            <div class="buyer-details">
-              <div>Ph No. : {{customerPhone}}</div>
-            </div>
-          </div>
-          
-          <div class="header-box invoice-box">
-            <div class="invoice-title-bar">INVOICE</div>
-            <div class="invoice-details-grid">
-              <div class="info-row">
-                <span class="info-label">Invoice No.</span>
-                <span class="info-sep">:</span>
-                <span class="info-val">{{invoiceId}}</span>
+      <div class="bill-container">
+        <!-- Header -->
+        <table width="100%" style="border-bottom: 2px solid #0d47a1; margin-bottom: 20px; padding-bottom: 15px;">
+          <tr>
+            <td style="text-align: left; vertical-align: top;">
+              <div style="font-size: 18px; font-weight: bold; color: #0d47a1; margin-bottom: 5px;">
+                {{brandName}}
               </div>
-              <div class="info-row">
-                <span class="info-label">Date</span>
-                <span class="info-sep">:</span>
-                <span class="info-val">{{createdAt}}</span>
+              <div style="font-size: 12px; color: #555; line-height: 1.4;">
+                {{brandTagline}}<br />
+                Address: {{brandAddress}}<br />
+                Contact: {{companyContactBlock}}<br />
+                GST: {{brandGstin}}
               </div>
-              <div class="info-row">
-                <span class="info-label">Status</span>
-                <span class="info-sep">:</span>
-                <span class="info-val">{{invoiceStatus}}</span>
-              </div>
-              <div class="info-row">
-                <span class="info-label">Payment</span>
-                <span class="info-sep">:</span>
-                <span class="info-val">{{paymentMode}}</span>
-              </div>
-              <div class="info-row">
-                <span class="info-label">Items</span>
-                <span class="info-sep">:</span>
-                <span class="info-val">{{itemCount}}</span>
-              </div>
-            </div>
-          </div>
-        </div>
+            </td>
+            <td style="width: 90px; vertical-align: top; text-align: right;">
+              <img src="" alt="" style="max-height: 60px; max-width: 220px;" onerror="this.style.display='none'" />
+            </td>
+          </tr>
+        </table>
 
-        <!-- Line Items Table -->
+        <!-- Client Info -->
+        <div class="section-title">Bill To</div>
+        <table class="info-table">
+          <tr>
+            <td style="width: 15%;"><strong>Invoice No:</strong></td>
+            <td style="width: 35%;">{{invoiceId}}</td>
+            <td style="width: 15%;"><strong>Date:</strong></td>
+            <td style="width: 35%;">{{createdAt}}</td>
+          </tr>
+          <tr>
+            <td><strong>Client Name:</strong></td>
+            <td>{{customerName}}</td>
+            <td><strong>Phone:</strong></td>
+            <td>{{customerPhone}}</td>
+          </tr>
+          <tr>
+            <td><strong>Payment:</strong></td>
+            <td>{{paymentMode}}</td>
+            <td><strong>Status:</strong></td>
+            <td>{{invoiceStatus}}</td>
+          </tr>
+          <tr>
+            <td><strong>Items:</strong></td>
+            <td colspan="3">{{itemCount}}</td>
+          </tr>
+        </table>
+
+        <!-- Charges Table (Height-fixed container to draw columns all the way down) -->
+        <div class="section-title">Charges</div>
         <div class="table-container">
-          <table class="items-table">
+          <table class="charges-table-fixed">
+            <colgroup>
+              <col style="width: 50px;" />
+              <col />
+              <col style="width: 65px;" />
+              <col style="width: 105px;" />
+              <col style="width: 95px;" />
+              <col style="width: 115px;" />
+            </colgroup>
             <thead>
               <tr>
-                <th style="width: 45px;" class="cell-center">Sr.</th>
+                <th class="cell-center">Serial No.</th>
                 <th>Description</th>
-                <th style="width: 65px;" class="cell-center">Qty</th>
-                <th style="width: 105px;" class="cell-right">Rate</th>
-                <th style="width: 95px;" class="cell-right">Discount</th>
-                <th style="width: 115px;" class="cell-right">Amount</th>
+                <th class="cell-center">Qty</th>
+                <th class="cell-right">Rate</th>
+                <th class="cell-right">Discount</th>
+                <th class="cell-right">Amount</th>
               </tr>
             </thead>
             <tbody>
               {{{itemsRows}}}
               <tr class="spacer-row">
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
+                <td>&nbsp;</td>
+                <td>&nbsp;</td>
+                <td>&nbsp;</td>
+                <td>&nbsp;</td>
+                <td>&nbsp;</td>
+                <td>&nbsp;</td>
               </tr>
             </tbody>
           </table>
         </div>
 
-        <!-- Bottom Grid Section -->
-        <div class="bottom-grid">
-          <div class="bottom-box bank-terms-box">
-            <div class="box-section-title">Bank Details :</div>
-            <div class="bank-details-text">
-              State Bank of India<br>
-              Ac. No. : 30860782555<br>
-              IFSC Code : SBIN0000222
-            </div>
-            <div class="box-section-title" style="margin-top: 6px;">Terms & Conditions :</div>
-            <div class="terms-text">
-              Subject to Local Jurisdiction.<br>
-              Goods once sold will not be taken back.
-            </div>
-          </div>
-          
-          <div class="bottom-box notes-box">
-            {{{notesBlock}}}
-          </div>
-          
-          <div class="bottom-box totals-box">
-            <table class="summary-table">
-              <tbody>
-                {{{summaryRows}}}
-              </tbody>
-            </table>
-          </div>
+        <!-- Summary -->
+        <table class="charges-table">
+          <tr>
+            <td style="text-align: left; font-weight: bold; width: 45%; vertical-align: top;">
+              {{{notesBlock}}}
+            </td>
+            <td style="text-align: right; padding: 0; vertical-align: top;">
+              <table class="summary-table">
+                <tbody>
+                  {{{summaryRows}}}
+                </tbody>
+              </table>
+            </td>
+          </tr>
+        </table>
+
+
+        <div class="signature-section">
+          <div>This is a computer-generated invoice and does not require a signature.</div>
         </div>
       </div>
 
-      <!-- Signature Section -->
-      <div class="signature-section">
-        <div class="sig-left">
-          Generated for {{brandName}} | Template: {{safeTemplateName}}
+      <div class="footer">
+        <div style="font-weight: bold; color: #0d47a1; margin-bottom: 4px;">
+          Contact us: {{companyContactBlock}}
         </div>
-        <div class="sig-right">
-          For <strong>{{brandName}}</strong>
-          <div class="sig-space"></div>
-          Authorized Signatory
+        <div>
+          Generated for {{brandName}}
         </div>
       </div>
     </main>
