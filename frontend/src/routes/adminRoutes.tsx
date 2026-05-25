@@ -20,6 +20,7 @@ import ImportInventory from "@/pages/admin/InterStoreTransfer/ImportInventory"
 import AllInterStoreTransfer from "@/pages/admin/InterStoreTransfer/AllInterStoreTransfer"
 import DailyTransactionReport from "@/pages/admin/reports/DailyTransactionReport"
 import ExpiryReports from "@/pages/admin/reports/ExpiryReports"
+import GstReport from "@/pages/admin/reports/GstReport"
 import Branch from "@/pages/admin/Branch/Branch"
 
 import AttributesPage from "@/pages/shared/Attributes/AttributesPage"
@@ -98,6 +99,7 @@ export const AdminRoutes = () => {
           >
             <Route path="reports/expiry-reports" element={<ExpiryReports />} />
           </Route>{" "}
+          <Route path="reports/gst-report" element={<GstReport />} />
         </Route>
       </Route>
     </>

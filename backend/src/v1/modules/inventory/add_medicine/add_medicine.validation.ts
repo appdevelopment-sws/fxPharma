@@ -64,6 +64,7 @@ export const createInventorySchema = z.object({
   editRates: z.boolean().optional().default(true),
 
   branchId: z.string().optional().nullable(),
+  availableStock: z.coerce.number().int().optional().default(0),
 });
 
 export const updateInventorySchema = createInventorySchema.partial();

@@ -14,11 +14,13 @@ import {
   Clock,
   Printer,
   Search,
+  Pause,
 } from "lucide-react"
 import { toast } from "sonner"
 
 import FilterPointofSale from "@/components/dialog/admin/FilterPointofSale"
 import ConfigureSaleItemDialog from "@/components/dialog/admin/ConfigureSaleItemDialog"
+import HeldBillsDialog from "@/components/dialog/admin/HeldBillsDialog"
 import { cn } from "@/lib/utils"
 import { queryKeys } from "@/lib/queryKeys"
 import { CategoryApi, ManufacturerApi } from "@/services/attributesApi"
@@ -80,6 +82,20 @@ type CartItem = {
   rateType: "mrp" | "rateA" | "rateB" | "rateC"
   rateValue: number
   itemDiscount: number
+}
+
+type HeldBill = {
+  id: string
+  holdAt: string
+  customerName: string
+  customerPhone: string
+  cart: CartItem[]
+  discountPercent: number
+  discountType: "flat" | "percent"
+  paymentMode: string
+  deliveryCost: number
+  binValue: number
+  totalAmount: number
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -386,6 +402,29 @@ const POS = () => {
   // Cart
   const [cart, setCart] = useState<CartItem[]>([])
 
+  // Held bills state
+  const [heldBillsModalOpen, setHeldBillsModalOpen] = useState(false)
+  const [heldBills, setHeldBills] = useState<HeldBill[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("pos_held_bills")
+        return saved ? JSON.parse(saved) : []
+      } catch {
+        return []
+      }
+    }
+    return []
+  })
+
+  // Synchronize held bills with local storage
+  useEffect(() => {
+    try {
+      localStorage.setItem("pos_held_bills", JSON.stringify(heldBills))
+    } catch (e) {
+      console.error("Failed to save held bills", e)
+    }
+  }, [heldBills])
+
   // Search / filter
   const [searchTerm, setSearchTerm] = useState("")
   const [category, setCategory] = useState("All Categories")
@@ -535,7 +574,8 @@ const POS = () => {
         !product.name.toLowerCase().includes(search) &&
         !product.composition.toLowerCase().includes(search) &&
         !product.mfg.toLowerCase().includes(search) &&
-        !product.category.toLowerCase().includes(search)
+        !product.category.toLowerCase().includes(search) &&
+        !product.batches.some((batch) => batch.number.toLowerCase().includes(search))
       )
         return false
 
@@ -730,6 +770,59 @@ const POS = () => {
     setSuccessInvoiceDetails(null)
   }
 
+  const handleHoldBill = () => {
+    if (cart.length === 0) {
+      toast.error("Cart is empty! Cannot hold an empty bill.")
+      return
+    }
+    const newHeldBill: HeldBill = {
+      id: `hold-${Date.now()}`,
+      holdAt: new Date().toISOString(),
+      customerName: customerName.trim(),
+      customerPhone: customerPhone.trim(),
+      cart,
+      discountPercent,
+      discountType,
+      paymentMode,
+      deliveryCost,
+      binValue,
+      totalAmount: roundedNet,
+    }
+    setHeldBills((prev) => [newHeldBill, ...prev])
+    toast.success("Bill placed on hold.")
+    resetPos()
+  }
+
+  const handleRestoreBill = (bill: HeldBill) => {
+    if (cart.length > 0) {
+      const confirmRestore = window.confirm(
+        "You have items in your current cart. Restoring this bill will overwrite the current cart. Do you want to proceed?"
+      )
+      if (!confirmRestore) return
+    }
+    setCart(bill.cart)
+    setCustomerName(bill.customerName)
+    setCustomerPhone(bill.customerPhone)
+    setDiscountPercent(bill.discountPercent)
+    setDiscountType(bill.discountType)
+    setPaymentMode(bill.paymentMode)
+    setDeliveryCost(bill.deliveryCost)
+    setBinValue(bill.binValue)
+    setReceiveAmount("")
+
+    // Remove from held bills list
+    setHeldBills((prev) => prev.filter((b) => b.id !== bill.id))
+    setHeldBillsModalOpen(false)
+    toast.success("Bill restored.")
+  }
+
+  const handleDeleteHeldBill = (id: string) => {
+    const confirmDelete = window.confirm("Are you sure you want to delete this held bill?")
+    if (!confirmDelete) return
+    setHeldBills((prev) => prev.filter((b) => b.id !== id))
+    toast.success("Held bill deleted.")
+  }
+
   // ─────────────────────────────────────────────────────────────────────────
   //  RENDER
   // ─────────────────────────────────────────────────────────────────────────
@@ -757,37 +850,20 @@ const POS = () => {
             <ScanLine className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-300" />
           </div>
 
-          {/* Category */}
-          <div className="relative">
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="appearance-none rounded-lg border border-gray-200 bg-gray-50 py-2 pl-3 pr-8 text-sm outline-none focus:border-teal-400 transition-all"
-            >
-              {categoryOptions.map((c) => (
-                <option key={c.value} value={c.value}>
-                  {c.label}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
-          </div>
-
-          {/* Manufacturer */}
-          <div className="relative hidden md:block">
-            <select
-              value={manufacturer}
-              onChange={(e) => setManufacturer(e.target.value)}
-              className="appearance-none rounded-lg border border-gray-200 bg-gray-50 py-2 pl-3 pr-8 text-sm outline-none focus:border-teal-400 transition-all"
-            >
-              {manufacturerOptions.map((m) => (
-                <option key={m.value} value={m.value}>
-                  {m.label}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
-          </div>
+          {/* Held Bills Button */}
+          <button
+            type="button"
+            onClick={() => setHeldBillsModalOpen(true)}
+            className="relative flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors active:scale-95"
+          >
+            <Pause className="h-3.5 w-3.5 text-blue-500" />
+            <span>Held Bills</span>
+            {heldBills.length > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-blue-500 text-[9px] font-bold text-white shadow-sm">
+                {heldBills.length}
+              </span>
+            )}
+          </button>
 
           {/* Filter button */}
           <button
@@ -1018,12 +1094,12 @@ const POS = () => {
           )}
         </div>
 
-        {/* Thin scroll decoration bar */}
+        {/* Thin scroll decoration bar
         <div className="flex h-2 flex-shrink-0 items-center border-t border-gray-100 bg-gray-100 px-1">
           <div className="h-1 flex-1 rounded-full overflow-hidden bg-gray-200">
             <div className="h-full w-1/3 rounded-full bg-gray-400 opacity-50" />
           </div>
-        </div>
+        </div> */}
 
         {/* ── Payment fields ── */}
         <div className="flex-shrink-0 border-t border-gray-200 bg-white px-4 pt-3.5 pb-2.5">
@@ -1195,25 +1271,33 @@ const POS = () => {
         </div>
 
         {/* ── Action buttons ── */}
-        <div className="grid grid-cols-3 gap-2.5 border-t border-gray-200 bg-gray-50/80 px-4 py-3 flex-shrink-0">
+        <div className="grid grid-cols-4 gap-2 border-t border-gray-200 bg-gray-50/80 px-4 py-3 flex-shrink-0">
           <button
             onClick={resetPos}
             disabled={createInvoiceMutation.isPending}
-            className="rounded-lg border border-amber-300 bg-white py-2.5 text-sm font-bold text-amber-600 hover:bg-amber-50 transition-colors active:scale-95 disabled:opacity-40"
+            className="rounded-lg border border-amber-300 bg-white py-2.5 text-xs font-bold text-amber-600 hover:bg-amber-50 transition-colors active:scale-95 disabled:opacity-40 text-center"
           >
             Reset
           </button>
           <button
+            type="button"
+            onClick={handleHoldBill}
+            disabled={cart.length === 0 || createInvoiceMutation.isPending}
+            className="rounded-lg border border-blue-300 bg-white py-2.5 text-xs font-bold text-blue-600 hover:bg-blue-50 transition-colors active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed text-center"
+          >
+            Hold
+          </button>
+          <button
             onClick={() => handleCompletePayment(false)}
             disabled={cart.length === 0 || createInvoiceMutation.isPending}
-            className="rounded-lg border border-teal-300 bg-white py-2.5 text-sm font-bold text-teal-600 hover:bg-teal-50 transition-colors active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="rounded-lg border border-teal-300 bg-white py-2.5 text-xs font-bold text-teal-600 hover:bg-teal-50 transition-colors active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed text-center"
           >
             {createInvoiceMutation.isPending ? "Saving..." : "Save"}
           </button>
           <button
             onClick={() => handleCompletePayment(true)}
             disabled={cart.length === 0 || createInvoiceMutation.isPending}
-            className="rounded-lg border border-teal-500 bg-white py-2.5 text-sm font-bold text-teal-700 hover:bg-teal-50 transition-colors active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="rounded-lg border border-teal-500 bg-white py-2.5 text-xs font-bold text-teal-700 hover:bg-teal-50 transition-colors active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed text-center"
           >
             {createInvoiceMutation.isPending ? "Saving..." : "Save & Print"}
           </button>
@@ -1329,6 +1413,14 @@ const POS = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <HeldBillsDialog
+        open={heldBillsModalOpen}
+        onClose={setHeldBillsModalOpen}
+        heldBills={heldBills}
+        onRestore={handleRestoreBill}
+        onDelete={handleDeleteHeldBill}
+      />
     </div>
   )
 }

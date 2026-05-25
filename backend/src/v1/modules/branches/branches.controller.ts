@@ -29,7 +29,6 @@ const mapBranchPayload = (payload: any) => {
   }
 
   delete mapped.branch_name;
-  delete mapped.status;
 
   return mapped;
 };
@@ -38,8 +37,10 @@ export class BranchesController {
   static getAll = catchAsync(async (req: Request, res: Response) => {
     await paginate(res, req.query, async (skip, take, search) => {
       const { organizationId } = getRequestScope(req);
+      const status = req.query.status as string | undefined;
       const where: any = {
         organizationId,
+        ...(status ? { status } : {}),
         ...buildSearchFilter(search, [
           "name",
           "code",

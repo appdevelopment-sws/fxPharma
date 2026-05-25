@@ -113,6 +113,14 @@ export default function AllInventoryPage() {
       },
 
       {
+        key: "availableStock",
+        header:
+          MEDICINE_STOCK_COLUMNS.find((c) => c.key === "availableStock")?.label ||
+          "Available Stock",
+        render: (row) => row.availableStock ?? 0,
+      },
+
+      {
         key: "status",
         header:
           MEDICINE_STOCK_COLUMNS.find((c) => c.key === "status")?.label ||

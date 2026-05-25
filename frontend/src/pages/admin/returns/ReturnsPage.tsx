@@ -49,6 +49,7 @@ export default function ReturnsPage() {
   const { data: statsData } = useQuery({
     queryKey: queryKeys.returns.stats(),
     queryFn: () => ReturnApi.getReturnStats(),
+    staleTime: 0,
     initialData: {
       data: {
         total_refunded: 845.0,

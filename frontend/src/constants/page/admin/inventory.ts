@@ -18,6 +18,7 @@ export const MEDICINE_STOCK_COLUMNS = [
   { key: "medicine_salt", label: "Medicine & Salt" },
   { key: "manufacturer", label: "Manufacturer" },
   { key: "category", label: "Category" },
+  { key: "availableStock", label: "Available Stock" },
   { key: "status", label: "Status" },
   { key: "action", label: "Actions" },
 ]

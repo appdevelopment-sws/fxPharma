@@ -215,7 +215,7 @@ const toApiPayload = (data: any) => ({
   hideProduct: !!data.hide_product,
   negativeStock: !!data.negative_stock,
   editRates: !!data.edit_rates,
-  available_stock: toNumber(data.available_stock),
+  availableStock: toNumber(data.available_stock),
 })
 
 export default function MedicineStockDialog({

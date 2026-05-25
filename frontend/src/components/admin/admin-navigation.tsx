@@ -182,6 +182,12 @@ export const adminNavigationGroups: SidebarNavigationGroup[] = [
             permissions: [PERMISSIONS.EXPIRY_REPORT_VIEW],
             icon: CalendarX,
           },
+          {
+            title: "GST Report",
+            to: "/admin/reports/gst-report",
+            description: "Input and Output GST summary",
+            icon: FileText,
+          },
         ],
       },
     ],
