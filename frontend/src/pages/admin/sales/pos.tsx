@@ -1206,7 +1206,7 @@ const POS = () => {
 
               {/* BIN */}
               <div className="flex items-center gap-1.5">
-                <label className="w-9 flex-shrink-0 text-xs font-semibold text-gray-500">BIN</label>
+                <label className="w-16 flex-shrink-0 text-xs font-semibold text-gray-500">BIN</label>
                 <div className="relative">
                   <select className="appearance-none rounded-lg border border-gray-200 bg-gray-50 py-1.5 pl-2.5 pr-7 text-xs outline-none focus:border-teal-400">
                     <option>Select</option>
@@ -1224,7 +1224,7 @@ const POS = () => {
 
               {/* Discount */}
               <div className="flex items-center gap-1.5">
-                <label className="w-9 flex-shrink-0 text-xs font-semibold text-gray-500">
+                <label className="w-16 flex-shrink-0 text-xs font-semibold text-gray-500">
                   Discount
                 </label>
                 <div className="relative">
