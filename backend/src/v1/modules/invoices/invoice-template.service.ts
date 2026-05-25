@@ -287,8 +287,6 @@ class InvoiceTemplateService {
         args: ["--no-sandbox", "--disable-setuid-sandbox"],
       });
     } else {
-      console.log("her=>>>>>>>>>>>", process.env.NODE_ENV);
-
       browser = await puppeteer.launch({
         headless: true,
         executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
