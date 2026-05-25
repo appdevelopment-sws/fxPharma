@@ -1,16 +1,16 @@
-import { useCallback, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import {
   Eye,
-  Printer,
-  RotateCcw,
   CreditCard,
   Banknote,
   QrCode,
   FileText,
   ArrowUpRight,
   Download,
+  RotateCcw,
 } from "lucide-react"
+import { toast } from "sonner"
 
 import DataTable, { type DataTableColumn } from "@/components/data-table"
 import { FilterBar } from "@/components/filter-bar"
@@ -44,6 +44,7 @@ export default function RecentInvoicesPage() {
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(
     null
   )
+  const [selectedTemplate, setSelectedTemplate] = useState<string>("template1")
   const { filter, handleFilter } = useSearchFilter(INITIAL_INVOICE_FILTERS)
 
   const { data: invoicesData, isLoading: isLoadingInvoices } = useQuery({
@@ -69,7 +70,30 @@ export default function RecentInvoicesPage() {
     },
   })
 
+  const { data: invoiceTemplatesData, isLoading: isLoadingTemplates } =
+    useQuery({
+      queryKey: queryKeys.invoices.templates(),
+      queryFn: () => InvoiceApi.getInvoiceTemplates(),
+      staleTime: 5 * 60 * 1000,
+    })
+
   const stats = statsData.data
+  const invoiceTemplates = invoiceTemplatesData?.data.templates || []
+  const defaultTemplate =
+    invoiceTemplatesData?.data.defaultTemplate || "template1"
+
+  useEffect(() => {
+    if (!invoiceTemplatesData?.data.templates?.length) return
+
+    const nextTemplate = invoiceTemplates.includes(selectedTemplate)
+      ? selectedTemplate
+      : defaultTemplate
+
+    if (nextTemplate !== selectedTemplate) {
+      setSelectedTemplate(nextTemplate)
+    }
+  }, [defaultTemplate, invoiceTemplates, invoiceTemplatesData, selectedTemplate])
+
   const { data: invoiceDetailsData, isFetching: isLoadingInvoiceDetails } =
     useQuery({
       queryKey: selectedInvoiceId
@@ -80,6 +104,48 @@ export default function RecentInvoicesPage() {
     })
 
   const selectedInvoice = invoiceDetailsData?.data
+
+  const downloadBlob = useCallback((blob: Blob, fileName: string) => {
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.href = url
+    link.download = fileName
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    window.setTimeout(() => window.URL.revokeObjectURL(url), 0)
+  }, [])
+
+  const handleDownloadInvoice = useCallback(
+    async (invoice: Invoice) => {
+      try {
+        const blob = await InvoiceApi.downloadInvoicePdf(
+          invoice.id,
+          selectedTemplate
+        )
+        downloadBlob(
+          blob,
+          `${invoice.invoice_id}-${selectedTemplate}.pdf`
+        )
+        toast.success(`Downloaded ${invoice.invoice_id} as ${selectedTemplate}.pdf`)
+      } catch (error: any) {
+        toast.error(
+          error?.response?.data?.message ||
+            "Could not download invoice PDF. Please try again."
+        )
+      }
+    },
+    [downloadBlob, selectedTemplate]
+  )
+
+  const handlePreviewInvoice = useCallback((invoice: Invoice) => {
+    try {
+      InvoiceApi.openInvoiceHtml(invoice.id, selectedTemplate)
+      toast.success(`Opened ${invoice.invoice_id} preview`)
+    } catch {
+      toast.error("Could not open invoice preview.")
+    }
+  }, [selectedTemplate])
 
   const handleFilterChange = useCallback(
     (updates: Record<string, any>) => {
@@ -195,22 +261,74 @@ export default function RecentInvoicesPage() {
             <Button
               size="icon-sm"
               variant="ghost"
+              onClick={() => handlePreviewInvoice(row)}
               className="text-muted-foreground hover:text-foreground"
             >
-              <Printer className="size-4" />
+              <ArrowUpRight className="size-4" />
             </Button>
             <Button
               size="icon-sm"
               variant="ghost"
+              onClick={() => handleDownloadInvoice(row)}
               className="text-muted-foreground hover:text-foreground"
             >
-              <RotateCcw className="size-4" />
+              <Download className="size-4" />
             </Button>
           </div>
         ),
       },
     ]
-  }, [filter.page, filter.perPage])
+  }, [
+    filter.page,
+    filter.perPage,
+    handleDownloadInvoice,
+    handlePreviewInvoice,
+  ])
+
+  const sectionAction = (
+    <div className="flex flex-col gap-3 xl:flex-row xl:items-end">
+      <div className="space-y-1">
+        <label className="text-xs font-medium text-muted-foreground">
+          Invoice Template
+        </label>
+        <select
+          value={selectedTemplate}
+          onChange={(e) => setSelectedTemplate(e.target.value)}
+          disabled={isLoadingTemplates || invoiceTemplates.length === 0}
+          className="h-9 min-w-[180px] rounded-lg border border-border bg-background px-3 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {(invoiceTemplates.length > 0 ? invoiceTemplates : [defaultTemplate]).map(
+            (template) => (
+              <option key={template} value={template}>
+                {template}
+              </option>
+            )
+          )}
+        </select>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          disabled={!selectedInvoice}
+          onClick={() => selectedInvoice && handlePreviewInvoice(selectedInvoice)}
+        >
+          <ArrowUpRight className="mr-2 size-4" />
+          Preview Selected
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={!selectedInvoice}
+          onClick={() => selectedInvoice && handleDownloadInvoice(selectedInvoice)}
+        >
+          <Download className="mr-2 size-4" />
+          Download PDF
+        </Button>
+      </div>
+    </div>
+  )
 
   return (
     <div className="space-y-6">
@@ -245,14 +363,7 @@ export default function RecentInvoicesPage() {
       <SectionCard
         title="Recent Invoices"
         description="View and manage all sales transactions and invoice history."
-        action={
-          <div className="flex items-center justify-center gap-x-3">
-            <Button type="button" variant="outline">
-              <Download className="mr-2 size-4" />
-              Export Data
-            </Button>
-          </div>
-        }
+        action={sectionAction}
       >
         <div className="space-y-4">
           <FilterBar
@@ -327,6 +438,24 @@ export default function RecentInvoicesPage() {
             </div>
           ) : selectedInvoice ? (
             <div className="space-y-4">
+              <div className="flex flex-wrap items-center justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => handlePreviewInvoice(selectedInvoice)}
+                >
+                  <ArrowUpRight className="mr-2 size-4" />
+                  Preview
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => handleDownloadInvoice(selectedInvoice)}
+                >
+                  <Download className="mr-2 size-4" />
+                  Download PDF
+                </Button>
+              </div>
               <div className="grid gap-3 rounded-lg border border-border/60 p-3 text-sm sm:grid-cols-2">
                 <div>
                   <p className="text-xs font-medium text-muted-foreground">

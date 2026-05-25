@@ -59,6 +59,11 @@ export type InvoiceStats = {
   refunds_issued_trend: string
 }
 
+export type InvoiceTemplatesResponse = {
+  templates: string[]
+  defaultTemplate: string
+}
+
 const BASE_URL = "/invoices"
 
 const toNumber = (value: unknown) => {
@@ -162,7 +167,34 @@ const InvoiceApi = {
   getGstSummary: async (params?: { startDate?: string; endDate?: string }): Promise<any> => {
     return api.get(`${BASE_URL}/gst-summary`, { params })
   },
+
+  getInvoiceTemplates: async (): Promise<{ data: InvoiceTemplatesResponse }> => {
+    const res = await api.get<{ success: boolean; data: InvoiceTemplatesResponse }>(
+      `${BASE_URL}/templates`
+    )
+    return { data: res.data }
+  },
+
+  downloadInvoicePdf: async (id: string, template?: string): Promise<Blob> => {
+    const res = await api.get(`${BASE_URL}/${id}/download`, {
+      params: {
+        template,
+        format: "pdf",
+      },
+      responseType: "blob",
+    })
+
+    return res.data as Blob
+  },
+
+  openInvoiceHtml: (id: string, template?: string) => {
+    const params = new URLSearchParams()
+    if (template) params.set("template", template)
+    params.set("format", "html")
+    const query = params.toString()
+    const url = `${window.location.origin}/api/v1${BASE_URL}/${id}/download${query ? `?${query}` : ""}`
+    window.open(url, "_blank", "noopener,noreferrer")
+  },
 }
 
 export default InvoiceApi
-
