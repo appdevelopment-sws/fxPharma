@@ -4,314 +4,474 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{{invoiceId}} - {{brandName}}</title>
+    <!-- Premium Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
       :root {
         color-scheme: light;
-        --ink: #111827;
-        --muted: #6b7280;
-        --line: #d1d5db;
-        --soft: #f3f4f6;
-        --accent: #0f766e;
-        --accent-soft: #ecfeff;
+        --primary: #0f766e;
+        --border-color: #000000;
+        --text-color: #000000;
+        --slate-500: #64748b;
       }
 
       * {
         box-sizing: border-box;
+        margin: 0;
+        padding: 0;
       }
 
       body {
-        margin: 0;
-        background: linear-gradient(135deg, #f9fafb 0%, #eff6ff 100%);
-        color: var(--ink);
-        font-family: Arial, Helvetica, sans-serif;
+        background-color: #f1f5f9;
+        color: var(--text-color);
+        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        font-size: 11px;
+        line-height: 1.4;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
       }
 
       .page {
         width: 210mm;
         min-height: 297mm;
         margin: 0 auto;
-        padding: 18mm;
+        padding: 10mm;
         background: #ffffff;
-      }
-
-      .header {
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
         display: flex;
+        flex-direction: column;
         justify-content: space-between;
-        gap: 24px;
-        border-bottom: 2px solid var(--line);
-        padding-bottom: 18px;
-        margin-bottom: 18px;
       }
 
-      .brand {
-        max-width: 65%;
-      }
-
-      .brand h1 {
-        margin: 0 0 6px;
-        font-size: 28px;
-        line-height: 1.1;
-        color: var(--accent);
-      }
-
-      .brand p {
-        margin: 4px 0;
-        color: var(--muted);
-        font-size: 12px;
-      }
-
-      .meta {
-        min-width: 230px;
-        background: var(--soft);
-        border: 1px solid var(--line);
-        border-radius: 12px;
-        padding: 14px;
-      }
-
-      .meta-row {
-        display: flex;
-        justify-content: space-between;
-        gap: 12px;
-        font-size: 12px;
-        padding: 4px 0;
-      }
-
-      .meta-row strong {
-        font-weight: 700;
-      }
-
-      .section-title {
-        margin: 0 0 10px;
-        font-size: 13px;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        color: var(--accent);
-      }
-
-      .details {
+      .header-grid {
         display: grid;
-        grid-template-columns: 1.1fr 0.9fr;
-        gap: 16px;
-        margin-bottom: 18px;
+        grid-template-columns: 1.2fr 1.2fr 1fr;
+        margin-bottom: 8px;
       }
 
-      .card {
-        border: 1px solid var(--line);
-        border-radius: 12px;
-        padding: 14px;
-        background: #ffffff;
+      .header-box {
+        border: 1px solid var(--border-color);
+        padding: 8px;
+        min-height: 145px;
       }
 
-      .detail-row {
-        display: flex;
-        justify-content: space-between;
-        gap: 12px;
-        padding: 5px 0;
-        font-size: 12px;
-        border-bottom: 1px dashed #e5e7eb;
+      .header-box:not(:first-child) {
+        border-left: none;
       }
 
-      .detail-row:last-child {
-        border-bottom: 0;
+      .seller-name {
+        font-size: 15px;
+        font-weight: 800;
+        color: var(--primary);
+        text-transform: uppercase;
+        margin-bottom: 2px;
       }
 
-      .detail-label {
-        color: var(--muted);
-      }
-
-      .detail-value {
+      .seller-tagline {
+        font-size: 10px;
         font-weight: 600;
-        text-align: right;
+        color: var(--slate-500);
+        margin-bottom: 6px;
+        text-transform: uppercase;
       }
 
-      table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 12px;
+      .seller-details {
+        font-size: 10.5px;
+        line-height: 1.5;
       }
 
-      thead th {
-        text-align: left;
-        background: var(--accent-soft);
-        color: var(--accent);
-        border-top: 1px solid var(--line);
-        border-bottom: 1px solid var(--line);
-        padding: 10px 8px;
+      .box-title {
+        font-weight: 700;
         font-size: 11px;
         text-transform: uppercase;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 2px;
+        margin-bottom: 6px;
+      }
+
+      .buyer-name {
+        font-size: 12px;
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+
+      .buyer-details {
+        font-size: 10.5px;
+        line-height: 1.5;
+      }
+
+      .invoice-title-bar {
+        background-color: var(--primary);
+        color: #ffffff;
+        text-align: center;
+        font-weight: 800;
+        padding: 4px;
+        margin: -8px -8px 8px -8px;
+        font-size: 12px;
         letter-spacing: 0.05em;
       }
 
-      tbody td {
-        border-bottom: 1px solid #e5e7eb;
-        padding: 10px 8px;
+      .invoice-details-grid {
+        padding-top: 2px;
+      }
+
+      .info-row {
+        display: flex;
+        margin-bottom: 3px;
+        font-size: 10.5px;
+      }
+
+      .info-label {
+        width: 80px;
+        font-weight: 600;
+      }
+
+      .info-sep {
+        width: 12px;
+      }
+
+      .info-val {
+        flex: 1;
+        font-weight: 600;
+      }
+
+      .table-container {
+        border: 1px solid var(--border-color);
+        margin-bottom: 8px;
+        min-height: 520px;
+        background-color: #ffffff;
+        display: flex;
+      }
+
+      .items-table {
+        width: 100%;
+        border-collapse: collapse;
+        height: 100%;
+      }
+
+      .items-table th {
+        background-color: var(--primary);
+        color: #ffffff;
+        font-size: 10.5px;
+        font-weight: 700;
+        padding: 6px 8px;
+        border: 1px solid var(--border-color);
+        text-transform: uppercase;
+        text-align: left;
+      }
+
+      .items-table td {
+        padding: 6px 8px;
+        font-size: 11px;
+        border-right: 1px solid var(--border-color);
         vertical-align: top;
       }
 
-      .cell-center {
+      .items-table td:last-child {
+        border-right: none;
+      }
+
+      .items-table tr {
+        border-bottom: 1px solid #e2e8f0;
+      }
+
+      .items-table tr:last-child {
+        border-bottom: none;
+      }
+
+      .items-table tr.spacer-row {
+        height: 100%;
+        border-bottom: none;
+      }
+
+      .items-table tr.spacer-row td {
+        border-bottom: none;
+        border-right: 1px solid var(--border-color);
+        padding: 0;
+      }
+
+      .items-table tr.spacer-row td:last-child {
+        border-right: none;
+      }
+
+      .items-table td.cell-center,
+      .items-table th.cell-center {
         text-align: center;
       }
 
-      .cell-right {
+      .items-table td.cell-right,
+      .items-table th.cell-right {
         text-align: right;
-        white-space: nowrap;
+        font-variant-numeric: tabular-nums;
       }
 
       .item-title {
         font-weight: 700;
+        color: var(--text-color);
       }
 
       .item-meta {
-        margin-top: 4px;
-        color: var(--muted);
         display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-        font-size: 11px;
+        gap: 8px;
+        margin-top: 3px;
+        font-size: 9.5px;
+        color: var(--slate-500);
       }
 
-      .summary {
-        margin-top: 16px;
+      .bottom-grid {
         display: grid;
-        grid-template-columns: 1fr 290px;
-        gap: 16px;
-        align-items: start;
+        grid-template-columns: 1.2fr 1.2fr 1fr;
+        margin-bottom: 8px;
       }
 
-      .summary-table td {
-        padding: 8px 10px;
-        border-bottom: 1px solid #e5e7eb;
+      .bottom-box {
+        border: 1px solid var(--border-color);
+        padding: 8px;
+        min-height: 130px;
       }
 
-      .summary-table tr:last-child td {
-        border-bottom: 0;
-        font-weight: 800;
-        font-size: 13px;
-        background: var(--soft);
+      .bottom-box:not(:first-child) {
+        border-left: none;
+      }
+
+      .box-section-title {
+        font-weight: 700;
+        text-decoration: underline;
+        margin-bottom: 3px;
+      }
+
+      .bank-details-text,
+      .terms-text {
+        line-height: 1.4;
       }
 
       .notes {
-        border-left: 4px solid var(--accent);
-        background: #f8fafc;
-        padding: 14px;
-        border-radius: 12px;
-        color: var(--ink);
-        font-size: 12px;
+        border: none;
+        background: none;
+        padding: 0;
       }
 
       .notes-label {
         font-weight: 700;
-        color: var(--accent);
-        margin-bottom: 6px;
+        text-decoration: underline;
+        color: var(--text-color);
+        margin-bottom: 4px;
+        text-transform: none;
       }
 
-      .footer {
-        margin-top: 20px;
-        padding-top: 14px;
-        border-top: 1px solid var(--line);
+      .notes-value {
+        font-size: 10.5px;
+        line-height: 1.4;
+      }
+
+      .summary-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      .summary-table td {
+        padding: 3px 0;
+        font-size: 10.5px;
+        color: var(--text-color);
+        border: none;
+      }
+
+      .summary-table td.cell-right {
+        text-align: right;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* Style the Net Amount row (5th child: Total Amount) */
+      .summary-table tr:nth-child(5) td {
+        border-top: 1px dashed var(--border-color);
+        border-bottom: 1px dashed var(--border-color);
+        font-weight: 800;
+        font-size: 11px;
+        padding: 5px 0;
+        background-color: transparent !important;
+        color: var(--text-color) !important;
+      }
+
+      .summary-table tr:nth-child(5) td.cell-right {
+        font-size: 12px;
+      }
+
+      .signature-section {
         display: flex;
         justify-content: space-between;
-        gap: 12px;
-        color: var(--muted);
-        font-size: 11px;
+        align-items: flex-end;
+        margin-top: 8px;
+        font-size: 10.5px;
+      }
+
+      .sig-left {
+        color: var(--slate-500);
+      }
+
+      .sig-right {
+        text-align: right;
+        width: 200px;
+      }
+
+      .sig-space {
+        height: 35px;
       }
 
       @page {
         size: A4;
         margin: 0;
       }
+
+      @media print {
+        body {
+          background: none !important;
+          color: #000000 !important;
+        }
+        .page {
+          box-shadow: none !important;
+          padding: 8mm !important;
+          width: 100% !important;
+          min-height: 0 !important;
+        }
+        .header-box,
+        .bottom-box,
+        .table-container {
+          border-color: #000000 !important;
+        }
+        .items-table th {
+          background-color: var(--primary) !important;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+      }
     </style>
   </head>
   <body>
     <main class="page">
-      <section class="header">
-        <div class="brand">
-          <h1>{{brandName}}</h1>
-          <p>{{brandTagline}}</p>
-          <p>{{brandAddress}}</p>
-          <p>{{companyContactBlock}}</p>
-          <p>GSTIN: {{brandGstin}}</p>
+      <div class="content-wrapper">
+        <!-- Header 3-Column Grid -->
+        <div class="header-grid">
+          <div class="header-box seller-box">
+            <div class="seller-name">{{brandName}}</div>
+            <div class="seller-tagline">{{brandTagline}}</div>
+            <div class="seller-details">
+              <div>{{brandAddress}}</div>
+              <div>Ph. : {{companyContactBlock}}</div>
+              <div class="brand-gstin">GSTIN : {{brandGstin}}</div>
+            </div>
+          </div>
+          
+          <div class="header-box buyer-box">
+            <div class="box-title">Buyer's Detail</div>
+            <div class="buyer-name">{{customerName}}</div>
+            <div class="buyer-details">
+              <div>Ph No. : {{customerPhone}}</div>
+            </div>
+          </div>
+          
+          <div class="header-box invoice-box">
+            <div class="invoice-title-bar">INVOICE</div>
+            <div class="invoice-details-grid">
+              <div class="info-row">
+                <span class="info-label">Invoice No.</span>
+                <span class="info-sep">:</span>
+                <span class="info-val">{{invoiceId}}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Date</span>
+                <span class="info-sep">:</span>
+                <span class="info-val">{{createdAt}}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Status</span>
+                <span class="info-sep">:</span>
+                <span class="info-val">{{invoiceStatus}}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Payment</span>
+                <span class="info-sep">:</span>
+                <span class="info-val">{{paymentMode}}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Items</span>
+                <span class="info-sep">:</span>
+                <span class="info-val">{{itemCount}}</span>
+              </div>
+            </div>
+          </div>
         </div>
-        <aside class="meta">
-          <div class="meta-row"><strong>Invoice</strong><span>{{invoiceId}}</span></div>
-          <div class="meta-row"><strong>Date</strong><span>{{createdAt}}</span></div>
-          <div class="meta-row"><strong>Status</strong><span>{{invoiceStatus}}</span></div>
-          <div class="meta-row"><strong>Payment</strong><span>{{paymentMode}}</span></div>
-          <div class="meta-row"><strong>Items</strong><span>{{itemCount}}</span></div>
-        </aside>
-      </section>
 
-      <section class="details">
-        <div class="card">
-          <h2 class="section-title">Customer</h2>
-          <div class="detail-row">
-            <span class="detail-label">Name</span>
-            <span class="detail-value">{{customerName}}</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Phone</span>
-            <span class="detail-value">{{customerPhone}}</span>
-          </div>
-        </div>
-
-        <div class="card">
-          <h2 class="section-title">Totals</h2>
-          <div class="detail-row">
-            <span class="detail-label">Gross</span>
-            <span class="detail-value">{{grossAmount}}</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Discount</span>
-            <span class="detail-value">{{discountAmount}}</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Tax</span>
-            <span class="detail-value">{{taxAmount}}</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Total</span>
-            <span class="detail-value">{{totalAmount}}</span>
-          </div>
-        </div>
-      </section>
-
-      <section class="card">
-        <h2 class="section-title">Items</h2>
-        <table>
-          <thead>
-            <tr>
-              <th style="width: 44px;">#</th>
-              <th>Item</th>
-              <th style="width: 72px;" class="cell-center">Qty</th>
-              <th style="width: 105px;" class="cell-right">Rate</th>
-              <th style="width: 105px;" class="cell-right">Discount</th>
-              <th style="width: 120px;" class="cell-right">Amount</th>
-            </tr>
-          </thead>
-          <tbody>
-            {{{itemsRows}}}
-          </tbody>
-        </table>
-      </section>
-
-      <section class="summary">
-        <div>
-          {{{notesBlock}}}
-        </div>
-        <div class="card">
-          <h2 class="section-title">Summary</h2>
-          <table class="summary-table">
+        <!-- Line Items Table -->
+        <div class="table-container">
+          <table class="items-table">
+            <thead>
+              <tr>
+                <th style="width: 45px;" class="cell-center">Sr.</th>
+                <th>Description</th>
+                <th style="width: 65px;" class="cell-center">Qty</th>
+                <th style="width: 105px;" class="cell-right">Rate</th>
+                <th style="width: 95px;" class="cell-right">Discount</th>
+                <th style="width: 115px;" class="cell-right">Amount</th>
+              </tr>
+            </thead>
             <tbody>
-              {{{summaryRows}}}
+              {{{itemsRows}}}
+              <tr class="spacer-row">
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+              </tr>
             </tbody>
           </table>
         </div>
-      </section>
 
-      <footer class="footer">
-        <span>Generated for {{brandName}}</span>
-        <span>Template: {{safeTemplateName}}</span>
-      </footer>
+        <!-- Bottom Grid Section -->
+        <div class="bottom-grid">
+          <div class="bottom-box bank-terms-box">
+            <div class="box-section-title">Bank Details :</div>
+            <div class="bank-details-text">
+              State Bank of India<br>
+              Ac. No. : 30860782555<br>
+              IFSC Code : SBIN0000222
+            </div>
+            <div class="box-section-title" style="margin-top: 6px;">Terms & Conditions :</div>
+            <div class="terms-text">
+              Subject to Local Jurisdiction.<br>
+              Goods once sold will not be taken back.
+            </div>
+          </div>
+          
+          <div class="bottom-box notes-box">
+            {{{notesBlock}}}
+          </div>
+          
+          <div class="bottom-box totals-box">
+            <table class="summary-table">
+              <tbody>
+                {{{summaryRows}}}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Signature Section -->
+      <div class="signature-section">
+        <div class="sig-left">
+          Generated for {{brandName}} | Template: {{safeTemplateName}}
+        </div>
+        <div class="sig-right">
+          For <strong>{{brandName}}</strong>
+          <div class="sig-space"></div>
+          Authorized Signatory
+        </div>
+      </div>
     </main>
   </body>
 </html>
