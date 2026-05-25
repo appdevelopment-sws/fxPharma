@@ -41,7 +41,9 @@ import {
 const formatCurrency = (value: number) => `\u20B9${value.toFixed(2)}`
 
 export default function RecentInvoicesPage() {
-  const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null)
+  const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(
+    null
+  )
   const { filter, handleFilter } = useSearchFilter(INITIAL_INVOICE_FILTERS)
 
   const { data: invoicesData, isLoading: isLoadingInvoices } = useQuery({
@@ -90,8 +92,7 @@ export default function RecentInvoicesPage() {
     return [
       {
         key: "serial",
-        header:
-          INVOICE_COLUMNS.find((c) => c.key === "serial")?.label || "#",
+        header: INVOICE_COLUMNS.find((c) => c.key === "serial")?.label || "#",
         render: (_, index) => {
           const currentPage = filter.page || 1
           const perPage = filter.perPage || 10

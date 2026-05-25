@@ -40,13 +40,29 @@ export default function ManageSubscriptionPage() {
     },
   })
 
-  const handleOpen = (
+  const handleOpen = async (
     store: any = null,
     mode: "create" | "edit" | "view" = "create"
   ) => {
-    drawerDisclosure.onOpen(
-      store ? { ...store, id: store.id, viewMode: mode === "view" } : null
-    )
+    if (!store) {
+      drawerDisclosure.onOpen(null)
+      return
+    }
+
+    if (mode === "create") {
+      drawerDisclosure.onOpen({
+        ...store,
+        id: store.id,
+        viewMode: false,
+      })
+      return
+    }
+
+    const storeResponse = await StoreListApi.getStoreById(store.id)
+    drawerDisclosure.onOpen({
+      ...storeResponse.data,
+      viewMode: mode === "view",
+    })
   }
   const handleFilterChange = useCallback(
     (updates: Record<string, any>) => {
@@ -110,7 +126,7 @@ export default function ManageSubscriptionPage() {
             <Button
               size="icon-sm"
               variant="ghost"
-              onClick={() => handleOpen(row, "view")}
+              onClick={() => void handleOpen(row, "view")}
             >
               <Eye className="size-4" />
             </Button>
@@ -118,7 +134,7 @@ export default function ManageSubscriptionPage() {
             <Button
               size="icon-sm"
               variant="ghost"
-              onClick={() => handleOpen(row, "edit")}
+              onClick={() => void handleOpen(row, "edit")}
             >
               <Pencil className="size-4" />
             </Button>
@@ -160,7 +176,10 @@ export default function ManageSubscriptionPage() {
         description="Manage store list for the platform."
         action={
           <div className="flex items-center justify-center gap-x-3">
-            <Button type="button" onClick={() => handleOpen(null, "create")}>
+            <Button
+              type="button"
+              onClick={() => void handleOpen(null, "create")}
+            >
               <Plus className="mr-2 size-4" />
               Create New Store
             </Button>

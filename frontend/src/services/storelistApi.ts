@@ -6,6 +6,7 @@ export type Store = {
   description?: string | null
   store_category?: string | null
   store_logo?: string | null
+  password?: string
   status: "ACTIVE" | "INACTIVE"
   first_name: string
   last_name: string
@@ -147,6 +148,7 @@ const mapApiToStore = (data: any): Store => {
     description: data.description,
     store_category: data.category,
     store_logo: data.logo,
+    password: data.password ?? "",
     status: data.status,
     first_name: data.owner?.firstName || data.ownerFirstName,
     last_name: data.owner?.lastName || data.ownerLastName,

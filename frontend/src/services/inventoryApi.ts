@@ -58,6 +58,16 @@ type InventoryRelation = {
   name?: string | null
 }
 
+const normalizeParams = (params?: Record<string, any>) => {
+  if (!params) return undefined
+
+  const { perPage, ...rest } = params
+  return {
+    ...rest,
+    limit: params.limit ?? perPage,
+  }
+}
+
 export type InventoryBatch = {
   id: string
   batchNo?: string
@@ -146,14 +156,84 @@ export type InventoryListResponse = {
   }
 }
 
+export type ExpiryReportItem = {
+  id: string
+  inventoryId: string
+  productName: string
+  saltComposition?: string | null
+  manufacturer?: InventoryRelation | null
+  category?: InventoryRelation | null
+  batchNo: string
+  expiryDate?: string | null
+  expiry?: string | null
+  remainingDays: number | null
+  stockQty: number
+  unit?: string | null
+  value: number
+  status: "ACTIVE" | "EXPIRING_SOON" | "EXPIRED"
+  statusLabel?: string
+  purchaseRate?: number
+  mrp?: number
+  rateA?: number
+  rateB?: number
+  rateC?: number
+  cgst?: number
+  sgst?: number
+  receivedAt?: string
+  createdAt?: string
+  updatedAt?: string
+}
+
+export type ExpiryReportStats = {
+  alreadyExpired: number
+  expiring30: number
+  expiring90: number
+  valueAtRisk: number
+}
+
+export type ExpiryReportResponse = {
+  data: ExpiryReportItem[]
+  meta?: {
+    total: number
+    page: number
+    limit: number
+    totalPages: number
+    hasNextPage?: boolean
+    hasPrevPage?: boolean
+  }
+  stats?: ExpiryReportStats
+}
+
 const BASE_URL = "/inventory/add-medicine"
+const EXPIRY_REPORT_URL = `${BASE_URL}/expiry-report`
 
 const InventoryApi = {
   getAll: async (params?: any): Promise<InventoryListResponse> => {
-    const res = await api.get<any>(BASE_URL, { params })
+    const queryParams = normalizeParams(params)
+    const res = await api.get<any>(BASE_URL, { params: queryParams })
     return {
       data: res.data ?? [],
       meta: res.meta,
+    }
+  },
+
+  getExpiryReport: async (
+    params?: any
+  ): Promise<ExpiryReportResponse> => {
+    const queryParams = normalizeParams(params)
+    const res = await api.get<any>(EXPIRY_REPORT_URL, {
+      params: queryParams,
+    })
+
+    return {
+      data: Array.isArray(res.data) ? res.data : [],
+      meta: res.meta
+        ? {
+            ...res.meta,
+            totalPages: res.meta.totalPages ?? res.meta.pages ?? 1,
+          }
+        : res.meta,
+      stats: res.stats,
     }
   },
 

@@ -8,6 +8,9 @@ export const PERMISSIONS = {
   MASTER_PRODUCT_READ: "master-products.view",
   MASTER_PRODUCT_UPDATE: "master-products.edit",
   MASTER_PRODUCT_DELETE: "master-products.delete",
+
+  DAILY_TRANSACTION_REPORT_VIEW: "reports.daily-transaction.view",
+  EXPIRY_REPORT_VIEW: "reports.expiry-reports",
 } as const;
 
 export type PermissionName = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
@@ -48,5 +51,13 @@ export const DEFAULT_PERMISSION_SEEDS = [
   {
     name: PERMISSIONS.MASTER_PRODUCT_DELETE,
     description: "Delete master products",
+  },
+  {
+    name: PERMISSIONS.DAILY_TRANSACTION_REPORT_VIEW,
+    description: "Can view daily transaction report",
+  },
+  {
+    name: PERMISSIONS.EXPIRY_REPORT_VIEW,
+    description: "Can view expiry reports",
   },
 ] as const;
