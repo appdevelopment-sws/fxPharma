@@ -46,6 +46,23 @@ const parseExpiryDate = (value?: string | null) => {
   return new Date(year, month, 0);
 };
 
+const normalizeExpiryMonthYear = (value?: string | null) => {
+  if (!value) return null;
+
+  const trimmed = value.trim();
+  const match = trimmed.match(/^(\d{1,2})\/(\d{2}|\d{4})$/);
+  if (!match) return trimmed;
+
+  const month = Number(match[1]);
+  const year = Number(match[2].length === 2 ? `20${match[2]}` : match[2]);
+
+  if (!Number.isFinite(month) || month < 1 || month > 12) {
+    return trimmed;
+  }
+
+  return `${String(month).padStart(2, "0")}/${year}`;
+};
+
 const parseOptionalDate = (value?: string | null) => {
   if (!value) return undefined;
 
@@ -109,7 +126,7 @@ const buildInventoryBatchData = ({
   item: any;
 }) => {
   const receivedQty = Math.max(0, toNumber(item.qty) + toNumber(item.freeQty));
-  const expiryDate = parseExpiryDate(item.expiry);
+  const expiryDate = normalizeExpiryMonthYear(item.expiry);
   const batchNo = String(item.batchNo ?? "").trim();
 
   if (!batchNo) {
@@ -131,7 +148,7 @@ const buildInventoryBatchData = ({
     branchId,
     inventoryId: item.inventoryId,
     batchNo,
-    expiry: item.expiry,
+    expiry: expiryDate,
     expiryDate,
     unit: item.unit ?? null,
     receivedQty,

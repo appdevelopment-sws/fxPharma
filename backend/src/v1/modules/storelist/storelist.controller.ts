@@ -162,6 +162,7 @@ const mapOrganizationToStore = (organization: any) => {
   const ownerMembership = getOwnerMembership(organization.members ?? []);
   const owner = ownerMembership?.user;
   const role = ownerMembership?.role;
+
   const permissions =
     role?.permissions
       ?.filter((item: any) => item.permission)
@@ -201,16 +202,16 @@ const mapOrganizationToStore = (organization: any) => {
     subscription_plan_id: organization.planId ?? null,
     plan: organization.plan
       ? {
-          id: organization.plan.id,
-          name: organization.plan.name,
-          key: organization.plan.key,
-          price: organization.plan.price,
-          billing_type: organization.plan.billingCycle,
-          max_staff_users: organization.plan.maxStaff,
-          max_stores: organization.plan.maxBranches,
-          isPopular: organization.plan.isPopular,
-          badgeText: organization.plan.badgeText,
-        }
+        id: organization.plan.id,
+        name: organization.plan.name,
+        key: organization.plan.key,
+        price: organization.plan.price,
+        billing_type: organization.plan.billingCycle,
+        max_staff_users: organization.plan.maxStaff,
+        max_stores: organization.plan.maxBranches,
+        isPopular: organization.plan.isPopular,
+        badgeText: organization.plan.badgeText,
+      }
       : null,
     permissions,
     isActive: organization.isActive,
@@ -218,18 +219,18 @@ const mapOrganizationToStore = (organization: any) => {
     updatedAt: organization.updatedAt,
     owner: owner
       ? {
-          firstName: owner.name?.split(" ")?.[0] ?? "",
-          lastName: owner.name?.split(" ")?.slice(1).join(" ") ?? "",
-          email: owner.email,
-          mobile: owner.phone,
-          role: role
-            ? {
-                key: role.key,
-                name: role.name,
-              }
-            : null,
-          permissions: role?.permissions ?? [],
-        }
+        firstName: owner.name?.split(" ")?.[0] ?? "",
+        lastName: owner.name?.split(" ")?.slice(1).join(" ") ?? "",
+        email: owner.email,
+        mobile: owner.phone,
+        role: role
+          ? {
+            key: role.key,
+            name: role.name,
+          }
+          : null,
+        permissions: role?.permissions ?? [],
+      }
       : null,
   };
 };
@@ -337,24 +338,24 @@ export class StoreListController {
 
       const filtered = normalizedSearch
         ? organizations.filter((organization) => {
-            const mainBranch = findMainBranch(organization.branches ?? []);
-            const address = parseAddress(mainBranch?.address);
-            const owner = getOwnerMembership(organization.members ?? [])?.user;
+          const mainBranch = findMainBranch(organization.branches ?? []);
+          const address = parseAddress(mainBranch?.address);
+          const owner = getOwnerMembership(organization.members ?? [])?.user;
 
-            return [
-              organization.name,
-              organization.slug,
-              owner?.name,
-              owner?.email,
-              owner?.phone,
-              address.city,
-              address.state,
-            ]
-              .filter(Boolean)
-              .some((value) =>
-                String(value).toLowerCase().includes(normalizedSearch),
-              );
-          })
+          return [
+            organization.name,
+            organization.slug,
+            owner?.name,
+            owner?.email,
+            owner?.phone,
+            address.city,
+            address.state,
+          ]
+            .filter(Boolean)
+            .some((value) =>
+              String(value).toLowerCase().includes(normalizedSearch),
+            );
+        })
         : organizations;
 
       const data = filtered
@@ -533,7 +534,6 @@ export class StoreListController {
           currency: req.body.currency ?? existing.currency,
           ownerEmail: req.body.ownerEmail ?? existing.ownerEmail,
 
-          
           planId: req.body.planId ?? existing.planId,
           isActive:
             req.body.isActive ??
@@ -548,9 +548,9 @@ export class StoreListController {
         organization.id,
         requestedRoleKey,
         roleTemplate?.name ||
-          (requestedRoleKey === DEFAULT_ROLE_KEY
-            ? "Organization Admin"
-            : requestedRoleKey),
+        (requestedRoleKey === DEFAULT_ROLE_KEY
+          ? "Organization Admin"
+          : requestedRoleKey),
         permissionKeys,
       );
 
@@ -561,18 +561,18 @@ export class StoreListController {
           data: {
             name: buildOwnerName(
               req.body.ownerFirstName ??
-                ownerMembership.user.name?.split(" ")?.[0] ??
-                "",
+              ownerMembership.user.name?.split(" ")?.[0] ??
+              "",
               req.body.ownerLastName ??
-                ownerMembership.user.name?.split(" ")?.slice(1).join(" ") ??
-                "",
+              ownerMembership.user.name?.split(" ")?.slice(1).join(" ") ??
+              "",
             ),
             email: req.body.loginEmail ?? ownerMembership.user.email,
             phone: req.body.ownerPhone ?? ownerMembership.user.phone,
             ...(req.body.password
               ? {
-                  passwordHash: await bcrypt.hash(req.body.password, 10),
-                }
+                passwordHash: await bcrypt.hash(req.body.password, 10),
+              }
               : {}),
           },
         });
@@ -601,32 +601,32 @@ export class StoreListController {
               : mainBranch.name,
             address:
               req.body.streetAddress ||
-              req.body.city ||
-              req.body.state ||
-              req.body.zipCode ||
-              req.body.country
+                req.body.city ||
+                req.body.state ||
+                req.body.zipCode ||
+                req.body.country
                 ? serializeAddress({
-                    streetAddress:
-                      req.body.streetAddress ??
-                      parseAddress(mainBranch.address).streetAddress ??
-                      "",
-                    city:
-                      req.body.city ??
-                      parseAddress(mainBranch.address).city ??
-                      "",
-                    state:
-                      req.body.state ??
-                      parseAddress(mainBranch.address).state ??
-                      "",
-                    zipCode:
-                      req.body.zipCode ??
-                      parseAddress(mainBranch.address).zipCode ??
-                      "",
-                    country:
-                      req.body.country ??
-                      parseAddress(mainBranch.address).country ??
-                      "",
-                  })
+                  streetAddress:
+                    req.body.streetAddress ??
+                    parseAddress(mainBranch.address).streetAddress ??
+                    "",
+                  city:
+                    req.body.city ??
+                    parseAddress(mainBranch.address).city ??
+                    "",
+                  state:
+                    req.body.state ??
+                    parseAddress(mainBranch.address).state ??
+                    "",
+                  zipCode:
+                    req.body.zipCode ??
+                    parseAddress(mainBranch.address).zipCode ??
+                    "",
+                  country:
+                    req.body.country ??
+                    parseAddress(mainBranch.address).country ??
+                    "",
+                })
                 : mainBranch.address,
             phone: req.body.ownerPhone ?? mainBranch.phone,
             email: req.body.ownerEmail ?? mainBranch.email,

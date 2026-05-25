@@ -99,8 +99,14 @@ const toExpiryInputValue = (value?: string | Date) => {
 
   if (typeof value === "string") {
     const trimmed = value.trim()
-    if (/^\d{1,2}\/\d{2,4}$/.test(trimmed)) {
-      return trimmed
+    const monthYearMatch = trimmed.match(/^(\d{1,2})\/(\d{2}|\d{4})$/)
+    if (monthYearMatch) {
+      const month = String(Number(monthYearMatch[1])).padStart(2, "0")
+      const year =
+        monthYearMatch[2].length === 2
+          ? `20${monthYearMatch[2]}`
+          : monthYearMatch[2]
+      return `${month}/${year}`
     }
   }
 
@@ -109,7 +115,7 @@ const toExpiryInputValue = (value?: string | Date) => {
 
   return `${String(date.getMonth() + 1).padStart(2, "0")}/${String(
     date.getFullYear()
-  ).slice(-2)}`
+  )}`
 }
 
 const toNumber = (value: unknown) => {

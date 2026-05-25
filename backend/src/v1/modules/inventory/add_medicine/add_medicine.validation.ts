@@ -43,7 +43,7 @@ export const createInventorySchema = z.object({
   minQty: z.coerce.number().int().optional().default(0),
   maxQty: z.coerce.number().int().optional().default(0),
   reorderQty: z.coerce.number().int().optional().default(0),
-  daysLimit: z.coerce.date().optional().default(new Date()), // Can be number of days or a date string
+  daysLimit: z.coerce.string().optional(), // Can be number of days or a date string
   convStri: z.coerce.number().optional().default(0),
   convCas: z.coerce.number().optional().default(0),
 

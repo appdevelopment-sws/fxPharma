@@ -37,6 +37,25 @@ router.get("/", isAuthenticated, InventoryController.getAll);
 
 /**
  * @swagger
+ * /inventory/add-medicine/expiry-report:
+ *   get:
+ *     security:
+ *       - bearerAuth: []
+ *     summary: Get expiry report rows
+ *     tags:
+ *       - Inventory
+ *     parameters:
+ *       - $ref: '#/components/parameters/page'
+ *       - $ref: '#/components/parameters/limit'
+ *       - $ref: '#/components/parameters/search'
+ *     responses:
+ *       200:
+ *         description: Expiry report rows
+ */
+router.get("/expiry-report", isAuthenticated, InventoryController.getExpiryReport);
+
+/**
+ * @swagger
  * /inventory/add-medicine/{id}:
  *   get:
  *     security:

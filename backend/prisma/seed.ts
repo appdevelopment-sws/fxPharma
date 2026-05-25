@@ -21,26 +21,113 @@ async function main() {
   // 1. Define Permissions
   const permissions = [
     { key: "users.view", name: "View Users", description: "Can view users" },
-    { key: "users.create", name: "Create Users", description: "Can create new users" },
-    { key: "users.edit", name: "Edit Users", description: "Can edit existing users" },
-    { key: "users.delete", name: "Delete Users", description: "Can delete users" },
+    {
+      key: "users.create",
+      name: "Create Users",
+      description: "Can create new users",
+    },
+    {
+      key: "users.edit",
+      name: "Edit Users",
+      description: "Can edit existing users",
+    },
+    {
+      key: "users.delete",
+      name: "Delete Users",
+      description: "Can delete users",
+    },
     { key: "roles.view", name: "View Roles", description: "Can view roles" },
-    { key: "roles.manage", name: "Manage Roles", description: "Can manage roles" },
-    { key: "branches.view", name: "View Branches", description: "Can view branches" },
-    { key: "branches.create", name: "Create Branches", description: "Can create new branches" },
-    { key: "branches.edit", name: "Edit Branches", description: "Can edit existing branches" },
-    { key: "branches.delete", name: "Delete Branches", description: "Can delete branches" },
-    { key: "inventory.view", name: "View Inventory", description: "Can view inventory" },
-    { key: "inventory.manage", name: "Manage Inventory", description: "Can manage inventory" },
+    {
+      key: "roles.manage",
+      name: "Manage Roles",
+      description: "Can manage roles",
+    },
+    {
+      key: "branches.view",
+      name: "View Branches",
+      description: "Can view branches",
+    },
+    {
+      key: "branches.create",
+      name: "Create Branches",
+      description: "Can create new branches",
+    },
+    {
+      key: "branches.edit",
+      name: "Edit Branches",
+      description: "Can edit existing branches",
+    },
+    {
+      key: "branches.delete",
+      name: "Delete Branches",
+      description: "Can delete branches",
+    },
+    {
+      key: "inventory.view",
+      name: "View Inventory",
+      description: "Can view inventory",
+    },
+    {
+      key: "inventory.manage",
+      name: "Manage Inventory",
+      description: "Can manage inventory",
+    },
     { key: "orders.view", name: "View Orders", description: "Can view orders" },
-    { key: "orders.create", name: "Create Orders", description: "Can create new orders" },
-    { key: "orders.manage", name: "Manage Orders", description: "Can manage orders" },
-    { key: "medicine.view", name: "View Medicines", description: "Can view medicines" },
-    { key: "medicine.manage", name: "Manage Medicines", description: "Can manage medicines" },
-    { key: "organization.view", name: "View Organization", description: "Can view organization details" },
-    { key: "organization.edit", name: "Edit Organization", description: "Can edit organization details" },
-    { key: "master-products.view", name: "View Master Products", description: "Can view master products" },
-    { key: "master-products.manage", name: "Manage Master Products", description: "Can manage master products" },
+    {
+      key: "orders.create",
+      name: "Create Orders",
+      description: "Can create new orders",
+    },
+    {
+      key: "orders.manage",
+      name: "Manage Orders",
+      description: "Can manage orders",
+    },
+    {
+      key: "medicine.view",
+      name: "View Medicines",
+      description: "Can view medicines",
+    },
+    {
+      key: "medicine.manage",
+      name: "Manage Medicines",
+      description: "Can manage medicines",
+    },
+    {
+      key: "organization.view",
+      name: "View Organization",
+      description: "Can view organization details",
+    },
+    {
+      key: "organization.edit",
+      name: "Edit Organization",
+      description: "Can edit organization details",
+    },
+    {
+      key: "master-products.view",
+      name: "View Master Products",
+      description: "Can view master products",
+    },
+    {
+      key: "master-products.manage",
+      name: "Manage Master Products",
+      description: "Can manage master products",
+    },
+    {
+      key: "reports.view",
+      name: "View Reports",
+      description: "Can view reports",
+    },
+    {
+      key: "reports.daily-transaction.view",
+      name: "View Daily Transaction Report",
+      description: "Can view daily transaction report",
+    },
+    {
+      key: "reports.expiry-reports",
+      name: "View Expiry Reports",
+      description: "Can view expiry reports",
+    },
   ];
 
   console.log("Seeding permissions...");
@@ -145,13 +232,24 @@ async function main() {
       key: "ORG_ADMIN",
       name: "Organization Admin",
       scope: "ORGANIZATION" as const,
-      permissions: permissions.map(p => p.key).filter(k => !k.startsWith("master-products")), // Can do everything except global master products
+      permissions: permissions
+        .map((p) => p.key)
+        .filter((k) => !k.startsWith("master-products")), // Can do everything except global master products
     },
     {
       key: "BRANCH_ADMIN",
       name: "Branch Admin",
       scope: "BRANCH" as const,
-      permissions: ["users.view", "branches.view", "inventory.view", "inventory.manage", "orders.view", "orders.create", "orders.manage", "medicine.view"],
+      permissions: [
+        "users.view",
+        "branches.view",
+        "inventory.view",
+        "inventory.manage",
+        "orders.view",
+        "orders.create",
+        "orders.manage",
+        "medicine.view",
+      ],
     },
     {
       key: "PHARMACIST",
@@ -187,7 +285,7 @@ async function main() {
 
     // Link permissions to role
     for (const pKey of rd.permissions) {
-      const p = createdPermissions.find(cp => cp.key === pKey);
+      const p = createdPermissions.find((cp) => cp.key === pKey);
       if (p) {
         await prisma.rolePermission.upsert({
           where: {

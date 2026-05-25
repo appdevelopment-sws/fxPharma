@@ -172,12 +172,14 @@ export const adminNavigationGroups: SidebarNavigationGroup[] = [
             title: "Daily Transactions",
             to: "/admin/reports/daily-transaction-report",
             description: "Daily transaction report",
+            permissions: [PERMISSIONS.DAILY_TRANSACTION_REPORT_VIEW],
             icon: Receipt,
           },
           {
             title: "Expiry Reports",
             to: "/admin/reports/expiry-reports",
             description: "Identify expiring stock",
+            permissions: [PERMISSIONS.EXPIRY_REPORT_VIEW],
             icon: CalendarX,
           },
           {
