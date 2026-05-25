@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from "react"
-import { useFieldArray, useForm, useWatch } from "react-hook-form"
+import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import {
   CalendarDays,
@@ -85,6 +85,8 @@ const createTempId = () =>
     ? crypto.randomUUID()
     : `row_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
 
+const EXPIRY_INPUT_PATTERN = /^(0[1-9]|1[0-2])\/(\d{2})$/
+
 const toDateInputValue = (value?: string | Date) => {
   if (!value) return ""
 
@@ -92,6 +94,16 @@ const toDateInputValue = (value?: string | Date) => {
   if (Number.isNaN(date.getTime())) return ""
 
   return date.toISOString().slice(0, 10)
+}
+
+const formatExpiryTyping = (value: string) => {
+  const digits = value.replace(/\D/g, "").slice(0, 4)
+
+  if (digits.length <= 2) {
+    return digits
+  }
+
+  return `${digits.slice(0, 2)}/${digits.slice(2)}`
 }
 
 const toExpiryInputValue = (value?: string | Date) => {
@@ -102,11 +114,12 @@ const toExpiryInputValue = (value?: string | Date) => {
     const monthYearMatch = trimmed.match(/^(\d{1,2})\/(\d{2}|\d{4})$/)
     if (monthYearMatch) {
       const month = String(Number(monthYearMatch[1])).padStart(2, "0")
-      const year =
-        monthYearMatch[2].length === 2
-          ? `20${monthYearMatch[2]}`
-          : monthYearMatch[2]
+      const year = monthYearMatch[2].slice(-2)
       return `${month}/${year}`
+    }
+
+    if (EXPIRY_INPUT_PATTERN.test(trimmed)) {
+      return trimmed
     }
   }
 
@@ -115,7 +128,14 @@ const toExpiryInputValue = (value?: string | Date) => {
 
   return `${String(date.getMonth() + 1).padStart(2, "0")}/${String(
     date.getFullYear()
-  )}`
+  ).slice(-2)}`
+}
+
+const normalizeExpiryForStorage = (value?: string) => {
+  if (!value) return ""
+
+  const normalized = toExpiryInputValue(value)
+  return EXPIRY_INPUT_PATTERN.test(normalized) ? normalized : ""
 }
 
 const toNumber = (value: unknown) => {
@@ -394,12 +414,16 @@ export default function OrderConfirmFormDialog({
       const balanceDue = Math.max(0, totals.netPayable - toNumber(values.paidAmount))
       const determinedStatus = balanceDue < 0.01 ? "COMPLETED" : "PENDING"
       const isUdharValue = determinedStatus === "COMPLETED" ? "NO" : values.isUdhar
+      const normalizedItems = values.items.map((item) => ({
+        ...item,
+        expiry: normalizeExpiryForStorage(item.expiry),
+      }))
 
       return ordersApi.update(order.id, {
         ...values,
         isUdhar: isUdharValue,
         status: determinedStatus,
-        items: values.items,
+        items: normalizedItems,
       })
     },
     onSuccess: () => {
@@ -420,6 +444,10 @@ export default function OrderConfirmFormDialog({
     saveMutation.mutate({
       ...values,
       paidAmount: totalPaidSoFar + toNumber(values.paidAmount),
+      items: values.items.map((item) => ({
+        ...item,
+        expiry: normalizeExpiryForStorage(item.expiry),
+      })),
     })
   }
 
@@ -667,11 +695,31 @@ export default function OrderConfirmFormDialog({
                       />
                     </div>
                     <div>
-                      <Input
-                        type="text"
-                        {...register(`items.${index}.expiry`)}
-                        placeholder="MM/YY"
-                        className="h-9 rounded-lg border-border/60 bg-background px-3 text-foreground hover:border-primary/30 focus-visible:border-primary/50 focus-visible:ring-4 focus-visible:ring-primary/10 transition-all duration-200 text-xs"
+                      <Controller
+                        control={control}
+                        name={`items.${index}.expiry`}
+                        render={({ field }) => (
+                          <Input
+                            {...field}
+                            type="text"
+                            inputMode="numeric"
+                            autoComplete="off"
+                            maxLength={5}
+                            placeholder="MM/YY"
+                            onChange={(event) => {
+                              field.onChange(
+                                formatExpiryTyping(event.target.value)
+                              )
+                            }}
+                            onBlur={(event) => {
+                              field.onBlur()
+                              field.onChange(
+                                normalizeExpiryForStorage(event.target.value)
+                              )
+                            }}
+                            className="h-9 rounded-lg border-border/60 bg-background px-3 text-foreground hover:border-primary/30 focus-visible:border-primary/50 focus-visible:ring-4 focus-visible:ring-primary/10 transition-all duration-200 text-xs"
+                          />
+                        )}
                       />
                     </div>
                     <div>
