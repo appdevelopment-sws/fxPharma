@@ -2,12 +2,25 @@ FROM node:20-alpine
 
 WORKDIR /app
 
+# Chromium deps
+RUN apk add --no-cache \
+    chromium \
+    nss \
+    freetype \
+    harfbuzz \
+    ca-certificates \
+    ttf-freefont
+
 COPY package*.json ./
 RUN npm install
 
 COPY . .
 
 RUN npx prisma generate
+
+# Tell puppeteer/playwright where chromium is
+ENV CHROMIUM_PATH=/usr/bin/chromium-browser
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 EXPOSE 5000
 
