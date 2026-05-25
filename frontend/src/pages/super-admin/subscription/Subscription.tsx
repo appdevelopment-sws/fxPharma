@@ -71,6 +71,19 @@ export default function ManageSubscriptionPage() {
     },
     [handleFilter]
   )
+  const handlePageChange = useCallback(
+    (page: number) => {
+      handleFilter({ page })
+    },
+    [handleFilter]
+  )
+
+  const handlePageSizeChange = useCallback(
+    (limit: number) => {
+      handleFilter({ limit, page: 1 })
+    },
+    [handleFilter]
+  )
 
   const columns: DataTableColumn<any>[] = useMemo(() => {
     return [
@@ -269,10 +282,8 @@ Businesses"
             pageSize={filter.perPage || 10}
             totalRecords={plansData?.meta?.total || 0}
             isLoading={isLoadingPlans}
-            onPageChange={(page) => handleFilterChange({ page })}
-            onPageSizeChange={(perPage) =>
-              handleFilterChange({ perPage, page: 1 })
-            }
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
             emptyTitle="No subscriptions found"
             emptyDescription="Create a subscription or adjust the filters to see matching records."
           />

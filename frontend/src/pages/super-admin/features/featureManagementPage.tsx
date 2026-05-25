@@ -86,6 +86,19 @@ const FeatureManagementPage = () => {
     },
     [handleFilter]
   )
+  const handlePageChange = useCallback(
+    (page: number) => {
+      handleFilter({ page })
+    },
+    [handleFilter]
+  )
+
+  const handlePageSizeChange = useCallback(
+    (limit: number) => {
+      handleFilter({ limit, page: 1 })
+    },
+    [handleFilter]
+  )
 
   const columns: DataTableColumn<Feature>[] = useMemo(
     () => [
@@ -219,10 +232,8 @@ const FeatureManagementPage = () => {
           pageSize={filter.perPage || 10}
           totalRecords={featureData?.meta?.total || 0}
           isLoading={isLoadingFeatures}
-          onPageChange={(page) => handleFilterChange({ page })}
-          onPageSizeChange={(perPage) =>
-            handleFilterChange({ perPage, page: 1 })
-          }
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
           emptyTitle="No features found"
           emptyDescription="Create a new feature to see it listed here."
         />

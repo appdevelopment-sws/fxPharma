@@ -72,6 +72,19 @@ export default function ExpiryReports() {
     },
     [handleFilter]
   )
+  const handlePageChange = useCallback(
+    (page: number) => {
+      handleFilter({ page })
+    },
+    [handleFilter]
+  )
+
+  const handlePageSizeChange = useCallback(
+    (limit: number) => {
+      handleFilter({ limit, page: 1 })
+    },
+    [handleFilter]
+  )
 
   const handleDateSelect = useCallback(
     (range: DateRange | undefined) => {
@@ -447,10 +460,8 @@ export default function ExpiryReports() {
             pageSize={filter.perPage || 10}
             totalRecords={reportData?.meta?.total || 0}
             isLoading={isLoadingReport}
-            onPageChange={(page) => handleFilterChange({ page })}
-            onPageSizeChange={(perPage) =>
-              handleFilterChange({ perPage, page: 1 })
-            }
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
             emptyTitle="No expiring items found"
             emptyDescription="Try expanding the date range or clearing the search filters."
           />

@@ -58,6 +58,19 @@ export default function AdminRolePage() {
     },
     [handleFilter]
   )
+  const handlePageChange = useCallback(
+    (page: number) => {
+      handleFilter({ page })
+    },
+    [handleFilter]
+  )
+
+  const handlePageSizeChange = useCallback(
+    (limit: number) => {
+      handleFilter({ limit, page: 1 })
+    },
+    [handleFilter]
+  )
 
   const columns: DataTableColumn<any>[] = useMemo(() => {
     return [
@@ -163,10 +176,8 @@ export default function AdminRolePage() {
             pageSize={filter.perPage || 10}
             totalRecords={rolesData?.meta?.total || 0}
             isLoading={isLoadingRoles}
-            onPageChange={(page) => handleFilterChange({ page })}
-            onPageSizeChange={(perPage) =>
-              handleFilterChange({ perPage, page: 1 })
-            }
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
             emptyTitle="No Roles found"
             emptyDescription="Add a new Role or adjust the filters to see matching records."
             emptyIcon={<Users className="size-10" />}
