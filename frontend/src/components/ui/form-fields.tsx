@@ -583,6 +583,9 @@ interface FormFileUploadProps<T extends FieldValues> {
   required?: boolean
   error?: string
   disabled?: boolean
+  uploadFile?: (file: File) => Promise<string>
+  onUploadingChange?: (uploading: boolean) => void
+  onUploadError?: (error: unknown) => void
 }
 
 /**
@@ -598,9 +601,24 @@ export function FormFileUpload<T extends FieldValues>({
   required,
   error,
   disabled,
+  uploadFile,
+  onUploadingChange,
+  onUploadError,
 }: FormFileUploadProps<T>) {
   const fileInputRef = React.useRef<HTMLInputElement>(null)
+  const [isUploading, setIsUploading] = React.useState(false)
+  const [localPreviewUrl, setLocalPreviewUrl] = React.useState<string | null>(
+    null
+  )
   const isImage = accept?.includes("image")
+
+  React.useEffect(() => {
+    return () => {
+      if (localPreviewUrl?.startsWith("blob:")) {
+        URL.revokeObjectURL(localPreviewUrl)
+      }
+    }
+  }, [localPreviewUrl])
 
   return (
     <Controller
@@ -609,13 +627,14 @@ export function FormFileUpload<T extends FieldValues>({
       render={({ field: { onChange, value, ref, ...field } }) => {
         // Generate preview URL if it's a file and an image
         const previewUrl = React.useMemo(() => {
+          if (localPreviewUrl) return localPreviewUrl
           if (!value) return null
           if (typeof value === "string") return getImageUrl(value)
           if ((value as any) instanceof File && isImage) {
             return URL.createObjectURL(value as File)
           }
           return null
-        }, [value, isImage])
+        }, [value, isImage, localPreviewUrl])
 
         // Cleanup object URL
         React.useEffect(() => {
@@ -648,9 +667,47 @@ export function FormFileUpload<T extends FieldValues>({
               className="hidden"
               accept={accept}
               disabled={disabled}
-              onChange={(e) => {
+              onChange={async (e) => {
                 const file = e.target.files?.[0] || null
-                onChange(file)
+                if (!file) {
+                  onChange(null)
+                  return
+                }
+
+                if (!uploadFile) {
+                  onChange(file)
+                  return
+                }
+
+                try {
+                  const objectUrl =
+                    isImage && file ? URL.createObjectURL(file) : null
+                  if (objectUrl) setLocalPreviewUrl(objectUrl)
+
+                  setIsUploading(true)
+                  onUploadingChange?.(true)
+
+                  const uploadedUrl = await uploadFile(file)
+                  if (objectUrl) {
+                    URL.revokeObjectURL(objectUrl)
+                    setLocalPreviewUrl(null)
+                  }
+                  onChange(uploadedUrl)
+                } catch (uploadError) {
+                  console.error(uploadError)
+                  onUploadError?.(uploadError)
+                  onChange(null)
+                  if (fileInputRef.current) {
+                    fileInputRef.current.value = ""
+                  }
+                  if (localPreviewUrl?.startsWith("blob:")) {
+                    URL.revokeObjectURL(localPreviewUrl)
+                  }
+                  setLocalPreviewUrl(null)
+                } finally {
+                  setIsUploading(false)
+                  onUploadingChange?.(false)
+                }
               }}
             />
             <div
@@ -660,9 +717,19 @@ export function FormFileUpload<T extends FieldValues>({
                 !disabled
                   ? "cursor-pointer hover:border-primary/50 hover:bg-muted"
                   : "cursor-not-allowed opacity-50",
-                error && "border-destructive hover:border-destructive"
+                error && "border-destructive hover:border-destructive",
+                isUploading && "cursor-wait opacity-80"
               )}
             >
+              {isUploading ? (
+                <div className="flex flex-col items-center justify-center gap-2 p-4 text-center">
+                  <Upload className="size-6 animate-pulse text-primary" />
+                  <span className="text-xs font-semibold text-primary">
+                    Uploading...
+                  </span>
+                </div>
+              ) : null}
+
               {value ? (
                 isImage && previewUrl ? (
                   <>

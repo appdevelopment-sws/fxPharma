@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 import { useForm, type SubmitHandler, useFieldArray } from "react-hook-form"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Plus, Trash2, Upload, Camera, ImageIcon } from "lucide-react"
@@ -169,27 +169,7 @@ export default function MasterProductDialog({
   })
 
   const onSubmit: SubmitHandler<any> = async (data) => {
-    let imageUrl = data.image_url
-
-    if (imageUrl instanceof File) {
-      try {
-        setIsUploading(true)
-        const uploadRes = await uploadApi.uploadImage(imageUrl)
-        imageUrl = uploadRes.data?.url || uploadRes.url
-      } catch (error) {
-        console.error("Failed to upload image:", error)
-        toast.error("Failed to upload product image.")
-        setIsUploading(false)
-        return
-      } finally {
-        setIsUploading(false)
-      }
-    }
-
-    handleMutation.mutate({
-      ...data,
-      image_url: imageUrl,
-    })
+    handleMutation.mutate(data)
   }
 
   const quickAddButton = (target: Exclude<QuickAddDialog, null>, label: string) =>
@@ -357,6 +337,14 @@ export default function MasterProductDialog({
                 accept="image/*"
                 maxSizeText="PNG, JPG up to 5MB"
                 disabled={isViewMode}
+                uploadFile={async (file) =>
+                  (await uploadApi.uploadImage(file)).publicUrl
+                }
+                onUploadingChange={setIsUploading}
+                onUploadError={() => {
+                  setIsUploading(false)
+                  toast.error("Failed to upload product image.")
+                }}
               />
             </div>
           </div>
