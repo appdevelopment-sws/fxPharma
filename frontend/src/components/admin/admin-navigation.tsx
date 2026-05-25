@@ -39,26 +39,15 @@ export const adminNavigationGroups: SidebarNavigationGroup[] = [
         to: "/admin/dashboard",
         description: "Workspace summary and permission overview",
         icon: LayoutDashboard,
-      },
-      {
-        title: "Profile",
-        to: "/admin/profile",
-        description: "Account details and tenant context",
-        icon: UserCog,
-      },
-      {
-        title: "Role",
-        to: "/admin/role",
-        description: "Role management",
-        icon: ShieldCheck,
-      },
-      {
-        title: "Branch",
-        to: "/admin/branch",
-        description: "Manage pharmacy branches",
-        icon: Building2,
-        permissions: [PERMISSIONS.BRANCH_VIEW],
-      },
+      },  {
+        title: "POS",
+        to: "/admin/pos",
+        description: "Point of Sale system",
+        icon: Barcode,
+        permissions: [PERMISSIONS.ORDER_CREATE],
+      }
+      
+
     ],
   },
   {
@@ -117,22 +106,14 @@ export const adminNavigationGroups: SidebarNavigationGroup[] = [
   },
   {
     title: "Orders & Sales",
-    items: [
-      {
-        title: "Orders",
-        to: "/admin/orders",
-        description: "Order management system",
+    items: [,{
+        title: "Recent Invoices",
+        to: "/admin/invoices",
+        description: "Transaction history",
         icon: FileText,
         permissions: [PERMISSIONS.ORDER_VIEW],
       },
-      {
-        title: "POS",
-        to: "/admin/pos",
-        description: "Point of Sale system",
-        icon: Barcode,
-        permissions: [PERMISSIONS.ORDER_CREATE],
-      },
-      {
+        {
         title: "Sales Returns",
         to: "/admin/returns",
         description: "Customer returns and refunds",
@@ -140,27 +121,23 @@ export const adminNavigationGroups: SidebarNavigationGroup[] = [
         permissions: [PERMISSIONS.ORDER_MANAGE],
       },
       {
-        title: "Recent Invoices",
-        to: "/admin/invoices",
-        description: "Transaction history",
+        title: "Orders",
+        to: "/admin/orders",
+        description: "Order management system",
         icon: FileText,
         permissions: [PERMISSIONS.ORDER_VIEW],
-      },
-    ],
-  },
-  {
-    title: "Procurement",
-    items: [
-      {
+      }, {
         title: "Suppliers",
         to: "/admin/suppliers",
         description: "Supplier management",
         icon: Users,
         permissions: [PERMISSIONS.INVENTORY_MANAGE],
       },
+       
+   
     ],
   },
-  {
+    {
     title: "Reports",
     items: [
       {
@@ -192,39 +169,74 @@ export const adminNavigationGroups: SidebarNavigationGroup[] = [
       },
     ],
   },
-
-   {
-    title: "Setting",
+{
+    title: "Profles",
     items: [
+        {
+        title: "Profile",
+        to: "/admin/profile",
+        description: "Account details and tenant context",
+        icon: UserCog,
+      },   {
+        title: "Role",
+        to: "/admin/role",
+        description: "Role management",
+        icon: ShieldCheck,
+      },
       {
-        title: "Analytics",
-        description: "Reports and business intelligence",
-        icon: LineChart,
-        children: [
-          {
-            title: "Daily Transactions",
-            to: "/admin/reports/daily-transaction-report",
-            description: "Daily transaction report",
-            permissions: [PERMISSIONS.DAILY_TRANSACTION_REPORT_VIEW],
-            icon: Receipt,
-          },
-          {
-            title: "Expiry Reports",
-            to: "/admin/reports/expiry-reports",
-            description: "Identify expiring stock",
-            permissions: [PERMISSIONS.EXPIRY_REPORT_VIEW],
-            icon: CalendarX,
-          },
-          {
-            title: "GST Report",
-            to: "/admin/reports/gst-report",
-            description: "Input and Output GST summary",
-            icon: FileText,
-          },
-        ],
+        title: "Branch",
+        to: "/admin/branch",
+        description: "Manage pharmacy branches",
+        icon: Building2,
+        permissions: [PERMISSIONS.BRANCH_VIEW],
       },
     ],
   },
+  // {
+  //   title: "Procurement",
+  //   items: [
+  //     {
+  //       title: "Suppliers",
+  //       to: "/admin/suppliers",
+  //       description: "Supplier management",
+  //       icon: Users,
+  //       permissions: [PERMISSIONS.INVENTORY_MANAGE],
+  //     },
+  //   ],
+  // },
+
+  //  {
+  //   title: "Setting",
+  //   items: [
+  //     {
+  //       title: "Analytics",
+  //       description: "Reports and business intelligence",
+  //       icon: LineChart,
+  //       children: [
+  //         {
+  //           title: "Daily Transactions",
+  //           to: "/admin/reports/daily-transaction-report",
+  //           description: "Daily transaction report",
+  //           permissions: [PERMISSIONS.DAILY_TRANSACTION_REPORT_VIEW],
+  //           icon: Receipt,
+  //         },
+  //         {
+  //           title: "Expiry Reports",
+  //           to: "/admin/reports/expiry-reports",
+  //           description: "Identify expiring stock",
+  //           permissions: [PERMISSIONS.EXPIRY_REPORT_VIEW],
+  //           icon: CalendarX,
+  //         },
+  //         {
+  //           title: "GST Report",
+  //           to: "/admin/reports/gst-report",
+  //           description: "Input and Output GST summary",
+  //           icon: FileText,
+  //         },
+  //       ],
+  //     },
+  //   ],
+  // },
   // {
   //   title: "Workspace",
   //   items: [
