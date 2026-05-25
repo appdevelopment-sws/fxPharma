@@ -106,11 +106,9 @@ export default function LoginPage() {
 
           <div className="relative z-10">
             <div className="animate-drop-in-center mb-20 flex items-center gap-3 text-white">
-              <div className="rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 p-2.5 shadow-lg shadow-indigo-500/30">
-                <Pill className="h-6 w-6 text-white" />
-              </div>
+              <img src="/logo.png" alt="Ojas Pharmacy Logo" className="h-24 w-auto object-contain rounded-lg bg-white p-2" />
               <span className="text-2xl font-bold tracking-tight">
-                PharmaAdmin
+
               </span>
             </div>
 
@@ -164,12 +162,10 @@ export default function LoginPage() {
           <div className="w-full max-w-[420px] space-y-8">
             <div className="space-y-3 text-center lg:text-left">
               <div className="animate-drop-in-center mb-8 flex justify-center lg:hidden">
-                <div className="rounded-2xl border border-border bg-gradient-to-br from-indigo-50 to-violet-50 p-4 shadow-sm dark:from-indigo-950/20 dark:to-violet-950/20">
-                  <Lock className="h-8 w-8 text-primary" />
-                </div>
+                <img src="/logo.png" alt="Ojas Pharmacy Logo" className="h-14 w-auto object-contain rounded-2xl border border-border bg-white p-2 shadow-sm" />
               </div>
               <h2 className="animate-shatter-top-right text-3xl font-extrabold tracking-tight text-foreground delay-150">
-                Sign in to PharmaAdmin
+                Sign in to Ojas Pharmacy
               </h2>
               <p className="animate-shatter-top-left text-sm text-muted-foreground delay-200">
                 Enter your credentials to access your dashboard.
@@ -214,7 +210,7 @@ export default function LoginPage() {
                     className={cn(
                       "h-12 rounded-xl border-border bg-muted/30 pr-10 focus:bg-background",
                       errors.password &&
-                        "border-destructive/50 bg-destructive/5"
+                      "border-destructive/50 bg-destructive/5"
                     )}
                     {...register("password")}
                   />
