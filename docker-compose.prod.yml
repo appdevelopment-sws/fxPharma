@@ -3,6 +3,7 @@ services:
     build:
       context: ./backend
       dockerfile: dockerfile.prod
+    restart: always
     env_file:
       - ./backend/.env.prod
     ports:
@@ -27,13 +28,6 @@ services:
       - ./backend/.env
     volumes:
       - postgres_data:/var/lib/postgresql/data
-  adminer:
-    image: adminer
-    restart: always
-    ports:
-      - "8080:8080"
-    depends_on:
-      - db
 
   redis:
     image: redis:7
