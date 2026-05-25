@@ -35,6 +35,8 @@ type OrderConfirmItem = {
   description?: string
   qty: number
   freeQty: number
+  freeQtyInput?: string
+  unitRate?: number
   batchNo: string
   expiry: string
   purchaseRate: number
@@ -129,39 +131,55 @@ const formatMoney = (value: number) =>
     maximumFractionDigits: 2,
   })
 
-const buildRowFromItem = (item: any): OrderConfirmItem => ({
-  tempId: item.tempId || item.id || createTempId(),
-  inventoryId: item.inventoryId || item.inventory?.id,
-  unit: item.unit || "strips",
-  name: item.inventory?.name || item.name || "",
-  description: item.inventory?.saltComposition || item.description || "",
-  qty: toNumber(item.qty || item.ordQty || 1),
-  freeQty: toNumber(item.freeQty || item.free || 0),
-  batchNo: item.batchNo || item.batch || "",
-  expiry: toExpiryInputValue(item.expiry || item.inventory?.daysLimit),
-  purchaseRate: toNumber(item.purchaseRate),
-  mrp: toNumber(item.inventory?.mrp),
-  rate1: toNumber(item.inventory?.rateA),
-  rate2: toNumber(item.inventory?.rateB),
-  rate3: toNumber(item.inventory?.rateC),
-  cgst: toNumber(item.inventory?.cgst),
-  sgst: toNumber(item.inventory?.sgst),
-  freeUnit: item.freeUnit || item.freeUnit || "strips",
-  discount: toNumber(item.discount || 0),
-  discount_type:
-    item.discount_type ||
-    item.discountType ||
-    "flat",
-})
+const normUnit = (u?: string) => {
+  if (!u) return "strip"
+  const l = u.trim().toLowerCase()
+  if (l === "strips") return "strip"
+  return l
+}
+
+const buildRowFromItem = (item: any): OrderConfirmItem => {
+  const qty = toNumber(item.qty || item.ordQty || 1)
+  const freeQty = toNumber(item.freeQty || item.free || 0)
+  const dbPurchaseRate = toNumber(item.purchaseRate)
+  const purchaseRate = dbPurchaseRate * (qty + freeQty)
+  const unitRate = qty > 0 ? purchaseRate / qty : dbPurchaseRate
+
+  return {
+    tempId: item.tempId || item.id || createTempId(),
+    inventoryId: item.inventoryId || item.inventory?.id,
+    unit: normUnit(item.unit),
+    name: item.inventory?.name || item.name || "",
+    description: item.inventory?.saltComposition || item.description || "",
+    qty,
+    freeQty,
+    freeQtyInput: String(freeQty),
+    unitRate: Math.round(unitRate * 100) / 100,
+    batchNo: item.batchNo || item.batch || "",
+    expiry: toExpiryInputValue(item.expiry || item.inventory?.daysLimit),
+    purchaseRate: Math.round(purchaseRate * 100) / 100,
+    mrp: toNumber(item.inventory?.mrp),
+    rate1: toNumber(item.inventory?.rateA),
+    rate2: toNumber(item.inventory?.rateB),
+    rate3: toNumber(item.inventory?.rateC),
+    cgst: toNumber(item.inventory?.cgst),
+    sgst: toNumber(item.inventory?.sgst),
+    freeUnit: normUnit(item.freeUnit),
+    discount: toNumber(item.discount || 0),
+    discount_type: item.discount_type || item.discountType || "flat",
+  }
+}
 
 const buildBlankRow = (): OrderConfirmItem => ({
   tempId: createTempId(),
   inventoryId: "",
-  unit: "strips",
+  unit: "strip",
   name: "",
   description: "",
   qty: 1,
   freeQty: 0,
+  freeQtyInput: "0",
+  unitRate: 0,
   batchNo: "",
   expiry: "",
   purchaseRate: 0,
@@ -171,7 +189,7 @@ const buildBlankRow = (): OrderConfirmItem => ({
   rate3: 0,
   cgst: 0,
   sgst: 0,
-  freeUnit: "strips",
+  freeUnit: "strip",
   discount: 0,
   discount_type: "flat",
 })
@@ -237,7 +255,7 @@ export default function OrderConfirmFormDialog({
 }: OrderConfirmFormDialogProps) {
   const queryClient = useQueryClient()
 
-  const { control, register, handleSubmit, reset, setValue } =
+  const { control, register, handleSubmit, reset, setValue, getValues } =
     useForm<OrderConfirmFormValues>({
       defaultValues: {
         supplierId: "",
@@ -285,6 +303,44 @@ export default function OrderConfirmFormDialog({
     control,
     name: "items",
   })
+
+  const handleRowCalculation = (index: number) => {
+    const item = getValues(`items.${index}`)
+    if (!item) return
+
+    const qty = toNumber(item.qty)
+    const freeQtyInput = String(item.freeQtyInput || "")
+    const unitRate = toNumber(item.unitRate)
+
+    const trimmed = freeQtyInput.trim()
+    const schemeMatch = trimmed.match(/^(\d+)\s*\+\s*(\d+)$/)
+
+    let freeQty = 0
+    let purchaseRate = 0
+
+    if (schemeMatch) {
+      const buyFactor = toNumber(schemeMatch[1])
+      const freeFactor = toNumber(schemeMatch[2])
+
+      if (buyFactor > 0) {
+        // Free quantity received is based on physical purchase threshold
+        freeQty = Math.floor((qty * freeFactor) / buyFactor)
+        // Scheme adjusted unit rate
+        const adjustedUnitRate = (unitRate * buyFactor) / (buyFactor + freeFactor)
+        // Purchase (Amount) in UI is the Row Total: (qty + freeQty) * adjustedUnitRate
+        purchaseRate = (qty + freeQty) * adjustedUnitRate
+      }
+    } else {
+      freeQty = toNumber(trimmed)
+      // Purchase (Amount) in UI for simple free is the Row Total: qty * unitRate
+      purchaseRate = qty * unitRate
+    }
+
+    purchaseRate = Math.round(purchaseRate * 100) / 100
+
+    setValue(`items.${index}.freeQty`, freeQty, { shouldDirty: true })
+    setValue(`items.${index}.purchaseRate`, purchaseRate, { shouldDirty: true })
+  }
 
   useEffect(() => {
     if (!open) return
@@ -395,11 +451,21 @@ export default function OrderConfirmFormDialog({
       const determinedStatus = balanceDue < 0.01 ? "COMPLETED" : "PENDING"
       const isUdharValue = determinedStatus === "COMPLETED" ? "NO" : values.isUdhar
 
+      const cleanedItems = values.items.map((item) => {
+        const { freeQtyInput, unitRate, ...rest } = item
+        const totalQty = toNumber(item.qty) + toNumber(item.freeQty)
+        const dbPurchaseRate = totalQty > 0 ? toNumber(item.purchaseRate) / totalQty : toNumber(item.purchaseRate)
+        return {
+          ...rest,
+          purchaseRate: Math.round(dbPurchaseRate * 100) / 100
+        }
+      })
+
       return ordersApi.update(order.id, {
         ...values,
         isUdhar: isUdharValue,
         status: determinedStatus,
-        items: values.items,
+        items: cleanedItems,
       })
     },
     onSuccess: () => {
@@ -579,13 +645,14 @@ export default function OrderConfirmFormDialog({
             <div className="w-max min-w-full">
               <div
                 className="grid gap-3 border-b border-border/40 px-6 py-2.5 text-[11px] font-bold tracking-wider text-muted-foreground uppercase bg-muted/10"
-                style={{ gridTemplateColumns: "240px 140px 140px 105px 90px 100px 100px 95px 95px 95px 80px 80px 140px 50px" }}
+                style={{ gridTemplateColumns: "180px 140px 140px 90px 75px 80px 80px 80px 70px 70px 70px 60px 60px 110px 50px" }}
               >
                 <div>Product Details</div>
                 <div className="text-center">Ord Qty</div>
                 <div className="text-center">Free</div>
                 <div>Batch No.</div>
                 <div>Expiry</div>
+                <div className="text-right">Rate</div>
                 <div className="text-right">Purchase</div>
                 <div className="text-right">MRP/Sell</div>
                 <div className="text-right">Rate 1</div>
@@ -602,7 +669,7 @@ export default function OrderConfirmFormDialog({
                   <div
                     key={field.id}
                     className="grid items-center gap-3 px-6 py-3 hover:bg-muted/10 transition-colors duration-150"
-                    style={{ gridTemplateColumns: "240px 140px 140px 105px 90px 100px 100px 95px 95px 95px 80px 80px 140px 50px" }}
+                    style={{ gridTemplateColumns: "180px 140px 140px 90px 75px 80px 80px 80px 70px 70px 70px 60px 60px 110px 40px" }}
                   >
                     <div>
                       <Input
@@ -612,20 +679,21 @@ export default function OrderConfirmFormDialog({
                       />
                     </div>
                     <div>
-                      <div className="flex items-center overflow-hidden rounded-lg border border-border/60 bg-background hover:border-primary/30 focus-within:border-primary/50 focus-within:ring-4 focus-within:ring-primary/10 transition-all duration-200">
+                      <div className="flex w-full items-center overflow-hidden rounded-lg border border-border/60 bg-background hover:border-primary/30 focus-within:border-primary/50 focus-within:ring-4 focus-within:ring-primary/10 transition-all duration-200">
                         <Input
                           type="text"
                           min={0}
                           step="1"
                           {...register(`items.${index}.qty`, {
                             valueAsNumber: true,
+                            onChange: () => handleRowCalculation(index)
                           })}
-                          className="h-9 w-16 border-0 bg-transparent text-center font-semibold shadow-none focus-visible:ring-0 text-xs"
+                          className="h-9 w-[75px] shrink-0 border-0 bg-transparent text-center font-semibold shadow-none focus-visible:ring-0 text-xs px-1"
                         />
-                        <div className="h-5 w-px bg-border/60" />
+                        <div className="h-5 w-px shrink-0 bg-border/60" />
                         <select
                           {...register(`items.${index}.unit`)}
-                          className="flex-1 bg-transparent px-2 text-xs font-semibold outline-none py-1.5 text-foreground"
+                          className="w-[60px] shrink-0 bg-transparent pl-1.5 pr-3 text-xs font-semibold outline-none py-1.5 text-foreground"
                         >
                           {PACKAGING_TYPE_OPTIONS.map((option) => (
                             <option key={option.value} value={option.value}>
@@ -636,20 +704,18 @@ export default function OrderConfirmFormDialog({
                       </div>
                     </div>
                     <div>
-                      <div className="flex items-center overflow-hidden rounded-lg border border-border/60 bg-background hover:border-primary/30 focus-within:border-primary/50 focus-within:ring-4 focus-within:ring-primary/10 transition-all duration-200">
+                      <div className="flex w-full items-center overflow-hidden rounded-lg border border-border/60 bg-background hover:border-primary/30 focus-within:border-primary/50 focus-within:ring-4 focus-within:ring-primary/10 transition-all duration-200">
                         <Input
                           type="text"
-                          min={0}
-                          step="1"
-                          {...register(`items.${index}.freeQty`, {
-                            valueAsNumber: true,
+                          {...register(`items.${index}.freeQtyInput`, {
+                            onChange: () => handleRowCalculation(index)
                           })}
-                          className="h-9 w-16 border-0 bg-transparent text-center font-semibold shadow-none focus-visible:ring-0 text-xs"
+                          className="h-9 w-[75px] shrink-0 border-0 bg-transparent text-center font-semibold shadow-none focus-visible:ring-0 text-xs px-1"
                         />
-                        <div className="h-5 w-px bg-border/60" />
+                        <div className="h-5 w-px shrink-0 bg-border/60" />
                         <select
                           {...register(`items.${index}.freeUnit`)}
-                          className="flex-1 bg-transparent px-2 text-xs font-semibold outline-none py-1.5 text-foreground"
+                          className="w-[60px] shrink-0 bg-transparent pl-1.5 pr-3 text-xs font-semibold outline-none py-1.5 text-foreground"
                         >
                           {PACKAGING_TYPE_OPTIONS.map((option) => (
                             <option key={option.value} value={option.value}>
@@ -672,6 +738,18 @@ export default function OrderConfirmFormDialog({
                         {...register(`items.${index}.expiry`)}
                         placeholder="MM/YY"
                         className="h-9 rounded-lg border-border/60 bg-background px-3 text-foreground hover:border-primary/30 focus-visible:border-primary/50 focus-visible:ring-4 focus-visible:ring-primary/10 transition-all duration-200 text-xs"
+                      />
+                    </div>
+                    <div>
+                      <Input
+                        type="text"
+                        min={0}
+                        step="0.01"
+                        {...register(`items.${index}.unitRate`, {
+                          valueAsNumber: true,
+                          onChange: () => handleRowCalculation(index)
+                        })}
+                        className="h-9 rounded-lg border-border/60 bg-background px-3 text-right font-semibold text-foreground hover:border-primary/30 focus-visible:border-primary/50 focus-visible:ring-4 focus-visible:ring-primary/10 transition-all duration-200 text-xs"
                       />
                     </div>
                     <div>
@@ -748,7 +826,7 @@ export default function OrderConfirmFormDialog({
                       />
                     </div>
                     <div>
-                      <div className="flex items-center overflow-hidden rounded-lg border border-border/60 bg-background hover:border-primary/30 focus-within:border-primary/50 focus-within:ring-4 focus-within:ring-primary/10 transition-all duration-200">
+                      <div className="flex w-full items-center overflow-hidden rounded-lg border border-border/60 bg-background hover:border-primary/30 focus-within:border-primary/50 focus-within:ring-4 focus-within:ring-primary/10 transition-all duration-200">
                         <Input
                           type="text"
                           min={0}
@@ -756,12 +834,12 @@ export default function OrderConfirmFormDialog({
                           {...register(`items.${index}.discount`, {
                             valueAsNumber: true,
                           })}
-                          className="h-9 w-14 border-0 bg-transparent text-center font-semibold shadow-none focus-visible:ring-0 text-xs"
+                          className="h-9 w-[50px] shrink-0 border-0 bg-transparent text-center font-semibold shadow-none focus-visible:ring-0 text-xs px-1"
                         />
-                        <div className="h-5 w-px bg-border/60" />
+                        <div className="h-5 w-px shrink-0 bg-border/60" />
                         <select
                           {...register(`items.${index}.discount_type`)}
-                          className="flex-1 bg-transparent px-2 text-xs font-semibold outline-none py-1.5 text-foreground"
+                          className="w-[55px] shrink-0 bg-transparent pl-1.5 pr-3 text-xs font-semibold outline-none py-1.5 text-foreground"
                         >
                           {DISCOUNT_TYPE_OPTIONS.map((option) => (
                             <option key={option.value} value={option.value}>
