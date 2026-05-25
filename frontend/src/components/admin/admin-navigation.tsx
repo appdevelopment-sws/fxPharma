@@ -192,6 +192,39 @@ export const adminNavigationGroups: SidebarNavigationGroup[] = [
       },
     ],
   },
+
+   {
+    title: "Setting",
+    items: [
+      {
+        title: "Analytics",
+        description: "Reports and business intelligence",
+        icon: LineChart,
+        children: [
+          {
+            title: "Daily Transactions",
+            to: "/admin/reports/daily-transaction-report",
+            description: "Daily transaction report",
+            permissions: [PERMISSIONS.DAILY_TRANSACTION_REPORT_VIEW],
+            icon: Receipt,
+          },
+          {
+            title: "Expiry Reports",
+            to: "/admin/reports/expiry-reports",
+            description: "Identify expiring stock",
+            permissions: [PERMISSIONS.EXPIRY_REPORT_VIEW],
+            icon: CalendarX,
+          },
+          {
+            title: "GST Report",
+            to: "/admin/reports/gst-report",
+            description: "Input and Output GST summary",
+            icon: FileText,
+          },
+        ],
+      },
+    ],
+  },
   // {
   //   title: "Workspace",
   //   items: [
