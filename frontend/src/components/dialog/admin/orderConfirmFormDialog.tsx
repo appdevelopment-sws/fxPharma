@@ -819,18 +819,6 @@ export default function OrderConfirmFormDialog({
                         type="text"
                         min={0}
                         step="0.01"
-                        {...register(`items.${index}.unitRate`, {
-                          valueAsNumber: true,
-                          onChange: () => handleRowCalculation(index),
-                        })}
-                        className="h-9 rounded-lg border-border/60 bg-background px-3 text-right text-xs font-semibold text-foreground transition-all duration-200 hover:border-primary/30 focus-visible:border-primary/50 focus-visible:ring-4 focus-visible:ring-primary/10"
-                      />
-                    </div>
-                    <div>
-                      <Input
-                        type="text"
-                        min={0}
-                        step="0.01"
                         {...register(`items.${index}.purchaseRate`, {
                           valueAsNumber: true,
                         })}
