@@ -20,23 +20,27 @@ export class ManufacturerController {
       ]);
 
       const where = {
-        ...searchFilter,
-        OR: includeGlobal
-          ? [
-              {
-                organizationId,
-                ...(branchId ? { branchId } : {}),
-              },
-              {
-                isGlobal: true,
-              },
-            ]
-          : [
-              {
-                organizationId,
-                ...(branchId ? { branchId } : {}),
-              },
-            ],
+        AND: [
+          {
+            OR: includeGlobal
+              ? [
+                  {
+                    organizationId,
+                    ...(branchId ? { branchId } : {}),
+                  },
+                  {
+                    isGlobal: true,
+                  },
+                ]
+              : [
+                  {
+                    organizationId,
+                    ...(branchId ? { branchId } : {}),
+                  },
+                ],
+          },
+          ...(search ? [searchFilter] : []),
+        ],
       };
 
       const [data, total] = await Promise.all([

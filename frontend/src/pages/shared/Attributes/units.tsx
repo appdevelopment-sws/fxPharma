@@ -197,7 +197,7 @@ const Units = () => {
             data={data?.data || []}
             rowKey="id"
             currentPage={filter.page || 1}
-            lastPage={data?.meta?.page || 1}
+            lastPage={data?.meta?.totalPages || 1}
             pageSize={filter.perPage || 10}
             totalRecords={data?.meta?.total || 0}
             isLoading={isLoading}
