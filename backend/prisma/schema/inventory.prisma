@@ -71,11 +71,11 @@ model Inventory {
   batches InventoryBatch[]
   // Relations
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  branch       Branch?      @relation(fields: [branchId], references: [id], onDelete: SetNull)
-  manufacturer Manufacturer @relation(fields: [manufacturerId], references: [id], onDelete: SetNull)
-  category     Category?    @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  brand        Brand?       @relation(fields: [brandId], references: [id], onDelete: SetNull)
-  unit         Unit?        @relation(fields: [unitId], references: [id], onDelete: SetNull)
+  branch       Branch?      @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  manufacturer Manufacturer @relation(fields: [manufacturerId], references: [id], onDelete: Cascade)
+  category     Category?    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  brand        Brand?       @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  unit         Unit?        @relation(fields: [unitId], references: [id], onDelete: Cascade)
   @@index([organizationId])
   @@index([branchId])
   @@index([name])
