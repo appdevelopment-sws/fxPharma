@@ -128,6 +128,48 @@ async function main() {
       name: "View Expiry Reports",
       description: "Can view expiry reports",
     },
+
+    //add permission for compound and interstore
+    {
+      key: "compound.view",
+      name: "View Compounding",
+      description: "Can view compounding details",
+    },
+    {
+      key: "compound.manage",
+      name: "Manage Compounding",
+      description: "Can manage compounding operations",
+    },
+    {
+      key: "interstore.view",
+      name: "View Interstore Transfers",
+      description: "Can view interstore transfer details",
+    },
+    {
+      key: "interstore.manage",
+      name: "Manage Interstore Transfers",
+      description: "Can manage interstore transfer operations",
+    },
+    {
+      key: "inventory-batch.view",
+      name: "View Inventory Batch",
+      description: "Can view inventory batches",
+    },
+    {
+      key: "inventory-batch.manage",
+      name: "Manage Inventory Batch",
+      description: "Can manage inventory batches",
+    },
+    {
+      key: "import-inventory.view",
+      name: "View Import Inventory",
+      description: "Can import inventory",
+    },
+    {
+      key: "import-inventory.manage",
+      name: "Manage Import Inventory",
+      description: "Can manage imported inventory",
+    },
   ];
 
   console.log("Seeding permissions...");

@@ -42,6 +42,17 @@ export const PERMISSIONS = {
   REPORTS_VIEW: "reports.view",
   DAILY_TRANSACTION_REPORT_VIEW: "reports.daily-transaction.view",
   EXPIRY_REPORT_VIEW: "reports.expiry-reports",
+  GST_REPORT_VIEW: "reports.gst-report",
+  //permission for interstore and compount
+  INTER_STORE_TRANSFER_VIEW: "inter-store-transfer.view",
+  INTER_STORE_TRANSFER_MANAGE: "inter-store-transfer.manage",
+  COMPOUND_VIEW: "compound.view",
+  COMPOUND_MANAGE: "compound.manage",
+  INVENTORY_BATCH_VIEW: "inventory-batch.view",
+  INVENTORY_BATCH_MANAGE: "inventory-batch.manage",
+  IMPORT_INVENTORY_VIEW: "import-inventory.view",
+
+  // Add more permissions as needed
 } as const
 
 export type PermissionName = (typeof PERMISSIONS)[keyof typeof PERMISSIONS]

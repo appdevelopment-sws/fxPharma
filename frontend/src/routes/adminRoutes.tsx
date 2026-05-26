@@ -46,13 +46,45 @@ export const AdminRoutes = () => {
           <Route path="profile" element={<AdminProfilePage />} />
           <Route path="role" element={<AdminRolePage />} />
           <Route path="all-inventory" element={<AllInventory />} />
-          <Route path="all-compound" element={<AllCompound />} />
-          <Route path="inventory-batch" element={<InventoryBatch />} />
-          <Route path="import-inventory" element={<ImportInventory />} />
           <Route
-            path="inter-store-transfer"
-            element={<AllInterStoreTransfer />}
-          />
+            element={
+              <ProtectedRoute
+                allowedPermissions={[PERMISSIONS.COMPOUND_VIEW]}
+              />
+            }
+          >
+            <Route path="all-compound" element={<AllCompound />} />
+          </Route>
+          <Route
+            element={
+              <ProtectedRoute
+                allowedPermissions={[PERMISSIONS.INVENTORY_BATCH_VIEW]}
+              />
+            }
+          >
+            <Route path="inventory-batch" element={<InventoryBatch />} />
+          </Route>
+          <Route
+            element={
+              <ProtectedRoute
+                allowedPermissions={[PERMISSIONS.IMPORT_INVENTORY_VIEW]}
+              />
+            }
+          >
+            <Route path="import-inventory" element={<ImportInventory />} />
+          </Route>
+          <Route
+            element={
+              <ProtectedRoute
+                allowedPermissions={[PERMISSIONS.INTER_STORE_TRANSFER_VIEW]}
+              />
+            }
+          >
+            <Route
+              path="inter-store-transfer"
+              element={<AllInterStoreTransfer />}
+            />
+          </Route>
           <Route path="orders" element={<Orders />} />
           <Route path="suppliers" element={<Suppliers />} />
           <Route path="returns" element={<ReturnsPage />} />

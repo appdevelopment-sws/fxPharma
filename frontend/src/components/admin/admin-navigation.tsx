@@ -83,14 +83,14 @@ export const adminNavigationGroups: SidebarNavigationGroup[] = [
             to: "/admin/inter-store-transfer",
             description: "Stock transfers between stores",
             icon: ArrowLeftRight,
-            permissions: [PERMISSIONS.INVENTORY_MANAGE],
+            permissions: [PERMISSIONS.INTER_STORE_TRANSFER_VIEW],
           },
           {
             title: "Import Inventory",
             to: "/admin/import-inventory",
             description: "Import inventory from CSV/Excel",
             icon: UploadCloud,
-            permissions: [PERMISSIONS.INVENTORY_MANAGE],
+            permissions: [PERMISSIONS.INTER_STORE_TRANSFER_VIEW],
           },
           {
             title: "Attributes",
