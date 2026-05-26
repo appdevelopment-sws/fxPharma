@@ -442,13 +442,15 @@ export class InventoryController {
   });
   static create = catchAsync(async (req: Request, res: Response) => {
     const { organizationId, branchId } = getRequestScope(req);
+    const { imageUrl, ...body } = req.body;
 
     const inventory = await rootPrisma.inventory.create({
       data: {
-        ...req.body,
+        ...body,
+        imageUrl: imageUrl ?? null,
         organizationId,
         branchId,
-        daysLimit: req.body.daysLimit ? req.body.daysLimit : null,
+        daysLimit: body.daysLimit ? body.daysLimit : null,
       },
     });
 
@@ -473,12 +475,13 @@ export class InventoryController {
       throw new ErrorHandler("Inventory item not found", 404);
     }
 
-    const { id, createdAt, updatedAt, ...data } = req.body;
+    const { id, createdAt, updatedAt, imageUrl, ...data } = req.body;
 
     const inventory = await rootPrisma.inventory.update({
       where: { id: req.params.id as string },
       data: {
         ...data,
+        imageUrl: imageUrl ?? null,
         daysLimit: data.daysLimit ? data.daysLimit : null,
       },
     });

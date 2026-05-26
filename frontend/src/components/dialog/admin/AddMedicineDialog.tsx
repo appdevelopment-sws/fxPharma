@@ -106,6 +106,7 @@ const toFormValues = (
     product?.saltComposition ||
     product?.salt ||
     "",
+  imageUrl: product?.imageUrl || "",
   category:
     product?.categoryId ||
     product?.category_id ||
@@ -216,6 +217,7 @@ const toApiPayload = (data: any) => ({
   negativeStock: !!data.negative_stock,
   editRates: !!data.edit_rates,
   availableStock: toNumber(data.available_stock),
+  imageUrl: data.imageUrl || null,
 })
 
 export default function MedicineStockDialog({

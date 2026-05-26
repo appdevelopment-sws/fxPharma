@@ -7,6 +7,7 @@ model Inventory {
   // 01 Product Identification
   name            String
   status          InventoryStatus @default(CONTINUE)
+  imageUrl        String?  @map("image_url")
   manufacturerId  String @map("manufacturer_id")
   saltComposition String?  @map("salt_composition")
   categoryId       String?  @default("TAB")

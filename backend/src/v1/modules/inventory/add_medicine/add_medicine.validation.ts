@@ -6,6 +6,7 @@ export const createInventorySchema = z.object({
   // 01 Product Identification
   name: z.string().min(1, "Product name is required"),
   status: InventoryStatusEnum.optional(),
+  imageUrl: z.string().optional().nullable(),
   manufacturerId: z.string().nullable().optional(),
   categoryId: z.string().nullable().optional(),
   brandId: z.string().nullable().optional(),
