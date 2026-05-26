@@ -113,11 +113,16 @@ export type GetStoresResponse = {
 const BASE_URL = "/storelist"
 
 const mapFormToApi = (data: StoreFormValues) => {
+  const logo =
+    typeof data.store_logo === "string" && data.store_logo.trim()
+      ? data.store_logo
+      : undefined
+
   return {
     storeName: data.store_name,
     description: data.description,
     category: data.store_category,
-    logo: data.store_logo,
+    logo,
     status: data.store_visibility || "ACTIVE",
     ownerFirstName: data.first_name,
     ownerLastName: data.last_name,

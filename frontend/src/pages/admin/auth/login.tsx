@@ -106,10 +106,12 @@ export default function LoginPage() {
 
           <div className="relative z-10">
             <div className="animate-drop-in-center mb-20 flex items-center gap-3 text-white">
-              <img src="/logo.png" alt="Ojas Pharmacy Logo" className="h-24 w-auto object-contain rounded-lg bg-white p-2" />
-              <span className="text-2xl font-bold tracking-tight">
-
-              </span>
+              <img
+                src="/logo.png"
+                alt="Ojas Pharmacy Logo"
+                className="h-24 w-auto rounded-lg bg-white object-contain p-2"
+              />
+              <span className="text-2xl font-bold tracking-tight"></span>
             </div>
 
             <div className="max-w-lg space-y-6">
@@ -162,7 +164,11 @@ export default function LoginPage() {
           <div className="w-full max-w-[420px] space-y-8">
             <div className="space-y-3 text-center lg:text-left">
               <div className="animate-drop-in-center mb-8 flex justify-center lg:hidden">
-                <img src="/logo.png" alt="Ojas Pharmacy Logo" className="h-14 w-auto object-contain rounded-2xl border border-border bg-white p-2 shadow-sm" />
+                <img
+                  src="/logo.png"
+                  alt="Ojas Pharmacy Logo"
+                  className="h-14 w-auto rounded-2xl border border-border bg-white object-contain p-2 shadow-sm"
+                />
               </div>
               <h2 className="animate-shatter-top-right text-3xl font-extrabold tracking-tight text-foreground delay-150">
                 Sign in to Ojas Pharmacy
@@ -210,7 +216,7 @@ export default function LoginPage() {
                     className={cn(
                       "h-12 rounded-xl border-border bg-muted/30 pr-10 focus:bg-background",
                       errors.password &&
-                      "border-destructive/50 bg-destructive/5"
+                        "border-destructive/50 bg-destructive/5"
                     )}
                     {...register("password")}
                   />
@@ -273,7 +279,7 @@ export default function LoginPage() {
               </div>
             </form>
 
-            <p className="animate-shatter-bottom-right text-center text-sm font-medium text-muted-foreground delay-700">
+            {/* <p className="animate-shatter-bottom-right text-center text-sm font-medium text-muted-foreground delay-700">
               Don't have an account?{" "}
               <Link
                 to="/admin/register"
@@ -281,7 +287,7 @@ export default function LoginPage() {
               >
                 Create an account
               </Link>
-            </p>
+            </p> */}
           </div>
         </div>
       </div>

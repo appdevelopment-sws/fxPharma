@@ -39,15 +39,14 @@ export const adminNavigationGroups: SidebarNavigationGroup[] = [
         to: "/admin/dashboard",
         description: "Workspace summary and permission overview",
         icon: LayoutDashboard,
-      },  {
+      },
+      {
         title: "POS",
         to: "/admin/pos",
         description: "Point of Sale system",
         icon: Barcode,
         permissions: [PERMISSIONS.ORDER_CREATE],
-      }
-      
-
+      },
     ],
   },
   {
@@ -106,14 +105,16 @@ export const adminNavigationGroups: SidebarNavigationGroup[] = [
   },
   {
     title: "Orders & Sales",
-    items: [,{
+    items: [
+      ,
+      {
         title: "Recent Invoices",
         to: "/admin/invoices",
         description: "Transaction history",
         icon: FileText,
         permissions: [PERMISSIONS.ORDER_VIEW],
       },
-        {
+      {
         title: "Sales Returns",
         to: "/admin/returns",
         description: "Customer returns and refunds",
@@ -126,18 +127,24 @@ export const adminNavigationGroups: SidebarNavigationGroup[] = [
         description: "Order management system",
         icon: FileText,
         permissions: [PERMISSIONS.ORDER_VIEW],
-      }, {
+      },
+      {
+        title: "Branch",
+        to: "/admin/branch",
+        description: "Manage pharmacy branches",
+        icon: Building2,
+        permissions: [PERMISSIONS.BRANCH_VIEW],
+      },
+      {
         title: "Suppliers",
         to: "/admin/suppliers",
         description: "Supplier management",
         icon: Users,
         permissions: [PERMISSIONS.INVENTORY_MANAGE],
       },
-       
-   
     ],
   },
-    {
+  {
     title: "Reports",
     items: [
       {
@@ -169,26 +176,20 @@ export const adminNavigationGroups: SidebarNavigationGroup[] = [
       },
     ],
   },
-{
+  {
     title: "Profles",
     items: [
-        {
+      {
         title: "Profile",
         to: "/admin/profile",
         description: "Account details and tenant context",
         icon: UserCog,
-      },   {
+      },
+      {
         title: "Role",
         to: "/admin/role",
         description: "Role management",
         icon: ShieldCheck,
-      },
-      {
-        title: "Branch",
-        to: "/admin/branch",
-        description: "Manage pharmacy branches",
-        icon: Building2,
-        permissions: [PERMISSIONS.BRANCH_VIEW],
       },
     ],
   },

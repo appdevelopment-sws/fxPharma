@@ -27,7 +27,7 @@ export const STORE_FORM_INITIAL_DATA = {
   id: "",
   store_name: "",
   description: "",
-  store_category: "",
+  store_category: "RETAIL",
   store_logo: null,
 
   store_visibility: "ACTIVE",
@@ -44,16 +44,16 @@ export const STORE_FORM_INITIAL_DATA = {
   gst_number: "",
   license_number: "",
 
-  timezone: "EST",
-  currency: "USD",
+  timezone: "IST",
+  currency: "INR",
   role_key: "ORG_ADMIN",
   permissions: [] as string[],
 
   street_address: "",
   city: "",
-  state: "",
+  state: "Patna",
   zip_code: "",
-  country: "United States",
+  country: "India",
 }
 
 export const FORM_MODE = {

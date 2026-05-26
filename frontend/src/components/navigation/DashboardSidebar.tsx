@@ -64,7 +64,7 @@ export function DashboardSidebar({
           isCollapsed ? "justify-center" : "gap-3"
         )}
       >
-        <div className="rounded-xl flex size-10 shrink-0 items-center justify-center bg-white/10 text-white">
+        <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/10 text-white">
           {brandIcon}
         </div>
         {!isCollapsed && (
@@ -72,7 +72,7 @@ export function DashboardSidebar({
             <h2 className="truncate text-base font-bold tracking-tight text-white">
               {workspaceTitle}
             </h2>
-            <p className="truncate text-xs font-medium tracking-widest uppercase text-white">
+            <p className="truncate text-xs font-medium tracking-widest text-white uppercase">
               {workspaceSubtitle}
             </p>
           </div>
@@ -119,7 +119,7 @@ export function DashboardSidebar({
           type="button"
           variant="ghost"
           className={cn(
-            "w-full transition-all duration-200 text-white hover:bg-white/10",
+            "w-full text-white transition-all duration-200 hover:bg-white/10",
             isCollapsed
               ? "h-10 w-10 justify-center p-0"
               : "justify-start gap-3 px-4"
@@ -130,7 +130,7 @@ export function DashboardSidebar({
           <LogOut className="size-5" />
           {!isCollapsed && (
             <span className="font-medium">
-              {isLoggingOut ? "Signing out..." : "Sign Out"}
+              {isLoggingOut ? "Signing out..." : "Log Out"}
             </span>
           )}
         </Button>
@@ -161,7 +161,7 @@ function SidebarItem({
     "group flex w-full items-center rounded-lg transition-all duration-300 ease-out",
     isCollapsed ? "mx-auto justify-center p-3" : "gap-x-2 px-3 py-2",
     isActive || isExpanded
-      ? "bg-white/20 text-white font-semibold"
+      ? "bg-white/20 font-semibold text-white"
       : "text-white hover:bg-white/10"
   )
   if (hasChildren) {
@@ -206,7 +206,7 @@ function SidebarItem({
                     "flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium transition-all duration-200",
                     childIsActive
                       ? "bg-white/15 text-white shadow-sm"
-                      : "text-white/90 hover:text-white hover:bg-white/5"
+                      : "text-white/90 hover:bg-white/5 hover:text-white"
                   )}
                 >
                   {ChildIcon && (
@@ -223,7 +223,11 @@ function SidebarItem({
   }
 
   return (
-    <NavLink to={item.to ?? "#"} onClick={() => onNavigate?.(item.to)} className={baseStyles}>
+    <NavLink
+      to={item.to ?? "#"}
+      onClick={() => onNavigate?.(item.to)}
+      className={baseStyles}
+    >
       <Icon className="size-5 shrink-0" />
       {!isCollapsed && (
         <span className="truncate text-sm font-medium">{item.title}</span>

@@ -23,6 +23,8 @@ type WorkspaceShellProps = {
   navigationGroups: SidebarNavigationGroup[]
   brandIcon: ReactNode
   onLogout: () => void
+  onOpenProfile?: () => void
+  onOpenSettings?: () => void
 }
 
 export function WorkspaceShell({
@@ -37,6 +39,8 @@ export function WorkspaceShell({
   navigationGroups,
   brandIcon,
   onLogout,
+  onOpenProfile,
+  onOpenSettings,
 }: WorkspaceShellProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isCollapsed, setIsCollapsed] = useState(false)
@@ -80,7 +84,7 @@ export function WorkspaceShell({
           type="button"
           variant="outline"
           size="icon"
-          className="absolute top-20 -right-3 z-50 size-6 rounded-full border-blue-700 bg-white text-[#2563EB] hover:text-blue-700 shadow-sm"
+          className="absolute top-20 -right-3 z-50 size-6 rounded-full border-blue-700 bg-white text-[#2563EB] shadow-sm hover:text-blue-700"
           onClick={() => setIsCollapsed(!isCollapsed)}
         >
           {isCollapsed ? (
@@ -101,12 +105,16 @@ export function WorkspaceShell({
           userRole={userRole}
           userEmail={userEmail}
           onOpenSidebar={() => setIsSidebarOpen(true)}
+          onOpenProfile={onOpenProfile}
+          onOpenSettings={onOpenSettings}
+          onLogout={onLogout}
+          isLoggingOut={isLoggingOut}
         />
 
         <main className="scrollbar-thin scrollbar-thumb-slate-200 flex-1 overflow-y-auto bg-[#f0f4fa]">
           <div
             className={cn(
-               "mx-auto h-full w-full p-4 sm:p-3 lg:p-4",
+              "mx-auto h-full w-full p-4 sm:p-3 lg:p-4",
               isCollapsed ? "lg:pl-8" : "lg:p-6"
             )}
           >
@@ -122,7 +130,7 @@ export function WorkspaceShell({
             className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
             onClick={() => setIsSidebarOpen(false)}
           />
-          <aside className="absolute inset-y-0 left-0 flex w-[240px] animate-in flex-col bg-[#2563EB] border-r border-blue-700 shadow-2xl duration-300 slide-in-from-left">
+          <aside className="absolute inset-y-0 left-0 flex w-[240px] animate-in flex-col border-r border-blue-700 bg-[#2563EB] shadow-2xl duration-300 slide-in-from-left">
             <div className="absolute top-4 right-4 z-10 transition-transform active:scale-95">
               <Button
                 variant="ghost"

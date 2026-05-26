@@ -23,6 +23,7 @@ import {
 
 import StoreListApi from "@/services/storelistApi"
 import SubscriptionApi from "@/services/subscriptionApi"
+import { uploadApi } from "@/services/uploadApi"
 import { queryKeys } from "@/lib/queryKeys"
 import { toast } from "sonner"
 import { createStoreFormSchema } from "@/validations/super-admin/storeValidation"
@@ -91,6 +92,7 @@ export default function ManageStoreDialog({
   const selectedRole =
     formMetaResponse?.data.roles.find((role) => role.key === selectedRoleKey) ??
     formMetaResponse?.data.roles.find((role) => role.key === defaultRoleKey)
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false)
 
   useEffect(() => {
     if (open) {
@@ -98,6 +100,8 @@ export default function ManageStoreDialog({
         reset({
           ...STORE_FORM_INITIAL_DATA,
           ...store,
+          store_category:
+            store?.store_category || STORE_FORM_INITIAL_DATA.store_category,
           store_visibility:
             store?.status || store?.store_visibility || "ACTIVE",
           subscription_plan_id:
@@ -182,30 +186,8 @@ export default function ManageStoreDialog({
     },
   })
 
-  const fileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader()
-      reader.readAsDataURL(file)
-      reader.onload = () => resolve(reader.result as string)
-      reader.onerror = (error) => reject(error)
-    })
-  }
-
-  const onSubmit: SubmitHandler<any> = async (data) => {
-    try {
-      const payload = { ...data }
-      if (payload.store_logo && typeof payload.store_logo === "object") {
-        const isFile =
-          payload.store_logo instanceof File ||
-          (payload.store_logo.name && payload.store_logo.size)
-        if (isFile) {
-          payload.store_logo = await fileToBase64(payload.store_logo)
-        }
-      }
-      handleMutation.mutate(payload)
-    } catch (error) {
-      console.error("Error converting file:", error)
-    }
+  const onSubmit: SubmitHandler<any> = (data) => {
+    handleMutation.mutate(data)
   }
 
   return (
@@ -227,9 +209,9 @@ export default function ManageStoreDialog({
             <Button
               type="submit"
               form="store-form"
-              disabled={handleMutation.isPending}
+              disabled={handleMutation.isPending || isUploadingLogo}
             >
-              {handleMutation.isPending
+              {handleMutation.isPending || isUploadingLogo
                 ? "Saving..."
                 : isEditMode
                   ? "Update Store"
@@ -288,6 +270,15 @@ export default function ManageStoreDialog({
                 maxSizeText="SVG, PNG, JPG (Max 2MB)"
                 disabled={isViewMode}
                 error={getError("store_logo")}
+                uploadFile={async (file) =>
+                  (await uploadApi.uploadImage(file)).publicUrl
+                }
+                onUploadingChange={setIsUploadingLogo}
+                onUploadError={() => {
+                  setIsUploadingLogo(false)
+                  toast.error("Failed to upload store logo.")
+                }}
+                required={false}
               />
             </div>
           </div>

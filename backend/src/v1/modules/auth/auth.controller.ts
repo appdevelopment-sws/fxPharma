@@ -113,6 +113,15 @@ export class AuthController {
         });
       }
 
+      const linkedOrganization = user.organizations[0]?.organization;
+
+      if (linkedOrganization && !linkedOrganization.isActive) {
+        return res.status(403).json({
+          success: false,
+          message: "Your organization is inactive. Please contact admin.",
+        });
+      }
+
       // Compare password
       const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
 

@@ -41,6 +41,7 @@ const AdminLayout = () => {
       isLoggingOut={logoutMutation.isPending}
       navigationGroups={navigationGroups}
       brandIcon={<PharmacyCrossIcon className="size-5" />}
+      onOpenProfile={() => navigate("/admin/profile")}
       onLogout={() => logoutMutation.mutate()}
     />
   )
