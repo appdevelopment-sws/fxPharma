@@ -20,6 +20,7 @@ import {
   CalendarX,
   KeyRound,
   Layers,
+  Settings,
 } from "lucide-react"
 import type { AuthUser } from "@/context/authContext"
 import {
@@ -196,7 +197,7 @@ export const adminNavigationGroups: SidebarNavigationGroup[] = [
         title: "Settings",
         to: "/admin/settings",
         description: "System settings and configuration",
-        icon: Setting,
+        icon: Settings,
         permissions: [PERMISSIONS.SETTINGS_VIEW],
       },
     ],
