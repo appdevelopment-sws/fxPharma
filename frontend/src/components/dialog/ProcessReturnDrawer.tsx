@@ -259,88 +259,93 @@ export default function ProcessReturnDrawer({
                     </tr>
                   </thead>
                   <tbody className="divide-y">
-                    {fields.map((field, index) => (
-                      <tr
-                        key={field.id}
-                        className={cn(
-                          "transition-colors",
-                          items[index].selected ? "bg-primary/5" : "opacity-60"
-                        )}
-                      >
-                        <td className="p-4">
-                          <Checkbox
-                            checked={items[index].selected}
-                            onCheckedChange={(checked) =>
-                              setValue(`items.${index}.selected`, !!checked)
-                            }
-                          />
-                        </td>
-                        <td className="p-4">
-                          <div className="font-medium text-foreground">
-                            {field.name}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            Batch: {field.batch} | Exp: {field.expiry}
-                          </div>
-                        </td>
-                        <td className="p-4">₹{field.unit_price.toFixed(2)}</td>
-                        <td className="p-4">{field.purchased_qty}</td>
-                        <td className="p-4">
-                          <div className="flex items-center justify-center gap-2">
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="icon-xs"
-                              onClick={() => {
-                                const val = getValues(`items.${index}.return_qty`)
-                                if (val > 0) {
-                                  setValue(
-                                    `items.${index}.return_qty`,
-                                    val - 1
+                    {fields.map((field, index) => {
+                      const item = items[index] ?? field
+
+                      return (
+                        <tr
+                          key={field.id}
+                          className={cn(
+                            "transition-colors",
+                            item.selected ? "bg-primary/5" : "opacity-60"
+                          )}
+                        >
+                          <td className="p-4">
+                            <Checkbox
+                              checked={item.selected}
+                              onCheckedChange={(checked) =>
+                                setValue(`items.${index}.selected`, !!checked)
+                              }
+                            />
+                          </td>
+                          <td className="p-4">
+                            <div className="font-medium text-foreground">
+                              {field.name}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              Batch: {field.batch} | Exp: {field.expiry}
+                            </div>
+                          </td>
+                          <td className="p-4">₹{field.unit_price.toFixed(2)}</td>
+                          <td className="p-4">{field.purchased_qty}</td>
+                          <td className="p-4">
+                            <div className="flex items-center justify-center gap-2">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="icon-xs"
+                                onClick={() => {
+                                  const val = getValues(
+                                    `items.${index}.return_qty`
                                   )
-                                }
-                              }}
-                            >
-                              <Minus className="size-3" />
-                            </Button>
-                            <span className="w-8 text-center font-medium">
-                              {items[index].return_qty}
-                            </span>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="icon-xs"
-                              onClick={() => {
-                                const val = getValues(`items.${index}.return_qty`)
-                                if (val < field.purchased_qty) {
-                                  setValue(
-                                    `items.${index}.return_qty`,
-                                    val + 1
+                                  if (val > 0) {
+                                    setValue(
+                                      `items.${index}.return_qty`,
+                                      val - 1
+                                    )
+                                  }
+                                }}
+                              >
+                                <Minus className="size-3" />
+                              </Button>
+                              <span className="w-8 text-center font-medium">
+                                {item.return_qty}
+                              </span>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="icon-xs"
+                                onClick={() => {
+                                  const val = getValues(
+                                    `items.${index}.return_qty`
                                   )
-                                }
-                              }}
-                            >
-                              <Plus className="size-3" />
-                            </Button>
-                          </div>
-                        </td>
-                        <td className="p-4">
-                          <FormSelectField
-                            control={control}
-                            name={`items.${index}.reason`}
-                            options={RETURN_REASON_OPTIONS}
-                            placeholder="Select Reason"
-                            className="w-40"
-                          />
-                        </td>
-                        <td className="p-4 text-right font-semibold">
-                          ₹
-                          {(
-                            items[index].unit_price * items[index].return_qty
-                          ).toFixed(2)}
-                        </td>
-                      </tr>
-                    ))}
+                                  if (val < field.purchased_qty) {
+                                    setValue(
+                                      `items.${index}.return_qty`,
+                                      val + 1
+                                    )
+                                  }
+                                }}
+                              >
+                                <Plus className="size-3" />
+                              </Button>
+                            </div>
+                          </td>
+                          <td className="p-4">
+                            <FormSelectField
+                              control={control}
+                              name={`items.${index}.reason`}
+                              options={RETURN_REASON_OPTIONS}
+                              placeholder="Select Reason"
+                              className="w-40"
+                            />
+                          </td>
+                          <td className="p-4 text-right font-semibold">
+                            ₹{(item.unit_price * item.return_qty).toFixed(2)}
+                          </td>
+                        </tr>
+                      )
+                    })}
                   </tbody>
                 </table>
               </div>
