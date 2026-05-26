@@ -51,7 +51,8 @@ export const PERMISSIONS = {
   INVENTORY_BATCH_VIEW: "inventory-batch.view",
   INVENTORY_BATCH_MANAGE: "inventory-batch.manage",
   IMPORT_INVENTORY_VIEW: "import-inventory.view",
-
+  IMPORT_INVENTORY_MANAGE: "import-inventory.manage",
+  SETTINGS_VIEW: "settings.view",
   // Add more permissions as needed
 } as const
 

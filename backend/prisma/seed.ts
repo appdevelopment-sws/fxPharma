@@ -170,6 +170,11 @@ async function main() {
       name: "Manage Import Inventory",
       description: "Can manage imported inventory",
     },
+    {
+      key: "settings.view",
+      name: "View Settings",
+      description: "Can view settings",
+    },
   ];
 
   console.log("Seeding permissions...");

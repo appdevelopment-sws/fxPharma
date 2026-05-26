@@ -191,6 +191,14 @@ export const adminNavigationGroups: SidebarNavigationGroup[] = [
         description: "Role management",
         icon: ShieldCheck,
       },
+
+      {
+        title: "Settings",
+        to: "/admin/settings",
+        description: "System settings and configuration",
+        icon: Setting,
+        permissions: [PERMISSIONS.SETTINGS_VIEW],
+      },
     ],
   },
   // {
