@@ -376,32 +376,32 @@ export default function ConfigureSaleItemDialog({
           </div>
         </div>
 
-        {/* Subtotal cost estimation panel (premium dark bg) */}
-        <div className="rounded-xl border border-slate-800 bg-primary-400 text-slate-150 p-4 space-y-3">
-          <div className="flex items-center gap-1.5 text-slate-300">
-            <Sparkles className="h-3.5 w-3.5 text-slate-900 dark:text-slate-100" />
-            <h5 className="text-[9px] font-semibold uppercase tracking-widest">
+        {/* Subtotal cost estimation panel */}
+        <div className="rounded-xl border border-slate-200/60 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 p-4 space-y-3">
+          <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
+            <Sparkles className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
+            <h5 className="text-[9px] font-bold uppercase tracking-widest">
               Cost Summary Preview
             </h5>
           </div>
           <div className="space-y-1.5 text-xs font-semibold">
-            <div className="flex justify-between text-slate-900 dark:text-slate-100">
+            <div className="flex justify-between text-slate-600 dark:text-slate-300">
               <span>Base Value</span>
-              <span>₹{totalBeforeDiscount.toFixed(2)}</span>
+              <span className="text-slate-900 dark:text-slate-100">₹{totalBeforeDiscount.toFixed(2)}</span>
             </div>
             {discountVal > 0 && (
-              <div className="flex justify-between text-emerald-450">
+              <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
                 <span>Discount ({itemDiscount}%)</span>
-                <span>-₹{discountVal.toFixed(2)}</span>
+                <span className="font-bold">-₹{discountVal.toFixed(2)}</span>
               </div>
             )}
-            <div className="flex justify-between text-slate-400">
+            <div className="flex justify-between text-slate-500 dark:text-slate-400">
               <span>GST Tax ({cgstRate + sgstRate}%)</span>
-              <span>₹{taxVal.toFixed(2)}</span>
+              <span className="text-slate-700 dark:text-slate-300">₹{taxVal.toFixed(2)}</span>
             </div>
-            <div className="flex justify-between text-white pt-2.5 border-t border-slate-800 font-extrabold text-sm">
+            <div className="flex justify-between items-center pt-2.5 border-t border-slate-200 dark:border-slate-850/80 text-slate-900 dark:text-slate-100 font-extrabold text-xs uppercase tracking-wider">
               <span>Total Net</span>
-              <span className="text-blue-400 font-mono text-base">₹{netVal.toFixed(2)}</span>
+              <span className="text-blue-600 dark:text-blue-400 font-mono text-base font-black">₹{netVal.toFixed(2)}</span>
             </div>
           </div>
         </div>
