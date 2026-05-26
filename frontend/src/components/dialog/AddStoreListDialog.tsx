@@ -41,10 +41,7 @@ export default function ManageStoreDialog({
 }: ManageStoreDialogProps) {
   const isViewMode = !!store?.viewMode
   const isEditMode = !!store?.id
-  const storeFormSchema = useMemo(
-    () => createStoreFormSchema(isEditMode),
-    [isEditMode]
-  )
+  const storeFormSchema = useMemo(() => createStoreFormSchema(), [])
   const [isvisiblePassword, setIsVisiblePassword] = useState(false)
   const {
     handleSubmit,
@@ -52,6 +49,7 @@ export default function ManageStoreDialog({
     reset,
     watch,
     setValue,
+    setError,
     formState: { errors },
   } = useForm({
     defaultValues: STORE_FORM_INITIAL_DATA,
@@ -187,7 +185,21 @@ export default function ManageStoreDialog({
   })
 
   const onSubmit: SubmitHandler<any> = (data) => {
-    handleMutation.mutate(data)
+    if (!isEditMode && !data.password) {
+      setError("password", {
+        type: "manual",
+        message: "Password is required",
+      })
+      return
+    }
+
+    const payload = { ...data }
+
+    if (isEditMode && !payload.password) {
+      delete payload.password
+    }
+
+    handleMutation.mutate(payload)
   }
 
   return (

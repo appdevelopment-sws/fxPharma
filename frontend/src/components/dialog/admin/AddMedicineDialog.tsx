@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useForm, useWatch, type SubmitHandler } from "react-hook-form"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
@@ -9,6 +9,7 @@ import {
   FormField,
   FormSelectField,
   FormSwitch,
+  FormFileUpload,
 } from "@/components/ui/form-fields"
 
 import sectionHeader from "@/components/sectionHeader"
@@ -31,6 +32,7 @@ import BrandApi, {
 import { COLOR_TYPE_OPTIONS } from "@/constants/shared/form-options"
 import { formatDateForInput } from "@/lib/utils"
 import { HsnApi } from "@/services/taxApi"
+import { uploadApi } from "@/services/uploadApi"
 
 interface MedicineStockDialogProps {
   open: boolean
@@ -106,6 +108,7 @@ const toFormValues = (
     product?.saltComposition ||
     product?.salt ||
     "",
+  imageUrl: product?.imageUrl || "",
   category:
     product?.categoryId ||
     product?.category_id ||
@@ -216,6 +219,7 @@ const toApiPayload = (data: any) => ({
   negativeStock: !!data.negative_stock,
   editRates: !!data.edit_rates,
   availableStock: toNumber(data.available_stock),
+  imageUrl: data.imageUrl || null,
 })
 
 export default function MedicineStockDialog({
@@ -230,6 +234,8 @@ export default function MedicineStockDialog({
   const isViewMode = resolvedMode === "view"
   const isEditMode = resolvedMode === "edit"
   const isCreateFromTemplate = resolvedMode === "create" && !!product
+
+  const [isUploading, setIsUploading] = useState(false)
 
   const { handleSubmit, control, reset, setValue } = useForm({
     defaultValues: MEDICINE_STOCK_FORM_INITIAL_DATA,
@@ -480,7 +486,11 @@ export default function MedicineStockDialog({
       size="xl"
       footer={
         <div className="flex justify-end gap-3">
-          <Button variant="outline" onClick={() => onClose(false)}>
+          <Button
+            variant="outline"
+            onClick={() => onClose(false)}
+            disabled={handleMutation.isPending || isUploading}
+          >
             {isViewMode ? "Close" : "Cancel"}
           </Button>
 
@@ -488,13 +498,15 @@ export default function MedicineStockDialog({
             <Button
               type="submit"
               form="medicine-stock-form"
-              disabled={handleMutation.isPending}
+              disabled={handleMutation.isPending || isUploading}
             >
-              {handleMutation.isPending
-                ? "Saving..."
-                : isEditMode
-                  ? "Update Medicine"
-                  : "Save Medicine"}
+              {isUploading
+                ? "Uploading..."
+                : handleMutation.isPending
+                  ? "Saving..."
+                  : isEditMode
+                    ? "Update Medicine"
+                    : "Save Medicine"}
             </Button>
           )}
         </div>
@@ -564,6 +576,22 @@ export default function MedicineStockDialog({
                   : "Loading categories..."
               }
               readOnly={isViewMode}
+            />
+            <FormFileUpload
+              control={control}
+              name="imageUrl"
+              label="Product Image"
+              accept="image/*"
+              maxSizeText="PNG, JPG up to 5MB"
+              disabled={isViewMode}
+              uploadFile={async (file) =>
+                (await uploadApi.uploadImage(file)).publicUrl
+              }
+              onUploadingChange={setIsUploading}
+              onUploadError={() => {
+                setIsUploading(false)
+                toast.error("Failed to upload product image.")
+              }}
             />
           </div>
         </div>

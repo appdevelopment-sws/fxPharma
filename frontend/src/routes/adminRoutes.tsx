@@ -30,6 +30,7 @@ import Manufacturers from "@/pages/shared/Attributes/manufacturers"
 import Units from "@/pages/shared/Attributes/units"
 import AdminProfilePage from "@/pages/admin/profile/AdminProfilePage"
 import AdminRolePage from "@/pages/admin/role/Role"
+import { Settings } from "lucide-react"
 
 export const AdminRoutes = () => {
   return (
@@ -46,13 +47,45 @@ export const AdminRoutes = () => {
           <Route path="profile" element={<AdminProfilePage />} />
           <Route path="role" element={<AdminRolePage />} />
           <Route path="all-inventory" element={<AllInventory />} />
-          <Route path="all-compound" element={<AllCompound />} />
-          <Route path="inventory-batch" element={<InventoryBatch />} />
-          <Route path="import-inventory" element={<ImportInventory />} />
           <Route
-            path="inter-store-transfer"
-            element={<AllInterStoreTransfer />}
-          />
+            element={
+              <ProtectedRoute
+                allowedPermissions={[PERMISSIONS.COMPOUND_VIEW]}
+              />
+            }
+          >
+            <Route path="all-compound" element={<AllCompound />} />
+          </Route>
+          <Route
+            element={
+              <ProtectedRoute
+                allowedPermissions={[PERMISSIONS.INVENTORY_BATCH_VIEW]}
+              />
+            }
+          >
+            <Route path="inventory-batch" element={<InventoryBatch />} />
+          </Route>
+          <Route
+            element={
+              <ProtectedRoute
+                allowedPermissions={[PERMISSIONS.IMPORT_INVENTORY_VIEW]}
+              />
+            }
+          >
+            <Route path="import-inventory" element={<ImportInventory />} />
+          </Route>
+          <Route
+            element={
+              <ProtectedRoute
+                allowedPermissions={[PERMISSIONS.INTER_STORE_TRANSFER_VIEW]}
+              />
+            }
+          >
+            <Route
+              path="inter-store-transfer"
+              element={<AllInterStoreTransfer />}
+            />
+          </Route>
           <Route path="orders" element={<Orders />} />
           <Route path="suppliers" element={<Suppliers />} />
           <Route path="returns" element={<ReturnsPage />} />
@@ -98,6 +131,15 @@ export const AdminRoutes = () => {
             }
           >
             <Route path="reports/expiry-reports" element={<ExpiryReports />} />
+          </Route>{" "}
+          <Route
+            element={
+              <ProtectedRoute
+                allowedPermissions={[PERMISSIONS.SETTINGS_VIEW]}
+              />
+            }
+          >
+            <Route path="settings" element={<Settings />} />
           </Route>{" "}
           <Route path="reports/gst-report" element={<GstReport />} />
         </Route>

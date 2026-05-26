@@ -2,6 +2,7 @@ import { api } from "./api"
 
 export type InventoryFormValues = {
   id?: string
+  imageUrl?: string | null
   product_name: string
   status?: "CONTINUE" | "DISCONTINUE"
   company?: string
@@ -91,6 +92,7 @@ export type InventoryItem = {
   id: string
   name: string
   status: "CONTINUE" | "DISCONTINUE"
+  imageUrl?: string | null
   manufacturerId?: string | null
   manufacturer?: InventoryRelation | string | null
   saltComposition?: string | null

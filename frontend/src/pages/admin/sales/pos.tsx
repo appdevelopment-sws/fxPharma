@@ -21,7 +21,7 @@ import { toast } from "sonner"
 import FilterPointofSale from "@/components/dialog/admin/FilterPointofSale"
 import ConfigureSaleItemDialog from "@/components/dialog/admin/ConfigureSaleItemDialog"
 import HeldBillsDialog from "@/components/dialog/admin/HeldBillsDialog"
-import { cn } from "@/lib/utils"
+import { cn, getImageUrl } from "@/lib/utils"
 import { queryKeys } from "@/lib/queryKeys"
 import { CategoryApi, ManufacturerApi } from "@/services/attributesApi"
 import InventoryApi from "@/services/inventoryApi"
@@ -56,6 +56,7 @@ type PosBatch = {
 type PosProduct = {
   id: string
   name: string
+  imageUrl?: string | null
   composition: string
   mfg: string
   category: string
@@ -204,6 +205,7 @@ const buildPosProduct = (inventoryItem: any): PosProduct => {
   return {
     id: inventoryItem.id,
     name: inventoryItem.name || "-",
+    imageUrl: inventoryItem.imageUrl || null,
     composition: inventoryItem.saltComposition || "-",
     mfg: getRelationName(inventoryItem.manufacturer),
     category: getRelationName(inventoryItem.category),
@@ -287,6 +289,18 @@ const getProductIllustration = (product: PosProduct, size: "sm" | "md" = "md") =
   const grad = getProductGradient(product.id)
   const svgClass = size === "sm" ? "w-7 h-7" : "w-14 h-14"
   const wrapClass = size === "sm" ? "h-8 w-8" : "h-full w-full"
+
+  if (product.imageUrl) {
+    return (
+      <div className={cn("flex items-center justify-center overflow-hidden rounded", wrapClass, grad.bg)}>
+        <img
+          src={getImageUrl(product.imageUrl)}
+          alt={product.name}
+          className={cn("object-contain", size === "sm" ? "h-7 w-7" : "h-14 w-14")}
+        />
+      </div>
+    )
+  }
 
   const wrap = (child: React.ReactNode) => (
     <div className={cn("flex items-center justify-center rounded", wrapClass, grad.bg)}>

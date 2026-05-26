@@ -103,6 +103,7 @@ const getRelationLabel = (value: any, keys: string[]) => {
 export const mapMasterProductToInventoryDraft = (product: any) => ({
   ...MEDICINE_STOCK_FORM_INITIAL_DATA,
   id: "",
+  imageUrl: product?.imageUrl || "",
   product_name: product?.name || "",
   status: product?.status || "CONTINUE",
   company: getRelationLabel(product?.brands, ["name"]) || product?.brands || "",

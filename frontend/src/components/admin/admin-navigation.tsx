@@ -20,6 +20,7 @@ import {
   CalendarX,
   KeyRound,
   Layers,
+  Settings,
 } from "lucide-react"
 import type { AuthUser } from "@/context/authContext"
 import {
@@ -69,28 +70,28 @@ export const adminNavigationGroups: SidebarNavigationGroup[] = [
             to: "/admin/all-compound",
             description: "Manage prescription compounding",
             icon: FlaskConical,
-            permissions: [PERMISSIONS.INVENTORY_VIEW],
+            permissions: [PERMISSIONS.COMPOUND_VIEW],
           },
           {
             title: "Inventory Batch",
             to: "/admin/inventory-batch",
             description: "View inventory batch details",
             icon: Layers,
-            permissions: [PERMISSIONS.INVENTORY_VIEW],
+            permissions: [PERMISSIONS.INVENTORY_BATCH_VIEW],
           },
           {
             title: "Inter Store Transfer",
             to: "/admin/inter-store-transfer",
             description: "Stock transfers between stores",
             icon: ArrowLeftRight,
-            permissions: [PERMISSIONS.INVENTORY_MANAGE],
+            permissions: [PERMISSIONS.INTER_STORE_TRANSFER_VIEW],
           },
           {
             title: "Import Inventory",
             to: "/admin/import-inventory",
             description: "Import inventory from CSV/Excel",
             icon: UploadCloud,
-            permissions: [PERMISSIONS.INVENTORY_MANAGE],
+            permissions: [PERMISSIONS.IMPORT_INVENTORY_VIEW],
           },
           {
             title: "Attributes",
@@ -190,6 +191,14 @@ export const adminNavigationGroups: SidebarNavigationGroup[] = [
         to: "/admin/role",
         description: "Role management",
         icon: ShieldCheck,
+      },
+
+      {
+        title: "Settings",
+        to: "/admin/settings",
+        description: "System settings and configuration",
+        icon: Settings,
+        permissions: [PERMISSIONS.SETTINGS_VIEW],
       },
     ],
   },

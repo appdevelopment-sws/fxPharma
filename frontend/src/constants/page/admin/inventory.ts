@@ -25,6 +25,7 @@ export const MEDICINE_STOCK_COLUMNS = [
 
 export const MEDICINE_STOCK_FORM_INITIAL_DATA = {
   id: "",
+  imageUrl: "",
 
   /* Product Identification */
   product_name: "",

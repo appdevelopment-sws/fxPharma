@@ -53,7 +53,7 @@ const optionSchema = (
       `Select a valid ${label.toLowerCase()}`
     )
 
-export const createStoreFormSchema = (isEditMode: boolean) =>
+export const createStoreFormSchema = () =>
   z.object({
     id: z.string().optional(),
     store_name: requiredText("Store name", 120).min(
@@ -98,9 +98,7 @@ export const createStoreFormSchema = (isEditMode: boolean) =>
     login_email: requiredText("Login email", 120).email(
       "Enter a valid login email"
     ),
-    password: isEditMode
-      ? z.union([z.literal(""), passwordSchema]).optional()
-      : passwordSchema,
+    password: z.union([z.literal(""), passwordSchema]).optional(),
     gst_number: optionalText("GST number", 10).refine(
       (value) => !value || /^[0-9A-Za-z]{10}$/.test(value),
       "GST number must be 10 alphanumeric characters"
