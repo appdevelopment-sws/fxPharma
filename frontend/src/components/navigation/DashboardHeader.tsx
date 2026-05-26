@@ -1,17 +1,23 @@
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
 import {
   Bell,
   ChevronRight,
+  ChevronDown,
+  LogOut,
   Menu,
   Search,
-  Globe,
   Settings,
-  ChevronDown,
+  UserCircle2,
   Maximize,
   Minimize,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 
 interface DashboardHeaderProps {
@@ -22,6 +28,10 @@ interface DashboardHeaderProps {
   userRole: string
   userEmail?: string
   onOpenSidebar: () => void
+  onOpenProfile?: () => void
+  onOpenSettings?: () => void
+  onLogout?: () => void
+  isLoggingOut?: boolean
 }
 
 export function DashboardHeader({
@@ -32,8 +42,13 @@ export function DashboardHeader({
   userRole,
   userEmail,
   onOpenSidebar,
+  onOpenProfile,
+  onOpenSettings,
+  onLogout,
+  isLoggingOut,
 }: DashboardHeaderProps) {
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false)
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -64,7 +79,7 @@ export function DashboardHeader({
           <Button
             variant="ghost"
             size="icon"
-            className="text-white/80 hover:text-white hover:bg-white/10 lg:hidden"
+            className="text-white/80 hover:bg-white/10 hover:text-white lg:hidden"
             onClick={onOpenSidebar}
           >
             <Menu className="size-5" />
@@ -82,9 +97,7 @@ export function DashboardHeader({
             {activeItemTitle && (
               <>
                 <ChevronRight className="size-3.5 opacity-50" />
-                <span className="font-bold text-white">
-                  {activeItemTitle}
-                </span>
+                <span className="font-bold text-white">{activeItemTitle}</span>
               </>
             )}
           </div>
@@ -107,7 +120,7 @@ export function DashboardHeader({
               variant="ghost"
               size="icon"
               onClick={toggleFullscreen}
-              className="hidden text-white/80 hover:text-white hover:bg-white/10 sm:flex"
+              className="hidden text-white/80 hover:bg-white/10 hover:text-white sm:flex"
             >
               {isFullscreen ? (
                 <Minimize className="size-5" />
@@ -119,7 +132,7 @@ export function DashboardHeader({
               <Button
                 variant="ghost"
                 size="icon"
-                className="text-white/80 hover:text-white hover:bg-white/10"
+                className="text-white/80 hover:bg-white/10 hover:text-white"
               >
                 <Bell className="size-5" />
               </Button>
@@ -127,23 +140,114 @@ export function DashboardHeader({
           </div>
 
           {/* User Profile */}
-          <button className="group flex items-center gap-3 pl-2 outline-none">
-            <div className="hidden text-right lg:block">
-              <p className="text-sm leading-none font-semibold text-white transition-colors group-hover:text-white/90">
-                {userName}
-              </p>
-              <p className="mt-1 text-[10px] leading-none font-bold tracking-tighter text-white/70 uppercase">
-                {userRole}
-              </p>
-            </div>
-            <div className="relative flex size-9 items-center justify-center rounded-full bg-white text-xs font-bold text-[#2563EB] shadow-sm ring-2 ring-white/20 transition-all group-hover:ring-white/40">
-              {userName
-                .split(" ")
-                .map((n) => n[0])
-                .join("")}
-              <div className="absolute right-0 bottom-0 size-2.5 rounded-full border-2 border-white bg-green-500 ring-1 ring-white/10" />
-            </div>
-          </button>
+          <Popover
+            open={isProfileMenuOpen}
+            onOpenChange={setIsProfileMenuOpen}
+          >
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                className="group flex items-center gap-2 rounded-full pl-2 transition-transform outline-none hover:scale-[1.01] active:scale-[0.99]"
+              >
+                <div className="hidden text-right lg:block">
+                  <p className="text-sm leading-none font-semibold text-white transition-colors group-hover:text-white/90">
+                    {userName}
+                  </p>
+                  <p className="mt-1 text-[10px] leading-none font-bold tracking-tighter text-white/70 uppercase">
+                    {userRole}
+                  </p>
+                </div>
+                <div className="relative flex size-9 items-center justify-center rounded-full bg-white text-xs font-bold text-[#2563EB] shadow-sm ring-2 ring-white/20 transition-all group-hover:ring-white/40">
+                  {userName
+                    .split(" ")
+                    .map((n) => n[0])
+                    .join("")}
+                  <div className="absolute right-0 bottom-0 size-2.5 rounded-full border-2 border-white bg-green-500 ring-1 ring-white/10" />
+                </div>
+                <ChevronDown className="hidden size-4 text-white/70 transition-transform group-data-[state=open]:rotate-180 sm:block" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent
+              align="end"
+              sideOffset={10}
+              className="w-80 border border-slate-200 bg-white p-3 text-slate-900 shadow-xl"
+            >
+              <div className="space-y-3 border-b border-slate-200 pb-3">
+                <div className="flex items-center gap-3">
+                  <div className="flex size-11 items-center justify-center rounded-full bg-[#2563EB] text-sm font-bold text-white shadow-sm">
+                    {userName
+                      .split(" ")
+                      .map((n) => n[0])
+                      .join("")}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-slate-900">
+                      {userName}
+                    </p>
+                    <p className="truncate text-xs text-slate-500">
+                      {userRole}
+                    </p>
+                    {userEmail && (
+                      <p className="truncate text-xs text-slate-500">
+                        {userEmail}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                {onOpenProfile && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsProfileMenuOpen(false)
+                      onOpenProfile()
+                    }}
+                    className={cn(
+                      "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900"
+                    )}
+                  >
+                    <UserCircle2 className="size-4 text-slate-500" />
+                    Profile
+                  </button>
+                )}
+
+                {onOpenSettings && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsProfileMenuOpen(false)
+                      onOpenSettings()
+                    }}
+                    className={cn(
+                      "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900"
+                    )}
+                  >
+                    <Settings className="size-4 text-slate-500" />
+                    Settings
+                  </button>
+                )}
+
+                {onLogout && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsProfileMenuOpen(false)
+                      onLogout()
+                    }}
+                    disabled={isLoggingOut}
+                    className={cn(
+                      "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-rose-600 transition-colors hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-60"
+                    )}
+                  >
+                    <LogOut className="size-4" />
+                    {isLoggingOut ? "Signing out..." : "Logout"}
+                  </button>
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
     </header>
