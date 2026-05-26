@@ -1164,7 +1164,7 @@ const POS = () => {
               </div>
 
               {/* Change Amount */}
-              <div className="flex items-center gap-2">
+              {/* <div className="flex items-center gap-2">
                 <label className="w-28 flex-shrink-0 text-xs font-semibold text-gray-500">
                   Change Amount
                 </label>
@@ -1173,7 +1173,7 @@ const POS = () => {
                   value={changeAmount.toFixed(0)}
                   className="flex-1 min-w-0 rounded-lg border border-gray-100 bg-gray-50 px-2.5 py-1.5 text-xs text-right text-gray-500 outline-none"
                 />
-              </div>
+              </div> */}
 
               {/* Due Amount */}
               <div className="flex items-center gap-2">
@@ -1219,7 +1219,7 @@ const POS = () => {
               </div>
 
               {/* BIN */}
-              <div className="flex items-center gap-1.5">
+              {/* <div className="flex items-center gap-1.5">
                 <label className="w-16 flex-shrink-0 text-xs font-semibold text-gray-500">BIN</label>
                 <div className="relative">
                   <select className="appearance-none rounded-lg border border-gray-200 bg-gray-50 py-1.5 pl-2.5 pr-7 text-xs outline-none focus:border-teal-400">
@@ -1234,7 +1234,7 @@ const POS = () => {
                   placeholder="0.00"
                   className="flex-1 min-w-0 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-xs text-right outline-none focus:border-teal-400 transition-all"
                 />
-              </div>
+              </div> */}
 
               {/* Discount */}
               <div className="flex items-center gap-1.5">
@@ -1265,7 +1265,7 @@ const POS = () => {
               </div>
 
               {/* Delivery Cost */}
-              <div className="flex items-center gap-1.5">
+              {/* <div className="flex items-center gap-1.5">
                 <label className="w-16 flex-shrink-0 text-xs font-semibold text-gray-500">
                   Delivery Cost
                 </label>
@@ -1277,7 +1277,7 @@ const POS = () => {
                   className="flex-1 min-w-0 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-xs text-right outline-none focus:border-teal-400 transition-all"
                   placeholder="0"
                 />
-              </div>
+              </div> */}
             </div>
           </div>
 

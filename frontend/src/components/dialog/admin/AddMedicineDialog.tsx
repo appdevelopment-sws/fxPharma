@@ -116,8 +116,8 @@ const toFormValues = (
     (options?.allowCategoryTypeFallback
       ? product?.categoryType || product?.category_type || product?.category
       : ""),
-  packing: product?.packing || "",
-  pack_qty_1: product?.packQty1 ?? product?.pack_qty_1 ?? "",
+  packing: "box",
+  pack_qty_1: 1,
   pack_qty_2: product?.packQty2 ?? product?.pack_qty_2 ?? "",
   pack_qty_3: product?.packQty3 ?? product?.pack_qty_3 ?? "",
   unit_1st: product?.unit1st || product?.unit_1st || "",
@@ -277,8 +277,8 @@ export default function MedicineStockDialog({
           value: manufacturer.id,
         })) ?? [],
         product?.manufacturerId ||
-          product?.manufacturer_id ||
-          product?.manufacturer?.id,
+        product?.manufacturer_id ||
+        product?.manufacturer?.id,
         product?.manufacturer?.name || product?.manufacturer?.label
       ),
     [manufacturersData, product]
@@ -317,9 +317,9 @@ export default function MedicineStockDialog({
           value: hsn.hsncode,
         })) ?? [],
         product?.hsn_code ||
-          product?.hsnCode ||
-          product?.hsn?.hsncode ||
-          product?.hsn?.code,
+        product?.hsnCode ||
+        product?.hsn?.hsncode ||
+        product?.hsn?.code,
         product?.hsn?.description || product?.hsn?.label
       ),
     [product, hsnData]
@@ -461,8 +461,8 @@ export default function MedicineStockDialog({
     onError: (error: any) => {
       toast.error(
         error?.response?.data?.message ||
-          error?.message ||
-          "Failed to save inventory item"
+        error?.message ||
+        "Failed to save inventory item"
       )
     },
   })
@@ -533,6 +533,7 @@ export default function MedicineStockDialog({
               control={control}
               name="manufacturer"
               label="Manufacturer"
+              required
               options={manufacturerOptions}
               placeholder={
                 manufacturerOptions.length ? "Select manufacturer" : ""
@@ -543,6 +544,7 @@ export default function MedicineStockDialog({
               control={control}
               name="company"
               label="Company"
+              required
               options={companyOptions}
               placeholder={companyOptions.length ? "Select company" : ""}
               readOnly={isViewMode}
@@ -551,6 +553,7 @@ export default function MedicineStockDialog({
               control={control}
               name="status"
               label="Status"
+
               options={PRODUCT_STATUS_OPTIONS}
               readOnly={isViewMode}
             />
@@ -558,12 +561,14 @@ export default function MedicineStockDialog({
               control={control}
               name="salt_composition"
               label="Salt Composition"
+              required
               readOnly={isViewMode}
             />
             <FormSelectField
               control={control}
               name="category"
               label="Category"
+              required
               options={categoryOptions}
               placeholder={
                 categoryOptions.length
@@ -604,8 +609,7 @@ export default function MedicineStockDialog({
                   name="packing"
                   label="Box"
                   options={BOX_TYPE_OPTIONS}
-                  placeholder="Select box type"
-                  readOnly={isViewMode}
+                  readOnly={true}
                 />
                 <FormField
                   control={control}
@@ -613,8 +617,8 @@ export default function MedicineStockDialog({
                   label="Box Qty"
                   inputType="number"
                   min="0"
-                  readOnly={isViewMode}
-                  placeholder="5"
+                  readOnly={true}
+                  placeholder="1"
                 />
               </div>
 
@@ -671,6 +675,7 @@ export default function MedicineStockDialog({
               control={control}
               name="hsn_code"
               label="HSN / SAC"
+              required
               options={hsnOptions}
             />
             <FormSelectField
@@ -731,6 +736,7 @@ export default function MedicineStockDialog({
               control={control}
               name="mrp"
               label="M.R.P. "
+              required
               inputType="number"
               step="0.01"
             />
