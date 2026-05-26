@@ -98,6 +98,8 @@ export default function ManageStoreDialog({
         reset({
           ...STORE_FORM_INITIAL_DATA,
           ...store,
+          store_category:
+            store?.store_category || STORE_FORM_INITIAL_DATA.store_category,
           store_visibility:
             store?.status || store?.store_visibility || "ACTIVE",
           subscription_plan_id:

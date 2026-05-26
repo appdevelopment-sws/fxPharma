@@ -101,9 +101,9 @@ export const createStoreFormSchema = (isEditMode: boolean) =>
     password: isEditMode
       ? z.union([z.literal(""), passwordSchema]).optional()
       : passwordSchema,
-    gst_number: optionalText("GST number", 15).refine(
-      (value) => !value || /^[0-9A-Za-z]{15}$/.test(value),
-      "GST number must be 15 alphanumeric characters"
+    gst_number: optionalText("GST number", 10).refine(
+      (value) => !value || /^[0-9A-Za-z]{10}$/.test(value),
+      "GST number must be 10 alphanumeric characters"
     ),
     license_number: optionalText("License number", 40).refine(
       (value) => !value || /^[A-Za-z0-9/\s-]{3,40}$/.test(value),
