@@ -81,7 +81,7 @@ export default function DailyTransactionReport() {
       handleFilter({ ...updates, page: 1 })
     },
     [handleFilter]
-  )  
+  )
   const handlePageChange = useCallback(
     (page: number) => {
       handleFilter({ page })
@@ -368,8 +368,8 @@ export default function DailyTransactionReport() {
                   <span className="text-sm font-bold">{item.value}%</span>
                 </div>
                 <div className="relative h-1 w-full rounded-full bg-muted/40">
-                  <div 
-                    className={cn("absolute inset-y-0 left-0 rounded-full transition-all duration-1000", item.color)} 
+                  <div
+                    className={cn("absolute inset-y-0 left-0 rounded-full transition-all duration-1000", item.color)}
                     style={{ width: `${item.value}%` }}
                   />
                 </div>
@@ -410,7 +410,7 @@ export default function DailyTransactionReport() {
               name="payment_mode"
               placeholder="All Payment Modes"
               options={[
-                { label: "All Payment Modes", value: "all" },
+
                 ...PAYMENT_MODE_OPTIONS,
               ]}
             />
@@ -418,7 +418,7 @@ export default function DailyTransactionReport() {
               name="status"
               placeholder="All Status"
               options={[
-                { label: "All Status", value: "all" },
+
                 ...INVOICE_STATUS_OPTIONS,
               ]}
             />
@@ -433,7 +433,7 @@ export default function DailyTransactionReport() {
             pageSize={filter.perPage || 10}
             totalRecords={invoicesData?.meta?.total || 0}
             isLoading={isLoadingInvoices}
-                        onPageChange={handlePageChange}
+            onPageChange={handlePageChange}
             onPageSizeChange={handlePageSizeChange}
 
             emptyTitle="No invoices found"

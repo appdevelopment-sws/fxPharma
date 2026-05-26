@@ -383,7 +383,7 @@ export default function RecentInvoicesPage() {
               name="payment_mode"
               placeholder="All Payment Modes"
               options={[
-                { label: "All Payment Modes", value: "all" },
+
                 ...PAYMENT_MODE_OPTIONS,
               ]}
             />
@@ -391,7 +391,7 @@ export default function RecentInvoicesPage() {
               name="status"
               placeholder="All Status"
               options={[
-                { label: "All Status", value: "all" },
+
                 ...INVOICE_STATUS_OPTIONS,
               ]}
             />
