@@ -34,10 +34,10 @@ export const MEDICINE_STOCK_FORM_INITIAL_DATA = {
   category: "TAB",
 
   /* Classification & Units */
-  packing: "",
+  packing: "box",
   unit_1st: "",
   unit_2nd: "",
-  pack_qty_1: "",
+  pack_qty_1: 1,
   pack_qty_2: "",
   pack_qty_3: "",
   hsn_code: "",

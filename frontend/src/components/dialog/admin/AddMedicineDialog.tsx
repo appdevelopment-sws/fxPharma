@@ -113,8 +113,8 @@ const toFormValues = (
     (options?.allowCategoryTypeFallback
       ? product?.categoryType || product?.category_type || product?.category
       : ""),
-  packing: product?.packing || "",
-  pack_qty_1: product?.packQty1 ?? product?.pack_qty_1 ?? "",
+  packing: "box",
+  pack_qty_1: 1,
   pack_qty_2: product?.packQty2 ?? product?.pack_qty_2 ?? "",
   pack_qty_3: product?.packQty3 ?? product?.pack_qty_3 ?? "",
   unit_1st: product?.unit1st || product?.unit_1st || "",
@@ -580,10 +580,8 @@ export default function MedicineStockDialog({
                   control={control}
                   name="packing"
                   label="Box"
-
                   options={BOX_TYPE_OPTIONS}
-                  placeholder="Select box type"
-                  readOnly={isViewMode}
+                  readOnly={true}
                 />
                 <FormField
                   control={control}
@@ -591,8 +589,8 @@ export default function MedicineStockDialog({
                   label="Box Qty"
                   inputType="number"
                   min="0"
-                  readOnly={isViewMode}
-                  placeholder="5"
+                  readOnly={true}
+                  placeholder="1"
                 />
               </div>
 
