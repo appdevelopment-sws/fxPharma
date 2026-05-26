@@ -121,16 +121,18 @@ export default function RecentInvoicesPage() {
           activeTemplate
         )
         downloadBlob(blob, `${invoice.invoice_id}-${activeTemplate}.pdf`)
-        toast.success(`Downloaded ${invoice.invoice_id} as ${activeTemplate}.pdf`)
+        toast.success(
+          `Downloaded ${invoice.invoice_id} as ${activeTemplate}.pdf`
+        )
       } catch (error: unknown) {
         const errMsg =
           (typeof error === "object" &&
             error !== null &&
             "response" in error &&
-            typeof (error as { response?: { data?: { message?: string } } }).response
-              ?.data?.message === "string" &&
-            (error as { response?: { data?: { message?: string } } }).response?.data
-              ?.message) ||
+            typeof (error as { response?: { data?: { message?: string } } })
+              .response?.data?.message === "string" &&
+            (error as { response?: { data?: { message?: string } } }).response
+              ?.data?.message) ||
           "Could not download invoice PDF. Please try again."
         toast.error(errMsg)
       }
@@ -138,14 +140,17 @@ export default function RecentInvoicesPage() {
     [downloadBlob, activeTemplate]
   )
 
-  const handlePreviewInvoice = useCallback((invoice: Invoice) => {
-    try {
-      InvoiceApi.openInvoiceHtml(invoice.id, activeTemplate)
-      toast.success(`Opened ${invoice.invoice_id} preview`)
-    } catch {
-      toast.error("Could not open invoice preview.")
-    }
-  }, [activeTemplate])
+  const handlePreviewInvoice = useCallback(
+    (invoice: Invoice) => {
+      try {
+        InvoiceApi.openInvoiceHtml(invoice.id, activeTemplate)
+        toast.success(`Opened ${invoice.invoice_id} preview`)
+      } catch {
+        toast.error("Could not open invoice preview.")
+      }
+    },
+    [activeTemplate]
+  )
 
   const handleFilterChange = useCallback(
     (updates: Record<string, unknown>) => {
@@ -289,15 +294,16 @@ export default function RecentInvoicesPage() {
           value={selectedTemplate}
           onChange={(e) => setSelectedTemplate(e.target.value)}
           disabled={isLoadingTemplates || invoiceTemplates.length === 0}
-          className="h-9 min-w-[180px] rounded-lg border border-border bg-background px-3 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-60"
+          className="h-9 min-w-[180px] rounded-lg border border-border bg-background px-3 text-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {(invoiceTemplates.length > 0 ? invoiceTemplates : [defaultTemplate]).map(
-            (template) => (
-              <option key={template} value={template}>
-                {template}
-              </option>
-            )
-          )}
+          {(invoiceTemplates.length > 0
+            ? invoiceTemplates
+            : [defaultTemplate]
+          ).map((template) => (
+            <option key={template} value={template}>
+              {template}
+            </option>
+          ))}
         </select>
       </div>
 
@@ -306,7 +312,9 @@ export default function RecentInvoicesPage() {
           type="button"
           variant="outline"
           disabled={!selectedInvoice}
-          onClick={() => selectedInvoice && handlePreviewInvoice(selectedInvoice)}
+          onClick={() =>
+            selectedInvoice && handlePreviewInvoice(selectedInvoice)
+          }
         >
           <ArrowUpRight className="mr-2 size-4" />
           Preview Selected
@@ -315,7 +323,9 @@ export default function RecentInvoicesPage() {
           type="button"
           variant="outline"
           disabled={!selectedInvoice}
-          onClick={() => selectedInvoice && handleDownloadInvoice(selectedInvoice)}
+          onClick={() =>
+            selectedInvoice && handleDownloadInvoice(selectedInvoice)
+          }
         >
           <Download className="mr-2 size-4" />
           Download PDF
@@ -381,19 +391,11 @@ export default function RecentInvoicesPage() {
             />
             <FilterBar.Select
               name="payment_mode"
-              placeholder="All Payment Modes"
-              options={[
-                { label: "All Payment Modes", value: "all" },
-                ...PAYMENT_MODE_OPTIONS,
-              ]}
+              options={[...PAYMENT_MODE_OPTIONS]}
             />
             <FilterBar.Select
               name="status"
-              placeholder="All Status"
-              options={[
-                { label: "All Status", value: "all" },
-                ...INVOICE_STATUS_OPTIONS,
-              ]}
+              options={[...INVOICE_STATUS_OPTIONS]}
             />
           </FilterBar>
 
