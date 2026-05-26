@@ -1,6 +1,8 @@
 #!/bin/bash
 
 set -e
+echo "Pulling latest changes from GitHub..."
+git pull
 
 echo "Stopping containers..."
 docker compose -f docker-compose.prod.yml down
