@@ -278,6 +278,7 @@ export default function ManageStoreDialog({
                   setIsUploadingLogo(false)
                   toast.error("Failed to upload store logo.")
                 }}
+                required={false}
               />
             </div>
           </div>
