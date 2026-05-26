@@ -22,6 +22,7 @@ export type AuthUser = {
       id: string
       name: string
       slug: string
+      logo: string | null
       branches?: Array<{
         id: string
         name: string
