@@ -1,6 +1,9 @@
 import { z } from "zod";
 
 const storeStatusEnum = z.enum(["ACTIVE", "INACTIVE", "PENDING", "BLOCK"]);
+const passwordSchema = z
+  .string()
+  .min(6, "Password must be at least 6 characters");
 
 export const createStoreSchema = z.object({
   storeName: z.string().min(1, "Store name is required"),
@@ -14,7 +17,7 @@ export const createStoreSchema = z.object({
   ownerPhone: z.string().min(1, "Owner phone is required"),
   ownerEmail: z.string().email("Invalid owner email").optional(),
   loginEmail: z.string().email("Invalid email"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  password: passwordSchema,
   gstNo: z.string().optional(),
   licenseNo: z.string().optional(),
   streetAddress: z.string().min(1, "Street address is required"),
@@ -28,4 +31,6 @@ export const createStoreSchema = z.object({
   permissions: z.array(z.string()).default([]),
 });
 
-export const updateStoreSchema = createStoreSchema.partial();
+export const updateStoreSchema = createStoreSchema.partial().extend({
+  password: z.union([z.literal(""), passwordSchema]).optional(),
+});
