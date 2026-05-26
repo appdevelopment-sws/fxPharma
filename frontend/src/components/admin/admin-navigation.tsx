@@ -69,14 +69,14 @@ export const adminNavigationGroups: SidebarNavigationGroup[] = [
             to: "/admin/all-compound",
             description: "Manage prescription compounding",
             icon: FlaskConical,
-            permissions: [PERMISSIONS.INVENTORY_VIEW],
+            permissions: [PERMISSIONS.COMPOUND_VIEW],
           },
           {
             title: "Inventory Batch",
             to: "/admin/inventory-batch",
             description: "View inventory batch details",
             icon: Layers,
-            permissions: [PERMISSIONS.INVENTORY_VIEW],
+            permissions: [PERMISSIONS.INVENTORY_BATCH_VIEW],
           },
           {
             title: "Inter Store Transfer",
@@ -90,7 +90,7 @@ export const adminNavigationGroups: SidebarNavigationGroup[] = [
             to: "/admin/import-inventory",
             description: "Import inventory from CSV/Excel",
             icon: UploadCloud,
-            permissions: [PERMISSIONS.INTER_STORE_TRANSFER_VIEW],
+            permissions: [PERMISSIONS.IMPORT_INVENTORY_VIEW],
           },
           {
             title: "Attributes",
