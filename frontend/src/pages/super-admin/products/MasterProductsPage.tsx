@@ -73,7 +73,7 @@ export default function MasterProductsPage() {
     [handleFilter]
   )
 
-   const handlePageChange = useCallback(
+  const handlePageChange = useCallback(
     (page: number) => {
       handleFilter({ page })
     },
@@ -288,7 +288,7 @@ export default function MasterProductsPage() {
               name="status"
               placeholder="All Status"
               options={[
-                { label: "All Status", value: "all" },
+
                 ...PRODUCT_STATUS_OPTIONS,
               ]}
             />
