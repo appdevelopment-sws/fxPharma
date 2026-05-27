@@ -44,8 +44,8 @@ export const PERMISSIONS = {
   EXPIRY_REPORT_VIEW: "reports.expiry-reports",
   GST_REPORT_VIEW: "reports.gst-report",
   //permission for interstore and compount
-  INTER_STORE_TRANSFER_VIEW: "inter-store-transfer.view",
-  INTER_STORE_TRANSFER_MANAGE: "inter-store-transfer.manage",
+  INTER_STORE_TRANSFER_VIEW: "interstore.view",
+  INTER_STORE_TRANSFER_MANAGE: "interstore.manage",
   COMPOUND_VIEW: "compound.view",
   COMPOUND_MANAGE: "compound.manage",
   INVENTORY_BATCH_VIEW: "inventory-batch.view",

@@ -475,23 +475,7 @@ const POS = () => {
   const [customerName, setCustomerName] = useState("")
   const [customerPhone, setCustomerPhone] = useState("")
 
-  // Pre-populate split amounts when entering split payment mode
-  useEffect(() => {
-    if (paymentMode === "Split Payment") {
-      if (!splitCashAmount && !splitOnlineAmount) {
-        setSplitCashAmount("0")
-        setSplitOnlineAmount(roundedNet.toString())
-      }
-    }
-  }, [paymentMode])
 
-  // Adjust split amounts dynamically if the bill total changes
-  useEffect(() => {
-    if (paymentMode === "Split Payment") {
-      const cash = parseFloat(splitCashAmount) || 0
-      setSplitOnlineAmount(Math.max(0, roundedNet - cash).toString())
-    }
-  }, [roundedNet])
 
   // Success modal
   const [successModalOpen, setSuccessModalOpen] = useState(false)
@@ -750,6 +734,24 @@ const POS = () => {
   const tenderedAmount = parseFloat(receiveAmount) || 0
   const changeAmount = tenderedAmount > roundedNet ? tenderedAmount - roundedNet : 0
   const dueAmount = tenderedAmount < roundedNet ? roundedNet - tenderedAmount : 0
+
+  // Pre-populate split amounts when entering split payment mode
+  useEffect(() => {
+    if (paymentMode === "Split Payment") {
+      if (!splitCashAmount && !splitOnlineAmount) {
+        setSplitCashAmount("0")
+        setSplitOnlineAmount(roundedNet.toString())
+      }
+    }
+  }, [paymentMode])
+
+  // Adjust split amounts dynamically if the bill total changes
+  useEffect(() => {
+    if (paymentMode === "Split Payment") {
+      const cash = parseFloat(splitCashAmount) || 0
+      setSplitOnlineAmount(Math.max(0, roundedNet - cash).toString())
+    }
+  }, [roundedNet])
 
   // ── Payment ───────────────────────────────────────────────────────────────
 
