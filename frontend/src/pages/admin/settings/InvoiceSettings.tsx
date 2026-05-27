@@ -105,7 +105,8 @@ export default function InvoiceSettings() {
               res.data.invoice_payment_qr_code ??
               DEFAULT_INVOICE_SETTINGS.invoice_payment_qr_code,
 
-            invoice_show_payment_qr: res.data.invoice_show_payment_qr !== "false",
+            invoice_show_payment_qr:
+              res.data.invoice_show_payment_qr !== "false",
           })
         }
       })
