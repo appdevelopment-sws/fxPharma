@@ -1,5 +1,4 @@
-import { useMemo } from "react"
-import { useMutation } from "@tanstack/react-query"
+import { useMemo, useCallback } from "react"
 import { useNavigate } from "react-router"
 import { useAuth } from "@/context/authContext"
 import AuthApi from "@/services/authApi"
@@ -20,14 +19,19 @@ const AdminLayout = () => {
     [user]
   )
 
-  const logoutMutation = useMutation({
-    mutationFn: AuthApi.logout,
-    onSuccess: async () => {
-      queryClient.setQueryData(queryKeys.auth.user(), null)
-      await queryClient.invalidateQueries({ queryKey: queryKeys.auth.all })
-      navigate("/admin/login", { replace: true })
-    },
-  })
+  const handleLogout = useCallback(() => {
+    // Fast logout: clear client state and redirect instantly
+    queryClient.setQueryData(queryKeys.auth.user(), null)
+    queryClient.removeQueries({ queryKey: queryKeys.auth.all })
+    localStorage.removeItem("activeOrganizationId")
+    localStorage.removeItem("activeBranchId")
+    navigate("/admin/login", { replace: true })
+
+    // Fire server-side logout in the background (invalidate cookie)
+    AuthApi.logout().catch(() => {
+      // Silently ignore — client is already logged out
+    })
+  }, [navigate])
 
   return (
     <WorkspaceShell
@@ -42,11 +46,11 @@ const AdminLayout = () => {
       userName={user?.name ?? "Workspace User"}
       userRole={user?.role ?? "Member"}
       userEmail={user?.email}
-      isLoggingOut={logoutMutation.isPending}
+      isLoggingOut={false}
       navigationGroups={navigationGroups}
       brandIcon={<PharmacyCrossIcon className="size-5" />}
       onOpenProfile={() => navigate("/admin/profile")}
-      onLogout={() => logoutMutation.mutate()}
+      onLogout={handleLogout}
     />
   )
 }

@@ -30,7 +30,10 @@ import Manufacturers from "@/pages/shared/Attributes/manufacturers"
 import Units from "@/pages/shared/Attributes/units"
 import AdminProfilePage from "@/pages/admin/profile/AdminProfilePage"
 import AdminRolePage from "@/pages/admin/role/Role"
-import { Settings } from "lucide-react"
+import { Settings as SettingsIcon } from "lucide-react"
+import SettingsView from "@/pages/admin/settings/settings"
+import OrganizationSettings from "@/pages/admin/settings/OrganizationSettings"
+import InvoiceSettings from "@/pages/admin/settings/InvoiceSettings"
 
 export const AdminRoutes = () => {
   return (
@@ -139,7 +142,11 @@ export const AdminRoutes = () => {
               />
             }
           >
-            <Route path="settings" element={<Settings />} />
+            <Route path="settings" element={<SettingsView />}>
+              <Route index element={<Navigate to="organization" replace />} />
+              <Route path="organization" element={<OrganizationSettings />} />
+              <Route path="invoice" element={<InvoiceSettings />} />
+            </Route>
           </Route>{" "}
           <Route path="reports/gst-report" element={<GstReport />} />
         </Route>
