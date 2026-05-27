@@ -17,6 +17,8 @@ type InvoiceLike = {
   customerName: string | null;
   customerPhone: string | null;
   paymentMode: string;
+  cashAmount?: unknown;
+  onlineAmount?: unknown;
   status: string;
   grossAmount: unknown;
   discountAmount: unknown;
@@ -215,6 +217,13 @@ function buildInvoiceData(invoice: InvoiceLike, templateName?: string | null) {
   const notes = invoice.notes?.trim() || "";
   const items = invoice.items || [];
 
+  let displayPaymentMode = mapPaymentMode(invoice.paymentMode);
+  if (invoice.paymentMode === "SPLIT") {
+    const cashStr = formatCurrency(invoice.cashAmount ?? 0);
+    const onlineStr = formatCurrency(invoice.onlineAmount ?? 0);
+    displayPaymentMode = `Split (Cash: ${cashStr}, Online: ${onlineStr})`;
+  }
+
   return {
     safeTemplateName,
     brandName: process.env.INVOICE_COMPANY_NAME || "Dawa Dukaan",
@@ -227,7 +236,7 @@ function buildInvoiceData(invoice: InvoiceLike, templateName?: string | null) {
     brandGstin: process.env.INVOICE_COMPANY_GSTIN || "",
     invoiceId: invoice.invoiceId,
     invoiceStatus: toTitleCase(invoice.status),
-    paymentMode: mapPaymentMode(invoice.paymentMode),
+    paymentMode: displayPaymentMode,
     createdAt,
     customerName,
     customerPhone,

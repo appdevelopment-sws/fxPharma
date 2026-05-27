@@ -230,7 +230,17 @@ export default function RecentInvoicesPage() {
           {row.payment_mode === "CASH" && <Banknote className="size-4" />}
           {row.payment_mode === "UPI" && <QrCode className="size-4" />}
           {row.payment_mode === "CARD" && <CreditCard className="size-4" />}
-          <span className="capitalize">{row.payment_mode.toLowerCase()}</span>
+          {row.payment_mode === "SPLIT" && (
+            <div className="flex items-center -space-x-1">
+              <Banknote className="size-3.5" />
+              <QrCode className="size-3.5" />
+            </div>
+          )}
+          <span className="capitalize text-xs">
+            {row.payment_mode === "SPLIT"
+              ? `Split (Cash: ₹${row.cash_amount ?? 0}, Online: ₹${row.online_amount ?? 0})`
+              : row.payment_mode.toLowerCase()}
+          </span>
         </div>
       ),
     },
@@ -479,8 +489,10 @@ export default function RecentInvoicesPage() {
                   <p className="text-xs font-medium text-muted-foreground">
                     Payment
                   </p>
-                  <p className="font-semibold capitalize">
-                    {selectedInvoice.payment_mode.toLowerCase()}
+                  <p className="font-semibold capitalize text-sm">
+                    {selectedInvoice.payment_mode === "SPLIT"
+                      ? `Split (Cash: ₹${selectedInvoice.cash_amount ?? 0}, Online: ₹${selectedInvoice.online_amount ?? 0})`
+                      : selectedInvoice.payment_mode.toLowerCase()}
                   </p>
                 </div>
                 <div>

@@ -94,6 +94,8 @@ type HeldBill = {
   discountPercent: number
   discountType: "flat" | "percent"
   paymentMode: string
+  splitCashAmount?: string
+  splitOnlineAmount?: string
   deliveryCost: number
   binValue: number
   totalAmount: number
@@ -465,11 +467,15 @@ const POS = () => {
   const [discountPercent, setDiscountPercent] = useState(0)
   const [discountType, setDiscountType] = useState<"flat" | "percent">("percent")
   const [paymentMode, setPaymentMode] = useState("Cash")
+  const [splitCashAmount, setSplitCashAmount] = useState("")
+  const [splitOnlineAmount, setSplitOnlineAmount] = useState("")
   const [receiveAmount, setReceiveAmount] = useState("")
   const [deliveryCost, setDeliveryCost] = useState(0)
   const [binValue, setBinValue] = useState(0)
   const [customerName, setCustomerName] = useState("")
   const [customerPhone, setCustomerPhone] = useState("")
+
+
 
   // Success modal
   const [successModalOpen, setSuccessModalOpen] = useState(false)
@@ -518,6 +524,8 @@ const POS = () => {
         tendered: responseData.tendered_amount,
         change: responseData.change_amount,
         paymentMode: responseData.payment_mode,
+        cashAmount: responseData.cash_amount,
+        onlineAmount: responseData.online_amount,
         date: new Date(responseData.createdAt).toLocaleString("en-IN"),
       })
       setSuccessModalOpen(true)
@@ -727,15 +735,44 @@ const POS = () => {
   const changeAmount = tenderedAmount > roundedNet ? tenderedAmount - roundedNet : 0
   const dueAmount = tenderedAmount < roundedNet ? roundedNet - tenderedAmount : 0
 
+  // Pre-populate split amounts when entering split payment mode
+  useEffect(() => {
+    if (paymentMode === "Split Payment") {
+      if (!splitCashAmount && !splitOnlineAmount) {
+        setSplitCashAmount("0")
+        setSplitOnlineAmount(roundedNet.toString())
+      }
+    }
+  }, [paymentMode])
+
+  // Adjust split amounts dynamically if the bill total changes
+  useEffect(() => {
+    if (paymentMode === "Split Payment") {
+      const cash = parseFloat(splitCashAmount) || 0
+      setSplitOnlineAmount(Math.max(0, roundedNet - cash).toString())
+    }
+  }, [roundedNet])
+
   // ── Payment ───────────────────────────────────────────────────────────────
 
   const handleCompletePayment = (printOnSuccess = false) => {
     if (cart.length === 0) return
 
+    if (paymentMode === "Split Payment") {
+      const cash = parseFloat(splitCashAmount) || 0
+      const online = parseFloat(splitOnlineAmount) || 0
+      if (Math.abs(cash + online - roundedNet) > 0.01) {
+        toast.error(`Split amounts (Cash: ₹${cash.toFixed(2)}, Online: ₹${online.toFixed(2)}) must sum up to the total net payable: ₹${roundedNet.toFixed(2)}`)
+        return
+      }
+    }
+
     const payload = {
       customerName: customerName.trim() || undefined,
       customerPhone: customerPhone.trim() || undefined,
-      paymentMode: paymentMode === "Cash" ? "CASH" : paymentMode === "UPI / QR" ? "UPI" : "CARD",
+      paymentMode: paymentMode === "Cash" ? "CASH" : paymentMode === "UPI / QR" ? "UPI" : paymentMode === "Card / POS" ? "CARD" : "SPLIT",
+      cashAmount: paymentMode === "Split Payment" ? parseFloat(splitCashAmount) || 0 : (paymentMode === "Cash" ? roundedNet : 0),
+      onlineAmount: paymentMode === "Split Payment" ? parseFloat(splitOnlineAmount) || 0 : (paymentMode !== "Cash" ? roundedNet : 0),
       grossAmount: grossTotal,
       discountAmount: discountAmount,
       taxAmount: totalTaxAmount,
@@ -777,6 +814,8 @@ const POS = () => {
     setDiscountPercent(0)
     setDiscountType("percent")
     setReceiveAmount("")
+    setSplitCashAmount("")
+    setSplitOnlineAmount("")
     setDeliveryCost(0)
     setBinValue(0)
     setSelectedProductId(null)
@@ -798,6 +837,8 @@ const POS = () => {
       discountPercent,
       discountType,
       paymentMode,
+      splitCashAmount: paymentMode === "Split Payment" ? splitCashAmount : undefined,
+      splitOnlineAmount: paymentMode === "Split Payment" ? splitOnlineAmount : undefined,
       deliveryCost,
       binValue,
       totalAmount: roundedNet,
@@ -820,6 +861,8 @@ const POS = () => {
     setDiscountPercent(bill.discountPercent)
     setDiscountType(bill.discountType)
     setPaymentMode(bill.paymentMode)
+    setSplitCashAmount(bill.splitCashAmount || "")
+    setSplitOnlineAmount(bill.splitOnlineAmount || "")
     setDeliveryCost(bill.deliveryCost)
     setBinValue(bill.binValue)
     setReceiveAmount("")
@@ -1201,10 +1244,51 @@ const POS = () => {
                     <option>Cash</option>
                     <option>Card / POS</option>
                     <option>UPI / QR</option>
+                    <option>Split Payment</option>
                   </select>
                   <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
                 </div>
               </div>
+
+              {/* Split Payment Amounts */}
+              {paymentMode === "Split Payment" && (
+                <div className="space-y-2 rounded-lg border border-teal-100 bg-teal-50/20 p-2.5 transition-all">
+                  <div className="flex items-center gap-2">
+                    <label className="w-24 flex-shrink-0 text-[10px] font-bold text-teal-700">
+                      Cash Amount
+                    </label>
+                    <input
+                      type="number"
+                      placeholder="0"
+                      value={splitCashAmount}
+                      onChange={(e) => {
+                        const val = e.target.value
+                        setSplitCashAmount(val)
+                        const cashNum = parseFloat(val) || 0
+                        setSplitOnlineAmount(Math.max(0, roundedNet - cashNum).toString())
+                      }}
+                      className="flex-1 min-w-0 rounded border border-teal-200 bg-white px-2.5 py-1 text-xs text-right outline-none focus:border-teal-400 transition-all font-semibold"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <label className="w-24 flex-shrink-0 text-[10px] font-bold text-teal-700">
+                      Online Amount
+                    </label>
+                    <input
+                      type="number"
+                      placeholder="0"
+                      value={splitOnlineAmount}
+                      onChange={(e) => {
+                        const val = e.target.value
+                        setSplitOnlineAmount(val)
+                        const onlineNum = parseFloat(val) || 0
+                        setSplitCashAmount(Math.max(0, roundedNet - onlineNum).toString())
+                      }}
+                      className="flex-1 min-w-0 rounded border border-teal-200 bg-white px-2.5 py-1 text-xs text-right outline-none focus:border-teal-400 transition-all font-semibold"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* ── Right column ── */}
@@ -1379,7 +1463,13 @@ const POS = () => {
                 <div className="flex justify-between">
                   <span>Payment Mode</span>
                   <span className="text-teal-600 font-black uppercase">
-                    {successInvoiceDetails.paymentMode}
+                    {successInvoiceDetails.paymentMode === "SPLIT" ? (
+                      <span>
+                        Split (Cash: ₹{successInvoiceDetails.cashAmount?.toFixed(2) ?? "0.00"}, Online: ₹{successInvoiceDetails.onlineAmount?.toFixed(2) ?? "0.00"})
+                      </span>
+                    ) : (
+                      successInvoiceDetails.paymentMode
+                    )}
                   </span>
                 </div>
               </div>

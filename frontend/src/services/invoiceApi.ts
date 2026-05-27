@@ -1,6 +1,6 @@
 import { api } from "./api"
 
-export type PaymentMode = "CASH" | "UPI" | "CARD"
+export type PaymentMode = "CASH" | "UPI" | "CARD" | "SPLIT"
 export type InvoiceStatus = "PAID" | "REFUNDED" | "CANCELLED"
 
 export type Invoice = {
@@ -17,6 +17,8 @@ export type Invoice = {
   tendered_amount: number
   change_amount: number
   payment_mode: PaymentMode
+  cash_amount?: number
+  online_amount?: number
   status: InvoiceStatus
   createdAt: string
   updatedAt?: string
@@ -109,6 +111,8 @@ const mapInvoice = (invoice: any): Invoice => ({
   tendered_amount: toNumber(invoice.tendered_amount ?? invoice.tenderedAmount),
   change_amount: toNumber(invoice.change_amount ?? invoice.changeAmount),
   payment_mode: invoice.payment_mode ?? invoice.paymentMode ?? "CASH",
+  cash_amount: toNumber(invoice.cash_amount ?? invoice.cashAmount),
+  online_amount: toNumber(invoice.online_amount ?? invoice.onlineAmount),
   status: invoice.status ?? "PAID",
   createdAt: invoice.createdAt,
   updatedAt: invoice.updatedAt,
