@@ -20,6 +20,8 @@ type InvoiceLike = {
   customerName: string | null;
   customerPhone: string | null;
   paymentMode: string;
+  cashAmount?: unknown;
+  onlineAmount?: unknown;
   status: string;
   grossAmount: unknown;
   discountAmount: unknown;
@@ -127,8 +129,7 @@ async function resolveTemplatePath(templateName?: string | null) {
 
     if (safeTemplateName !== DEFAULT_TEMPLATE_NAME) {
       throw new ErrorHandler(
-        `Invoice template "${safeTemplateName}" was not found. Available templates: ${
-          availableTemplates.length > 0 ? availableTemplates.join(", ") : "none"
+        `Invoice template "${safeTemplateName}" was not found. Available templates: ${availableTemplates.length > 0 ? availableTemplates.join(", ") : "none"
         }`,
         404,
       );
@@ -142,8 +143,7 @@ async function resolveTemplatePath(templateName?: string | null) {
       };
     } catch {
       throw new ErrorHandler(
-        `Default invoice template was not found. Available templates: ${
-          availableTemplates.length > 0 ? availableTemplates.join(", ") : "none"
+        `Default invoice template was not found. Available templates: ${availableTemplates.length > 0 ? availableTemplates.join(", ") : "none"
         }`,
         500,
       );
@@ -222,9 +222,17 @@ function buildInvoiceData(
   const notes = invoice.notes?.trim() || "";
   const items = invoice.items || [];
 
+  let displayPaymentMode = mapPaymentMode(invoice.paymentMode);
+  if (invoice.paymentMode === "SPLIT") {
+    const cashStr = formatCurrency(invoice.cashAmount ?? 0);
+    const onlineStr = formatCurrency(invoice.onlineAmount ?? 0);
+    displayPaymentMode = `Split (Cash: ${cashStr}, Online: ${onlineStr})`;
+  }
+
+
   const brandName = settingsMap["store_name"] || settingsMap["invoice_company_name"] || process.env.INVOICE_COMPANY_NAME || "Dawa Dukaan";
   const brandTagline = settingsMap["description"] || settingsMap["invoice_company_tagline"] || process.env.INVOICE_COMPANY_TAGLINE || "Simple, reusable invoice templates";
-  
+
   // Construct address from parts if available, otherwise fallback
   const addressParts = [
     settingsMap["street_address"],
@@ -286,7 +294,7 @@ function buildInvoiceData(
     invoiceFooterBlock,
     invoiceId: invoice.invoiceId,
     invoiceStatus: toTitleCase(invoice.status),
-    paymentMode: mapPaymentMode(invoice.paymentMode),
+    paymentMode: displayPaymentMode,
     createdAt,
     customerName,
     customerPhone,

@@ -1,5 +1,4 @@
-import { useMemo } from "react"
-import { useMutation } from "@tanstack/react-query"
+import { useMemo, useCallback } from "react"
 import { useNavigate } from "react-router"
 import { WorkspaceShell } from "@/components/navigation/WorkspaceShell"
 import { useAuth } from "@/context/authContext"
@@ -20,14 +19,19 @@ const SuperAdminLayout = () => {
     [user]
   )
 
-  const logoutMutation = useMutation({
-    mutationFn: AuthApi.logout,
-    onSuccess: async () => {
-      queryClient.setQueryData(queryKeys.auth.user(), null)
-      await queryClient.invalidateQueries({ queryKey: queryKeys.auth.all })
-      navigate("/admin/login", { replace: true })
-    },
-  })
+  const handleLogout = useCallback(() => {
+    // Fast logout: clear client state and redirect instantly
+    queryClient.setQueryData(queryKeys.auth.user(), null)
+    queryClient.removeQueries({ queryKey: queryKeys.auth.all })
+    localStorage.removeItem("activeOrganizationId")
+    localStorage.removeItem("activeBranchId")
+    navigate("/admin/login", { replace: true })
+
+    // Fire server-side logout in the background (invalidate cookie)
+    AuthApi.logout().catch(() => {
+      // Silently ignore — client is already logged out
+    })
+  }, [navigate])
 
   return (
     <WorkspaceShell
@@ -38,10 +42,10 @@ const SuperAdminLayout = () => {
       userName={user?.name ?? "Super Admin"}
       userRole={user?.role ?? "Super Admin"}
       userEmail={user?.email}
-      isLoggingOut={logoutMutation.isPending}
+      isLoggingOut={false}
       navigationGroups={navigationGroups}
       brandIcon={<PlatformShieldIcon className="size-5" />}
-      onLogout={() => logoutMutation.mutate()}
+      onLogout={handleLogout}
     />
   )
 }

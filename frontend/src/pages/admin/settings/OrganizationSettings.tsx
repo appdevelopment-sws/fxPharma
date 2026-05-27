@@ -8,7 +8,11 @@ import { useAuth } from "@/context/authContext"
 import StoreListApi, { type StoreFormValues } from "@/services/storelistApi"
 import SettingsApi from "@/services/settingsApi"
 import UploadApi from "@/services/uploadApi"
-import { FormField, FormTextarea, FormFileUpload } from "@/components/ui/form-fields"
+import {
+  FormField,
+  FormTextarea,
+  FormFileUpload,
+} from "@/components/ui/form-fields"
 import { Button } from "@/components/ui/button"
 
 const DEFAULT_TIMEZONES = [
@@ -101,12 +105,12 @@ export default function OrganizationSettings() {
     mutationFn: (values: StoreFormValues) =>
       StoreListApi.updateStore(activeOrganizationId || "", values),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["organization", activeOrganizationId] })
+      queryClient.invalidateQueries({
+        queryKey: ["organization", activeOrganizationId],
+      })
       toast.success("Organization settings updated successfully")
     },
-    onError: (error: any) => {
-      toast.error(error?.response?.data?.message || "Failed to update organization settings")
-    },
+    onError: (error: any) => {},
   })
 
   const onSubmit: SubmitHandler<StoreFormValues> = async (data) => {
@@ -149,7 +153,9 @@ export default function OrganizationSettings() {
     return (
       <div className="flex h-64 items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="ml-2 text-sm text-muted-foreground">Loading settings...</span>
+        <span className="ml-2 text-sm text-muted-foreground">
+          Loading settings...
+        </span>
       </div>
     )
   }
@@ -161,7 +167,9 @@ export default function OrganizationSettings() {
         <div className="space-y-6 lg:col-span-2">
           {/* General Information */}
           <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-            <h3 className="mb-4 text-lg font-semibold text-card-foreground">General Info</h3>
+            <h3 className="mb-4 text-lg font-semibold text-card-foreground">
+              General Info
+            </h3>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="sm:col-span-2">
                 <FormField
@@ -194,7 +202,9 @@ export default function OrganizationSettings() {
 
           {/* Address Details */}
           <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-            <h3 className="mb-4 text-lg font-semibold text-card-foreground">Address Details</h3>
+            <h3 className="mb-4 text-lg font-semibold text-card-foreground">
+              Address Details
+            </h3>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="sm:col-span-2">
                 <FormField
@@ -205,23 +215,45 @@ export default function OrganizationSettings() {
                 />
               </div>
               <div>
-                <FormField control={control} name="city" label="CITY" placeholder="e.g. Indore" />
+                <FormField
+                  control={control}
+                  name="city"
+                  label="CITY"
+                  placeholder="e.g. Indore"
+                />
               </div>
               <div>
-                <FormField control={control} name="state" label="STATE" placeholder="e.g. Madhya Pradesh" />
+                <FormField
+                  control={control}
+                  name="state"
+                  label="STATE"
+                  placeholder="e.g. Madhya Pradesh"
+                />
               </div>
               <div>
-                <FormField control={control} name="zip_code" label="ZIP / POSTAL CODE" placeholder="e.g. 452001" />
+                <FormField
+                  control={control}
+                  name="zip_code"
+                  label="ZIP / POSTAL CODE"
+                  placeholder="e.g. 452001"
+                />
               </div>
               <div>
-                <FormField control={control} name="country" label="COUNTRY" placeholder="e.g. India" />
+                <FormField
+                  control={control}
+                  name="country"
+                  label="COUNTRY"
+                  placeholder="e.g. India"
+                />
               </div>
             </div>
           </div>
 
           {/* Tax & Legal */}
           <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-            <h3 className="mb-4 text-lg font-semibold text-card-foreground">Tax & License Settings</h3>
+            <h3 className="mb-4 text-lg font-semibold text-card-foreground">
+              Tax & License Settings
+            </h3>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <FormField
@@ -235,7 +267,7 @@ export default function OrganizationSettings() {
                 <FormField
                   control={control}
                   name="license_number"
-                  label="DRUG LICENSE NUMBER"
+                  label="LICENSE NUMBER"
                   placeholder="e.g. DL-12345/2026"
                 />
               </div>
@@ -243,7 +275,7 @@ export default function OrganizationSettings() {
           </div>
 
           {/* Regional Settings */}
-          <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+          {/* <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
             <h3 className="mb-4 text-lg font-semibold text-card-foreground">Regional Settings</h3>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
@@ -273,14 +305,16 @@ export default function OrganizationSettings() {
                 </select>
               </div>
             </div>
-          </div>
+          </div> */}
         </div>
 
         {/* Right Side: Logo & Owner details */}
         <div className="space-y-6">
           {/* Logo Upload Card */}
           <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-            <h3 className="mb-4 text-lg font-semibold text-card-foreground">Store Logo</h3>
+            <h3 className="mb-4 text-lg font-semibold text-card-foreground">
+              Store Logo
+            </h3>
             <FormFileUpload
               control={control}
               name="store_logo"
@@ -292,7 +326,9 @@ export default function OrganizationSettings() {
 
           {/* Owner details */}
           <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-            <h3 className="mb-4 text-lg font-semibold text-card-foreground">Owner Details</h3>
+            <h3 className="mb-4 text-lg font-semibold text-card-foreground">
+              Owner Details
+            </h3>
             <div className="space-y-4">
               <FormField
                 control={control}

@@ -20,6 +20,7 @@ export const PAYMENT_MODE_OPTIONS = [
   { label: "Cash", value: "CASH" },
   { label: "UPI", value: "UPI" },
   { label: "Card", value: "CARD" },
+  { label: "Split Payment", value: "SPLIT" },
 ]
 
 export const INVOICE_STATUS_OPTIONS = [

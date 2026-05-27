@@ -245,10 +245,10 @@ export default function LoginPage() {
               <div className="animate-drop-in-center pt-2 delay-600">
                 <Button
                   type="submit"
-                  disabled={isSubmitting}
+                  disabled={loginMutation.isPending}
                   className="h-12 w-full rounded-xl bg-primary font-bold text-primary-foreground shadow-md transition-all duration-300 hover:opacity-90 hover:shadow-xl hover:shadow-primary/20 active:scale-[0.98]"
                 >
-                  {isSubmitting ? (
+                  {loginMutation.isPending ? (
                     <span className="flex items-center gap-2">
                       <svg
                         className="mr-2 -ml-1 h-4 w-4 animate-spin text-primary-foreground"
