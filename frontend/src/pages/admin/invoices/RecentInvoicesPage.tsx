@@ -141,9 +141,9 @@ export default function RecentInvoicesPage() {
   )
 
   const handlePreviewInvoice = useCallback(
-    (invoice: Invoice) => {
+    async (invoice: Invoice) => {
       try {
-        InvoiceApi.openInvoiceHtml(invoice.id, activeTemplate)
+        await InvoiceApi.openInvoiceHtml(invoice.id, activeTemplate)
         toast.success(`Opened ${invoice.invoice_id} preview`)
       } catch {
         toast.error("Could not open invoice preview.")
@@ -151,6 +151,15 @@ export default function RecentInvoicesPage() {
     },
     [activeTemplate]
   )
+
+  const handlePreviewTemplate = useCallback(async () => {
+    try {
+      await InvoiceApi.openInvoiceTemplatePreview(activeTemplate)
+      toast.success(`Opened template preview for ${activeTemplate}`)
+    } catch {
+      toast.error("Could not open template preview.")
+    }
+  }, [activeTemplate])
 
   const handleFilterChange = useCallback(
     (updates: Record<string, unknown>) => {
@@ -236,7 +245,7 @@ export default function RecentInvoicesPage() {
               <QrCode className="size-3.5" />
             </div>
           )}
-          <span className="capitalize text-xs">
+          <span className="text-xs capitalize">
             {row.payment_mode === "SPLIT"
               ? `Split (Cash: ₹${row.cash_amount ?? 0}, Online: ₹${row.online_amount ?? 0})`
               : row.payment_mode.toLowerCase()}
@@ -321,12 +330,21 @@ export default function RecentInvoicesPage() {
         <Button
           type="button"
           variant="outline"
+          disabled={invoiceTemplates.length === 0}
+          onClick={handlePreviewTemplate}
+        >
+          <ArrowUpRight className="mr-2 size-4" />
+          Preview Template
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
           disabled={!selectedInvoice}
           onClick={() =>
             selectedInvoice && handlePreviewInvoice(selectedInvoice)
           }
         >
-          <ArrowUpRight className="mr-2 size-4" />
+          <Eye className="mr-2 size-4" />
           Preview Selected
         </Button>
         <Button
@@ -489,7 +507,7 @@ export default function RecentInvoicesPage() {
                   <p className="text-xs font-medium text-muted-foreground">
                     Payment
                   </p>
-                  <p className="font-semibold capitalize text-sm">
+                  <p className="text-sm font-semibold capitalize">
                     {selectedInvoice.payment_mode === "SPLIT"
                       ? `Split (Cash: ₹${selectedInvoice.cash_amount ?? 0}, Online: ₹${selectedInvoice.online_amount ?? 0})`
                       : selectedInvoice.payment_mode.toLowerCase()}
