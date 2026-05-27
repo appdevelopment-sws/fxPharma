@@ -19,6 +19,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
+import { ModeToggle } from "@/components/mode-toggle"
 
 interface DashboardHeaderProps {
   appLabel: string
@@ -49,6 +50,12 @@ export function DashboardHeader({
 }: DashboardHeaderProps) {
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false)
+  const [now, setNow] = useState(new Date())
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 1000)
+    return () => clearInterval(timer)
+  }, [])
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -72,7 +79,7 @@ export function DashboardHeader({
   }
 
   return (
-    <header className="sticky top-0 z-30 h-16 border-b border-blue-700 bg-[#2563EB] text-white">
+    <header className="sticky top-0 z-30 h-16 border-b border-white/20 dark:border-zinc-800 bg-[#2563EB] dark:bg-zinc-950 text-white">
       <div className="flex h-full items-center justify-between px-4 sm:px-6">
         {/* Left: Mobile trigger & Breadcrumbs */}
         <div className="flex items-center gap-4">
@@ -106,16 +113,19 @@ export function DashboardHeader({
         {/* Right: Actions & Profile */}
         <div className="flex items-center gap-2 sm:gap-4">
           {/* Search - Desktop only for now */}
-          <div className="relative mr-2 hidden items-center md:flex">
-            <Search className="absolute left-3 size-4 text-white/60" />
-            <input
-              type="text"
-              placeholder="Search..."
-              className="h-9 w-48 rounded-full border-transparent bg-white/10 pr-4 pl-10 text-sm text-white transition-all outline-none placeholder:text-white/60 focus:bg-white/20 focus:ring-2 focus:ring-white/20 lg:w-64"
-            />
-          </div>
+
 
           <div className="flex items-center gap-1 border-r border-white/10 pr-2 sm:gap-2">
+            {/* Live Clock & Date */}
+            <div className="hidden sm:flex flex-col items-end justify-center mr-2 border-r border-white/10 pr-4">
+              <span className="text-xs font-bold text-white tracking-wide leading-none">
+                {now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+              </span>
+              <span className="text-[9px] text-white/60 font-medium uppercase tracking-widest mt-1">
+                {now.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
+              </span>
+            </div>
+
             <Button
               variant="ghost"
               size="icon"
@@ -128,6 +138,9 @@ export function DashboardHeader({
                 <Maximize className="size-5" />
               )}
             </Button>
+            <div className="relative">
+              <ModeToggle />
+            </div>
             <div className="relative">
               <Button
                 variant="ghost"
@@ -157,7 +170,7 @@ export function DashboardHeader({
                     {userRole}
                   </p>
                 </div>
-                <div className="relative flex size-9 items-center justify-center rounded-full bg-white text-xs font-bold text-[#2563EB] shadow-sm ring-2 ring-white/20 transition-all group-hover:ring-white/40">
+                <div className="relative flex size-9 items-center justify-center rounded-full bg-white dark:bg-zinc-800 text-xs font-bold text-[#2563EB] dark:text-white shadow-sm ring-2 ring-white/20 transition-all group-hover:ring-white/40">
                   {userName
                     .split(" ")
                     .map((n) => n[0])
@@ -170,25 +183,25 @@ export function DashboardHeader({
             <PopoverContent
               align="end"
               sideOffset={10}
-              className="w-80 border border-slate-200 bg-white p-3 text-slate-900 shadow-xl"
+              className="w-80 border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-3 text-slate-900 dark:text-zinc-100 shadow-xl"
             >
-              <div className="space-y-3 border-b border-slate-200 pb-3">
+              <div className="space-y-3 border-b border-slate-200 dark:border-zinc-800 pb-3">
                 <div className="flex items-center gap-3">
-                  <div className="flex size-11 items-center justify-center rounded-full bg-[#2563EB] text-sm font-bold text-white shadow-sm">
+                  <div className="flex size-11 items-center justify-center rounded-full bg-[#2563EB] dark:bg-zinc-800 text-sm font-bold text-white shadow-sm">
                     {userName
                       .split(" ")
                       .map((n) => n[0])
                       .join("")}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-slate-900">
+                    <p className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
                       {userName}
                     </p>
-                    <p className="truncate text-xs text-slate-500">
+                    <p className="truncate text-xs text-slate-500 dark:text-slate-400">
                       {userRole}
                     </p>
                     {userEmail && (
-                      <p className="truncate text-xs text-slate-500">
+                      <p className="truncate text-xs text-slate-500 dark:text-slate-400">
                         {userEmail}
                       </p>
                     )}
@@ -205,7 +218,7 @@ export function DashboardHeader({
                       onOpenProfile()
                     }}
                     className={cn(
-                      "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900"
+                      "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-slate-700 dark:text-slate-300 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-slate-100"
                     )}
                   >
                     <UserCircle2 className="size-4 text-slate-500" />
@@ -221,7 +234,7 @@ export function DashboardHeader({
                       onOpenSettings()
                     }}
                     className={cn(
-                      "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900"
+                      "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-slate-700 dark:text-slate-300 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-slate-100"
                     )}
                   >
                     <Settings className="size-4 text-slate-500" />
@@ -238,7 +251,7 @@ export function DashboardHeader({
                     }}
                     disabled={isLoggingOut}
                     className={cn(
-                      "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-rose-600 transition-colors hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-60"
+                      "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-rose-600 dark:text-rose-500 transition-colors hover:bg-rose-50 dark:hover:bg-rose-950/30 disabled:cursor-not-allowed disabled:opacity-60"
                     )}
                   >
                     <LogOut className="size-4" />

@@ -11,13 +11,31 @@ export interface StatCardProps {
   valueClassName?: string
 }
 
-const iconBgVariants = [
-  "bg-blue-500/10 text-blue-600",
-  "bg-green-500/10 text-green-600",
-  "bg-purple-500/10 text-purple-600",
-  "bg-orange-500/10 text-orange-600",
-  "bg-red-500/10 text-red-600",
-  "bg-pink-500/10 text-pink-600",
+const cardVariants = [
+  {
+    shape1: "bg-blue-500",
+    shape2: "bg-blue-400",
+    iconBg: "bg-blue-500/15 text-blue-500",
+    accent: "from-blue-500/5",
+  },
+  {
+    shape1: "bg-emerald-500",
+    shape2: "bg-teal-400",
+    iconBg: "bg-emerald-500/15 text-emerald-500",
+    accent: "from-emerald-500/5",
+  },
+  {
+    shape1: "bg-violet-500",
+    shape2: "bg-purple-400",
+    iconBg: "bg-violet-500/15 text-violet-500",
+    accent: "from-violet-500/5",
+  },
+  {
+    shape1: "bg-orange-500",
+    shape2: "bg-amber-400",
+    iconBg: "bg-orange-500/15 text-orange-500",
+    accent: "from-orange-500/5",
+  },
 ]
 
 export function StatCard({
@@ -28,42 +46,70 @@ export function StatCard({
   className,
   valueClassName,
 }: StatCardProps) {
-  const iconColor = useMemo(() => {
-    return iconBgVariants[Math.floor(Math.random() * iconBgVariants.length)]
+  const variant = useMemo(() => {
+    return cardVariants[Math.floor(Math.random() * cardVariants.length)]
   }, [])
 
   return (
     <Card
       className={cn(
-        "group relative overflow-hidden rounded-2xl border border-border/40 backdrop-blur-sm",
-        "p-5 shadow-sm transition-all duration-300",
-        "hover:-translate-y-1 hover:shadow-xl",
+        "group relative overflow-hidden rounded-xl border border-border/40",
+        "px-4 py-3 shadow-sm transition-all duration-300",
+        "hover:-translate-y-0.5 hover:shadow-md",
         className
       )}
     >
-      {/* Subtle Gradient Glow */}
-      <div className="pointer-events-none absolute inset-0 opacity-0 transition group-hover:opacity-100">
-        <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-primary/10 blur-2xl" />
+      {/* Colorful decorative shapes */}
+      <div className="pointer-events-none absolute inset-0">
+        {/* Large circle — top right */}
+        <div
+          className={cn(
+            "absolute -top-5 -right-5 h-16 w-16 rounded-full opacity-20",
+            variant.shape1
+          )}
+        />
+        {/* Small circle — bottom left */}
+        <div
+          className={cn(
+            "absolute -bottom-3 -left-3 h-10 w-10 rounded-full opacity-15",
+            variant.shape2
+          )}
+        />
+        {/* Rotated rectangle — mid right */}
+        <div
+          className={cn(
+            "absolute top-1/2 -right-2 h-8 w-8 -translate-y-1/2 rotate-12 rounded-md opacity-10",
+            variant.shape1
+          )}
+        />
+        {/* Subtle gradient wash */}
+        <div
+          className={cn(
+            "absolute inset-0 bg-gradient-to-br to-transparent opacity-40",
+            variant.accent
+          )}
+        />
       </div>
 
-      <div className="flex items-start justify-between">
-        {/* Left Content */}
-        <div className="space-y-1.5">
+      {/* Content */}
+      <div className="relative flex items-center justify-between gap-3">
+        {/* Left */}
+        <div className="min-w-0 flex-1 space-y-0.5">
           <div
             className={cn(
-              "text-3xl font-semibold tracking-tight text-foreground",
+              "text-xl font-bold tracking-tight text-foreground leading-none",
               valueClassName
             )}
           >
             {value}
           </div>
 
-          <div className="text-sm font-medium text-muted-foreground">
+          <div className="text-xs font-medium text-muted-foreground truncate">
             {title}
           </div>
 
           {helper && (
-            <div className="text-xs text-muted-foreground/80">{helper}</div>
+            <div className="text-[10px] text-muted-foreground/70 truncate">{helper}</div>
           )}
         </div>
 
@@ -71,9 +117,9 @@ export function StatCard({
         {icon && (
           <div
             className={cn(
-              "flex h-12 w-12 items-center justify-center rounded-xl",
+              "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
               "transition-all duration-300 group-hover:scale-110",
-              iconColor
+              variant.iconBg
             )}
           >
             {icon}

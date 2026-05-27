@@ -59,8 +59,8 @@ export function WorkspaceShell({
       {/* Desktop Sidebar */}
       <aside
         className={cn(
-          "relative z-40 hidden h-screen shrink-0 border-r border-blue-700 bg-[#2563EB] transition-all duration-300 lg:block",
-          isCollapsed ? "w-20" : "w-[240px]"
+          "relative z-40 hidden h-screen shrink-0 border-r border-white/20 dark:border-zinc-800 bg-[#2563EB] dark:bg-zinc-950 transition-all duration-300 lg:block",
+          isCollapsed ? "w-20" : "w-[220px]"
         )}
       >
         <DashboardSidebar
@@ -72,11 +72,6 @@ export function WorkspaceShell({
           activePath={location.pathname}
           isLoggingOut={isLoggingOut}
           onLogout={onLogout}
-          onNavigate={(to) => {
-            if (to && to.includes("/pos")) {
-              setIsCollapsed(true)
-            }
-          }}
         />
 
         {/* Collapse Toggle Button */}
@@ -84,7 +79,7 @@ export function WorkspaceShell({
           type="button"
           variant="outline"
           size="icon"
-          className="absolute top-20 -right-3 z-50 size-6 rounded-full border-blue-700 bg-white text-[#2563EB] shadow-sm hover:text-blue-700"
+          className="absolute top-20 -right-3 z-50 size-6 rounded-full shadow-md transition-colors border-slate-200 bg-white text-[#2563EB] hover:bg-slate-50 hover:text-blue-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700 dark:hover:text-white"
           onClick={() => setIsCollapsed(!isCollapsed)}
         >
           {isCollapsed ? (
@@ -111,7 +106,7 @@ export function WorkspaceShell({
           isLoggingOut={isLoggingOut}
         />
 
-        <main className="scrollbar-thin scrollbar-thumb-slate-200 flex-1 overflow-y-auto bg-[#f0f4fa]">
+        <main className="scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-zinc-700 flex-1 overflow-y-auto bg-[#f0f4fa] dark:bg-zinc-900">
           <div
             className={cn(
               "mx-auto h-full w-full p-4 sm:p-3 lg:p-4",
@@ -130,7 +125,7 @@ export function WorkspaceShell({
             className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
             onClick={() => setIsSidebarOpen(false)}
           />
-          <aside className="absolute inset-y-0 left-0 flex w-[240px] animate-in flex-col border-r border-blue-700 bg-[#2563EB] shadow-2xl duration-300 slide-in-from-left">
+          <aside className="absolute inset-y-0 left-0 flex w-[220px] animate-in flex-col border-r border-white/20 dark:border-zinc-800 bg-[#2563EB] dark:bg-zinc-950 shadow-2xl duration-300 slide-in-from-left">
             <div className="absolute top-4 right-4 z-10 transition-transform active:scale-95">
               <Button
                 variant="ghost"
