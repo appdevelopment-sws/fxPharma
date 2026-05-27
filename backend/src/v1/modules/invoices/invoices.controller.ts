@@ -23,7 +23,10 @@ export class InvoicesController {
       throw new ErrorHandler("Invoice not found.", 404);
     }
 
-    if (invoice.organizationId !== organizationId || (branchId && invoice.branchId !== branchId)) {
+    if (
+      invoice.organizationId !== organizationId ||
+      (branchId && invoice.branchId !== branchId)
+    ) {
       throw new ErrorHandler("Access denied.", 403);
     }
 
@@ -50,18 +53,37 @@ export class InvoicesController {
     } = req.body;
 
     const invoice = await rootPrisma.$transaction(async (tx) => {
-      // 1. Generate unique invoiceId
+      // 1. Generate unique invoiceId from settings
+      const prefixSetting = await tx.setting.findFirst({
+        where: {
+          organizationId,
+          branchId: branchId || null,
+          key: "invoice_prefix",
+        },
+      });
+      const sequenceSetting = await tx.setting.findFirst({
+        where: {
+          organizationId,
+          branchId: branchId || null,
+          key: "invoice_sequence",
+        },
+      });
+
+      const prefix = prefixSetting?.value || "INV-";
+      const startingSeq = parseInt(sequenceSetting?.value || "1", 10);
+
       const count = await tx.invoice.count({
         where: { organizationId },
       });
-      let invoiceId = `INV-${String(count + 1).padStart(6, "0")}`;
+      const nextNum = (isNaN(startingSeq) ? 1 : startingSeq) + count;
+      let invoiceId = `${prefix}${String(nextNum).padStart(6, "0")}`;
 
       // Verify uniqueness
-      const existing = await tx.invoice.findUnique({
-        where: { invoiceId },
+      const existing = await tx.invoice.findFirst({
+        where: { invoiceId, organizationId },
       });
       if (existing) {
-        invoiceId = `INV-${String(count + 1).padStart(6, "0")}-${Math.floor(100 + Math.random() * 900)}`;
+        invoiceId = `${prefix}${String(nextNum).padStart(6, "0")}-${Math.floor(100 + Math.random() * 900)}`;
       }
 
       // 2. Decrement stock for each item
@@ -81,12 +103,16 @@ export class InvoicesController {
           });
 
           if (!batch) {
-            throw new Error(`Batch ${item.batchNo || ""} not found for item ${item.inventoryName}.`);
+            throw new Error(
+              `Batch ${item.batchNo || ""} not found for item ${item.inventoryName}.`,
+            );
           }
 
           const nextBatchQty = batch.availableQty - item.qty;
           if (nextBatchQty < 0 && !inventoryItem.negativeStock) {
-            throw new Error(`Insufficient stock for item ${item.inventoryName} in batch ${batch.batchNo}.`);
+            throw new Error(
+              `Insufficient stock for item ${item.inventoryName} in batch ${batch.batchNo}.`,
+            );
           }
 
           await tx.inventoryBatch.update({
@@ -116,8 +142,18 @@ export class InvoicesController {
           customerName: customerName || null,
           customerPhone: customerPhone || null,
           paymentMode,
-          cashAmount: paymentMode === "SPLIT" ? (cashAmount ?? 0.0) : (paymentMode === "CASH" ? totalAmount : 0.0),
-          onlineAmount: paymentMode === "SPLIT" ? (onlineAmount ?? 0.0) : (paymentMode !== "CASH" ? totalAmount : 0.0),
+          cashAmount:
+            paymentMode === "SPLIT"
+              ? (cashAmount ?? 0.0)
+              : paymentMode === "CASH"
+                ? totalAmount
+                : 0.0,
+          onlineAmount:
+            paymentMode === "SPLIT"
+              ? (onlineAmount ?? 0.0)
+              : paymentMode !== "CASH"
+                ? totalAmount
+                : 0.0,
           status: "PAID",
           grossAmount,
           discountAmount,
@@ -206,10 +242,22 @@ export class InvoicesController {
     const { organizationId, branchId } = getRequestScope(req);
 
     const now = new Date();
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    const todayStart = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+    );
+    const todayEnd = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate() + 1,
+    );
 
-    const yesterdayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+    const yesterdayStart = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate() - 1,
+    );
     const yesterdayEnd = todayStart;
 
     // This month's start and end
@@ -309,8 +357,14 @@ export class InvoicesController {
       ),
     ]);
 
-    const todaySales = todayInvoices.reduce((acc, inv) => acc + Number(inv.totalAmount), 0);
-    const yesterdaySales = yesterdayInvoices.reduce((acc, inv) => acc + Number(inv.totalAmount), 0);
+    const todaySales = todayInvoices.reduce(
+      (acc, inv) => acc + Number(inv.totalAmount),
+      0,
+    );
+    const yesterdaySales = yesterdayInvoices.reduce(
+      (acc, inv) => acc + Number(inv.totalAmount),
+      0,
+    );
 
     const thisMonthSales = thisMonthInvoices.reduce((acc, inv) => acc + Number(inv.totalAmount), 0);
     const lastMonthSales = lastMonthInvoices.reduce((acc, inv) => acc + Number(inv.totalAmount), 0);
@@ -319,7 +373,8 @@ export class InvoicesController {
     const yesterdayCount = yesterdayInvoices.length;
 
     const todayAvg = todayCount > 0 ? todaySales / todayCount : 0;
-    const yesterdayAvg = yesterdayCount > 0 ? yesterdaySales / yesterdayCount : 0;
+    const yesterdayAvg =
+      yesterdayCount > 0 ? yesterdaySales / yesterdayCount : 0;
 
     const todayRefunds = todayInvoices
       .filter((inv) => inv.status === "REFUNDED")
@@ -383,11 +438,80 @@ export class InvoicesController {
     });
   });
 
+  static previewTemplate = catchAsync(async (req: Request, res: Response) => {
+    const { organizationId, branchId } = getRequestScope(req);
+    const templateName = req.query.template as string | undefined;
+
+    const invoice = {
+      invoiceId: "PREVIEW-0001",
+      organizationId: organizationId || "",
+      branchId: branchId || null,
+      customerName: "John Doe",
+      customerPhone: "9876543210",
+      paymentMode: "CASH",
+      status: "PAID",
+      grossAmount: 1200,
+      discountAmount: 50,
+      taxAmount: 180,
+      deliveryCost: 20,
+      totalAmount: 1350,
+      tenderedAmount: 1400,
+      changeAmount: 50,
+      notes: "This is a preview invoice rendered from the selected template.",
+      createdAt: new Date(),
+      items: [
+        {
+          inventoryName: "Paracetamol 650mg",
+          batchNo: "BATCH01",
+          qty: 2,
+          sellUnit: "Strip",
+          rateValue: 120,
+          itemDiscount: 10,
+          subTotal: 230,
+        },
+        {
+          inventoryName: "Cough Syrup",
+          batchNo: "BATCH02",
+          qty: 1,
+          sellUnit: "Bottle",
+          rateValue: 180,
+          itemDiscount: 0,
+          subTotal: 180,
+        },
+        {
+          inventoryName: "Vitamin C Tablets",
+          batchNo: null,
+          qty: 3,
+          sellUnit: "Strip",
+          rateValue: 90,
+          itemDiscount: 5,
+          subTotal: 255,
+        },
+      ],
+    };
+
+    const html = await invoiceTemplateService.renderInvoiceHtml(
+      invoice,
+      templateName,
+    );
+
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    res.setHeader(
+      "Content-Disposition",
+      "inline; filename=invoice-template-preview.html",
+    );
+    res.status(200).send(html);
+  });
+
   static getById = catchAsync(async (req: Request, res: Response) => {
     const { organizationId, branchId } = getRequestScope(req);
     const id = req.params.id as string;
 
-    const invoice = await InvoicesController.getAccessibleInvoice(id, organizationId, branchId);
+    const invoice = await InvoicesController.getAccessibleInvoice(
+      id,
+      organizationId,
+      branchId,
+    );
 
     res.json({ success: true, data: invoice });
   });
@@ -401,10 +525,17 @@ export class InvoicesController {
       undefined;
     const format = req.query.format === "html" ? "html" : "pdf";
 
-    const invoice = await InvoicesController.getAccessibleInvoice(id, organizationId, branchId);
+    const invoice = await InvoicesController.getAccessibleInvoice(
+      id,
+      organizationId,
+      branchId,
+    );
 
     if (format === "html") {
-      const html = await invoiceTemplateService.renderInvoiceHtml(invoice, templateName);
+      const html = await invoiceTemplateService.renderInvoiceHtml(
+        invoice,
+        templateName,
+      );
       res.setHeader("Content-Type", "text/html; charset=utf-8");
       res.setHeader(
         "Content-Disposition",
@@ -413,8 +544,12 @@ export class InvoicesController {
       return res.status(200).send(html);
     }
 
-    const pdfBuffer = await invoiceTemplateService.renderInvoicePdf(invoice, templateName);
-    const safeTemplateName = invoiceTemplateService.getSafeTemplateName(templateName);
+    const pdfBuffer = await invoiceTemplateService.renderInvoicePdf(
+      invoice,
+      templateName,
+    );
+    const safeTemplateName =
+      invoiceTemplateService.getSafeTemplateName(templateName);
 
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
@@ -428,7 +563,9 @@ export class InvoicesController {
     const { organizationId, branchId } = getRequestScope(req);
     const { startDate, endDate } = req.query;
 
-    const start = startDate ? new Date(startDate as string) : new Date(new Date().setDate(new Date().getDate() - 30));
+    const start = startDate
+      ? new Date(startDate as string)
+      : new Date(new Date().setDate(new Date().getDate() - 30));
     const end = endDate ? new Date(endDate as string) : new Date();
 
     const invoices = await rootPrisma.invoice.findMany({
@@ -503,7 +640,7 @@ export class InvoicesController {
 
       totalPurchaseGross += taxableAmount;
       totalPurchaseTax += totalGst;
-      totalPurchaseNet += (taxableAmount + totalGst);
+      totalPurchaseNet += taxableAmount + totalGst;
 
       return {
         id: batch.id,

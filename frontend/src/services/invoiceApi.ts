@@ -105,9 +105,12 @@ const mapInvoiceItem = (item: any): InvoiceItem => ({
 const mapInvoice = (invoice: any): Invoice => ({
   id: invoice.id,
   invoice_id: invoice.invoice_id ?? invoice.invoiceId ?? "",
-  customer_name: invoice.customer_name ?? invoice.customerName ?? "Walk-in Customer",
+  customer_name:
+    invoice.customer_name ?? invoice.customerName ?? "Walk-in Customer",
   customer_phone: invoice.customer_phone ?? invoice.customerPhone ?? null,
-  item_count: toNumber(invoice.item_count ?? invoice.itemCount ?? invoice.items?.length),
+  item_count: toNumber(
+    invoice.item_count ?? invoice.itemCount ?? invoice.items?.length
+  ),
   gross_amount: toNumber(invoice.gross_amount ?? invoice.grossAmount),
   discount_amount: toNumber(invoice.discount_amount ?? invoice.discountAmount),
   tax_amount: toNumber(invoice.tax_amount ?? invoice.taxAmount),
@@ -148,7 +151,8 @@ const InvoiceApi = {
       meta: {
         total: res.data?.pagination?.total ?? 0,
         page: res.data?.pagination?.page ?? params?.page ?? 1,
-        limit: res.data?.pagination?.limit ?? params?.perPage ?? params?.limit ?? 10,
+        limit:
+          res.data?.pagination?.limit ?? params?.perPage ?? params?.limit ?? 10,
         pages: res.data?.pagination?.totalPages ?? 1,
       },
     }
@@ -169,18 +173,27 @@ const InvoiceApi = {
   },
 
   createInvoice: async (data: any): Promise<{ data: Invoice }> => {
-    const res = await api.post<{ success: boolean; data: Invoice }>(BASE_URL, data)
+    const res = await api.post<{ success: boolean; data: Invoice }>(
+      BASE_URL,
+      data
+    )
     return { data: mapInvoice(res.data) }
   },
 
-  getGstSummary: async (params?: { startDate?: string; endDate?: string }): Promise<any> => {
+  getGstSummary: async (params?: {
+    startDate?: string
+    endDate?: string
+  }): Promise<any> => {
     return api.get(`${BASE_URL}/gst-summary`, { params })
   },
 
-  getInvoiceTemplates: async (): Promise<{ data: InvoiceTemplatesResponse }> => {
-    const res = await api.get<{ success: boolean; data: InvoiceTemplatesResponse }>(
-      `${BASE_URL}/templates`
-    )
+  getInvoiceTemplates: async (): Promise<{
+    data: InvoiceTemplatesResponse
+  }> => {
+    const res = await api.get<{
+      success: boolean
+      data: InvoiceTemplatesResponse
+    }>(`${BASE_URL}/templates`)
     return { data: res.data }
   },
 
@@ -196,13 +209,37 @@ const InvoiceApi = {
     return res.data as Blob
   },
 
-  openInvoiceHtml: (id: string, template?: string) => {
+  openInvoiceHtml: async (id: string, template?: string) => {
     const params = new URLSearchParams()
     if (template) params.set("template", template)
     params.set("format", "html")
     const query = params.toString()
-    const url = `${window.location.origin}/api/v1${BASE_URL}/${id}/download${query ? `?${query}` : ""}`
-    window.open(url, "_blank", "noopener,noreferrer")
+    const url = `${BASE_URL}/${id}/download${query ? `?${query}` : ""}`
+
+    const html = await api.get<string>(url, {
+      responseType: "text",
+    })
+
+    const blob = new Blob([html], { type: "text/html" })
+    const previewUrl = window.URL.createObjectURL(blob)
+    window.open(previewUrl, "_blank", "noopener,noreferrer")
+    window.setTimeout(() => window.URL.revokeObjectURL(previewUrl), 1000)
+  },
+
+  openInvoiceTemplatePreview: async (template?: string) => {
+    const params = new URLSearchParams()
+    if (template) params.set("template", template)
+    const query = params.toString()
+    const url = `${BASE_URL}/preview${query ? `?${query}` : ""}`
+
+    const html = await api.get<string>(url, {
+      responseType: "text",
+    })
+
+    const blob = new Blob([html], { type: "text/html" })
+    const previewUrl = window.URL.createObjectURL(blob)
+    window.open(previewUrl, "_blank", "noopener,noreferrer")
+    window.setTimeout(() => window.URL.revokeObjectURL(previewUrl), 1000)
   },
 }
 

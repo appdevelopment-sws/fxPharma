@@ -1,7 +1,7 @@
 import React from "react"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import SectionCard from "@/components/SectionCard"
-import { Building2, FileText } from "lucide-react"
+import { Building2, FileText, ShieldAlert } from "lucide-react"
 import { Outlet, useLocation, useNavigate } from "react-router"
 
 const SettingsView = () => {
@@ -31,6 +31,14 @@ const SettingsView = () => {
               <FileText className="size-4" />
               Invoice Customization
             </TabsTrigger>
+            <TabsTrigger value="invoice-templates" className="gap-2 p-4">
+              <ShieldAlert className="size-4" />
+              Invoice Templates
+            </TabsTrigger>
+            {/* <TabsTrigger value="pharmacy" className="gap-2 p-4">
+              <ShieldAlert className="size-4" />
+              Invoice Setting
+            </TabsTrigger> */}
           </TabsList>
 
           <div className="mt-4">
