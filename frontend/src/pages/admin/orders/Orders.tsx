@@ -95,7 +95,8 @@ const Orders = () => {
       const batch = item.batchNo ? ` | Batch: ${item.batchNo}` : ""
       const expiry = item.expiry ? ` | Expiry: ${item.expiry}` : ""
 
-      return `${index + 1}. ${name} | Qty: ${qty} ${unit} | Rate: ${rate} | Total: ${lineTotal}${batch}${expiry}`
+      // return `${index + 1}. ${name} | Qty: ${qty} ${unit} | Rate: ${rate} | Total: ${lineTotal}${batch}${expiry}`
+      return `${index + 1}. ${name} | Qty: ${qty} ${unit}`
     })
 
     const totalAmount = order.items?.reduce(
@@ -108,20 +109,12 @@ const Orders = () => {
       `Order ID: ${order.id}`,
       `Status: ${order.status || "N/A"}`,
       `Created: ${new Date(order.createdAt).toLocaleDateString()}`,
-      `Received: ${order.receivedAt ? new Date(order.receivedAt).toLocaleDateString() : "N/A"}`,
-      `Payment mode: ${order.paymentMode || "N/A"}`,
-      `Paid amount: ${order.paidAmount || "0"}`,
-      "",
-      `Supplier: ${supplier?.companyName || "N/A"}`,
-      `Phone: ${supplier?.phone || "N/A"}`,
-      `WhatsApp: ${supplier?.whatsappNumber || "N/A"}`,
-      `Email: ${supplier?.email || "N/A"}`,
       "",
       "Items:",
       ...(itemLines?.length ? itemLines : ["No items available"]),
       "",
       `Total items: ${order.items?.length || 0}`,
-      `Total amount: ${totalAmount}`,
+      // `Total amount: ${totalAmount}`,
       `Notes: ${order.notes || "None"}`,
     ]
 
