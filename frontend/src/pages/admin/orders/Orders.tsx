@@ -66,8 +66,8 @@ const Orders = () => {
       handleFilter({ ...updates, page: 1 })
     },
     [handleFilter]
-  ) 
-  
+  )
+
   const handlePageChange = useCallback(
     (page: number) => {
       handleFilter({ page })
@@ -82,6 +82,90 @@ const Orders = () => {
     [handleFilter]
   )
 
+  const formatOrderShareMessage = (order: any) => {
+    if (!order) return ""
+
+    const supplier = order.supplier
+    const itemLines = order.items?.map((item: any, index: number) => {
+      const name = item.inventory?.name || "Unknown item"
+      const qty = item.qty ?? 0
+      const unit = item.unit || ""
+      const rate = item.purchaseRate || "0"
+      const lineTotal = Number(rate) * Number(qty)
+      const batch = item.batchNo ? ` | Batch: ${item.batchNo}` : ""
+      const expiry = item.expiry ? ` | Expiry: ${item.expiry}` : ""
+
+      // return `${index + 1}. ${name} | Qty: ${qty} ${unit} | Rate: ${rate} | Total: ${lineTotal}${batch}${expiry}`
+      return `${index + 1}. ${name} | Qty: ${qty} ${unit}`
+    })
+
+    const totalAmount = order.items?.reduce(
+      (sum: number, item: any) =>
+        sum + Number(item.purchaseRate || 0) * Number(item.qty || 0),
+      0
+    )
+
+    const lines = [
+      `Order ID: ${order.id}`,
+      `Date: ${new Date(order.createdAt).toLocaleDateString()}`,
+      "",
+      "Items:",
+      ...(itemLines?.length ? itemLines : ["No itms available"]),
+      "",
+      `Total items: ${order.items?.length || 0}`,
+      // `Total amount: ${totalAmount}`,
+      `Notes: ${order.notes || "None"}`,
+    ]
+
+    return lines.join("\n")
+  }
+
+  const openWhatsAppShare = (order: any) => {
+    const phone = order?.supplier?.whatsappNumber?.replace(/\D/g, "")
+    if (!phone) {
+      toast.error("Supplier WhatsApp number is not available.")
+      return
+    }
+
+    const text = formatOrderShareMessage(order)
+    const url = `https://api.whatsapp.com/send?phone=${encodeURIComponent(
+      phone
+    )}&text=${encodeURIComponent(text)}`
+
+    window.open(url, "_blank")
+  }
+
+  const openEmailShare = (order: any) => {
+    const email = order?.supplier?.email
+
+    if (!email) {
+      toast.error("Supplier email is not available.")
+      return
+    }
+
+    const subject = `Order details for ${order.id}`
+    const body = formatOrderShareMessage(order)
+
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(
+      email
+    )}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+
+    window.open(gmailUrl, "_blank")
+  }
+
+  const handleShare = (type: "whatsapp" | "email") => {
+    if (!shareDisclosure.data) return
+
+    if (type === "whatsapp") {
+      openWhatsAppShare(shareDisclosure.data)
+      return
+    }
+
+    if (type === "email") {
+      openEmailShare(shareDisclosure.data)
+      return
+    }
+  }
 
   const columns: DataTableColumn<any>[] = useMemo(() => {
     return [
@@ -197,6 +281,7 @@ const Orders = () => {
         open={shareDisclosure.isOpen}
         onClose={shareDisclosure.onClose}
         order={shareDisclosure.data}
+        onShare={handleShare}
       />
       <ConfirmDialog
         open={deleteDisclosure.isOpen}
@@ -241,7 +326,6 @@ const Orders = () => {
             isLoading={isLoading}
             onPageChange={handlePageChange}
             onPageSizeChange={handlePageSizeChange}
-
           />
         </div>
       </SectionCard>

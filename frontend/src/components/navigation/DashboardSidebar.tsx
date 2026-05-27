@@ -1,8 +1,11 @@
 import { useState, useEffect, useMemo, type ReactNode } from "react"
 import { NavLink } from "react-router"
 import { ChevronDown, LogOut } from "lucide-react"
+
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+
 import {
   isNavigationItemActive,
   type SidebarNavigationGroup,
@@ -56,52 +59,40 @@ export function DashboardSidebar({
   }
 
   return (
-    <div className="flex h-full flex-col bg-[#2563EB] text-white">
-      {/* Brand Section */}
+    <div className="relative flex h-full flex-col overflow-visible bg-[#2563EB] text-white">
+      {/* BRAND */}
       <div
         className={cn(
           "flex items-center border-b border-white/10 p-6",
           isCollapsed ? "justify-center" : "gap-3"
         )}
       >
-        <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/10 text-white">
+        <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white/10">
           <img
-            src={workspaceSubtitle ? workspaceSubtitle : "/logo.png"}
+            src={workspaceSubtitle || "/logo.png"}
             alt={workspaceTitle}
-            className="truncate text-xs font-medium tracking-widest text-white uppercase"
+            className="h-full w-full object-cover"
           />
         </div>
+
         {!isCollapsed && (
           <div className="min-w-0">
             <h2 className="truncate text-base font-bold tracking-tight text-white">
               {workspaceTitle}
             </h2>
-            {/* <img
-              src={workspaceSubtitle}
-              alt={workspaceTitle}
-              className="truncate text-xs font-medium tracking-widest text-white uppercase"
-            /> */}
           </div>
         )}
       </div>
 
-      {/* Navigation section */}
+      {/* NAVIGATION */}
       <nav
         className={cn(
-          "no-scrollbar flex-1 space-y-8 overflow-y-auto px-3 py-4",
-          isCollapsed ? "items-center" : ""
+          "no-scrollbar flex-1 overflow-x-visible overflow-y-auto px-3 py-4",
+          isCollapsed ? "space-y-4" : "space-y-8"
         )}
       >
         {navigationGroups.map((group) => (
-          <div
-            key={group.title}
-            className={cn("m-0 my-1", isCollapsed && "my-6")}
-          >
-            {/* {!isCollapsed && (
-              <p className="px-4 text-[10px] font-bold tracking-[0.2em] uppercase">
-                {group.title}
-              </p>
-            )} */}
+          <div key={group.title} className={cn("my-1", isCollapsed && "my-4")}>
             <div className={cn("space-y-1", isCollapsed && "space-y-4")}>
               {group.items.map((item) => (
                 <SidebarItem
@@ -119,7 +110,7 @@ export function DashboardSidebar({
         ))}
       </nav>
 
-      {/* Footer / Logout */}
+      {/* FOOTER */}
       <div className="border-t border-white/10 bg-white/5 p-4">
         <Button
           type="button"
@@ -134,6 +125,7 @@ export function DashboardSidebar({
           disabled={isLoggingOut}
         >
           <LogOut className="size-5" />
+
           {!isCollapsed && (
             <span className="font-medium">
               {isLoggingOut ? "Signing out..." : "Log Out"}
@@ -161,48 +153,121 @@ function SidebarItem({
   isCollapsed: boolean
 }) {
   const Icon = item.icon
+
   const isActive = isNavigationItemActive(item, activePath)
+
   const hasChildren = !!item.children?.length
+
+  const [showPopup, setShowPopup] = useState(false)
+
   const baseStyles = cn(
-    "group flex w-full items-center rounded-lg transition-all duration-300 ease-out",
-    isCollapsed ? "mx-auto justify-center p-3" : "gap-x-2 px-3 py-2",
+    "group flex w-full items-center rounded-xl transition-all duration-200",
+    isCollapsed ? "mx-auto justify-center p-3" : "gap-x-2 px-3 py-2.5",
     isActive || isExpanded
       ? "bg-white/20 font-semibold text-white"
       : "text-white hover:bg-white/10"
   )
-  if (hasChildren) {
-    return (
-      <div className="w-full">
-        <button
-          type="button"
-          onClick={() => onToggleExpanded(item.title)}
-          className={baseStyles}
-        >
-          {/* LEFT GROUP */}
-          <div className="flex items-center gap-2">
-            <Icon className="size-5 shrink-0" />
-            {!isCollapsed && (
-              <span className="text-sm font-medium whitespace-nowrap">
-                {item.title}
-              </span>
-            )}
-          </div>
 
-          {/* RIGHT ICON */}
+  // =====================================
+  // ITEMS WITH CHILDREN
+  // =====================================
+
+  if (hasChildren) {
+    const triggerButton = (
+      <button
+        type="button"
+        onClick={() => {
+          if (!isCollapsed) {
+            onToggleExpanded(item.title)
+          }
+        }}
+        className={baseStyles}
+      >
+        {/* LEFT */}
+        <div className="flex items-center gap-2">
+          <Icon className="size-5 shrink-0" />
+
           {!isCollapsed && (
-            <ChevronDown
-              className={cn(
-                "ml-auto size-4 transition-transform duration-200",
-                isExpanded && "rotate-180"
-              )}
-            />
+            <span className="text-sm font-medium whitespace-nowrap">
+              {item.title}
+            </span>
           )}
-        </button>
-        {!isCollapsed && isExpanded && (
+        </div>
+
+        {/* RIGHT ICON */}
+        {!isCollapsed && (
+          <ChevronDown
+            className={cn(
+              "ml-auto size-4 transition-transform duration-200",
+              isExpanded && "rotate-180"
+            )}
+          />
+        )}
+      </button>
+    )
+
+    if (isCollapsed) {
+      return (
+        <Popover open={showPopup} onOpenChange={setShowPopup}>
+          <PopoverTrigger asChild>
+            {triggerButton}
+          </PopoverTrigger>
+          <PopoverContent
+            side="right"
+            align="start"
+            sideOffset={12}
+            className="w-56 rounded-xl border border-slate-200 bg-white p-2 shadow-2xl z-[9999]"
+          >
+            {/* TITLE */}
+            <div className="mb-2 px-3 py-2 text-xs font-semibold tracking-wide text-slate-500 uppercase">
+              {item.title}
+            </div>
+
+            {/* CHILDREN */}
+            <div className="space-y-1">
+              {item.children?.map((child) => {
+                const childIsActive = isNavigationItemActive(child, activePath)
+                const ChildIcon = child.icon
+
+                return (
+                  <NavLink
+                    key={child.to}
+                    to={child.to ?? "#"}
+                    onClick={() => {
+                      setShowPopup(false)
+                      onNavigate?.(child.to)
+                    }}
+                    className={cn(
+                      "flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-all duration-200",
+                      childIsActive
+                        ? "bg-blue-50 font-medium text-blue-600"
+                        : "text-slate-700 hover:bg-slate-100"
+                    )}
+                  >
+                    {ChildIcon && <ChildIcon className="size-4 shrink-0" />}
+                    <span>{child.title}</span>
+                  </NavLink>
+                )
+              })}
+            </div>
+          </PopoverContent>
+        </Popover>
+      )
+    }
+
+    return (
+      <div className="relative w-full overflow-visible">
+        {triggerButton}
+
+        {/* =====================================
+            EXPANDED ACCORDION
+        ===================================== */}
+        {isExpanded && (
           <div className="mt-1 ml-5 space-y-1 border-l border-white/10 py-1 pl-4">
             {item.children?.map((child) => {
               const childIsActive = isNavigationItemActive(child, activePath)
               const ChildIcon = child.icon
+
               return (
                 <NavLink
                   key={child.to}
@@ -228,6 +293,10 @@ function SidebarItem({
     )
   }
 
+  // =====================================
+  // NORMAL ITEM
+  // =====================================
+
   return (
     <NavLink
       to={item.to ?? "#"}
@@ -235,6 +304,7 @@ function SidebarItem({
       className={baseStyles}
     >
       <Icon className="size-5 shrink-0" />
+
       {!isCollapsed && (
         <span className="truncate text-sm font-medium">{item.title}</span>
       )}

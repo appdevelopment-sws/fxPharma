@@ -102,9 +102,18 @@ export default function useSearchFilter(initalData: FilterData = defaultData) {
           ...initalData,
         })
       } else {
+        // Support both `limit` and `perPage` keys for page size
+        const normalized = { ...data } as Partial<FilterData>
+        if (
+          normalized.limit !== undefined &&
+          normalized.perPage === undefined
+        ) {
+          normalized.perPage = normalized.limit
+        }
+
         setFilter((prev) => ({
           ...prev,
-          ...data,
+          ...normalized,
         }))
       }
     },

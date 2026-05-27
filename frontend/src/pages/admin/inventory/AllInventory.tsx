@@ -128,8 +128,8 @@ export default function AllInventoryPage() {
       {
         key: "availableStock",
         header:
-          MEDICINE_STOCK_COLUMNS.find((c) => c.key === "availableStock")?.label ||
-          "Available Stock",
+          MEDICINE_STOCK_COLUMNS.find((c) => c.key === "availableStock")
+            ?.label || "Available Stock",
         render: (row) => row.availableStock ?? 0,
       },
 
@@ -281,7 +281,6 @@ export default function AllInventoryPage() {
             isLoading={isLoadingInventory}
             onPageChange={handlePageChange}
             onPageSizeChange={handlePageSizeChange}
-
             emptyTitle="No inventory found"
             emptyDescription="Create an inventory item or adjust the filters to see matching records."
           />
