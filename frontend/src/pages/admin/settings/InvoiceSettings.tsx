@@ -28,6 +28,8 @@ interface InvoiceSettingsFormValues {
   invoice_header_image: string
   invoice_footer_image: string
   invoice_director_signature: string
+  invoice_payment_qr_code: string
+  invoice_show_payment_qr: boolean
 }
 const DEFAULT_INVOICE_SETTINGS: InvoiceSettingsFormValues = {
   invoice_prefix: "INV-",
@@ -44,6 +46,8 @@ const DEFAULT_INVOICE_SETTINGS: InvoiceSettingsFormValues = {
   invoice_header_image: "",
   invoice_footer_image: "",
   invoice_director_signature: "",
+  invoice_payment_qr_code: "",
+  invoice_show_payment_qr: false,
 }
 export default function InvoiceSettings() {
   const { activeOrganizationId } = useAuth()
@@ -96,6 +100,12 @@ export default function InvoiceSettings() {
             invoice_director_signature:
               res.data.invoice_director_signature ??
               DEFAULT_INVOICE_SETTINGS.invoice_director_signature,
+
+            invoice_payment_qr_code:
+              res.data.invoice_payment_qr_code ??
+              DEFAULT_INVOICE_SETTINGS.invoice_payment_qr_code,
+
+            invoice_show_payment_qr: res.data.invoice_show_payment_qr !== "false",
           })
         }
       })
@@ -127,6 +137,8 @@ export default function InvoiceSettings() {
         invoice_header_image: data.invoice_header_image,
         invoice_footer_image: data.invoice_footer_image,
         invoice_director_signature: data.invoice_director_signature,
+        invoice_payment_qr_code: data.invoice_payment_qr_code,
+        invoice_show_payment_qr: String(data.invoice_show_payment_qr),
       }
 
       await SettingsApi.updateSettings(payload)
@@ -222,6 +234,29 @@ export default function InvoiceSettings() {
               />
             </div>
           </div>
+          {/* Payment QR Code */}
+          <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+            <h3 className="mb-4 text-lg font-semibold text-card-foreground">
+              Payment QR Code
+            </h3>
+            <p className="mb-4 text-sm text-muted-foreground">
+              Add a QR code for payment methods. This can be displayed on
+              invoices for easy payment processing.
+            </p>
+
+            <div className="grid gap-6">
+              <FormFileUpload
+                control={control}
+                name="invoice_payment_qr_code"
+                label="PAYMENT QR CODE"
+                accept="image/*"
+                maxSizeText="Recommended: 500x500 PNG/JPG"
+                uploadFile={async (file) =>
+                  (await uploadApi.uploadImage(file)).publicUrl
+                }
+              />
+            </div>
+          </div>
           {/* Contact Details Printed on Invoice */}
           <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
             <h3 className="mb-4 text-lg font-semibold text-card-foreground">
@@ -298,6 +333,12 @@ export default function InvoiceSettings() {
                 name="invoice_show_license"
                 label="Show Drug License"
                 description="Print the organization Drug License number on invoices"
+              />
+              <FormSwitch
+                control={control}
+                name="invoice_show_payment_qr"
+                label="Show Payment QR Code"
+                description="Display the payment QR code on invoices"
               />
             </div>
           </div>
