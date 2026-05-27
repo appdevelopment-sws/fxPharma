@@ -129,7 +129,8 @@ async function resolveTemplatePath(templateName?: string | null) {
 
     if (safeTemplateName !== DEFAULT_TEMPLATE_NAME) {
       throw new ErrorHandler(
-        `Invoice template "${safeTemplateName}" was not found. Available templates: ${availableTemplates.length > 0 ? availableTemplates.join(", ") : "none"
+        `Invoice template "${safeTemplateName}" was not found. Available templates: ${
+          availableTemplates.length > 0 ? availableTemplates.join(", ") : "none"
         }`,
         404,
       );
@@ -143,7 +144,8 @@ async function resolveTemplatePath(templateName?: string | null) {
       };
     } catch {
       throw new ErrorHandler(
-        `Default invoice template was not found. Available templates: ${availableTemplates.length > 0 ? availableTemplates.join(", ") : "none"
+        `Default invoice template was not found. Available templates: ${
+          availableTemplates.length > 0 ? availableTemplates.join(", ") : "none"
         }`,
         500,
       );
@@ -213,7 +215,7 @@ function buildSummaryRows(invoice: InvoiceLike) {
 function buildInvoiceData(
   invoice: InvoiceLike,
   templateName?: string | null,
-  settingsMap: Record<string, string> = {}
+  settingsMap: Record<string, string> = {},
 ) {
   const safeTemplateName = sanitizeTemplateName(templateName);
   const createdAt = formatDateTime(invoice.createdAt);
@@ -229,9 +231,16 @@ function buildInvoiceData(
     displayPaymentMode = `Split (Cash: ${cashStr}, Online: ${onlineStr})`;
   }
 
-
-  const brandName = settingsMap["store_name"] || settingsMap["invoice_company_name"] || process.env.INVOICE_COMPANY_NAME || "Dawa Dukaan";
-  const brandTagline = settingsMap["description"] || settingsMap["invoice_company_tagline"] || process.env.INVOICE_COMPANY_TAGLINE || "Simple, reusable invoice templates";
+  const brandName =
+    settingsMap["store_name"] ||
+    settingsMap["invoice_company_name"] ||
+    process.env.INVOICE_COMPANY_NAME ||
+    "Dawa Dukaan";
+  const brandTagline =
+    settingsMap["description"] ||
+    settingsMap["invoice_company_tagline"] ||
+    process.env.INVOICE_COMPANY_TAGLINE ||
+    "Simple, reusable invoice templates";
 
   // Construct address from parts if available, otherwise fallback
   const addressParts = [
@@ -239,18 +248,35 @@ function buildInvoiceData(
     settingsMap["city"],
     settingsMap["state"],
     settingsMap["zip_code"],
-    settingsMap["country"]
+    settingsMap["country"],
   ].filter(Boolean);
-  const brandAddress = addressParts.length > 0
-    ? addressParts.join(", ")
-    : settingsMap["invoice_company_address"] || process.env.INVOICE_COMPANY_ADDRESS || "India";
+  const brandAddress =
+    addressParts.length > 0
+      ? addressParts.join(", ")
+      : settingsMap["invoice_company_address"] ||
+        process.env.INVOICE_COMPANY_ADDRESS ||
+        "India";
 
-  const brandPhone = settingsMap["phone"] || settingsMap["invoice_company_phone"] || process.env.INVOICE_COMPANY_PHONE || "";
-  const brandEmail = settingsMap["email"] || settingsMap["invoice_company_email"] || process.env.INVOICE_COMPANY_EMAIL || "";
-  const brandGstin = settingsMap["gst_number"] || settingsMap["invoice_company_gstin"] || process.env.INVOICE_COMPANY_GSTIN || "";
-  const brandLogo = settingsMap["store_logo"] || settingsMap["invoice_company_logo"] || "";
+  const brandPhone =
+    settingsMap["phone"] ||
+    settingsMap["invoice_company_phone"] ||
+    process.env.INVOICE_COMPANY_PHONE ||
+    "";
+  const brandEmail =
+    settingsMap["email"] ||
+    settingsMap["invoice_company_email"] ||
+    process.env.INVOICE_COMPANY_EMAIL ||
+    "";
+  const brandGstin =
+    settingsMap["gst_number"] ||
+    settingsMap["invoice_company_gstin"] ||
+    process.env.INVOICE_COMPANY_GSTIN ||
+    "";
+  const brandLogo =
+    settingsMap["store_logo"] || settingsMap["invoice_company_logo"] || "";
 
-  const brandLicense20 = settingsMap["drug_license_20"] || settingsMap["license_number"] || "";
+  const brandLicense20 =
+    settingsMap["drug_license_20"] || settingsMap["license_number"] || "";
   const brandLicense21 = settingsMap["drug_license_21"] || "";
   const brandFssai = settingsMap["fssai_no"] || "";
 
@@ -317,12 +343,7 @@ function buildInvoiceData(
       `
       : "",
     notesValue: notes || "-",
-    companyContactBlock: [
-      brandPhone,
-      brandEmail,
-    ]
-      .filter(Boolean)
-      .join(" · "),
+    companyContactBlock: [brandPhone, brandEmail].filter(Boolean).join(" · "),
   };
 }
 
