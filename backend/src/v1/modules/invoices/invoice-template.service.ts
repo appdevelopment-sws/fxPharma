@@ -3,6 +3,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import puppeteer from "puppeteer";
 import ErrorHandler from "../../../utils/ErrorHandler.js";
+import { rootPrisma } from "@/lib/prisma.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -14,6 +15,8 @@ type InvoiceTemplateValue = string | number | null | undefined;
 
 type InvoiceLike = {
   invoiceId: string;
+  organizationId: string;
+  branchId: string | null;
   customerName: string | null;
   customerPhone: string | null;
   paymentMode: string;
@@ -207,7 +210,11 @@ function buildSummaryRows(invoice: InvoiceLike) {
     .join("");
 }
 
-function buildInvoiceData(invoice: InvoiceLike, templateName?: string | null) {
+function buildInvoiceData(
+  invoice: InvoiceLike,
+  templateName?: string | null,
+  settingsMap: Record<string, string> = {}
+) {
   const safeTemplateName = sanitizeTemplateName(templateName);
   const createdAt = formatDateTime(invoice.createdAt);
   const customerName = invoice.customerName?.trim() || "Walk-in Customer";
@@ -215,16 +222,68 @@ function buildInvoiceData(invoice: InvoiceLike, templateName?: string | null) {
   const notes = invoice.notes?.trim() || "";
   const items = invoice.items || [];
 
+  const brandName = settingsMap["store_name"] || settingsMap["invoice_company_name"] || process.env.INVOICE_COMPANY_NAME || "Dawa Dukaan";
+  const brandTagline = settingsMap["description"] || settingsMap["invoice_company_tagline"] || process.env.INVOICE_COMPANY_TAGLINE || "Simple, reusable invoice templates";
+  
+  // Construct address from parts if available, otherwise fallback
+  const addressParts = [
+    settingsMap["street_address"],
+    settingsMap["city"],
+    settingsMap["state"],
+    settingsMap["zip_code"],
+    settingsMap["country"]
+  ].filter(Boolean);
+  const brandAddress = addressParts.length > 0
+    ? addressParts.join(", ")
+    : settingsMap["invoice_company_address"] || process.env.INVOICE_COMPANY_ADDRESS || "India";
+
+  const brandPhone = settingsMap["phone"] || settingsMap["invoice_company_phone"] || process.env.INVOICE_COMPANY_PHONE || "";
+  const brandEmail = settingsMap["email"] || settingsMap["invoice_company_email"] || process.env.INVOICE_COMPANY_EMAIL || "";
+  const brandGstin = settingsMap["gst_number"] || settingsMap["invoice_company_gstin"] || process.env.INVOICE_COMPANY_GSTIN || "";
+  const brandLogo = settingsMap["store_logo"] || settingsMap["invoice_company_logo"] || "";
+
+  const brandLicense20 = settingsMap["drug_license_20"] || settingsMap["license_number"] || "";
+  const brandLicense21 = settingsMap["drug_license_21"] || "";
+  const brandFssai = settingsMap["fssai_no"] || "";
+
+  const showGst = settingsMap["show_gst"] !== "false";
+  const showLicense = settingsMap["show_license"] !== "false";
+
+  const licenseParts: string[] = [];
+  if (showGst && brandGstin) {
+    licenseParts.push(`GSTIN: ${brandGstin}`);
+  }
+  if (showLicense) {
+    if (brandLicense20) licenseParts.push(`DL (Form 20): ${brandLicense20}`);
+    if (brandLicense21) licenseParts.push(`DL (Form 21): ${brandLicense21}`);
+    if (brandFssai) licenseParts.push(`FSSAI: ${brandFssai}`);
+  }
+  const brandLicenseBlock = licenseParts.join(" · ");
+
+  const invoiceTerms = settingsMap["invoice_terms_conditions"] || "";
+  const invoiceFooter = settingsMap["invoice_footer_message"] || "";
+
+  const invoiceTermsBlock = invoiceTerms
+    ? `<div style="font-weight: bold; margin-bottom: 3px;">Terms & Conditions:</div>
+       <div style="white-space: pre-line; margin-bottom: 8px;">${escapeHtml(invoiceTerms)}</div>`
+    : "";
+
+  const invoiceFooterBlock = invoiceFooter
+    ? `<div style="text-align: center; font-style: italic; margin-top: 5px;">${escapeHtml(invoiceFooter)}</div>`
+    : "";
+
   return {
     safeTemplateName,
-    brandName: process.env.INVOICE_COMPANY_NAME || "Dawa Dukaan",
-    brandTagline:
-      process.env.INVOICE_COMPANY_TAGLINE ||
-      "Simple, reusable invoice templates",
-    brandAddress: process.env.INVOICE_COMPANY_ADDRESS || "India",
-    brandPhone: process.env.INVOICE_COMPANY_PHONE || "",
-    brandEmail: process.env.INVOICE_COMPANY_EMAIL || "",
-    brandGstin: process.env.INVOICE_COMPANY_GSTIN || "",
+    brandName,
+    brandTagline,
+    brandAddress,
+    brandPhone,
+    brandEmail,
+    brandGstin,
+    brandLogo,
+    brandLicenseBlock,
+    invoiceTermsBlock,
+    invoiceFooterBlock,
     invoiceId: invoice.invoiceId,
     invoiceStatus: toTitleCase(invoice.status),
     paymentMode: mapPaymentMode(invoice.paymentMode),
@@ -251,8 +310,8 @@ function buildInvoiceData(invoice: InvoiceLike, templateName?: string | null) {
       : "",
     notesValue: notes || "-",
     companyContactBlock: [
-      process.env.INVOICE_COMPANY_PHONE,
-      process.env.INVOICE_COMPANY_EMAIL,
+      brandPhone,
+      brandEmail,
     ]
       .filter(Boolean)
       .join(" · "),
@@ -272,7 +331,48 @@ class InvoiceTemplateService {
     const { templatePath, safeTemplateName } =
       await resolveTemplatePath(templateName);
     const template = await fs.readFile(templatePath, "utf8");
-    const data = buildInvoiceData(invoice, safeTemplateName);
+
+    // Fetch settings for organization
+    const orgSettings = await rootPrisma.setting.findMany({
+      where: {
+        organizationId: invoice.organizationId || undefined,
+        branchId: null,
+      },
+    });
+
+    // Fetch settings for branch (if invoice has branchId)
+    let branchSettings: any[] = [];
+    if (invoice.branchId) {
+      branchSettings = await rootPrisma.setting.findMany({
+        where: {
+          organizationId: invoice.organizationId || undefined,
+          branchId: invoice.branchId,
+        },
+      });
+    }
+
+    const settingsMap: Record<string, string> = {};
+    orgSettings.forEach((s) => {
+      settingsMap[s.key] = s.value;
+    });
+    branchSettings.forEach((s) => {
+      settingsMap[s.key] = s.value;
+    });
+
+    // Fallback to Organization fields if no settings are configured yet
+    if (!settingsMap["store_name"]) {
+      const org = await rootPrisma.organization.findUnique({
+        where: { id: invoice.organizationId || undefined },
+      });
+      if (org) {
+        settingsMap["store_name"] = org.name;
+        if (org.logo) settingsMap["store_logo"] = org.logo;
+        if (org.gstNo) settingsMap["gst_number"] = org.gstNo;
+        if (org.licenseNo) settingsMap["license_number"] = org.licenseNo;
+      }
+    }
+
+    const data = buildInvoiceData(invoice, safeTemplateName, settingsMap);
 
     return renderTemplate(template, data);
   }

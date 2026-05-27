@@ -48,18 +48,29 @@ export class InvoicesController {
     } = req.body;
 
     const invoice = await rootPrisma.$transaction(async (tx) => {
-      // 1. Generate unique invoiceId
+      // 1. Generate unique invoiceId from settings
+      const prefixSetting = await tx.setting.findFirst({
+        where: { organizationId, branchId: branchId || null, key: "invoice_prefix" },
+      });
+      const sequenceSetting = await tx.setting.findFirst({
+        where: { organizationId, branchId: branchId || null, key: "invoice_sequence" },
+      });
+
+      const prefix = prefixSetting?.value || "INV-";
+      const startingSeq = parseInt(sequenceSetting?.value || "1", 10);
+
       const count = await tx.invoice.count({
         where: { organizationId },
       });
-      let invoiceId = `INV-${String(count + 1).padStart(6, "0")}`;
+      const nextNum = (isNaN(startingSeq) ? 1 : startingSeq) + count;
+      let invoiceId = `${prefix}${String(nextNum).padStart(6, "0")}`;
 
       // Verify uniqueness
-      const existing = await tx.invoice.findUnique({
-        where: { invoiceId },
+      const existing = await tx.invoice.findFirst({
+        where: { invoiceId, organizationId },
       });
       if (existing) {
-        invoiceId = `INV-${String(count + 1).padStart(6, "0")}-${Math.floor(100 + Math.random() * 900)}`;
+        invoiceId = `${prefix}${String(nextNum).padStart(6, "0")}-${Math.floor(100 + Math.random() * 900)}`;
       }
 
       // 2. Decrement stock for each item

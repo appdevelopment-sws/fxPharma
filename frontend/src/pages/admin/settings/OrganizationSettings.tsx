@@ -6,6 +6,7 @@ import { Loader2, Save } from "lucide-react"
 
 import { useAuth } from "@/context/authContext"
 import StoreListApi, { type StoreFormValues } from "@/services/storelistApi"
+import SettingsApi from "@/services/settingsApi"
 import UploadApi from "@/services/uploadApi"
 import { FormField, FormTextarea, FormFileUpload } from "@/components/ui/form-fields"
 import { Button } from "@/components/ui/button"
@@ -108,12 +109,35 @@ export default function OrganizationSettings() {
     },
   })
 
-  const onSubmit: SubmitHandler<StoreFormValues> = (data) => {
+  const onSubmit: SubmitHandler<StoreFormValues> = async (data) => {
     if (!activeOrganizationId) {
       toast.error("No active organization found")
       return
     }
-    updateMutation.mutate(data)
+    try {
+      await updateMutation.mutateAsync(data)
+      
+      const settingsPayload = {
+        store_name: data.store_name,
+        description: data.description,
+        store_category: data.store_category,
+        store_logo: data.store_logo,
+        phone: data.phone,
+        email: data.email,
+        gst_number: data.gst_number,
+        license_number: data.license_number,
+        street_address: data.street_address,
+        city: data.city,
+        state: data.state,
+        zip_code: data.zip_code,
+        country: data.country,
+        timezone: data.timezone,
+        currency: data.currency,
+      }
+      await SettingsApi.updateSettings(settingsPayload)
+    } catch (e) {
+      console.error("Failed to sync settings", e)
+    }
   }
 
   const uploadFile = async (file: File) => {

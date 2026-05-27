@@ -4,29 +4,30 @@ import { toast } from "sonner"
 import { Loader2, Save, FileText } from "lucide-react"
 
 import { useAuth } from "@/context/authContext"
+import SettingsApi from "@/services/settingsApi"
 import { FormField, FormTextarea, FormSwitch } from "@/components/ui/form-fields"
 import { Button } from "@/components/ui/button"
 
 interface InvoiceSettingsFormValues {
   invoice_prefix: string
   invoice_sequence: string
-  phone: string
-  email: string
-  terms_conditions: string
-  footer_message: string
-  show_gst: boolean
-  show_license: boolean
+  invoice_phone: string
+  invoice_email: string
+  invoice_terms_conditions: string
+  invoice_footer_message: string
+  invoice_show_gst: boolean
+  invoice_show_license: boolean
 }
 
 const DEFAULT_INVOICE_SETTINGS: InvoiceSettingsFormValues = {
   invoice_prefix: "INV-",
   invoice_sequence: "1001",
-  phone: "",
-  email: "",
-  terms_conditions: "1. Goods once sold will not be taken back.\n2. Interest @ 18% p.a. will be charged if payment is not made within due date.",
-  footer_message: "Thank you for shopping with us! Get well soon.",
-  show_gst: true,
-  show_license: true,
+  invoice_phone: "",
+  invoice_email: "",
+  invoice_terms_conditions: "1. Goods once sold will not be taken back.\n2. Interest @ 18% p.a. will be charged if payment is not made within due date.",
+  invoice_footer_message: "Thank you for shopping with us! Get well soon.",
+  invoice_show_gst: true,
+  invoice_show_license: true,
 }
 
 export default function InvoiceSettings() {
@@ -42,28 +43,33 @@ export default function InvoiceSettings() {
     defaultValues: DEFAULT_INVOICE_SETTINGS,
   })
 
-  // Load from LocalStorage on mount or organization change
+  // Load from Settings API on mount or organization change
   useEffect(() => {
     if (!activeOrganizationId) return
 
     setLoading(true)
-    const storageKey = `${activeOrganizationId}_invoice_settings`
-    const saved = localStorage.getItem(storageKey)
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved)
-        reset({
-          ...DEFAULT_INVOICE_SETTINGS,
-          ...parsed,
-        })
-      } catch (e) {
-        console.error("Failed to parse invoice settings from localStorage", e)
-        reset(DEFAULT_INVOICE_SETTINGS)
-      }
-    } else {
-      reset(DEFAULT_INVOICE_SETTINGS)
-    }
-    setLoading(false)
+    SettingsApi.getSettings()
+      .then((res) => {
+        if (res.data) {
+          reset({
+            invoice_prefix: res.data.invoice_prefix ?? DEFAULT_INVOICE_SETTINGS.invoice_prefix,
+            invoice_sequence: res.data.invoice_sequence ?? DEFAULT_INVOICE_SETTINGS.invoice_sequence,
+            invoice_phone: res.data.invoice_phone ?? DEFAULT_INVOICE_SETTINGS.invoice_phone,
+            invoice_email: res.data.invoice_email ?? DEFAULT_INVOICE_SETTINGS.invoice_email,
+            invoice_terms_conditions: res.data.invoice_terms_conditions ?? DEFAULT_INVOICE_SETTINGS.invoice_terms_conditions,
+            invoice_footer_message: res.data.invoice_footer_message ?? DEFAULT_INVOICE_SETTINGS.invoice_footer_message,
+            invoice_show_gst: res.data.invoice_show_gst !== "false",
+            invoice_show_license: res.data.invoice_show_license !== "false",
+          })
+        }
+      })
+      .catch((e) => {
+        console.error("Failed to fetch settings", e)
+        toast.error("Failed to load invoice settings")
+      })
+      .finally(() => {
+        setLoading(false)
+      })
   }, [activeOrganizationId, reset])
 
   const onSubmit: SubmitHandler<InvoiceSettingsFormValues> = async (data) => {
@@ -72,15 +78,24 @@ export default function InvoiceSettings() {
       return
     }
 
-    const storageKey = `${activeOrganizationId}_invoice_settings`
-    localStorage.setItem(storageKey, JSON.stringify(data))
-    
-    // Simulate API delay for a polished UX feel
-    await new Promise((resolve) => setTimeout(resolve, 600))
-    
-    // Force form state to reset its isDirty based on the newly saved data
-    reset(data)
-    toast.success("Invoice settings updated successfully")
+    try {
+      const payload = {
+        invoice_prefix: data.invoice_prefix,
+        invoice_sequence: data.invoice_sequence,
+        invoice_phone: data.invoice_phone,
+        invoice_email: data.invoice_email,
+        invoice_terms_conditions: data.invoice_terms_conditions,
+        invoice_footer_message: data.invoice_footer_message,
+        invoice_show_gst: String(data.invoice_show_gst),
+        invoice_show_license: String(data.invoice_show_license),
+      }
+
+      await SettingsApi.updateSettings(payload)
+      reset(data)
+      toast.success("Invoice settings updated successfully")
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to update invoice settings")
+    }
   }
 
   if (loading) {
@@ -135,7 +150,7 @@ export default function InvoiceSettings() {
               <div>
                 <FormField
                   control={control}
-                  name="phone"
+                  name="invoice_phone"
                   label="CONTACT PHONE ON INVOICE"
                   placeholder="e.g. +91 98765 43210"
                 />
@@ -143,7 +158,7 @@ export default function InvoiceSettings() {
               <div>
                 <FormField
                   control={control}
-                  name="email"
+                  name="invoice_email"
                   label="CONTACT EMAIL ON INVOICE"
                   placeholder="e.g. billing@dawadukaan.com"
                 />
@@ -158,7 +173,7 @@ export default function InvoiceSettings() {
               <div>
                 <FormTextarea
                   control={control}
-                  name="terms_conditions"
+                  name="invoice_terms_conditions"
                   label="TERMS & CONDITIONS"
                   placeholder="Terms and conditions displayed on the invoice..."
                   rows={4}
@@ -167,7 +182,7 @@ export default function InvoiceSettings() {
               <div>
                 <FormTextarea
                   control={control}
-                  name="footer_message"
+                  name="invoice_footer_message"
                   label="FOOTER / THANKS MESSAGE"
                   placeholder="A short greeting or thank you note..."
                   rows={2}
@@ -185,13 +200,13 @@ export default function InvoiceSettings() {
             <div className="space-y-4">
               <FormSwitch
                 control={control}
-                name="show_gst"
+                name="invoice_show_gst"
                 label="Show GSTIN"
                 description="Print the organization GST number on invoices"
               />
               <FormSwitch
                 control={control}
-                name="show_license"
+                name="invoice_show_license"
                 label="Show Drug License"
                 description="Print the organization Drug License number on invoices"
               />
