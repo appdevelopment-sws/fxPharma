@@ -107,11 +107,10 @@ const Orders = () => {
 
     const lines = [
       `Order ID: ${order.id}`,
-      `Status: ${order.status || "N/A"}`,
-      `Created: ${new Date(order.createdAt).toLocaleDateString()}`,
+      `Date: ${new Date(order.createdAt).toLocaleDateString()}`,
       "",
       "Items:",
-      ...(itemLines?.length ? itemLines : ["No items available"]),
+      ...(itemLines?.length ? itemLines : ["No itms available"]),
       "",
       `Total items: ${order.items?.length || 0}`,
       // `Total amount: ${totalAmount}`,
@@ -138,6 +137,7 @@ const Orders = () => {
 
   const openEmailShare = (order: any) => {
     const email = order?.supplier?.email
+
     if (!email) {
       toast.error("Supplier email is not available.")
       return
@@ -145,11 +145,12 @@ const Orders = () => {
 
     const subject = `Order details for ${order.id}`
     const body = formatOrderShareMessage(order)
-    const mailto = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(
-      subject
-    )}&body=${encodeURIComponent(body)}`
 
-    window.location.href = mailto
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(
+      email
+    )}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+
+    window.open(gmailUrl, "_blank")
   }
 
   const handleShare = (type: "whatsapp" | "email") => {
