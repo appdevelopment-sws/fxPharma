@@ -38,10 +38,28 @@ export default function BranchDialog({
   useEffect(() => {
     if (open) {
       if (isEditMode || isViewMode) {
+        let displayAddress = branch?.address || ""
+        try {
+          const parsed = JSON.parse(displayAddress)
+          if (parsed && typeof parsed === "object") {
+            displayAddress = [
+              parsed.streetAddress,
+              parsed.city,
+              parsed.state,
+              parsed.zipCode,
+              parsed.country,
+            ]
+              .filter(Boolean)
+              .join(", ")
+          }
+        } catch {
+          // Keep raw if not valid JSON
+        }
+
         reset({
           branch_name: branch?.branch_name || branch?.name || "",
           code: branch?.code || "",
-          address: branch?.address || "",
+          address: displayAddress,
           phone: branch?.phone || "",
           email: branch?.email || "",
           status:

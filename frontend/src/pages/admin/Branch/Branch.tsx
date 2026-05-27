@@ -85,7 +85,26 @@ export default function Branch() {
         key: "address",
         header:
           BRANCHES_COLUMNS.find((c) => c.key === "address")?.label || "Address",
-        accessor: "address",
+        render: (row) => {
+          if (!row.address) return ""
+          try {
+            const parsed = JSON.parse(row.address)
+            if (parsed && typeof parsed === "object") {
+              return [
+                parsed.streetAddress,
+                parsed.city,
+                parsed.state,
+                parsed.zipCode,
+                parsed.country,
+              ]
+                .filter(Boolean)
+                .join(", ")
+            }
+          } catch {
+            // Not a JSON string
+          }
+          return row.address
+        },
       },
       {
         key: "status",
