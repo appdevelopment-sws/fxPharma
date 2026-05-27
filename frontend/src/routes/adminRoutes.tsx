@@ -34,8 +34,8 @@ import { Settings as SettingsIcon } from "lucide-react"
 import SettingsView from "@/pages/admin/settings/settings"
 import OrganizationSettings from "@/pages/admin/settings/OrganizationSettings"
 import InvoiceSettings from "@/pages/admin/settings/InvoiceSettings"
-import PharmacySettings from "@/pages/admin/settings/PharmacySettings"
-import InvoiceTemplates from "@/pages/admin/settings/PharmacySettings"
+import PharmacySettings from "@/pages/admin/settings/InvoiceTemplate"
+import InvoiceTemplates from "@/pages/admin/settings/InvoiceTemplate"
 
 export const AdminRoutes = () => {
   return (
