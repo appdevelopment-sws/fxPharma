@@ -67,7 +67,7 @@ function FilterBar({ values, onChange, children, className }: FilterBarProps) {
 function FilterBarSelect({
   name,
   options,
-  placeholder = "Select",
+  placeholder = "All",
   className,
 }: FilterBarSelectProps) {
   const { values, onChange } = useFilterBarContext()

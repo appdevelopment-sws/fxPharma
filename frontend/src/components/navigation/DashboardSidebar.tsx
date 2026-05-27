@@ -65,16 +65,22 @@ export function DashboardSidebar({
         )}
       >
         <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/10 text-white">
-          {brandIcon}
+          <img
+            src={workspaceSubtitle ? workspaceSubtitle : "/logo.png"}
+            alt={workspaceTitle}
+            className="truncate text-xs font-medium tracking-widest text-white uppercase"
+          />
         </div>
         {!isCollapsed && (
           <div className="min-w-0">
             <h2 className="truncate text-base font-bold tracking-tight text-white">
               {workspaceTitle}
             </h2>
-            <p className="truncate text-xs font-medium tracking-widest text-white uppercase">
-              {workspaceSubtitle}
-            </p>
+            {/* <img
+              src={workspaceSubtitle}
+              alt={workspaceTitle}
+              className="truncate text-xs font-medium tracking-widest text-white uppercase"
+            /> */}
           </div>
         )}
       </div>

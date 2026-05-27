@@ -334,7 +334,11 @@ export class MasterProductController {
         pattern: "solid",
         fgColor: { argb: "FF4F46E5" }, // Indigo-600
       };
-      cell.alignment = { vertical: "middle", horizontal: "center", wrapText: true };
+      cell.alignment = {
+        vertical: "middle",
+        horizontal: "center",
+        wrapText: true,
+      };
       cell.border = {
         top: { style: "thin", color: { argb: "FFC7D2FE" } },
         left: { style: "thin", color: { argb: "FFC7D2FE" } },
@@ -380,15 +384,15 @@ export class MasterProductController {
       column.width = Math.min(maxLen + 6, 35);
     });
 
-    const buffer = await workbook.xlsx.writeBuffer() as any;
+    const buffer = (await workbook.xlsx.writeBuffer()) as any;
 
     res.setHeader(
       "Content-Disposition",
-      "attachment; filename=product_import_template.xlsx"
+      "attachment; filename=product_import_template.xlsx",
     );
     res.setHeader(
       "Content-Type",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     );
     res.status(200).send(buffer);
   });
@@ -496,6 +500,7 @@ export class MasterProductController {
                 phone: "",
                 address: "",
                 organizationId,
+                isGlobal: true,
                 branchId,
               },
             });
@@ -529,13 +534,13 @@ export class MasterProductController {
         };
 
         const isNarcotic = parseBool(
-          row["Narcotic Drug"] || row["is_narcotic"] || row["narcotic"]
+          row["Narcotic Drug"] || row["is_narcotic"] || row["narcotic"],
         );
         const isScheduleH = parseBool(
-          row["Schedule H"] || row["is_schedule_h"] || row["schedule_h"]
+          row["Schedule H"] || row["is_schedule_h"] || row["schedule_h"],
         );
         const isScheduleH1 = parseBool(
-          row["Schedule H1"] || row["is_schedule_h1"] || row["schedule_h1"]
+          row["Schedule H1"] || row["is_schedule_h1"] || row["schedule_h1"],
         );
 
         // Barcodes
@@ -556,14 +561,14 @@ export class MasterProductController {
               barcodesToCreate.push({ value: code });
             } else {
               console.log(
-                `Skipping barcode "${code}" on row ${rowNum} because it already exists in DB`
+                `Skipping barcode "${code}" on row ${rowNum} because it already exists in DB`,
               );
             }
           }
         }
 
         const categoryType = String(
-          row["Category Type"] || row["category_type"] || "TAB"
+          row["Category Type"] || row["category_type"] || "TAB",
         )
           .trim()
           .toUpperCase();
@@ -571,12 +576,12 @@ export class MasterProductController {
           .trim()
           .toUpperCase();
         const colorType = String(
-          row["Color Type"] || row["color_type"] || "NORMAL"
+          row["Color Type"] || row["color_type"] || "NORMAL",
         )
           .trim()
           .toUpperCase();
         const industrySegment = String(
-          row["Industry Segment"] || row["industry_segment"] || "1"
+          row["Industry Segment"] || row["industry_segment"] || "1",
         ).trim();
 
         await rootPrisma.masterProduct.create({
@@ -594,6 +599,7 @@ export class MasterProductController {
             isNarcotic,
             isScheduleH,
             isScheduleH1,
+
             barcodes:
               barcodesToCreate.length > 0
                 ? {
