@@ -35,6 +35,7 @@ import SettingsView from "@/pages/admin/settings/settings"
 import OrganizationSettings from "@/pages/admin/settings/OrganizationSettings"
 import InvoiceSettings from "@/pages/admin/settings/InvoiceSettings"
 import PharmacySettings from "@/pages/admin/settings/PharmacySettings"
+import InvoiceTemplates from "@/pages/admin/settings/PharmacySettings"
 
 export const AdminRoutes = () => {
   return (
@@ -147,7 +148,7 @@ export const AdminRoutes = () => {
               <Route index element={<Navigate to="organization" replace />} />
               <Route path="organization" element={<OrganizationSettings />} />
               <Route path="invoice" element={<InvoiceSettings />} />
-              <Route path="pharmacy" element={<PharmacySettings />} />
+              <Route path="invoice-templates" element={<InvoiceTemplates />} />
             </Route>
           </Route>{" "}
           <Route path="reports/gst-report" element={<GstReport />} />

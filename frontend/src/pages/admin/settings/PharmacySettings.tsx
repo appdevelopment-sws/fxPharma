@@ -8,7 +8,7 @@ import SettingsApi from "@/services/settingsApi"
 import { FormField, FormSwitch } from "@/components/ui/form-fields"
 import { Button } from "@/components/ui/button"
 
-interface PharmacySettingsFormValues {
+interface InvoiceTemplatesFormValues {
   drug_license_20: string
   drug_license_21: string
   fssai_no: string
@@ -17,7 +17,7 @@ interface PharmacySettingsFormValues {
   require_prescription: boolean
 }
 
-const DEFAULT_PHARMACY_SETTINGS: PharmacySettingsFormValues = {
+const DEFAULT_PHARMACY_SETTINGS: InvoiceTemplatesFormValues = {
   drug_license_20: "",
   drug_license_21: "",
   fssai_no: "",
@@ -26,7 +26,7 @@ const DEFAULT_PHARMACY_SETTINGS: PharmacySettingsFormValues = {
   require_prescription: false,
 }
 
-export default function PharmacySettings() {
+export default function InvoiceTemplates() {
   const { activeOrganizationId } = useAuth()
   const [loading, setLoading] = useState(true)
 
@@ -94,7 +94,9 @@ export default function PharmacySettings() {
     return (
       <div className="flex h-64 items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="ml-2 text-sm text-muted-foreground">Loading pharmacy settings...</span>
+        <span className="ml-2 text-sm text-muted-foreground">
+          Loading pharmacy settings...
+        </span>
       </div>
     )
   }
@@ -108,10 +110,13 @@ export default function PharmacySettings() {
           <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
             <div className="mb-4 flex items-center gap-2">
               <ShieldAlert className="h-5 w-5 text-primary" />
-              <h3 className="text-lg font-semibold text-card-foreground">Licenses & Regulations</h3>
+              <h3 className="text-lg font-semibold text-card-foreground">
+                Licenses & Regulations
+              </h3>
             </div>
             <p className="mb-4 text-sm text-muted-foreground">
-              Configure your Pharmacy Drug Licenses and Food Safety credentials. These details will print on your invoices automatically.
+              Configure your Pharmacy Drug Licenses and Food Safety credentials.
+              These details will print on your invoices automatically.
             </p>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
@@ -143,7 +148,9 @@ export default function PharmacySettings() {
 
           {/* Operations Thresholds */}
           <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-            <h3 className="mb-4 text-lg font-semibold text-card-foreground">Alerts & Warning Thresholds</h3>
+            <h3 className="mb-4 text-lg font-semibold text-card-foreground">
+              Alerts & Warning Thresholds
+            </h3>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <FormField
@@ -173,7 +180,9 @@ export default function PharmacySettings() {
         <div className="space-y-6">
           {/* Rules & Compliance */}
           <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-            <h3 className="mb-4 text-lg font-semibold text-card-foreground">Compliance Toggles</h3>
+            <h3 className="mb-4 text-lg font-semibold text-card-foreground">
+              Compliance Toggles
+            </h3>
             <div className="space-y-4">
               <FormSwitch
                 control={control}

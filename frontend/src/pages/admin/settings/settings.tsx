@@ -31,9 +31,9 @@ const SettingsView = () => {
               <FileText className="size-4" />
               Invoice Customization
             </TabsTrigger>
-            <TabsTrigger value="pharmacy" className="gap-2 p-4">
+            <TabsTrigger value="invoice-templates" className="gap-2 p-4">
               <ShieldAlert className="size-4" />
-              Pharmacy Operations
+              Invoice Templates
             </TabsTrigger>
             {/* <TabsTrigger value="pharmacy" className="gap-2 p-4">
               <ShieldAlert className="size-4" />
