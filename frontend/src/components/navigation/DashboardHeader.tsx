@@ -79,32 +79,32 @@ export function DashboardHeader({
   }
 
   return (
-    <header className="sticky top-0 z-30 h-16 border-b border-white/20 dark:border-zinc-800 bg-[#2563EB] dark:bg-zinc-950 text-white">
+    <header className="sticky top-0 z-30 h-16 border-b border-border dark:border-zinc-800 bg-white dark:bg-zinc-950 text-foreground dark:text-zinc-100 shadow-sm">
       <div className="flex h-full items-center justify-between px-4 sm:px-6">
         {/* Left: Mobile trigger & Breadcrumbs */}
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
             size="icon"
-            className="text-white/80 hover:bg-white/10 hover:text-white lg:hidden"
+            className="text-muted-foreground hover:bg-slate-100 hover:text-foreground lg:hidden"
             onClick={onOpenSidebar}
           >
             <Menu className="size-5" />
             <span className="sr-only">Open sidebar</span>
           </Button>
 
-          <div className="hidden items-center gap-2 text-xs font-medium tracking-wider text-white/70 uppercase sm:flex">
-            <span className="cursor-default transition-colors hover:text-white">
+          <div className="hidden items-center gap-2 text-xs font-medium tracking-wider text-muted-foreground uppercase sm:flex">
+            <span className="cursor-default transition-colors hover:text-foreground">
               {appLabel}
             </span>
             <ChevronRight className="size-3.5 opacity-50" />
-            <span className="cursor-default transition-colors hover:text-white">
+            <span className="cursor-default transition-colors hover:text-foreground">
               {workspaceLabel}
             </span>
             {activeItemTitle && (
               <>
                 <ChevronRight className="size-3.5 opacity-50" />
-                <span className="font-bold text-white">{activeItemTitle}</span>
+                <span className="font-bold text-foreground">{activeItemTitle}</span>
               </>
             )}
           </div>
@@ -115,13 +115,13 @@ export function DashboardHeader({
           {/* Search - Desktop only for now */}
 
 
-          <div className="flex items-center gap-1 border-r border-white/10 pr-2 sm:gap-2">
+          <div className="flex items-center gap-1 border-r border-border pr-2 sm:gap-2">
             {/* Live Clock & Date */}
-            <div className="hidden sm:flex flex-col items-end justify-center mr-2 border-r border-white/10 pr-4">
-              <span className="text-xs font-bold text-white tracking-wide leading-none">
+            <div className="hidden sm:flex flex-col items-end justify-center mr-2 border-r border-border pr-4">
+              <span className="text-xs font-bold text-foreground tracking-wide leading-none">
                 {now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
               </span>
-              <span className="text-[9px] text-white/60 font-medium uppercase tracking-widest mt-1">
+              <span className="text-[9px] text-muted-foreground font-medium uppercase tracking-widest mt-1">
                 {now.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
               </span>
             </div>
@@ -130,7 +130,7 @@ export function DashboardHeader({
               variant="ghost"
               size="icon"
               onClick={toggleFullscreen}
-              className="hidden text-white/80 hover:bg-white/10 hover:text-white sm:flex"
+              className="hidden text-muted-foreground hover:bg-slate-100 hover:text-foreground sm:flex"
             >
               {isFullscreen ? (
                 <Minimize className="size-5" />
@@ -145,7 +145,7 @@ export function DashboardHeader({
               <Button
                 variant="ghost"
                 size="icon"
-                className="text-white/80 hover:bg-white/10 hover:text-white"
+                className="text-muted-foreground hover:bg-slate-100 hover:text-foreground"
               >
                 <Bell className="size-5" />
               </Button>
@@ -163,21 +163,21 @@ export function DashboardHeader({
                 className="group flex items-center gap-2 rounded-full pl-2 transition-transform outline-none hover:scale-[1.01] active:scale-[0.99]"
               >
                 <div className="hidden text-right lg:block">
-                  <p className="text-sm leading-none font-semibold text-white transition-colors group-hover:text-white/90">
+                  <p className="text-sm leading-none font-semibold text-foreground transition-colors group-hover:text-primary">
                     {userName}
                   </p>
-                  <p className="mt-1 text-[10px] leading-none font-bold tracking-tighter text-white/70 uppercase">
+                  <p className="mt-1 text-[10px] leading-none font-bold tracking-tighter text-muted-foreground uppercase">
                     {userRole}
                   </p>
                 </div>
-                <div className="relative flex size-9 items-center justify-center rounded-full bg-white dark:bg-zinc-800 text-xs font-bold text-[#2563EB] dark:text-white shadow-sm ring-2 ring-white/20 transition-all group-hover:ring-white/40">
+                <div className="relative flex size-9 items-center justify-center rounded-full bg-primary dark:bg-zinc-800 text-xs font-bold text-white shadow-sm ring-2 ring-slate-100 transition-all group-hover:ring-slate-200">
                   {userName
                     .split(" ")
                     .map((n) => n[0])
                     .join("")}
                   <div className="absolute right-0 bottom-0 size-2.5 rounded-full border-2 border-white bg-green-500 ring-1 ring-white/10" />
                 </div>
-                <ChevronDown className="hidden size-4 text-white/70 transition-transform group-data-[state=open]:rotate-180 sm:block" />
+                <ChevronDown className="hidden size-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180 sm:block" />
               </button>
             </PopoverTrigger>
             <PopoverContent
@@ -187,7 +187,7 @@ export function DashboardHeader({
             >
               <div className="space-y-3 border-b border-slate-200 dark:border-zinc-800 pb-3">
                 <div className="flex items-center gap-3">
-                  <div className="flex size-11 items-center justify-center rounded-full bg-[#2563EB] dark:bg-zinc-800 text-sm font-bold text-white shadow-sm">
+                  <div className="flex size-11 items-center justify-center rounded-full bg-primary dark:bg-zinc-800 text-sm font-bold text-white shadow-sm">
                     {userName
                       .split(" ")
                       .map((n) => n[0])

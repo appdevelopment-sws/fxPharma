@@ -59,15 +59,15 @@ export function DashboardSidebar({
   }
 
   return (
-    <div className="flex h-full flex-col bg-[#2563EB] dark:bg-zinc-950 text-white">
+    <div className="flex h-full flex-col bg-sidebar  text-[#D1D5DB]">
       {/* Brand Header */}
       <div
         className={cn(
-          "flex h-16 shrink-0 items-center border-b border-white/20 dark:border-zinc-800",
+          "flex h-16 shrink-0 items-center border-b border-white/10 dark:border-zinc-800",
           isCollapsed ? "justify-center px-0" : "gap-3 px-6"
         )}
       >
-        <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white/10">
+        <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white/5">
           <img
             src={workspaceSubtitle || "/logo.png"}
             alt={workspaceTitle}
@@ -77,7 +77,7 @@ export function DashboardSidebar({
 
         {!isCollapsed && (
           <div className="min-w-0">
-            <h2 className="truncate text-base font-bold tracking-tight text-white">
+            <h2 className="truncate text-base font-bold tracking-tight text-[#D1D5DB]">
               {workspaceTitle}
             </h2>
           </div>
@@ -164,8 +164,8 @@ function SidebarItem({
     "group flex w-full items-center transition-all duration-200",
     isCollapsed ? "mx-auto justify-center p-3 rounded-full" : "gap-x-2 px-3 py-2.5 rounded-full border-l-4",
     isActive || isExpanded
-      ? "bg-white/15 font-semibold text-white border-white"
-      : "text-white hover:bg-white/10 border-transparent"
+      ? cn(" font-semibold text-white", !isCollapsed && "border-l-4 border-[#FF7A00] pl-2")
+      : "text-[#D1D5DB] hover:bg-[#163B68] hover:text-white"
   )
 
   // =====================================
@@ -240,8 +240,8 @@ function SidebarItem({
                     className={cn(
                       "flex items-center gap-2 px-3 py-2 text-sm transition-all duration-200 rounded-full border-l-[3px]",
                       childIsActive
-                        ? "bg-blue-50 font-medium text-blue-600 border-blue-600"
-                        : "text-slate-700 hover:bg-slate-100 border-transparent"
+                        ? "bg-blue-50 font-medium text-[#0B4F9C]"
+                        : "text-slate-700 hover:bg-slate-100"
                     )}
                   >
                     {ChildIcon && <ChildIcon className="size-4 shrink-0" />}
@@ -276,8 +276,8 @@ function SidebarItem({
                   className={cn(
                     "flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium transition-all duration-200 rounded-full border-l-[3px]",
                     childIsActive
-                      ? "bg-white/15 text-white shadow-sm border-white"
-                      : "text-white/90 hover:bg-white/5 hover:text-white border-transparent"
+                      ? "bg-[#0B4F9C] text-white shadow-sm"
+                      : "text-[#D1D5DB] hover:bg-[#163B68] hover:text-white"
                   )}
                 >
                   {ChildIcon && (
