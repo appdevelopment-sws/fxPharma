@@ -42,7 +42,7 @@ export const adminNavigationGroups: SidebarNavigationGroup[] = [
         icon: LayoutDashboard,
       },
       {
-        title: "POS",
+        title: "Selling Point",
         to: "/admin/pos",
         description: "Point of Sale system",
         icon: Barcode,
