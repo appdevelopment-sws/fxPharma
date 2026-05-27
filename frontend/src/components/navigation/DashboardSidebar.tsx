@@ -59,12 +59,12 @@ export function DashboardSidebar({
   }
 
   return (
-    <div className="relative flex h-full flex-col overflow-visible bg-[#2563EB] text-white">
-      {/* BRAND */}
+    <div className="flex h-full flex-col bg-[#2563EB] dark:bg-zinc-950 text-white">
+      {/* Brand Header */}
       <div
         className={cn(
-          "flex items-center border-b border-white/10 p-6",
-          isCollapsed ? "justify-center" : "gap-3"
+          "flex h-16 shrink-0 items-center border-b border-white/20 dark:border-zinc-800",
+          isCollapsed ? "justify-center px-0" : "gap-3 px-6"
         )}
       >
         <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white/10">
@@ -110,13 +110,13 @@ export function DashboardSidebar({
         ))}
       </nav>
 
-      {/* FOOTER */}
-      <div className="border-t border-white/10 bg-white/5 p-4">
+      {/* Footer / Logout */}
+      <div className="border-t border-white/10 dark:border-zinc-800 bg-white/5 dark:bg-zinc-900/50 p-4">
         <Button
           type="button"
           variant="ghost"
           className={cn(
-            "w-full text-white transition-all duration-200 hover:bg-white/10",
+            "w-full text-white transition-all duration-200 hover:bg-rose-500/20 hover:text-rose-200 dark:hover:bg-rose-500/10 dark:hover:text-rose-400",
             isCollapsed
               ? "h-10 w-10 justify-center p-0"
               : "justify-start gap-3 px-4"

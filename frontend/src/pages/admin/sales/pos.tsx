@@ -885,7 +885,7 @@ const POS = () => {
   // ─────────────────────────────────────────────────────────────────────────
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-gray-100 font-sans text-gray-900 select-none">
+    <div className="flex h-screen w-full overflow-hidden bg-muted/40 font-sans text-foreground select-none">
 
       {/* ══════════════════════════════════════════════
           LEFT PANEL — Product Catalog
@@ -893,7 +893,7 @@ const POS = () => {
       <div className="flex flex-1 flex-col overflow-hidden">
 
         {/* ── Top bar: search + filters ── */}
-        <div className="flex items-center gap-2.5 border-b border-gray-200 bg-white px-4 py-3 shadow-sm flex-shrink-0">
+        <div className="flex items-center gap-2.5 border-b border-border bg-card px-4 py-3 shadow-sm flex-shrink-0">
           {/* Search */}
           <div className="relative min-w-0 flex-1 max-w-72">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
@@ -902,7 +902,7 @@ const POS = () => {
               placeholder="Search / Scan medicine..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full rounded-lg border border-gray-200 bg-gray-50 py-2 pl-9 pr-9 text-sm outline-none focus:border-teal-400 focus:ring-1 focus:ring-teal-300/30 transition-all"
+              className="w-full rounded-lg border border-border bg-muted/40 py-2 pl-9 pr-9 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-teal-400 focus:ring-1 focus:ring-teal-300/30 transition-all"
             />
             <ScanLine className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-300" />
           </div>
@@ -911,7 +911,7 @@ const POS = () => {
           <button
             type="button"
             onClick={() => setHeldBillsModalOpen(true)}
-            className="relative flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors active:scale-95"
+            className="relative flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-sm font-semibold text-muted-foreground hover:bg-muted/60 transition-colors active:scale-95"
           >
             <Pause className="h-3.5 w-3.5 text-blue-500" />
             <span>Held Bills</span>
@@ -926,28 +926,28 @@ const POS = () => {
           <button
             type="button"
             onClick={() => setIsFilterOpen(true)}
-            className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors active:scale-95"
+            className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-sm font-semibold text-muted-foreground hover:bg-muted/60 transition-colors active:scale-95"
           >
             <Filter className="h-3.5 w-3.5 text-teal-500" />
             Filter
           </button>
 
           {/* Spacer + count */}
-          <span className="ml-auto hidden sm:block text-xs text-gray-400 font-semibold whitespace-nowrap">
+          <span className="ml-auto hidden sm:block text-xs text-muted-foreground font-semibold whitespace-nowrap">
             {filteredProducts.length} items
           </span>
 
           {/* Clock */}
-          <div className="hidden lg:flex items-center gap-1 text-xs font-bold text-gray-400">
+          <div className="hidden lg:flex items-center gap-1 text-xs font-bold text-muted-foreground">
             <Clock className="h-3.5 w-3.5" />
             {liveTime}
           </div>
         </div>
 
         {/* ── Product Grid ── */}
-        <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto p-4 custom-scrollbar bg-muted/20">
           {filteredProducts.length === 0 ? (
-            <div className="flex h-full flex-col items-center justify-center gap-3 text-gray-300">
+            <div className="flex h-full flex-col items-center justify-center gap-3 text-muted-foreground/40">
               <Pill className="h-12 w-12 animate-bounce" />
               <p className="text-sm font-semibold">No products found.</p>
             </div>
@@ -973,28 +973,28 @@ const POS = () => {
                       setConfigModalOpen(true)
                     }}
                     className={cn(
-                      "relative flex flex-col items-center rounded-lg border bg-white p-2.5 text-left transition-all duration-150 active:scale-[0.97] cursor-pointer hover:shadow-md",
+                      "relative flex flex-col items-center rounded-lg border bg-card p-2.5 text-left transition-all duration-150 active:scale-[0.97] cursor-pointer hover:shadow-md",
                       isSelected
-                        ? "border-teal-500 ring-1 ring-teal-400/40 shadow-sm bg-teal-50/30"
+                        ? "border-teal-500 ring-1 ring-teal-400/40 shadow-sm bg-teal-500/5"
                         : isOutOfStock
-                          ? "border-gray-200 opacity-50 cursor-not-allowed"
-                          : "border-gray-200 hover:border-teal-300"
+                          ? "border-border opacity-50 cursor-not-allowed"
+                          : "border-border hover:border-teal-300"
                     )}
                   >
                     {/* Illustration */}
-                    <div className="flex h-[100px] w-full items-center justify-center overflow-hidden rounded-md bg-gray-50 mb-2.5">
+                    <div className="flex h-[100px] w-full items-center justify-center overflow-hidden rounded-md bg-muted/40 mb-2.5">
                       {getProductIllustration(product, "md")}
                     </div>
 
                     {/* Name */}
-                    <p className="w-full text-center text-xs font-semibold leading-tight text-gray-800 line-clamp-2">
+                    <p className="w-full text-center text-xs font-semibold leading-tight text-foreground line-clamp-2">
                       {product.name}
                     </p>
 
                     {/* Price */}
-                    <p className="mt-1 text-xs font-bold text-gray-500">
+                    <p className="mt-1 text-xs font-bold text-muted-foreground">
                       {basePrice > 0 ? `${basePrice.toFixed(2)}` : "0"}
-                      <span className="text-[10px] font-semibold text-gray-400"></span>
+                      <span className="text-[10px] font-semibold text-muted-foreground/60"></span>
                     </p>
 
                     {/* Out of stock badge */}
@@ -1018,13 +1018,13 @@ const POS = () => {
               }).map((_, i) => (
                 <div
                   key={`empty-${i}`}
-                  className="flex flex-col items-center rounded-lg border border-dashed border-gray-200 bg-white/60 p-2.5 opacity-40"
+                  className="flex flex-col items-center rounded-lg border border-dashed border-border bg-card/60 p-2.5 opacity-40"
                 >
-                  <div className="flex h-[100px] w-full items-center justify-center rounded-md bg-gray-50 mb-2.5">
-                    <ShoppingCart className="h-8 w-8 text-gray-200" />
+                  <div className="flex h-[100px] w-full items-center justify-center rounded-md bg-muted/40 mb-2.5">
+                    <ShoppingCart className="h-8 w-8 text-muted-foreground/30" />
                   </div>
-                  <p className="text-xs font-semibold text-gray-300">—</p>
-                  <p className="text-xs text-gray-200">---</p>
+                  <p className="text-xs font-semibold text-muted-foreground/30">—</p>
+                  <p className="text-xs text-muted-foreground/20">---</p>
                 </div>
               ))}
             </div>
@@ -1035,11 +1035,11 @@ const POS = () => {
       {/* ══════════════════════════════════════════════
           RIGHT PANEL — Invoice
       ══════════════════════════════════════════════ */}
-      <div className="flex w-[540px] xl:w-[600px] flex-col border-l border-gray-200 bg-white shadow-xl flex-shrink-0">
+      <div className="flex w-[540px] xl:w-[600px] flex-col border-l border-border bg-card shadow-xl flex-shrink-0">
 
         {/* ── Table header ── */}
         <div
-          className="grid flex-shrink-0 items-center border-b border-gray-200 bg-gray-50 px-3 py-2.5 text-xs font-bold uppercase tracking-wider text-gray-500"
+          className="grid flex-shrink-0 items-center border-b border-border bg-muted/40 px-3 py-2.5 text-xs font-bold uppercase tracking-wider text-muted-foreground"
           style={{ gridTemplateColumns: "40px 1fr 70px 56px 108px 84px 76px" }}
         >
           <span>Image</span>
@@ -1052,12 +1052,12 @@ const POS = () => {
         </div>
 
         {/* ── Cart rows ── */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar divide-y divide-gray-50">
+        <div className="flex-1 overflow-y-auto custom-scrollbar divide-y divide-border/40">
           {cart.length === 0 ? (
-            <div className="flex h-full flex-col items-center justify-center gap-2 p-6 text-center text-gray-300">
+            <div className="flex h-full flex-col items-center justify-center gap-2 p-6 text-center text-muted-foreground/30">
               <ShoppingCart className="h-10 w-10" />
-              <p className="text-xs font-semibold text-gray-400">No items added yet</p>
-              <p className="text-[10px] text-gray-300">Click a product on the left to add</p>
+              <p className="text-xs font-semibold text-muted-foreground/50">No items added yet</p>
+              <p className="text-[10px] text-muted-foreground/30">Click a product on the left to add</p>
             </div>
           ) : (
             cart.map((item) => {
@@ -1068,22 +1068,22 @@ const POS = () => {
               return (
                 <div
                   key={item.id}
-                  className="grid items-center px-3 py-3 hover:bg-gray-50/70 transition-colors border-b border-gray-50"
+                  className="grid items-center px-3 py-3 hover:bg-muted/30 transition-colors border-b border-border/30"
                   style={{ gridTemplateColumns: "40px 1fr 70px 56px 108px 84px 76px" }}
                 >
                   {/* Thumbnail */}
-                  <div className="h-9 w-9 overflow-hidden rounded-md bg-gray-100 flex items-center justify-center flex-shrink-0">
+                  <div className="h-9 w-9 overflow-hidden rounded-md bg-muted/60 flex items-center justify-center flex-shrink-0">
                     {getProductIllustration(item.product, "sm")}
                   </div>
 
                   {/* Name + remove */}
                   <div className="flex items-center gap-1.5 pr-1.5 min-w-0">
-                    <p className="flex-1 truncate font-semibold text-gray-800 text-xs leading-tight">
+                    <p className="flex-1 truncate font-semibold text-foreground text-xs leading-tight">
                       {item.product.name}
                     </p>
                     <button
                       onClick={() => removeFromCart(item.id)}
-                      className="flex-shrink-0 rounded p-1 text-gray-300 hover:bg-red-50 hover:text-red-500 transition-colors"
+                      className="flex-shrink-0 rounded p-1 text-muted-foreground/40 hover:bg-red-500/10 hover:text-red-500 transition-colors"
                       title="Remove"
                     >
                       <Trash2 className="h-3 w-3" />
@@ -1091,19 +1091,19 @@ const POS = () => {
                   </div>
 
                   {/* Batch */}
-                  <div className="font-mono text-xs text-gray-500 truncate">
+                  <div className="font-mono text-xs text-muted-foreground truncate">
                     {item.batch.number}
                   </div>
 
                   {/* Price */}
-                  <div className="text-xs font-semibold text-gray-700">
+                  <div className="text-xs font-semibold text-foreground">
                     {item.rateValue.toFixed(2)}
                   </div>
 
                   {/* Discount: type dropdown + value */}
                   <div className="flex items-center gap-1">
                     <div className="relative">
-                      <select className="appearance-none rounded border border-gray-200 bg-white pl-2 pr-5 py-1 text-xs outline-none focus:border-teal-400 h-7 text-gray-600 cursor-pointer">
+                      <select className="appearance-none rounded border border-border bg-background pl-2 pr-5 py-1 text-xs text-foreground outline-none focus:border-teal-400 h-7 cursor-pointer">
                         <option>Flat</option>
                         <option>%</option>
                       </select>
@@ -1115,7 +1115,7 @@ const POS = () => {
                       max="100"
                       value={item.itemDiscount}
                       onChange={(e) => updateItemDiscount(item.id, Number(e.target.value))}
-                      className="w-9 rounded border border-gray-200 bg-gray-50 px-1 py-1 text-xs text-center outline-none focus:border-teal-400 h-7"
+                      className="w-9 rounded border border-border bg-muted/40 px-1 py-1 text-xs text-center text-foreground outline-none focus:border-teal-400 h-7"
                     />
                   </div>
 
@@ -1123,16 +1123,16 @@ const POS = () => {
                   <div className="flex items-center justify-center gap-1">
                     <button
                       onClick={() => updateQty(item.id, -1)}
-                      className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded border border-gray-200 bg-gray-50 text-gray-500 hover:bg-gray-100 transition-colors"
+                      className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded border border-border bg-muted/40 text-muted-foreground hover:bg-muted/70 transition-colors"
                     >
                       <Minus className="h-3 w-3" />
                     </button>
-                    <span className="w-6 text-center text-xs font-bold text-gray-800 tabular-nums">
+                    <span className="w-6 text-center text-xs font-bold text-foreground tabular-nums">
                       {item.qty}
                     </span>
                     <button
                       onClick={() => updateQty(item.id, 1)}
-                      className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded border border-gray-200 bg-gray-50 text-gray-500 hover:bg-gray-100 transition-colors"
+                      className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded border border-border bg-muted/40 text-muted-foreground hover:bg-muted/70 transition-colors"
                     >
                       <Plus className="h-3 w-3" />
                     </button>
@@ -1140,10 +1140,10 @@ const POS = () => {
 
                   {/* Sub Total */}
                   <div className="text-right pr-1">
-                    <span className="text-xs font-bold text-gray-800 tabular-nums">
+                    <span className="text-xs font-bold text-foreground tabular-nums">
                       {finalItemPrice.toFixed(2)}
                     </span>
-                    <span className="text-[10px] font-semibold text-gray-400"></span>
+                    <span className="text-[10px] font-semibold text-muted-foreground/50"></span>
                   </div>
                 </div>
               )
@@ -1151,22 +1151,15 @@ const POS = () => {
           )}
         </div>
 
-        {/* Thin scroll decoration bar
-        <div className="flex h-2 flex-shrink-0 items-center border-t border-gray-100 bg-gray-100 px-1">
-          <div className="h-1 flex-1 rounded-full overflow-hidden bg-gray-200">
-            <div className="h-full w-1/3 rounded-full bg-gray-400 opacity-50" />
-          </div>
-        </div> */}
-
         {/* ── Payment fields ── */}
-        <div className="flex-shrink-0 border-t border-gray-200 bg-white px-4 pt-3.5 pb-2.5">
+        <div className="flex-shrink-0 border-t border-border bg-card px-4 pt-3.5 pb-2.5">
           <div className="grid grid-cols-2 gap-x-6 gap-y-2.5">
 
             {/* ── Left column ── */}
             <div className="space-y-2.5">
               {/* Customer Name */}
               <div className="flex items-center gap-2">
-                <label className="w-28 flex-shrink-0 text-xs font-semibold text-gray-500">
+                <label className="w-28 flex-shrink-0 text-xs font-semibold text-muted-foreground">
                   Cust. Name
                 </label>
                 <input
@@ -1174,13 +1167,13 @@ const POS = () => {
                   placeholder="Walk-in Customer"
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
-                  className="flex-1 min-w-0 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-xs outline-none focus:border-teal-400 focus:ring-1 focus:ring-teal-300/20 transition-all"
+                  className="flex-1 min-w-0 rounded-lg border border-border bg-muted/40 px-2.5 py-1.5 text-xs text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-teal-400 focus:ring-1 focus:ring-teal-300/20 transition-all"
                 />
               </div>
 
               {/* Customer Phone */}
               <div className="flex items-center gap-2">
-                <label className="w-28 flex-shrink-0 text-xs font-semibold text-gray-500">
+                <label className="w-28 flex-shrink-0 text-xs font-semibold text-muted-foreground">
                   Cust. Phone
                 </label>
                 <input
@@ -1188,13 +1181,13 @@ const POS = () => {
                   placeholder="Phone number"
                   value={customerPhone}
                   onChange={(e) => setCustomerPhone(e.target.value)}
-                  className="flex-1 min-w-0 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-xs outline-none focus:border-teal-400 focus:ring-1 focus:ring-teal-300/20 transition-all"
+                  className="flex-1 min-w-0 rounded-lg border border-border bg-muted/40 px-2.5 py-1.5 text-xs text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-teal-400 focus:ring-1 focus:ring-teal-300/20 transition-all"
                 />
               </div>
 
               {/* Receive Amount */}
               <div className="flex items-center gap-2">
-                <label className="w-28 flex-shrink-0 text-xs font-semibold text-gray-500">
+                <label className="w-28 flex-shrink-0 text-xs font-semibold text-muted-foreground">
                   Receive Amount
                 </label>
                 <input
@@ -1202,57 +1195,45 @@ const POS = () => {
                   value={receiveAmount}
                   onChange={(e) => setReceiveAmount(e.target.value)}
                   placeholder="0"
-                  className="flex-1 min-w-0 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-xs text-right outline-none focus:border-teal-400 focus:ring-1 focus:ring-teal-300/20 transition-all"
+                  className="flex-1 min-w-0 rounded-lg border border-border bg-muted/40 px-2.5 py-1.5 text-xs text-right text-foreground outline-none focus:border-teal-400 focus:ring-1 focus:ring-teal-300/20 transition-all"
                 />
               </div>
 
-              {/* Change Amount */}
-              {/* <div className="flex items-center gap-2">
-                <label className="w-28 flex-shrink-0 text-xs font-semibold text-gray-500">
-                  Change Amount
-                </label>
-                <input
-                  readOnly
-                  value={changeAmount.toFixed(0)}
-                  className="flex-1 min-w-0 rounded-lg border border-gray-100 bg-gray-50 px-2.5 py-1.5 text-xs text-right text-gray-500 outline-none"
-                />
-              </div> */}
-
               {/* Due Amount */}
               <div className="flex items-center gap-2">
-                <label className="w-28 flex-shrink-0 text-xs font-semibold text-gray-500">
+                <label className="w-28 flex-shrink-0 text-xs font-semibold text-muted-foreground">
                   Due Amount
                 </label>
                 <input
                   readOnly
                   value={dueAmount > 0 ? dueAmount.toFixed(2) : roundedNet.toFixed(2)}
-                  className="flex-1 min-w-0 rounded-lg border border-gray-100 bg-gray-50 px-2.5 py-1.5 text-xs text-right font-semibold text-gray-700 outline-none"
+                  className="flex-1 min-w-0 rounded-lg border border-border bg-muted/40 px-2.5 py-1.5 text-xs text-right font-semibold text-foreground outline-none"
                 />
               </div>
 
               {/* Payment Type */}
               <div className="flex items-center gap-2">
-                <label className="w-28 flex-shrink-0 text-xs font-semibold text-gray-500">
+                <label className="w-28 flex-shrink-0 text-xs font-semibold text-muted-foreground">
                   Payment Type
                 </label>
                 <div className="relative flex-1 min-w-0">
                   <select
                     value={paymentMode}
                     onChange={(e) => setPaymentMode(e.target.value)}
-                    className="w-full appearance-none rounded-lg border border-gray-200 bg-gray-50 py-1.5 pl-2.5 pr-7 text-xs outline-none focus:border-teal-400 transition-all"
+                    className="w-full appearance-none rounded-lg border border-border bg-muted/40 py-1.5 pl-2.5 pr-7 text-xs text-foreground outline-none focus:border-teal-400 transition-all"
                   >
                     <option>Cash</option>
                     <option>Card / POS</option>
                     <option>UPI / QR</option>
                     <option>Split Payment</option>
                   </select>
-                  <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
+                  <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
                 </div>
               </div>
 
               {/* Split Payment Amounts */}
               {paymentMode === "Split Payment" && (
-                <div className="space-y-2 rounded-lg border border-teal-100 bg-teal-50/20 p-2.5 transition-all">
+                <div className="space-y-2 rounded-lg border border-teal-200 bg-teal-500/5 p-2.5 transition-all">
                   <div className="flex items-center gap-2">
                     <label className="w-24 flex-shrink-0 text-[10px] font-bold text-teal-700">
                       Cash Amount
@@ -1267,7 +1248,7 @@ const POS = () => {
                         const cashNum = parseFloat(val) || 0
                         setSplitOnlineAmount(Math.max(0, roundedNet - cashNum).toString())
                       }}
-                      className="flex-1 min-w-0 rounded border border-teal-200 bg-white px-2.5 py-1 text-xs text-right outline-none focus:border-teal-400 transition-all font-semibold"
+                      className="flex-1 min-w-0 rounded border border-teal-200 bg-background px-2.5 py-1 text-xs text-right outline-none focus:border-teal-400 transition-all font-semibold"
                     />
                   </div>
                   <div className="flex items-center gap-2">
@@ -1284,7 +1265,7 @@ const POS = () => {
                         const onlineNum = parseFloat(val) || 0
                         setSplitCashAmount(Math.max(0, roundedNet - onlineNum).toString())
                       }}
-                      className="flex-1 min-w-0 rounded border border-teal-200 bg-white px-2.5 py-1 text-xs text-right outline-none focus:border-teal-400 transition-all font-semibold"
+                      className="flex-1 min-w-0 rounded border border-teal-200 bg-background px-2.5 py-1 text-xs text-right outline-none focus:border-teal-400 transition-all font-semibold"
                     />
                   </div>
                 </div>
@@ -1295,47 +1276,29 @@ const POS = () => {
             <div className="space-y-2.5">
               {/* Total */}
               <div className="flex items-baseline justify-between">
-                <span className="text-base font-black text-gray-800">Total</span>
-                <span className="text-base font-black text-gray-800 tabular-nums">
+                <span className="text-base font-black text-foreground">Total</span>
+                <span className="text-base font-black text-foreground tabular-nums">
                   {roundedNet.toFixed(2)}
-                  <span className="text-xs font-semibold text-gray-500"></span>
+                  <span className="text-xs font-semibold text-muted-foreground"></span>
                 </span>
               </div>
 
-              {/* BIN */}
-              {/* <div className="flex items-center gap-1.5">
-                <label className="w-16 flex-shrink-0 text-xs font-semibold text-gray-500">BIN</label>
-                <div className="relative">
-                  <select className="appearance-none rounded-lg border border-gray-200 bg-gray-50 py-1.5 pl-2.5 pr-7 text-xs outline-none focus:border-teal-400">
-                    <option>Select</option>
-                  </select>
-                  <ChevronDown className="pointer-events-none absolute right-1.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
-                </div>
-                <input
-                  type="number"
-                  value={binValue}
-                  onChange={(e) => setBinValue(Number(e.target.value))}
-                  placeholder="0.00"
-                  className="flex-1 min-w-0 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-xs text-right outline-none focus:border-teal-400 transition-all"
-                />
-              </div> */}
-
               {/* Discount */}
               <div className="flex items-center gap-1.5">
-                <label className="w-16 flex-shrink-0 text-xs font-semibold text-gray-500">
+                <label className="w-16 flex-shrink-0 text-xs font-semibold text-muted-foreground">
                   Discount
                 </label>
                 <div className="relative">
                   <select
                     value={discountType}
                     onChange={(e) => setDiscountType(e.target.value as "flat" | "percent")}
-                    className="appearance-none rounded-lg border border-gray-200 bg-gray-50 py-1.5 pl-2.5 pr-7 text-xs outline-none focus:border-teal-400"
+                    className="appearance-none rounded-lg border border-border bg-muted/40 py-1.5 pl-2.5 pr-7 text-xs text-foreground outline-none focus:border-teal-400"
                   >
                     <option value="percent">Select</option>
                     <option value="flat">Flat</option>
                     <option value="percent">%</option>
                   </select>
-                  <ChevronDown className="pointer-events-none absolute right-1.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
+                  <ChevronDown className="pointer-events-none absolute right-1.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
                 </div>
                 <input
                   type="number"
@@ -1344,36 +1307,19 @@ const POS = () => {
                   onChange={(e) =>
                     setDiscountPercent(Math.min(100, Math.max(0, Number(e.target.value))))
                   }
-                  className="flex-1 min-w-0 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-xs text-right outline-none focus:border-teal-400 transition-all"
+                  className="flex-1 min-w-0 rounded-lg border border-border bg-muted/40 px-2.5 py-1.5 text-xs text-right text-foreground outline-none focus:border-teal-400 transition-all"
                 />
               </div>
-
-              {/* Delivery Cost */}
-              {/* <div className="flex items-center gap-1.5">
-                <label className="w-16 flex-shrink-0 text-xs font-semibold text-gray-500">
-                  Delivery Cost
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  value={deliveryCost}
-                  onChange={(e) => setDeliveryCost(Math.max(0, Number(e.target.value)))}
-                  className="flex-1 min-w-0 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-xs text-right outline-none focus:border-teal-400 transition-all"
-                  placeholder="0"
-                />
-              </div> */}
             </div>
           </div>
-
-
         </div>
 
         {/* ── Action buttons ── */}
-        <div className="grid grid-cols-4 gap-2 border-t border-gray-200 bg-gray-50/80 px-4 py-3 flex-shrink-0">
+        <div className="grid grid-cols-4 gap-2 border-t border-border bg-muted/30 px-4 py-3 flex-shrink-0">
           <button
             onClick={resetPos}
             disabled={createInvoiceMutation.isPending}
-            className="rounded-lg border border-amber-300 bg-white py-2.5 text-xs font-bold text-amber-600 hover:bg-amber-50 transition-colors active:scale-95 disabled:opacity-40 text-center"
+            className="rounded-lg bg-amber-500 py-2.5 text-xs font-bold text-white hover:bg-amber-600 transition-colors active:scale-95 disabled:opacity-40 text-center shadow-sm"
           >
             Reset
           </button>
@@ -1381,21 +1327,21 @@ const POS = () => {
             type="button"
             onClick={handleHoldBill}
             disabled={cart.length === 0 || createInvoiceMutation.isPending}
-            className="rounded-lg border border-blue-300 bg-white py-2.5 text-xs font-bold text-blue-600 hover:bg-blue-50 transition-colors active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed text-center"
+            className="rounded-lg bg-blue-500 py-2.5 text-xs font-bold text-white hover:bg-blue-600 transition-colors active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed text-center shadow-sm"
           >
             Hold
           </button>
           <button
             onClick={() => handleCompletePayment(false)}
             disabled={cart.length === 0 || createInvoiceMutation.isPending}
-            className="rounded-lg border border-teal-300 bg-white py-2.5 text-xs font-bold text-teal-600 hover:bg-teal-50 transition-colors active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed text-center"
+            className="rounded-lg bg-teal-500 py-2.5 text-xs font-bold text-white hover:bg-teal-600 transition-colors active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed text-center shadow-sm"
           >
             {createInvoiceMutation.isPending ? "Saving..." : "Save"}
           </button>
           <button
             onClick={() => handleCompletePayment(true)}
             disabled={cart.length === 0 || createInvoiceMutation.isPending}
-            className="rounded-lg border border-teal-500 bg-white py-2.5 text-xs font-bold text-teal-700 hover:bg-teal-50 transition-colors active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed text-center"
+            className="rounded-lg bg-teal-600 py-2.5 text-xs font-bold text-white hover:bg-teal-700 transition-colors active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed text-center shadow-sm"
           >
             {createInvoiceMutation.isPending ? "Saving..." : "Save & Print"}
           </button>
@@ -1424,41 +1370,41 @@ const POS = () => {
 
       {/* Success / Receipt modal */}
       <Dialog open={successModalOpen} onOpenChange={setSuccessModalOpen}>
-        <DialogContent className="sm:max-w-md font-sans p-6 rounded-2xl text-center">
+        <DialogContent className="sm:max-w-md font-sans p-6 rounded-2xl text-center bg-card">
           <DialogHeader className="items-center">
             <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500 mb-2 mx-auto">
               <CheckCircle2 className="h-9 w-9" />
             </div>
-            <DialogTitle className="text-base font-black tracking-tight text-slate-900 uppercase">
+            <DialogTitle className="text-base font-black tracking-tight text-foreground uppercase">
               Transaction Success
             </DialogTitle>
-            <DialogDescription className="text-slate-400 font-semibold text-xs">
+            <DialogDescription className="text-muted-foreground font-semibold text-xs">
               Invoice generated and stock updated.
             </DialogDescription>
           </DialogHeader>
 
           {successInvoiceDetails && (
             <div className="space-y-3 py-2 text-left">
-              <div className="rounded-xl border border-gray-100 bg-gray-50 p-4 text-[10px] font-bold text-gray-400 space-y-1.5">
+              <div className="rounded-xl border border-border bg-muted/40 p-4 text-[10px] font-bold text-muted-foreground space-y-1.5">
                 <div className="flex justify-between">
                   <span>Invoice ID</span>
-                  <span className="text-gray-800 font-extrabold">{successInvoiceDetails.id}</span>
+                  <span className="text-foreground font-extrabold">{successInvoiceDetails.id}</span>
                 </div>
                 {successInvoiceDetails.customerName && (
                   <div className="flex justify-between">
                     <span>Customer Name</span>
-                    <span className="text-gray-800 font-extrabold">{successInvoiceDetails.customerName}</span>
+                    <span className="text-foreground font-extrabold">{successInvoiceDetails.customerName}</span>
                   </div>
                 )}
                 {successInvoiceDetails.customerPhone && (
                   <div className="flex justify-between">
                     <span>Customer Phone</span>
-                    <span className="text-gray-800 font-extrabold">{successInvoiceDetails.customerPhone}</span>
+                    <span className="text-foreground font-extrabold">{successInvoiceDetails.customerPhone}</span>
                   </div>
                 )}
                 <div className="flex justify-between">
                   <span>Date &amp; Time</span>
-                  <span className="text-gray-800 font-extrabold">{successInvoiceDetails.date}</span>
+                  <span className="text-foreground font-extrabold">{successInvoiceDetails.date}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Payment Mode</span>
@@ -1474,8 +1420,8 @@ const POS = () => {
                 </div>
               </div>
 
-              <div className="rounded-xl border border-gray-100 bg-white p-4 space-y-1.5 text-[10px] font-bold">
-                <div className="flex justify-between text-gray-500">
+              <div className="rounded-xl border border-border bg-card p-4 space-y-1.5 text-[10px] font-bold">
+                <div className="flex justify-between text-muted-foreground">
                   <span>Gross Total</span>
                   <span>₹{successInvoiceDetails.grossTotal.toFixed(2)}</span>
                 </div>
@@ -1485,11 +1431,11 @@ const POS = () => {
                     <span>−₹{successInvoiceDetails.overallDiscount.toFixed(2)}</span>
                   </div>
                 )}
-                <div className="flex justify-between text-gray-500">
+                <div className="flex justify-between text-muted-foreground">
                   <span>GST</span>
                   <span>₹{successInvoiceDetails.tax.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between border-t border-gray-100 pt-2 text-xs font-black text-gray-800">
+                <div className="flex justify-between border-t border-border pt-2 text-xs font-black text-foreground">
                   <span>Net Paid</span>
                   <span className="text-emerald-600 font-mono">
                     ₹{successInvoiceDetails.netPayable.toFixed(2)}
@@ -1499,7 +1445,7 @@ const POS = () => {
             </div>
           )}
 
-          <DialogFooter className="gap-2 border-t pt-4 -mx-6 -mb-6 bg-gray-50 p-4 rounded-b-2xl">
+          <DialogFooter className="gap-2 border-t pt-4 -mx-6 -mb-6 bg-muted/40 p-4 rounded-b-2xl">
             <Button
               variant="outline"
               onClick={() => toast.success("Printing invoice...")}
