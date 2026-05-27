@@ -5,8 +5,14 @@ import { Loader2, Save, FileText } from "lucide-react"
 
 import { useAuth } from "@/context/authContext"
 import SettingsApi from "@/services/settingsApi"
-import { FormField, FormTextarea, FormSwitch } from "@/components/ui/form-fields"
+import {
+  FormField,
+  FormTextarea,
+  FormSwitch,
+  FormFileUpload,
+} from "@/components/ui/form-fields"
 import { Button } from "@/components/ui/button"
+import uploadApi from "@/services/uploadApi"
 
 interface InvoiceSettingsFormValues {
   invoice_prefix: string
@@ -17,19 +23,28 @@ interface InvoiceSettingsFormValues {
   invoice_footer_message: string
   invoice_show_gst: boolean
   invoice_show_license: boolean
-}
 
+  // NEW
+  invoice_header_image: string
+  invoice_footer_image: string
+  invoice_director_signature: string
+}
 const DEFAULT_INVOICE_SETTINGS: InvoiceSettingsFormValues = {
   invoice_prefix: "INV-",
   invoice_sequence: "1001",
   invoice_phone: "",
   invoice_email: "",
-  invoice_terms_conditions: "1. Goods once sold will not be taken back.\n2. Interest @ 18% p.a. will be charged if payment is not made within due date.",
+  invoice_terms_conditions:
+    "1. Goods once sold will not be taken back.\n2. Interest @ 18% p.a. will be charged if payment is not made within due date.",
   invoice_footer_message: "Thank you for shopping with us! Get well soon.",
   invoice_show_gst: true,
   invoice_show_license: true,
-}
 
+  // NEW
+  invoice_header_image: "",
+  invoice_footer_image: "",
+  invoice_director_signature: "",
+}
 export default function InvoiceSettings() {
   const { activeOrganizationId } = useAuth()
   const [loading, setLoading] = useState(true)
@@ -52,14 +67,35 @@ export default function InvoiceSettings() {
       .then((res) => {
         if (res.data) {
           reset({
-            invoice_prefix: res.data.invoice_prefix ?? DEFAULT_INVOICE_SETTINGS.invoice_prefix,
-            invoice_sequence: res.data.invoice_sequence ?? DEFAULT_INVOICE_SETTINGS.invoice_sequence,
-            invoice_phone: res.data.invoice_phone ?? DEFAULT_INVOICE_SETTINGS.invoice_phone,
-            invoice_email: res.data.invoice_email ?? DEFAULT_INVOICE_SETTINGS.invoice_email,
-            invoice_terms_conditions: res.data.invoice_terms_conditions ?? DEFAULT_INVOICE_SETTINGS.invoice_terms_conditions,
-            invoice_footer_message: res.data.invoice_footer_message ?? DEFAULT_INVOICE_SETTINGS.invoice_footer_message,
+            invoice_prefix:
+              res.data.invoice_prefix ??
+              DEFAULT_INVOICE_SETTINGS.invoice_prefix,
+            invoice_sequence:
+              res.data.invoice_sequence ??
+              DEFAULT_INVOICE_SETTINGS.invoice_sequence,
+            invoice_phone:
+              res.data.invoice_phone ?? DEFAULT_INVOICE_SETTINGS.invoice_phone,
+            invoice_email:
+              res.data.invoice_email ?? DEFAULT_INVOICE_SETTINGS.invoice_email,
+            invoice_terms_conditions:
+              res.data.invoice_terms_conditions ??
+              DEFAULT_INVOICE_SETTINGS.invoice_terms_conditions,
+            invoice_footer_message:
+              res.data.invoice_footer_message ??
+              DEFAULT_INVOICE_SETTINGS.invoice_footer_message,
             invoice_show_gst: res.data.invoice_show_gst !== "false",
             invoice_show_license: res.data.invoice_show_license !== "false",
+            invoice_header_image:
+              res.data.invoice_header_image ??
+              DEFAULT_INVOICE_SETTINGS.invoice_header_image,
+
+            invoice_footer_image:
+              res.data.invoice_footer_image ??
+              DEFAULT_INVOICE_SETTINGS.invoice_footer_image,
+
+            invoice_director_signature:
+              res.data.invoice_director_signature ??
+              DEFAULT_INVOICE_SETTINGS.invoice_director_signature,
           })
         }
       })
@@ -88,6 +124,9 @@ export default function InvoiceSettings() {
         invoice_footer_message: data.invoice_footer_message,
         invoice_show_gst: String(data.invoice_show_gst),
         invoice_show_license: String(data.invoice_show_license),
+        invoice_header_image: data.invoice_header_image,
+        invoice_footer_image: data.invoice_footer_image,
+        invoice_director_signature: data.invoice_director_signature,
       }
 
       await SettingsApi.updateSettings(payload)
@@ -102,7 +141,9 @@ export default function InvoiceSettings() {
     return (
       <div className="flex h-64 items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="ml-2 text-sm text-muted-foreground">Loading settings...</span>
+        <span className="ml-2 text-sm text-muted-foreground">
+          Loading settings...
+        </span>
       </div>
     )
   }
@@ -116,7 +157,9 @@ export default function InvoiceSettings() {
           <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
             <div className="mb-4 flex items-center gap-2">
               <FileText className="h-5 w-5 text-primary" />
-              <h3 className="text-lg font-semibold text-card-foreground">Numbering & Sequencing</h3>
+              <h3 className="text-lg font-semibold text-card-foreground">
+                Numbering & Sequencing
+              </h3>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
@@ -139,12 +182,54 @@ export default function InvoiceSettings() {
               </div>
             </div>
           </div>
+          {/* Branding & Signature */}
+          <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+            <h3 className="mb-4 text-lg font-semibold text-card-foreground">
+              Branding & Signature
+            </h3>
 
+            <div className="grid gap-6">
+              <FormFileUpload
+                control={control}
+                name="invoice_header_image"
+                label="HEADER IMAGE"
+                accept="image/*"
+                maxSizeText="Recommended: 1200x200 PNG/JPG"
+                uploadFile={async (file) =>
+                  (await uploadApi.uploadImage(file)).publicUrl
+                }
+              />
+
+              <FormFileUpload
+                control={control}
+                name="invoice_footer_image"
+                label="FOOTER IMAGE"
+                accept="image/*"
+                maxSizeText="Recommended: 1200x150 PNG/JPG"
+                uploadFile={async (file) =>
+                  (await uploadApi.uploadImage(file)).publicUrl
+                }
+              />
+              <FormFileUpload
+                control={control}
+                name="invoice_director_signature"
+                label="DIRECTOR SIGNATURE"
+                accept="image/*"
+                maxSizeText="Transparent PNG Recommended"
+                uploadFile={async (file) =>
+                  (await uploadApi.uploadImage(file)).publicUrl
+                }
+              />
+            </div>
+          </div>
           {/* Contact Details Printed on Invoice */}
           <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-            <h3 className="mb-4 text-lg font-semibold text-card-foreground">Print Contact Details</h3>
+            <h3 className="mb-4 text-lg font-semibold text-card-foreground">
+              Print Contact Details
+            </h3>
             <p className="mb-4 text-sm text-muted-foreground">
-              These details will be printed on the invoice header. Leave blank to default to Organization contact details.
+              These details will be printed on the invoice header. Leave blank
+              to default to Organization contact details.
             </p>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
@@ -168,7 +253,9 @@ export default function InvoiceSettings() {
 
           {/* Footer & Terms */}
           <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-            <h3 className="mb-4 text-lg font-semibold text-card-foreground">Terms & Footer Message</h3>
+            <h3 className="mb-4 text-lg font-semibold text-card-foreground">
+              Terms & Footer Message
+            </h3>
             <div className="grid gap-4">
               <div>
                 <FormTextarea
@@ -196,7 +283,9 @@ export default function InvoiceSettings() {
         <div className="space-y-6">
           {/* Display Toggles */}
           <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-            <h3 className="mb-4 text-lg font-semibold text-card-foreground">Show / Hide Fields</h3>
+            <h3 className="mb-4 text-lg font-semibold text-card-foreground">
+              Show / Hide Fields
+            </h3>
             <div className="space-y-4">
               <FormSwitch
                 control={control}

@@ -44,7 +44,7 @@ export class SettingsController {
     // Iterate through key-value pairs and upsert
     for (const [key, value] of Object.entries(settings)) {
       const valStr = value !== undefined && value !== null ? String(value) : "";
-      
+
       const existing = await rootPrisma.setting.findFirst({
         where: {
           organizationId,
@@ -71,5 +71,38 @@ export class SettingsController {
     }
 
     res.json({ success: true, message: "Settings updated successfully" });
+  });
+
+  static getSettingByKey = catchAsync(async (req: Request, res: Response) => {
+    const { organizationId, branchId } = getRequestScope(req);
+    const { key } = req.params;
+
+    if (!key || typeof key !== "string") {
+      throw new ErrorHandler("Valid key parameter is required", 400);
+    }
+
+    // Try to fetch branch-level setting first if branchId exists
+    let setting = null;
+    if (branchId) {
+      setting = await rootPrisma.setting.findFirst({
+        where: { organizationId, branchId, key },
+      });
+    }
+
+    // Fallback to org-level setting if no branch setting found
+    if (!setting) {
+      setting = await rootPrisma.setting.findFirst({
+        where: { organizationId, branchId: null, key },
+      });
+    }
+
+    if (!setting) {
+      throw new ErrorHandler(`Setting with key "${key}" not found`, 404);
+    }
+
+    res.json({
+      success: true,
+      data: { key: setting.key, value: setting.value },
+    });
   });
 }
