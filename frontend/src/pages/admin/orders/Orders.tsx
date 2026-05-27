@@ -95,7 +95,8 @@ const Orders = () => {
       const batch = item.batchNo ? ` | Batch: ${item.batchNo}` : ""
       const expiry = item.expiry ? ` | Expiry: ${item.expiry}` : ""
 
-      return `${index + 1}. ${name} | Qty: ${qty} ${unit} | Rate: ${rate} | Total: ${lineTotal}${batch}${expiry}`
+      // return `${index + 1}. ${name} | Qty: ${qty} ${unit} | Rate: ${rate} | Total: ${lineTotal}${batch}${expiry}`
+      return `${index + 1}. ${name} | Qty: ${qty} ${unit}`
     })
 
     const totalAmount = order.items?.reduce(
@@ -106,22 +107,13 @@ const Orders = () => {
 
     const lines = [
       `Order ID: ${order.id}`,
-      `Status: ${order.status || "N/A"}`,
-      `Created: ${new Date(order.createdAt).toLocaleDateString()}`,
-      `Received: ${order.receivedAt ? new Date(order.receivedAt).toLocaleDateString() : "N/A"}`,
-      `Payment mode: ${order.paymentMode || "N/A"}`,
-      `Paid amount: ${order.paidAmount || "0"}`,
-      "",
-      `Supplier: ${supplier?.companyName || "N/A"}`,
-      `Phone: ${supplier?.phone || "N/A"}`,
-      `WhatsApp: ${supplier?.whatsappNumber || "N/A"}`,
-      `Email: ${supplier?.email || "N/A"}`,
+      `Date: ${new Date(order.createdAt).toLocaleDateString()}`,
       "",
       "Items:",
-      ...(itemLines?.length ? itemLines : ["No items available"]),
+      ...(itemLines?.length ? itemLines : ["No itms available"]),
       "",
       `Total items: ${order.items?.length || 0}`,
-      `Total amount: ${totalAmount}`,
+      // `Total amount: ${totalAmount}`,
       `Notes: ${order.notes || "None"}`,
     ]
 
@@ -145,6 +137,7 @@ const Orders = () => {
 
   const openEmailShare = (order: any) => {
     const email = order?.supplier?.email
+
     if (!email) {
       toast.error("Supplier email is not available.")
       return
@@ -152,11 +145,12 @@ const Orders = () => {
 
     const subject = `Order details for ${order.id}`
     const body = formatOrderShareMessage(order)
-    const mailto = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(
-      subject
-    )}&body=${encodeURIComponent(body)}`
 
-    window.location.href = mailto
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(
+      email
+    )}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+
+    window.open(gmailUrl, "_blank")
   }
 
   const handleShare = (type: "whatsapp" | "email") => {

@@ -176,8 +176,8 @@ const buildPosProduct = (inventoryItem: any): PosProduct => {
         rateC,
         mrp,
         purchaseRate,
-        cgst: toNumber(batch.cgst ?? 0),
-        sgst: toNumber(batch.sgst ?? 0),
+        cgst: toNumber(inventoryItem?.cgst ?? 0),
+        sgst: toNumber(inventoryItem?.sgst ?? 0),
       }
     })
     : []
@@ -538,18 +538,18 @@ const POS = () => {
   })
 
   const { data: categoriesData } = useQuery({
-    queryKey: queryKeys.categories.list({ limit: 1000 }),
-    queryFn: () => CategoryApi.getCategories({ limit: 1000 }),
+    queryKey: queryKeys.categories.list({ limit: 20 }),
+    queryFn: () => CategoryApi.getCategories({ limit: 20 }),
   })
 
   const { data: manufacturersData } = useQuery({
-    queryKey: queryKeys.manufacturers.list({ limit: 1000 }),
-    queryFn: () => ManufacturerApi.getManufacturers({ limit: 1000 }),
+    queryKey: queryKeys.manufacturers.list({ limit: 20 }),
+    queryFn: () => ManufacturerApi.getManufacturers({ limit: 20 }),
   })
 
   const { data: productsData } = useQuery({
-    queryKey: queryKeys.inventory.list({ limit: 1000 }),
-    queryFn: () => InventoryApi.getAll({ limit: 1000 }),
+    queryKey: queryKeys.inventory.list({ limit: 20 }),
+    queryFn: () => InventoryApi.getAll({ limit: 20 }),
   })
 
   const categoryOptions = useMemo(
