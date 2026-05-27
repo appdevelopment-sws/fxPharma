@@ -260,6 +260,14 @@ export class InvoicesController {
     );
     const yesterdayEnd = todayStart;
 
+    // This month's start and end
+    const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const thisMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+
+    // Last month's start and end
+    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const lastMonthEnd = thisMonthStart;
+
     const filtersToday: any = {
       organizationId,
       createdAt: { gte: todayStart, lt: todayEnd },
@@ -272,9 +280,81 @@ export class InvoicesController {
       ...(branchId ? { branchId } : {}),
     };
 
-    const [todayInvoices, yesterdayInvoices] = await Promise.all([
+    const filtersThisMonth: any = {
+      organizationId,
+      createdAt: { gte: thisMonthStart, lt: thisMonthEnd },
+      status: "PAID",
+      ...(branchId ? { branchId } : {}),
+    };
+
+    const filtersLastMonth: any = {
+      organizationId,
+      createdAt: { gte: lastMonthStart, lt: lastMonthEnd },
+      status: "PAID",
+      ...(branchId ? { branchId } : {}),
+    };
+
+    const [
+      todayInvoices,
+      yesterdayInvoices,
+      thisMonthInvoices,
+      lastMonthInvoices,
+      lowStockCount,
+      topStock,
+      monthlySalesChart,
+    ] = await Promise.all([
       rootPrisma.invoice.findMany({ where: filtersToday }),
       rootPrisma.invoice.findMany({ where: filtersYesterday }),
+      rootPrisma.invoice.findMany({ where: filtersThisMonth }),
+      rootPrisma.invoice.findMany({ where: filtersLastMonth }),
+      rootPrisma.inventory.count({
+        where: {
+          organizationId,
+          availableStock: { lte: 10 },
+          ...(branchId ? { branchId } : {}),
+        },
+      }),
+      rootPrisma.inventory.findMany({
+        where: {
+          organizationId,
+          ...(branchId ? { branchId } : {}),
+        },
+        orderBy: {
+          availableStock: "desc",
+        },
+        take: 4,
+        select: {
+          name: true,
+          availableStock: true,
+        },
+      }),
+      Promise.all(
+        Array.from({ length: 6 }).map(async (_, idx) => {
+          const i = 5 - idx;
+          const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+          const start = new Date(d.getFullYear(), d.getMonth(), 1);
+          const end = new Date(d.getFullYear(), d.getMonth() + 1, 1);
+
+          const invoicesInMonth = await rootPrisma.invoice.findMany({
+            where: {
+              organizationId,
+              createdAt: { gte: start, lt: end },
+              status: "PAID",
+              ...(branchId ? { branchId } : {}),
+            },
+            select: {
+              totalAmount: true,
+            },
+          });
+
+          const totalAmount = invoicesInMonth.reduce((acc, inv) => acc + Number(inv.totalAmount), 0);
+          const monthName = d.toLocaleString("en-US", { month: "short" });
+          return {
+            name: monthName,
+            value: totalAmount,
+          };
+        })
+      ),
     ]);
 
     const todaySales = todayInvoices.reduce(
@@ -285,6 +365,9 @@ export class InvoicesController {
       (acc, inv) => acc + Number(inv.totalAmount),
       0,
     );
+
+    const thisMonthSales = thisMonthInvoices.reduce((acc, inv) => acc + Number(inv.totalAmount), 0);
+    const lastMonthSales = lastMonthInvoices.reduce((acc, inv) => acc + Number(inv.totalAmount), 0);
 
     const todayCount = todayInvoices.length;
     const yesterdayCount = yesterdayInvoices.length;
@@ -309,6 +392,20 @@ export class InvoicesController {
       return `${sign}${pct.toFixed(0)}% vs yesterday`;
     };
 
+    const getMonthTrendString = (currentVal: number, previousVal: number) => {
+      if (previousVal === 0) {
+        return currentVal > 0 ? "+100% vs last month" : "0% vs last month";
+      }
+      const pct = ((currentVal - previousVal) / previousVal) * 100;
+      const sign = pct >= 0 ? "+" : "";
+      return `${sign}${pct.toFixed(0)}% vs last month`;
+    };
+
+    const topStockMedicines = topStock.map((item) => ({
+      name: item.name,
+      value: item.availableStock ?? 0,
+    }));
+
     res.json({
       success: true,
       data: {
@@ -320,6 +417,11 @@ export class InvoicesController {
         avg_order_value_trend: getTrendString(todayAvg, yesterdayAvg),
         refunds_issued: todayRefunds,
         refunds_issued_trend: getTrendString(todayRefunds, yesterdayRefunds),
+        monthly_sales_total: thisMonthSales,
+        monthly_sales_trend: getMonthTrendString(thisMonthSales, lastMonthSales),
+        low_stock_count: lowStockCount,
+        monthly_sales_chart: monthlySalesChart,
+        top_stock_medicines: topStockMedicines,
       },
     });
   });

@@ -59,6 +59,11 @@ export type InvoiceStats = {
   avg_order_value_trend: string
   refunds_issued: number
   refunds_issued_trend: string
+  monthly_sales_total: number
+  monthly_sales_trend: string
+  low_stock_count: number
+  monthly_sales_chart: { name: string; value: number }[]
+  top_stock_medicines: { name: string; value: number }[]
 }
 
 export type InvoiceTemplatesResponse = {
