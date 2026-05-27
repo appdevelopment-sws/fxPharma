@@ -5,7 +5,9 @@ import { Loader2, Save, ShieldAlert } from "lucide-react"
 
 import { useAuth } from "@/context/authContext"
 import SettingsApi from "@/services/settingsApi"
+import InvoiceApi from "@/services/invoiceApi"
 import { FormField, FormSwitch } from "@/components/ui/form-fields"
+import { FormSelectField } from "@/components/ui/form-fields"
 import { Button } from "@/components/ui/button"
 
 interface InvoiceTemplatesFormValues {
@@ -15,6 +17,7 @@ interface InvoiceTemplatesFormValues {
   expiry_alert_months: string
   low_stock_threshold: string
   require_prescription: boolean
+  invoice_template_name: string
 }
 
 const DEFAULT_PHARMACY_SETTINGS: InvoiceTemplatesFormValues = {
@@ -24,24 +27,40 @@ const DEFAULT_PHARMACY_SETTINGS: InvoiceTemplatesFormValues = {
   expiry_alert_months: "3",
   low_stock_threshold: "10",
   require_prescription: false,
+  invoice_template_name: "template1",
 }
 
 export default function InvoiceTemplates() {
   const { activeOrganizationId } = useAuth()
   const [loading, setLoading] = useState(true)
+  const [invoiceTemplates, setInvoiceTemplates] = useState<string[]>([])
+  const [templatesLoading, setTemplatesLoading] = useState(true)
 
   const {
     handleSubmit,
     control,
     reset,
     formState: { isSubmitting, isDirty },
-  } = useForm<PharmacySettingsFormValues>({
+  } = useForm<InvoiceTemplatesFormValues>({
     defaultValues: DEFAULT_PHARMACY_SETTINGS,
   })
 
   // Load settings from backend database settings API
   useEffect(() => {
     if (!activeOrganizationId) return
+
+    setTemplatesLoading(true)
+    InvoiceApi.getInvoiceTemplates()
+      .then((res) => {
+        setInvoiceTemplates(res.data.templates ?? [])
+      })
+      .catch((e) => {
+        console.error("Failed to load invoice templates", e)
+        toast.error("Failed to load invoice templates")
+      })
+      .finally(() => {
+        setTemplatesLoading(false)
+      })
 
     setLoading(true)
     SettingsApi.getSettings()
@@ -54,6 +73,10 @@ export default function InvoiceTemplates() {
             expiry_alert_months: res.data.expiry_alert_months || "3",
             low_stock_threshold: res.data.low_stock_threshold || "10",
             require_prescription: res.data.require_prescription === "true",
+            invoice_template_name:
+              res.data.invoice_template_name ||
+              res.data.invoice_template ||
+              DEFAULT_PHARMACY_SETTINGS.invoice_template_name,
           })
         }
       })
@@ -66,7 +89,7 @@ export default function InvoiceTemplates() {
       })
   }, [activeOrganizationId, reset])
 
-  const onSubmit: SubmitHandler<PharmacySettingsFormValues> = async (data) => {
+  const onSubmit: SubmitHandler<InvoiceTemplatesFormValues> = async (data) => {
     if (!activeOrganizationId) {
       toast.error("No active organization found")
       return
@@ -80,6 +103,7 @@ export default function InvoiceTemplates() {
         expiry_alert_months: data.expiry_alert_months,
         low_stock_threshold: data.low_stock_threshold,
         require_prescription: String(data.require_prescription),
+        invoice_template_name: data.invoice_template_name,
       }
 
       await SettingsApi.updateSettings(payload)
@@ -107,7 +131,7 @@ export default function InvoiceTemplates() {
         {/* Left Columns: Settings Fields */}
         <div className="space-y-6 lg:col-span-2">
           {/* Licenses & Regulations */}
-          <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+          {/* <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
             <div className="mb-4 flex items-center gap-2">
               <ShieldAlert className="h-5 w-5 text-primary" />
               <h3 className="text-lg font-semibold text-card-foreground">
@@ -144,7 +168,7 @@ export default function InvoiceTemplates() {
                 />
               </div>
             </div>
-          </div>
+          </div> */}
 
           {/* Operations Thresholds */}
           <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
@@ -158,7 +182,7 @@ export default function InvoiceTemplates() {
                   name="expiry_alert_months"
                   label="EXPIRY ALERT PERIOD (MONTHS)"
                   placeholder="e.g. 3"
-                  type="number"
+                  inputType="number"
                   required
                 />
               </div>
@@ -168,10 +192,39 @@ export default function InvoiceTemplates() {
                   name="low_stock_threshold"
                   label="LOW STOCK THRESHOLD"
                   placeholder="e.g. 10"
-                  type="number"
+                  inputType="number"
                   required
                 />
               </div>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+            <h3 className="mb-4 text-lg font-semibold text-card-foreground">
+              Invoice Template
+            </h3>
+            <p className="mb-4 text-sm text-muted-foreground">
+              Choose the invoice template that will be used for PDF/HTML
+              invoices.
+            </p>
+            <div>
+              <FormSelectField
+                control={control}
+                name="invoice_template_name"
+                label="Invoice Template"
+                placeholder={
+                  templatesLoading ? "Loading templates…" : "Select a template"
+                }
+                options={
+                  invoiceTemplates.length > 0
+                    ? invoiceTemplates.map((template) => ({
+                        label: template,
+                        value: template,
+                      }))
+                    : [{ label: "template1", value: "template1" }]
+                }
+                disabled={templatesLoading}
+              />
             </div>
           </div>
         </div>

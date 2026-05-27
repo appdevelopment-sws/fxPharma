@@ -336,10 +336,6 @@ class InvoiceTemplateService {
   }
 
   async renderInvoiceHtml(invoice: InvoiceLike, templateName?: string | null) {
-    const { templatePath, safeTemplateName } =
-      await resolveTemplatePath(templateName);
-    const template = await fs.readFile(templatePath, "utf8");
-
     // Fetch settings for organization
     const orgSettings = await rootPrisma.setting.findMany({
       where: {
@@ -366,6 +362,18 @@ class InvoiceTemplateService {
     branchSettings.forEach((s) => {
       settingsMap[s.key] = s.value;
     });
+
+    const selectedTemplate =
+      templateName ||
+      settingsMap["invoice_template_name"] ||
+      settingsMap["invoice_template"] ||
+      undefined;
+
+    const { templatePath, safeTemplateName } =
+      await resolveTemplatePath(selectedTemplate);
+    const template = await fs.readFile(templatePath, "utf8");
+
+    // settingsMap already built above
 
     // Fallback to Organization fields if no settings are configured yet
     if (!settingsMap["store_name"]) {
