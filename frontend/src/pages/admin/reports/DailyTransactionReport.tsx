@@ -157,7 +157,17 @@ export default function DailyTransactionReport() {
             {row.payment_mode === "CASH" && <Banknote className="size-4" />}
             {row.payment_mode === "UPI" && <QrCode className="size-4" />}
             {row.payment_mode === "CARD" && <CreditCard className="size-4" />}
-            <span className="capitalize">{row.payment_mode.toLowerCase()}</span>
+            {row.payment_mode === "SPLIT" && (
+              <div className="flex items-center -space-x-1">
+                <Banknote className="size-3.5" />
+                <QrCode className="size-3.5" />
+              </div>
+            )}
+            <span className="capitalize text-xs">
+              {row.payment_mode === "SPLIT"
+                ? `Split (Cash: ₹${row.cash_amount ?? 0}, Online: ₹${row.online_amount ?? 0})`
+                : row.payment_mode.toLowerCase()}
+            </span>
           </div>
         ),
       },

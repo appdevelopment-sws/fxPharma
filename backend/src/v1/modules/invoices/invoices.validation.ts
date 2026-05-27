@@ -16,7 +16,9 @@ const invoiceItemSchema = z.object({
 export const createInvoiceSchema = z.object({
   customerName: z.string().optional().nullable(),
   customerPhone: z.string().optional().nullable(),
-  paymentMode: z.enum(["CASH", "UPI", "CARD"]).default("CASH"),
+  paymentMode: z.enum(["CASH", "UPI", "CARD", "SPLIT"]).default("CASH"),
+  cashAmount: z.coerce.number().optional().default(0.0),
+  onlineAmount: z.coerce.number().optional().default(0.0),
   grossAmount: z.coerce.number().default(0.0),
   discountAmount: z.coerce.number().default(0.0),
   taxAmount: z.coerce.number().default(0.0),

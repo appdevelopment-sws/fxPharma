@@ -10,6 +10,8 @@ model Invoice {
   customerPhone  String?       @map("customer_phone")
 
   paymentMode    PaymentMode   @default(CASH) @map("payment_mode")
+  cashAmount     Decimal       @default(0.0) @map("cash_amount")
+  onlineAmount   Decimal       @default(0.0) @map("online_amount")
   status         InvoiceStatus @default(PAID)
 
   grossAmount    Decimal       @default(0.0) @map("gross_amount")
@@ -65,6 +67,7 @@ enum PaymentMode {
   CASH
   UPI
   CARD
+  SPLIT
 }
 
 enum InvoiceStatus {
