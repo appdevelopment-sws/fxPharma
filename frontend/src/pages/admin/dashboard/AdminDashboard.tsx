@@ -27,6 +27,8 @@ import { Link } from "react-router"
 import { cn } from "@/lib/utils"
 import { useMemo } from "react"
 import { useTheme } from "@/components/theme-provider"
+import { useQuery } from "@tanstack/react-query"
+import InvoiceApi from "@/services/invoiceApi"
 
 // ─── Mock Data ────────────────────────────────────────────────────────────────
 const activityData = [
@@ -191,13 +193,26 @@ export default function AdminDashboard() {
     getVisibleAdminNavigation(user)
   ).filter((item) => item.to !== "/admin/dashboard")
 
+  const { data: statsResponse, isLoading } = useQuery({
+    queryKey: ["dashboardStats"],
+    queryFn: () => InvoiceApi.getInvoiceStats(),
+  })
+
+  const stats = statsResponse?.data
+
   const kpiCards: KpiCardProps[] = [
     {
-      title: "Granted Permissions",
-      value: permissionCards.length,
-      helper: "From current session",
-      icon: ShieldCheck,
-      trend: "neutral",
+      title: "Today's Revenue",
+      value: isLoading
+        ? "..."
+        : `₹${Number(stats?.todays_sales ?? 0).toLocaleString("en-IN")}`,
+      helper: isLoading ? "Loading..." : (stats?.todays_sales_trend ?? "0% vs yesterday"),
+      icon: Receipt,
+      trend: stats?.todays_sales_trend?.startsWith("+")
+        ? "up"
+        : stats?.todays_sales_trend?.startsWith("-")
+        ? "down"
+        : "neutral",
       colors: {
         shape1: "bg-blue-500",
         shape2: "bg-blue-400",
@@ -207,11 +222,17 @@ export default function AdminDashboard() {
       },
     },
     {
-      title: "Visible Modules",
-      value: visibleModules.length + 1,
-      helper: "Sidebar items",
-      icon: LayoutGrid,
-      trend: "neutral",
+      title: "Monthly Revenue",
+      value: isLoading
+        ? "..."
+        : `₹${Number(stats?.monthly_sales_total ?? 0).toLocaleString("en-IN")}`,
+      helper: isLoading ? "Loading..." : (stats?.monthly_sales_trend ?? "0% vs last month"),
+      icon: TrendingUp,
+      trend: stats?.monthly_sales_trend?.startsWith("+")
+        ? "up"
+        : stats?.monthly_sales_trend?.startsWith("-")
+        ? "down"
+        : "neutral",
       colors: {
         shape1: "bg-violet-500",
         shape2: "bg-purple-400",
@@ -221,12 +242,17 @@ export default function AdminDashboard() {
       },
     },
     {
-      title: "Tenant Status",
-      value: user.tenant?.status ?? "Active",
-      helper: "Workspace health",
-      icon: Building2,
-      trend: "up",
-      trendLabel: "Healthy",
+      title: "Total Invoices",
+      value: isLoading
+        ? "..."
+        : Number(stats?.total_invoices ?? 0).toLocaleString("en-IN"),
+      helper: isLoading ? "Loading..." : (stats?.total_invoices_trend ?? "0% vs yesterday"),
+      icon: FileText,
+      trend: stats?.total_invoices_trend?.startsWith("+")
+        ? "up"
+        : stats?.total_invoices_trend?.startsWith("-")
+        ? "down"
+        : "neutral",
       colors: {
         shape1: "bg-emerald-500",
         shape2: "bg-teal-400",
@@ -236,18 +262,20 @@ export default function AdminDashboard() {
       },
     },
     {
-      title: "Weekly Activity",
-      value: "84%",
-      helper: "vs last week",
-      icon: Activity,
-      trend: "up",
-      trendLabel: "+12%",
+      title: "Low Stock Alerts",
+      value: isLoading
+        ? "..."
+        : Number(stats?.low_stock_count ?? 0).toLocaleString("en-IN"),
+      helper: isLoading ? "Loading..." : "Items to reorder",
+      icon: AlertCircle,
+      trend: (stats?.low_stock_count ?? 0) > 0 ? "down" : "up",
+      trendLabel: (stats?.low_stock_count ?? 0) > 0 ? "Warning" : "Good",
       colors: {
-        shape1: "bg-orange-500",
-        shape2: "bg-amber-400",
-        iconBg: "bg-orange-500/15",
-        iconText: "text-orange-500",
-        gradient: "from-orange-500/5",
+        shape1: "bg-rose-500",
+        shape2: "bg-orange-400",
+        iconBg: "bg-rose-500/15",
+        iconText: "text-rose-500",
+        gradient: "from-rose-500/5",
       },
     },
   ]
@@ -325,9 +353,11 @@ export default function AdminDashboard() {
             <div className="rounded-xl backdrop-blur-sm border border-emerald-500/20 bg-emerald-500/10 px-4 py-2 text-center shadow-sm">
               <div className="flex items-center gap-1 justify-center">
                 <Zap className="h-4 w-4 text-emerald-500" />
-                <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400">84%</span>
+                <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
+                  {isLoading ? "..." : stats?.monthly_sales_trend?.split(" ")[0] ?? "0%"}
+                </span>
               </div>
-              <div className="text-[10px] font-medium uppercase tracking-wide text-emerald-700/70 dark:text-emerald-400/70">Activity</div>
+              <div className="text-[10px] font-medium uppercase tracking-wide text-emerald-700/70 dark:text-emerald-400/70">Sales Trend</div>
             </div>
           </div>
         </div>
@@ -343,33 +373,44 @@ export default function AdminDashboard() {
       {/* ── Charts Row ────────────────────────────────────────────────────────── */}
       <div className="grid gap-2 lg:grid-cols-[1.4fr_1fr]">
         <ChartCard
-          title="Weekly Activity"
-          description="Actions performed across the workspace this week"
+          title="Monthly Sales"
+          description="Total sales revenue across the workspace for the last 6 months"
           action={
-            <span className="flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-              <TrendingUp className="h-3 w-3" /> +12%
-            </span>
+            !isLoading && (
+              <span className={cn(
+                "flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold",
+                stats?.monthly_sales_trend?.startsWith("+")
+                  ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                  : stats?.monthly_sales_trend?.startsWith("-")
+                  ? "bg-rose-500/10 text-rose-600 dark:text-rose-400"
+                  : "bg-slate-500/10 text-slate-600 dark:text-slate-400"
+              )}>
+                {stats?.monthly_sales_trend?.startsWith("+") && <TrendingUp className="h-3 w-3" />}
+                {stats?.monthly_sales_trend?.startsWith("-") && <TrendingDown className="h-3 w-3" />}
+                {stats?.monthly_sales_trend ?? "0% vs last month"}
+              </span>
+            )
           }
         >
           <DashboardAreaChart
-            data={activityData}
+            data={stats?.monthly_sales_chart ?? []}
             xKey="name"
             yKey="value"
             height={200}
-            color="#3b82f6"
+            color="var(--primary)"
           />
         </ChartCard>
 
         <ChartCard
-          title="Module Engagement"
-          description="Most interacted modules this month"
+          title="Medicine Stock Levels"
+          description="Highest stock levels by medicine"
         >
           <DashboardBarChart
-            data={moduleUsageData}
+            data={stats?.top_stock_medicines ?? []}
             xKey="name"
             yKey="value"
             height={200}
-            color="#8b5cf6"
+            color="var(--primary)"
           />
         </ChartCard>
       </div>
