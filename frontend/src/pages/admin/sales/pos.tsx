@@ -130,14 +130,19 @@ const formatExpiry = (value?: string | null) => {
 
   const parsed = parseExpiryValue(trimmed)
   if (!parsed) return value
-  return parsed.toLocaleDateString("en-IN", { month: "2-digit", year: "numeric" })
+  return parsed.toLocaleDateString("en-IN", {
+    month: "2-digit",
+    year: "numeric",
+  })
 }
 
 const isNearExpiry = (value?: string | null) => {
   if (!value) return false
   const parsed = parseExpiryValue(value)
   if (!parsed) return false
-  return (parsed.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24) <= 180
+  return (
+    (parsed.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24) <= 180
+  )
 }
 
 const toNumber = (value: unknown) => {
@@ -146,10 +151,12 @@ const toNumber = (value: unknown) => {
 }
 
 const getRelationName = (value: unknown) => {
-  if (typeof value === "string" || typeof value === "number") return String(value) || "-"
+  if (typeof value === "string" || typeof value === "number")
+    return String(value) || "-"
   if (value && typeof value === "object" && "name" in value) {
     const name = (value as { name?: unknown }).name
-    if (typeof name === "string" || typeof name === "number") return String(name) || "-"
+    if (typeof name === "string" || typeof name === "number")
+      return String(name) || "-"
   }
   return "-"
 }
@@ -157,29 +164,31 @@ const getRelationName = (value: unknown) => {
 const buildPosProduct = (inventoryItem: any): PosProduct => {
   const batches = Array.isArray(inventoryItem?.batches)
     ? inventoryItem.batches.map((batch: any) => {
-      const mrp = toNumber(batch.mrp ?? 0)
-      const rateA = toNumber(batch.rateA ?? batch.rate_a ?? 0)
-      const rateB = toNumber(batch.rateB ?? batch.rate_b ?? 0)
-      const rateC = toNumber(batch.rateC ?? batch.rate_c ?? 0)
-      const purchaseRate = toNumber(batch.purchaseRate ?? batch.purchase_rate ?? 0)
-      const price = mrp || purchaseRate || 0
-      const stock = toNumber(batch.availableQty ?? batch.receivedQty ?? 0)
-      return {
-        id: batch.id,
-        number: batch.batchNo || batch.number || "-",
-        expiry: formatExpiry(batch.expiryDate || batch.expiry),
-        stock,
-        price,
-        isNearExpiry: isNearExpiry(batch.expiryDate || batch.expiry),
-        rateA,
-        rateB,
-        rateC,
-        mrp,
-        purchaseRate,
-        cgst: toNumber(inventoryItem?.cgst ?? 0),
-        sgst: toNumber(inventoryItem?.sgst ?? 0),
-      }
-    })
+        const mrp = toNumber(batch.mrp ?? 0)
+        const rateA = toNumber(batch.rateA ?? batch.rate_a ?? 0)
+        const rateB = toNumber(batch.rateB ?? batch.rate_b ?? 0)
+        const rateC = toNumber(batch.rateC ?? batch.rate_c ?? 0)
+        const purchaseRate = toNumber(
+          batch.purchaseRate ?? batch.purchase_rate ?? 0
+        )
+        const price = mrp || purchaseRate || 0
+        const stock = toNumber(batch.availableQty ?? batch.receivedQty ?? 0)
+        return {
+          id: batch.id,
+          number: batch.batchNo || batch.number || "-",
+          expiry: formatExpiry(batch.expiryDate || batch.expiry),
+          stock,
+          price,
+          isNearExpiry: isNearExpiry(batch.expiryDate || batch.expiry),
+          rateA,
+          rateB,
+          rateC,
+          mrp,
+          purchaseRate,
+          cgst: toNumber(inventoryItem?.cgst ?? 0),
+          sgst: toNumber(inventoryItem?.sgst ?? 0),
+        }
+      })
     : []
 
   const fallbackStock = toNumber(inventoryItem?.availableStock ?? 0)
@@ -187,22 +196,24 @@ const buildPosProduct = (inventoryItem: any): PosProduct => {
     batches.length > 0
       ? batches
       : [
-        {
-          id: `${inventoryItem.id}-batch`,
-          number: "N/A",
-          expiry: "-",
-          stock: fallbackStock,
-          price: toNumber(inventoryItem?.mrp ?? inventoryItem?.purchaseRate ?? 0),
-          isNearExpiry: false,
-          rateA: toNumber(inventoryItem?.rateA ?? 0),
-          rateB: toNumber(inventoryItem?.rateB ?? 0),
-          rateC: toNumber(inventoryItem?.rateC ?? 0),
-          mrp: toNumber(inventoryItem?.mrp ?? 0),
-          purchaseRate: toNumber(inventoryItem?.purchaseRate ?? 0),
-          cgst: toNumber(inventoryItem?.cgst ?? 0),
-          sgst: toNumber(inventoryItem?.sgst ?? 0),
-        },
-      ]
+          {
+            id: `${inventoryItem.id}-batch`,
+            number: "N/A",
+            expiry: "-",
+            stock: fallbackStock,
+            price: toNumber(
+              inventoryItem?.mrp ?? inventoryItem?.purchaseRate ?? 0
+            ),
+            isNearExpiry: false,
+            rateA: toNumber(inventoryItem?.rateA ?? 0),
+            rateB: toNumber(inventoryItem?.rateB ?? 0),
+            rateC: toNumber(inventoryItem?.rateC ?? 0),
+            mrp: toNumber(inventoryItem?.mrp ?? 0),
+            purchaseRate: toNumber(inventoryItem?.purchaseRate ?? 0),
+            cgst: toNumber(inventoryItem?.cgst ?? 0),
+            sgst: toNumber(inventoryItem?.sgst ?? 0),
+          },
+        ]
 
   return {
     id: inventoryItem.id,
@@ -233,7 +244,9 @@ const getQtyPerStrip = (product: PosProduct) => {
   if (product.convStri && product.convStri > 0) return product.convStri
   if (product.packQty3 && product.packQty3 > 0) return product.packQty3
   const packingStr = String(product.packing || "").toLowerCase()
-  const matches = packingStr.match(/(\d+)\s*(tablet|capsule|piece|tab|cap|'s|s)/)
+  const matches = packingStr.match(
+    /(\d+)\s*(tablet|capsule|piece|tab|cap|'s|s)/
+  )
   if (matches && matches[1]) {
     const parsed = parseInt(matches[1], 10)
     if (parsed > 0) return parsed
@@ -259,9 +272,12 @@ const getRateValue = (
 ) => {
   let baseRate = 0
   if (rateType === "mrp") baseRate = batch.mrp || batch.price || 0
-  else if (rateType === "rateA") baseRate = batch.rateA || batch.mrp || batch.price || 0
-  else if (rateType === "rateB") baseRate = batch.rateB || batch.mrp || batch.price || 0
-  else if (rateType === "rateC") baseRate = batch.rateC || batch.mrp || batch.price || 0
+  else if (rateType === "rateA")
+    baseRate = batch.rateA || batch.mrp || batch.price || 0
+  else if (rateType === "rateB")
+    baseRate = batch.rateB || batch.mrp || batch.price || 0
+  else if (rateType === "rateC")
+    baseRate = batch.rateC || batch.mrp || batch.price || 0
   if (sellUnit === "piece" && qtyPerStrip > 0) return baseRate / qtyPerStrip
   return baseRate
 }
@@ -285,7 +301,10 @@ const getProductGradient = (productId: string) => {
   return gradients[Math.abs(hash) % gradients.length]
 }
 
-const getProductIllustration = (product: PosProduct, size: "sm" | "md" = "md") => {
+const getProductIllustration = (
+  product: PosProduct,
+  size: "sm" | "md" = "md"
+) => {
   const name = product.name.toLowerCase()
   const form = (product.formulation || "").toLowerCase()
   const grad = getProductGradient(product.id)
@@ -294,35 +313,75 @@ const getProductIllustration = (product: PosProduct, size: "sm" | "md" = "md") =
 
   if (product.imageUrl) {
     return (
-      <div className={cn("flex items-center justify-center overflow-hidden rounded", wrapClass, grad.bg)}>
+      <div
+        className={cn(
+          "flex items-center justify-center overflow-hidden rounded",
+          wrapClass,
+          grad.bg
+        )}
+      >
         <img
           src={getImageUrl(product.imageUrl)}
           alt={product.name}
-          className={cn("object-contain", size === "sm" ? "h-7 w-7" : "h-14 w-14")}
+          className={cn(
+            "object-contain",
+            size === "sm" ? "h-7 w-7" : "h-14 w-14"
+          )}
         />
       </div>
     )
   }
 
   const wrap = (child: React.ReactNode) => (
-    <div className={cn("flex items-center justify-center rounded", wrapClass, grad.bg)}>
+    <div
+      className={cn(
+        "flex items-center justify-center rounded",
+        wrapClass,
+        grad.bg
+      )}
+    >
       {child}
     </div>
   )
 
-  if (name.includes("elvive") || name.includes("shampoo") || name.includes("body wash")) {
+  if (
+    name.includes("elvive") ||
+    name.includes("shampoo") ||
+    name.includes("body wash")
+  ) {
     return wrap(
       <svg viewBox="0 0 64 64" className={svgClass} fill="none">
         <defs>
-          <linearGradient id={`sg-${product.id}`} x1="0%" y1="0%" x2="100%" y2="100%">
+          <linearGradient
+            id={`sg-${product.id}`}
+            x1="0%"
+            y1="0%"
+            x2="100%"
+            y2="100%"
+          >
             <stop offset="0%" stopColor={grad.from} />
             <stop offset="100%" stopColor={grad.to} />
           </linearGradient>
         </defs>
         <path d="M26 12h12v4H26z" fill="#94a3b8" />
         <path d="M22 16h20v6H22z" fill="#64748b" />
-        <rect x="18" y="22" width="28" height="34" rx="6" fill={`url(#sg-${product.id})`} />
-        <rect x="22" y="30" width="20" height="16" rx="2" fill="white" opacity="0.8" />
+        <rect
+          x="18"
+          y="22"
+          width="28"
+          height="34"
+          rx="6"
+          fill={`url(#sg-${product.id})`}
+        />
+        <rect
+          x="22"
+          y="30"
+          width="20"
+          height="16"
+          rx="2"
+          fill="white"
+          opacity="0.8"
+        />
         <path d="M26 34h12v2H26zm0 4h8v2H26z" fill={grad.to} />
       </svg>
     )
@@ -338,12 +397,25 @@ const getProductIllustration = (product: PosProduct, size: "sm" | "md" = "md") =
     return wrap(
       <svg viewBox="0 0 64 64" className={svgClass} fill="none">
         <defs>
-          <linearGradient id={`bg-${product.id}`} x1="0%" y1="0%" x2="100%" y2="100%">
+          <linearGradient
+            id={`bg-${product.id}`}
+            x1="0%"
+            y1="0%"
+            x2="100%"
+            y2="100%"
+          >
             <stop offset="0%" stopColor={grad.from} />
             <stop offset="100%" stopColor={grad.to} />
           </linearGradient>
         </defs>
-        <rect x="8" y="12" width="22" height="42" rx="2" fill={`url(#bg-${product.id})`} />
+        <rect
+          x="8"
+          y="12"
+          width="22"
+          height="42"
+          rx="2"
+          fill={`url(#bg-${product.id})`}
+        />
         <rect x="12" y="20" width="14" height="24" fill="white" opacity="0.3" />
         <rect x="36" y="24" width="18" height="30" rx="3" fill="#64748b" />
         <path d="M41 20h8v4h-8z" fill="#475569" />
@@ -362,33 +434,75 @@ const getProductIllustration = (product: PosProduct, size: "sm" | "md" = "md") =
     return wrap(
       <svg viewBox="0 0 64 64" className={svgClass} fill="none">
         <defs>
-          <linearGradient id={`tg-${product.id}`} x1="0%" y1="0%" x2="100%" y2="100%">
+          <linearGradient
+            id={`tg-${product.id}`}
+            x1="0%"
+            y1="0%"
+            x2="100%"
+            y2="100%"
+          >
             <stop offset="0%" stopColor={grad.from} />
             <stop offset="100%" stopColor={grad.to} />
           </linearGradient>
         </defs>
-        <path d="M12 48 L22 14 C23 11 27 11 28 14 L38 48 Z" fill={`url(#tg-${product.id})`} />
+        <path
+          d="M12 48 L22 14 C23 11 27 11 28 14 L38 48 Z"
+          fill={`url(#tg-${product.id})`}
+        />
         <rect x="10" y="48" width="30" height="4" fill="#475569" />
         <rect x="22" y="10" width="6" height="4" fill="#94a3b8" />
-        <rect x="19" y="30" width="12" height="8" transform="rotate(-15 19 30)" fill="white" opacity="0.8" />
+        <rect
+          x="19"
+          y="30"
+          width="12"
+          height="8"
+          transform="rotate(-15 19 30)"
+          fill="white"
+          opacity="0.8"
+        />
       </svg>
     )
   }
 
-  if (name.includes("avaspray") || name.includes("spray") || name.includes("inhaler")) {
+  if (
+    name.includes("avaspray") ||
+    name.includes("spray") ||
+    name.includes("inhaler")
+  ) {
     return wrap(
       <svg viewBox="0 0 64 64" className={svgClass} fill="none">
         <defs>
-          <linearGradient id={`spg-${product.id}`} x1="0%" y1="0%" x2="100%" y2="100%">
+          <linearGradient
+            id={`spg-${product.id}`}
+            x1="0%"
+            y1="0%"
+            x2="100%"
+            y2="100%"
+          >
             <stop offset="0%" stopColor={grad.from} />
             <stop offset="100%" stopColor={grad.to} />
           </linearGradient>
         </defs>
-        <rect x="20" y="24" width="24" height="32" rx="4" fill={`url(#spg-${product.id})`} />
+        <rect
+          x="20"
+          y="24"
+          width="24"
+          height="32"
+          rx="4"
+          fill={`url(#spg-${product.id})`}
+        />
         <path d="M28 12h8v12h-8z" fill="#94a3b8" />
         <path d="M36 14h6v4h-6z" fill="#475569" />
         <circle cx="40" cy="16" r="1.5" fill="#f43f5e" />
-        <rect x="25" y="32" width="14" height="12" rx="1" fill="white" opacity="0.8" />
+        <rect
+          x="25"
+          y="32"
+          width="14"
+          height="12"
+          rx="1"
+          fill="white"
+          opacity="0.8"
+        />
       </svg>
     )
   }
@@ -397,17 +511,46 @@ const getProductIllustration = (product: PosProduct, size: "sm" | "md" = "md") =
   return wrap(
     <svg viewBox="0 0 64 64" className={svgClass} fill="none">
       <defs>
-        <linearGradient id={`bxg-${product.id}`} x1="0%" y1="0%" x2="100%" y2="100%">
+        <linearGradient
+          id={`bxg-${product.id}`}
+          x1="0%"
+          y1="0%"
+          x2="100%"
+          y2="100%"
+        >
           <stop offset="0%" stopColor={grad.from} />
           <stop offset="100%" stopColor={grad.to} />
         </linearGradient>
       </defs>
-      <rect x="10" y="16" width="44" height="32" rx="4" fill={`url(#bxg-${product.id})`} />
+      <rect
+        x="10"
+        y="16"
+        width="44"
+        height="32"
+        rx="4"
+        fill={`url(#bxg-${product.id})`}
+      />
       <rect x="14" y="22" width="36" height="8" fill="white" opacity="0.8" />
       <circle cx="20" cy="38" r="4" fill="white" opacity="0.5" />
       <circle cx="28" cy="38" r="4" fill="white" opacity="0.5" />
-      <line x1="36" y1="38" x2="48" y2="38" stroke="white" strokeWidth="2" opacity="0.5" />
-      <line x1="36" y1="42" x2="44" y2="42" stroke="white" strokeWidth="2" opacity="0.5" />
+      <line
+        x1="36"
+        y1="38"
+        x2="48"
+        y2="38"
+        stroke="white"
+        strokeWidth="2"
+        opacity="0.5"
+      />
+      <line
+        x1="36"
+        y1="42"
+        x2="44"
+        y2="42"
+        stroke="white"
+        strokeWidth="2"
+        opacity="0.5"
+      />
     </svg>
   )
 }
@@ -447,7 +590,9 @@ const POS = () => {
   const [manufacturer, setManufacturer] = useState("All Manufacturers")
 
   // Selected card highlight
-  const [selectedProductId, setSelectedProductId] = useState<string | null>(null)
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(
+    null
+  )
 
   // Configure modal
   const [configModalOpen, setConfigModalOpen] = useState(false)
@@ -465,7 +610,9 @@ const POS = () => {
 
   // Invoice fields
   const [discountPercent, setDiscountPercent] = useState(0)
-  const [discountType, setDiscountType] = useState<"flat" | "percent">("percent")
+  const [discountType, setDiscountType] = useState<"flat" | "percent">(
+    "percent"
+  )
   const [paymentMode, setPaymentMode] = useState("Cash")
   const [splitCashAmount, setSplitCashAmount] = useState("")
   const [splitOnlineAmount, setSplitOnlineAmount] = useState("")
@@ -475,15 +622,17 @@ const POS = () => {
   const [customerName, setCustomerName] = useState("")
   const [customerPhone, setCustomerPhone] = useState("")
 
-
-
   // Success modal
   const [successModalOpen, setSuccessModalOpen] = useState(false)
   const [successInvoiceDetails, setSuccessInvoiceDetails] = useState<any>(null)
 
   // Live clock
   const [liveTime, setLiveTime] = useState(
-    new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit" })
+    new Date().toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    })
   )
   useEffect(() => {
     const t = setInterval(
@@ -532,7 +681,10 @@ const POS = () => {
       toast.success("Invoice saved and stock updated!")
     },
     onError: (error: any) => {
-      const errMsg = error?.response?.data?.message || error?.message || "Failed to save invoice."
+      const errMsg =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Failed to save invoice."
       toast.error(errMsg)
     },
   })
@@ -597,17 +749,26 @@ const POS = () => {
         !product.composition.toLowerCase().includes(search) &&
         !product.mfg.toLowerCase().includes(search) &&
         !product.category.toLowerCase().includes(search) &&
-        !product.batches.some((batch) => batch.number.toLowerCase().includes(search))
+        !product.batches.some((batch) =>
+          batch.number.toLowerCase().includes(search)
+        )
       )
         return false
 
-      if (category !== "All Categories" && product.category !== category) return false
-      if (manufacturer !== "All Manufacturers" && product.mfg !== manufacturer) return false
+      if (category !== "All Categories" && product.category !== category)
+        return false
+      if (manufacturer !== "All Manufacturers" && product.mfg !== manufacturer)
+        return false
 
       if (posFilters.stockStatus !== "all") {
-        if (posFilters.stockStatus === "in_stock" && product.totalStock <= 0) return false
-        if (posFilters.stockStatus === "out_of_stock" && product.totalStock > 0) return false
-        if (posFilters.stockStatus === "low_stock" && (product.totalStock <= 0 || product.totalStock > 50))
+        if (posFilters.stockStatus === "in_stock" && product.totalStock <= 0)
+          return false
+        if (posFilters.stockStatus === "out_of_stock" && product.totalStock > 0)
+          return false
+        if (
+          posFilters.stockStatus === "low_stock" &&
+          (product.totalStock <= 0 || product.totalStock > 50)
+        )
           return false
       }
 
@@ -618,9 +779,15 @@ const POS = () => {
         if (posFilters.itemType === "generics" && t.includes("rx")) return false
       }
 
-      if (posFilters.formulation.length > 0 && !posFilters.formulation.includes(product.formulation))
+      if (
+        posFilters.formulation.length > 0 &&
+        !posFilters.formulation.includes(product.formulation)
+      )
         return false
-      if (posFilters.manufacturers.length > 0 && !posFilters.manufacturers.includes(product.mfg))
+      if (
+        posFilters.manufacturers.length > 0 &&
+        !posFilters.manufacturers.includes(product.mfg)
+      )
         return false
 
       return true
@@ -639,7 +806,8 @@ const POS = () => {
     if (!configProduct) return
     const b = config.batch
     const qtyPerStrip = getQtyPerStrip(configProduct)
-    const maxStock = config.sellUnit === "strip" ? b.stock : b.stock * qtyPerStrip
+    const maxStock =
+      config.sellUnit === "strip" ? b.stock : b.stock * qtyPerStrip
 
     if (config.qty <= 0) {
       toast.error("Please enter a valid quantity.")
@@ -652,7 +820,12 @@ const POS = () => {
       return
     }
 
-    const rateVal = getRateValue(b, config.rateType, config.sellUnit, qtyPerStrip)
+    const rateVal = getRateValue(
+      b,
+      config.rateType,
+      config.sellUnit,
+      qtyPerStrip
+    )
     const cartItemId = `${b.id}-${config.sellUnit}-${config.rateType}`
 
     setCart((prev) => {
@@ -661,7 +834,11 @@ const POS = () => {
         const existing = prev[existingIdx]
         const newQty = Math.min(existing.qty + config.qty, maxStock)
         const updated = [...prev]
-        updated[existingIdx] = { ...existing, qty: newQty, itemDiscount: config.itemDiscount }
+        updated[existingIdx] = {
+          ...existing,
+          qty: newQty,
+          itemDiscount: config.itemDiscount,
+        }
         return updated
       }
       return [
@@ -689,7 +866,9 @@ const POS = () => {
         if (item.id !== cartItemId) return item
         const qtyPerStrip = getQtyPerStrip(item.product)
         const maxStock =
-          item.sellUnit === "strip" ? item.batch.stock : item.batch.stock * qtyPerStrip
+          item.sellUnit === "strip"
+            ? item.batch.stock
+            : item.batch.stock * qtyPerStrip
         const newQty = Math.min(maxStock, Math.max(1, item.qty + delta))
         return { ...item, qty: newQty }
       })
@@ -703,14 +882,19 @@ const POS = () => {
   const updateItemDiscount = (cartItemId: string, disc: number) => {
     setCart((prev) =>
       prev.map((item) =>
-        item.id !== cartItemId ? item : { ...item, itemDiscount: Math.min(100, Math.max(0, disc)) }
+        item.id !== cartItemId
+          ? item
+          : { ...item, itemDiscount: Math.min(100, Math.max(0, disc)) }
       )
     )
   }
 
   // ── Calculations ──────────────────────────────────────────────────────────
 
-  const grossTotal = cart.reduce((sum, item) => sum + item.rateValue * item.qty, 0)
+  const grossTotal = cart.reduce(
+    (sum, item) => sum + item.rateValue * item.qty,
+    0
+  )
 
   const totalItemDiscountAmount = cart.reduce(
     (sum, item) => sum + (item.rateValue * item.qty * item.itemDiscount) / 100,
@@ -718,8 +902,13 @@ const POS = () => {
   )
 
   const totalTaxAmount = cart.reduce((sum, item) => {
-    const itemTaxable = item.rateValue * item.qty * (1 - item.itemDiscount / 100)
-    return sum + (itemTaxable * (toNumber(item.batch.cgst) + toNumber(item.batch.sgst))) / 100
+    const itemTaxable =
+      item.rateValue * item.qty * (1 - item.itemDiscount / 100)
+    return (
+      sum +
+      (itemTaxable * (toNumber(item.batch.cgst) + toNumber(item.batch.sgst))) /
+        100
+    )
   }, 0)
 
   const totalAfterItemDiscount = grossTotal - totalItemDiscountAmount
@@ -732,8 +921,10 @@ const POS = () => {
   const roundedNet = Math.max(0, Math.round(netPayable))
 
   const tenderedAmount = parseFloat(receiveAmount) || 0
-  const changeAmount = tenderedAmount > roundedNet ? tenderedAmount - roundedNet : 0
-  const dueAmount = tenderedAmount < roundedNet ? roundedNet - tenderedAmount : 0
+  const changeAmount =
+    tenderedAmount > roundedNet ? tenderedAmount - roundedNet : 0
+  const dueAmount =
+    tenderedAmount < roundedNet ? roundedNet - tenderedAmount : 0
 
   // Pre-populate split amounts when entering split payment mode
   useEffect(() => {
@@ -762,7 +953,9 @@ const POS = () => {
       const cash = parseFloat(splitCashAmount) || 0
       const online = parseFloat(splitOnlineAmount) || 0
       if (Math.abs(cash + online - roundedNet) > 0.01) {
-        toast.error(`Split amounts (Cash: ₹${cash.toFixed(2)}, Online: ₹${online.toFixed(2)}) must sum up to the total net payable: ₹${roundedNet.toFixed(2)}`)
+        toast.error(
+          `Split amounts (Cash: ₹${cash.toFixed(2)}, Online: ₹${online.toFixed(2)}) must sum up to the total net payable: ₹${roundedNet.toFixed(2)}`
+        )
         return
       }
     }
@@ -770,9 +963,26 @@ const POS = () => {
     const payload = {
       customerName: customerName.trim() || undefined,
       customerPhone: customerPhone.trim() || undefined,
-      paymentMode: paymentMode === "Cash" ? "CASH" : paymentMode === "UPI / QR" ? "UPI" : paymentMode === "Card / POS" ? "CARD" : "SPLIT",
-      cashAmount: paymentMode === "Split Payment" ? parseFloat(splitCashAmount) || 0 : (paymentMode === "Cash" ? roundedNet : 0),
-      onlineAmount: paymentMode === "Split Payment" ? parseFloat(splitOnlineAmount) || 0 : (paymentMode !== "Cash" ? roundedNet : 0),
+      paymentMode:
+        paymentMode === "Cash"
+          ? "CASH"
+          : paymentMode === "UPI / QR"
+            ? "UPI"
+            : paymentMode === "Card / POS"
+              ? "CARD"
+              : "SPLIT",
+      cashAmount:
+        paymentMode === "Split Payment"
+          ? parseFloat(splitCashAmount) || 0
+          : paymentMode === "Cash"
+            ? roundedNet
+            : 0,
+      onlineAmount:
+        paymentMode === "Split Payment"
+          ? parseFloat(splitOnlineAmount) || 0
+          : paymentMode !== "Cash"
+            ? roundedNet
+            : 0,
       grossAmount: grossTotal,
       discountAmount: discountAmount,
       taxAmount: totalTaxAmount,
@@ -781,7 +991,9 @@ const POS = () => {
       tenderedAmount: tenderedAmount || roundedNet,
       changeAmount: changeAmount,
       items: cart.map((item) => {
-        const subTotal = item.rateValue * item.qty - (item.rateValue * item.qty * item.itemDiscount) / 100
+        const subTotal =
+          item.rateValue * item.qty -
+          (item.rateValue * item.qty * item.itemDiscount) / 100
         return {
           inventoryId: item.product.id,
           inventoryName: item.product.name,
@@ -802,7 +1014,7 @@ const POS = () => {
         if (printOnSuccess) {
           toast.info("Preparing print...")
         }
-      }
+      },
     })
   }
 
@@ -837,8 +1049,10 @@ const POS = () => {
       discountPercent,
       discountType,
       paymentMode,
-      splitCashAmount: paymentMode === "Split Payment" ? splitCashAmount : undefined,
-      splitOnlineAmount: paymentMode === "Split Payment" ? splitOnlineAmount : undefined,
+      splitCashAmount:
+        paymentMode === "Split Payment" ? splitCashAmount : undefined,
+      splitOnlineAmount:
+        paymentMode === "Split Payment" ? splitOnlineAmount : undefined,
       deliveryCost,
       binValue,
       totalAmount: roundedNet,
@@ -874,7 +1088,9 @@ const POS = () => {
   }
 
   const handleDeleteHeldBill = (id: string) => {
-    const confirmDelete = window.confirm("Are you sure you want to delete this held bill?")
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this held bill?"
+    )
     if (!confirmDelete) return
     setHeldBills((prev) => prev.filter((b) => b.id !== id))
     toast.success("Held bill deleted.")
@@ -886,32 +1102,30 @@ const POS = () => {
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-muted/40 font-sans text-foreground select-none">
-
       {/* ══════════════════════════════════════════════
           LEFT PANEL — Product Catalog
       ══════════════════════════════════════════════ */}
       <div className="flex flex-1 flex-col overflow-hidden">
-
         {/* ── Top bar: search + filters ── */}
-        <div className="flex items-center gap-2.5 border-b border-border bg-card px-4 py-3 shadow-sm flex-shrink-0">
+        <div className="flex flex-shrink-0 items-center gap-2.5 border-b border-border bg-card px-4 py-3 shadow-sm">
           {/* Search */}
-          <div className="relative min-w-0 flex-1 max-w-72">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <div className="relative max-w-72 min-w-0 flex-1">
+            <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
               placeholder="Search / Scan medicine..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full rounded-lg border border-border bg-muted/40 py-2 pl-9 pr-9 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-teal-400 focus:ring-1 focus:ring-teal-300/30 transition-all"
+              className="w-full rounded-lg border border-border bg-muted/40 py-2 pr-9 pl-9 text-sm text-foreground transition-all outline-none placeholder:text-muted-foreground focus:border-teal-400 focus:ring-1 focus:ring-teal-300/30"
             />
-            <ScanLine className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-300" />
+            <ScanLine className="pointer-events-none absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-gray-300" />
           </div>
 
           {/* Held Bills Button */}
           <button
             type="button"
             onClick={() => setHeldBillsModalOpen(true)}
-            className="relative flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-sm font-semibold text-muted-foreground hover:bg-muted/60 transition-colors active:scale-95"
+            className="relative flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted/60 active:scale-95"
           >
             <Pause className="h-3.5 w-3.5 text-blue-500" />
             <span>Held Bills</span>
@@ -926,26 +1140,26 @@ const POS = () => {
           <button
             type="button"
             onClick={() => setIsFilterOpen(true)}
-            className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-sm font-semibold text-muted-foreground hover:bg-muted/60 transition-colors active:scale-95"
+            className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted/60 active:scale-95"
           >
             <Filter className="h-3.5 w-3.5 text-teal-500" />
             Filter
           </button>
 
           {/* Spacer + count */}
-          <span className="ml-auto hidden sm:block text-xs text-muted-foreground font-semibold whitespace-nowrap">
+          <span className="ml-auto hidden text-xs font-semibold whitespace-nowrap text-muted-foreground sm:block">
             {filteredProducts.length} items
           </span>
 
           {/* Clock */}
-          <div className="hidden lg:flex items-center gap-1 text-xs font-bold text-muted-foreground">
+          <div className="hidden items-center gap-1 text-xs font-bold text-muted-foreground lg:flex">
             <Clock className="h-3.5 w-3.5" />
             {liveTime}
           </div>
         </div>
 
         {/* ── Product Grid ── */}
-        <div className="flex-1 overflow-y-auto p-4 custom-scrollbar bg-muted/20">
+        <div className="custom-scrollbar flex-1 overflow-y-auto bg-muted/20 p-4">
           {filteredProducts.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center gap-3 text-muted-foreground/40">
               <Pill className="h-12 w-12 animate-bounce" />
@@ -954,11 +1168,15 @@ const POS = () => {
           ) : (
             <div
               className="grid gap-3"
-              style={{ gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))" }}
+              style={{
+                gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))",
+              }}
             >
               {filteredProducts.map((product) => {
                 const firstBatch = product.batches[0] || null
-                const basePrice = firstBatch ? firstBatch.mrp || firstBatch.price || 0 : 0
+                const basePrice = firstBatch
+                  ? firstBatch.mrp || firstBatch.price || 0
+                  : 0
                 const isOutOfStock = product.totalStock <= 0
                 const isSelected = selectedProductId === product.id
 
@@ -973,21 +1191,21 @@ const POS = () => {
                       setConfigModalOpen(true)
                     }}
                     className={cn(
-                      "relative flex flex-col items-center rounded-lg border bg-card p-2.5 text-left transition-all duration-150 active:scale-[0.97] cursor-pointer hover:shadow-md",
+                      "relative flex cursor-pointer flex-col items-center rounded-lg border bg-card p-2.5 text-left transition-all duration-150 hover:shadow-md active:scale-[0.97]",
                       isSelected
-                        ? "border-teal-500 ring-1 ring-teal-400/40 shadow-sm bg-teal-500/5"
+                        ? "border-teal-500 bg-teal-500/5 shadow-sm ring-1 ring-teal-400/40"
                         : isOutOfStock
-                          ? "border-border opacity-50 cursor-not-allowed"
+                          ? "cursor-not-allowed border-border opacity-50"
                           : "border-border hover:border-teal-300"
                     )}
                   >
                     {/* Illustration */}
-                    <div className="flex h-[100px] w-full items-center justify-center overflow-hidden rounded-md bg-muted/40 mb-2.5">
+                    <div className="mb-2.5 flex h-[100px] w-full items-center justify-center overflow-hidden rounded-md bg-muted/40">
                       {getProductIllustration(product, "md")}
                     </div>
 
                     {/* Name */}
-                    <p className="w-full text-center text-xs font-semibold leading-tight text-foreground line-clamp-2">
+                    <p className="line-clamp-2 w-full text-center text-xs leading-tight font-semibold text-foreground">
                       {product.name}
                     </p>
 
@@ -999,7 +1217,7 @@ const POS = () => {
 
                     {/* Out of stock badge */}
                     {isOutOfStock && (
-                      <span className="absolute top-1.5 right-1.5 rounded bg-red-500 px-1.5 py-0.5 text-[9px] font-bold uppercase text-white">
+                      <span className="absolute top-1.5 right-1.5 rounded bg-red-500 px-1.5 py-0.5 text-[9px] font-bold text-white uppercase">
                         Out
                       </span>
                     )}
@@ -1020,10 +1238,12 @@ const POS = () => {
                   key={`empty-${i}`}
                   className="flex flex-col items-center rounded-lg border border-dashed border-border bg-card/60 p-2.5 opacity-40"
                 >
-                  <div className="flex h-[100px] w-full items-center justify-center rounded-md bg-muted/40 mb-2.5">
+                  <div className="mb-2.5 flex h-[100px] w-full items-center justify-center rounded-md bg-muted/40">
                     <ShoppingCart className="h-8 w-8 text-muted-foreground/30" />
                   </div>
-                  <p className="text-xs font-semibold text-muted-foreground/30">—</p>
+                  <p className="text-xs font-semibold text-muted-foreground/30">
+                    —
+                  </p>
                   <p className="text-xs text-muted-foreground/20">---</p>
                 </div>
               ))}
@@ -1035,11 +1255,10 @@ const POS = () => {
       {/* ══════════════════════════════════════════════
           RIGHT PANEL — Invoice
       ══════════════════════════════════════════════ */}
-      <div className="flex w-[540px] xl:w-[600px] flex-col border-l border-border bg-card shadow-xl flex-shrink-0">
-
+      <div className="flex w-[540px] flex-shrink-0 flex-col border-l border-border bg-card shadow-xl xl:w-[600px]">
         {/* ── Table header ── */}
         <div
-          className="grid flex-shrink-0 items-center border-b border-border bg-muted/40 px-3 py-2.5 text-xs font-bold uppercase tracking-wider text-muted-foreground"
+          className="grid flex-shrink-0 items-center border-b border-border bg-muted/40 px-3 py-2.5 text-xs font-bold tracking-wider text-muted-foreground uppercase"
           style={{ gridTemplateColumns: "52px 1fr 70px 56px 108px 84px 76px" }}
         >
           <span>Image</span>
@@ -1048,16 +1267,20 @@ const POS = () => {
           <span>Price</span>
           <span>Discount</span>
           <span className="text-center">Qty</span>
-          <span className="text-right pr-1">Sub Total</span>
+          <span className="pr-1 text-right">Sub Total</span>
         </div>
 
         {/* ── Cart rows ── */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar divide-y divide-border/40">
+        <div className="custom-scrollbar flex-1 divide-y divide-border/40 overflow-y-auto">
           {cart.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center gap-2 p-6 text-center text-muted-foreground/30">
               <ShoppingCart className="h-10 w-10" />
-              <p className="text-xs font-semibold text-muted-foreground/50">No items added yet</p>
-              <p className="text-[10px] text-muted-foreground/30">Click a product on the left to add</p>
+              <p className="text-xs font-semibold text-muted-foreground/50">
+                No items added yet
+              </p>
+              <p className="text-[10px] text-muted-foreground/30">
+                Click a product on the left to add
+              </p>
             </div>
           ) : (
             cart.map((item) => {
@@ -1068,22 +1291,24 @@ const POS = () => {
               return (
                 <div
                   key={item.id}
-                  className="grid items-center px-3 py-3 hover:bg-muted/30 transition-colors border-b border-border/30"
-                  style={{ gridTemplateColumns: "52px 1fr 70px 56px 108px 84px 76px" }}
+                  className="grid items-center border-b border-border/30 px-3 py-3 transition-colors hover:bg-muted/30"
+                  style={{
+                    gridTemplateColumns: "52px 1fr 70px 56px 108px 84px 76px",
+                  }}
                 >
                   {/* Thumbnail */}
-                  <div className="h-9 w-9 overflow-hidden rounded-md bg-muted/60 flex items-center justify-center flex-shrink-0">
+                  <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-md bg-muted/60">
                     {getProductIllustration(item.product, "sm")}
                   </div>
 
                   {/* Name + remove */}
-                  <div className="flex items-center gap-1.5 pr-1.5 min-w-0">
-                    <p className="flex-1 truncate font-semibold text-foreground text-xs leading-tight">
+                  <div className="flex min-w-0 items-center gap-1.5 pr-1.5">
+                    <p className="flex-1 truncate text-xs leading-tight font-semibold text-foreground">
                       {item.product.name}
                     </p>
                     <button
                       onClick={() => removeFromCart(item.id)}
-                      className="flex-shrink-0 rounded p-1 text-muted-foreground/40 hover:bg-red-500/10 hover:text-red-500 transition-colors"
+                      className="flex-shrink-0 rounded p-1 text-muted-foreground/40 transition-colors hover:bg-red-500/10 hover:text-red-500"
                       title="Remove"
                     >
                       <Trash2 className="h-3 w-3" />
@@ -1091,7 +1316,7 @@ const POS = () => {
                   </div>
 
                   {/* Batch */}
-                  <div className="font-mono text-xs text-muted-foreground truncate">
+                  <div className="truncate font-mono text-xs text-muted-foreground">
                     {item.batch.number}
                   </div>
 
@@ -1103,19 +1328,21 @@ const POS = () => {
                   {/* Discount: type dropdown + value */}
                   <div className="flex items-center gap-1">
                     <div className="relative">
-                      <select className="appearance-none rounded border border-border bg-background pl-2 pr-5 py-1 text-xs text-foreground outline-none focus:border-teal-400 h-7 cursor-pointer">
+                      <select className="h-7 cursor-pointer appearance-none rounded border border-border bg-background py-1 pr-5 pl-2 text-xs text-foreground outline-none focus:border-teal-400">
                         <option>Flat</option>
                         <option>%</option>
                       </select>
-                      <ChevronDown className="pointer-events-none absolute right-1 top-1/2 h-3 w-3 -translate-y-1/2 text-gray-400" />
+                      <ChevronDown className="pointer-events-none absolute top-1/2 right-1 h-3 w-3 -translate-y-1/2 text-gray-400" />
                     </div>
                     <input
                       type="number"
                       min="0"
                       max="100"
                       value={item.itemDiscount}
-                      onChange={(e) => updateItemDiscount(item.id, Number(e.target.value))}
-                      className="w-9 rounded border border-border bg-muted/40 px-1 py-1 text-xs text-center text-foreground outline-none focus:border-teal-400 h-7"
+                      onChange={(e) =>
+                        updateItemDiscount(item.id, Number(e.target.value))
+                      }
+                      className="h-7 w-9 rounded border border-border bg-muted/40 px-1 py-1 text-center text-xs text-foreground outline-none focus:border-teal-400"
                     />
                   </div>
 
@@ -1123,7 +1350,7 @@ const POS = () => {
                   <div className="flex items-center justify-center gap-1">
                     <button
                       onClick={() => updateQty(item.id, -1)}
-                      className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded border border-border bg-muted/40 text-muted-foreground hover:bg-muted/70 transition-colors"
+                      className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded border border-border bg-muted/40 text-muted-foreground transition-colors hover:bg-muted/70"
                     >
                       <Minus className="h-3 w-3" />
                     </button>
@@ -1132,14 +1359,14 @@ const POS = () => {
                     </span>
                     <button
                       onClick={() => updateQty(item.id, 1)}
-                      className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded border border-border bg-muted/40 text-muted-foreground hover:bg-muted/70 transition-colors"
+                      className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded border border-border bg-muted/40 text-muted-foreground transition-colors hover:bg-muted/70"
                     >
                       <Plus className="h-3 w-3" />
                     </button>
                   </div>
 
                   {/* Sub Total */}
-                  <div className="text-right pr-1">
+                  <div className="pr-1 text-right">
                     <span className="text-xs font-bold text-foreground tabular-nums">
                       {finalItemPrice.toFixed(2)}
                     </span>
@@ -1154,7 +1381,6 @@ const POS = () => {
         {/* ── Payment fields ── */}
         <div className="flex-shrink-0 border-t border-border bg-card px-4 pt-3.5 pb-2.5">
           <div className="grid grid-cols-2 gap-x-6 gap-y-2.5">
-
             {/* ── Left column ── */}
             <div className="space-y-2.5">
               {/* Customer Name */}
@@ -1167,7 +1393,7 @@ const POS = () => {
                   placeholder="Walk-in Customer"
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
-                  className="flex-1 min-w-0 rounded-lg border border-border bg-muted/40 px-2.5 py-1.5 text-xs text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-teal-400 focus:ring-1 focus:ring-teal-300/20 transition-all"
+                  className="min-w-0 flex-1 rounded-lg border border-border bg-muted/40 px-2.5 py-1.5 text-xs text-foreground transition-all outline-none placeholder:text-muted-foreground/50 focus:border-teal-400 focus:ring-1 focus:ring-teal-300/20"
                 />
               </div>
 
@@ -1181,7 +1407,7 @@ const POS = () => {
                   placeholder="Phone number"
                   value={customerPhone}
                   onChange={(e) => setCustomerPhone(e.target.value)}
-                  className="flex-1 min-w-0 rounded-lg border border-border bg-muted/40 px-2.5 py-1.5 text-xs text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-teal-400 focus:ring-1 focus:ring-teal-300/20 transition-all"
+                  className="min-w-0 flex-1 rounded-lg border border-border bg-muted/40 px-2.5 py-1.5 text-xs text-foreground transition-all outline-none placeholder:text-muted-foreground/50 focus:border-teal-400 focus:ring-1 focus:ring-teal-300/20"
                 />
               </div>
 
@@ -1190,21 +1416,20 @@ const POS = () => {
                 <label className="w-28 flex-shrink-0 text-xs font-semibold text-muted-foreground">
                   Payment Type
                 </label>
-                <div className="relative flex-1 min-w-0">
+                <div className="relative min-w-0 flex-1">
                   <select
                     value={paymentMode}
                     onChange={(e) => setPaymentMode(e.target.value)}
-                    className="w-full appearance-none rounded-lg border border-border bg-muted/40 py-1.5 pl-2.5 pr-7 text-xs text-foreground outline-none focus:border-teal-400 transition-all"
+                    className="w-full appearance-none rounded-lg border border-border bg-muted/40 py-1.5 pr-7 pl-2.5 text-xs text-foreground transition-all outline-none focus:border-teal-400"
                   >
                     <option>Cash</option>
                     <option>Card / POS</option>
                     <option>UPI / QR</option>
                     <option>Split Payment</option>
                   </select>
-                  <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                  <ChevronDown className="pointer-events-none absolute top-1/2 right-2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
                 </div>
               </div>
-
 
               {/* Receive Amount */}
               <div className="flex items-center gap-2">
@@ -1216,7 +1441,7 @@ const POS = () => {
                   value={receiveAmount}
                   onChange={(e) => setReceiveAmount(e.target.value)}
                   placeholder="0"
-                  className="flex-1 min-w-0 rounded-lg border border-border bg-muted/40 px-2.5 py-1.5 text-xs text-right text-foreground outline-none focus:border-teal-400 focus:ring-1 focus:ring-teal-300/20 transition-all"
+                  className="min-w-0 flex-1 rounded-lg border border-border bg-muted/40 px-2.5 py-1.5 text-right text-xs text-foreground transition-all outline-none focus:border-teal-400 focus:ring-1 focus:ring-teal-300/20"
                 />
               </div>
 
@@ -1227,11 +1452,12 @@ const POS = () => {
                 </label>
                 <input
                   readOnly
-                  value={dueAmount > 0 ? dueAmount.toFixed(2) : roundedNet.toFixed(2)}
-                  className="flex-1 min-w-0 rounded-lg border border-border bg-muted/40 px-2.5 py-1.5 text-xs text-right font-semibold text-foreground outline-none"
+                  value={
+                    dueAmount > 0 ? dueAmount.toFixed(2) : roundedNet.toFixed(2)
+                  }
+                  className="min-w-0 flex-1 rounded-lg border border-border bg-muted/40 px-2.5 py-1.5 text-right text-xs font-semibold text-foreground outline-none"
                 />
               </div>
-
 
               {/* Split Payment Amounts */}
               {paymentMode === "Split Payment" && (
@@ -1248,9 +1474,11 @@ const POS = () => {
                         const val = e.target.value
                         setSplitCashAmount(val)
                         const cashNum = parseFloat(val) || 0
-                        setSplitOnlineAmount(Math.max(0, roundedNet - cashNum).toString())
+                        setSplitOnlineAmount(
+                          Math.max(0, roundedNet - cashNum).toString()
+                        )
                       }}
-                      className="flex-1 min-w-0 rounded border border-teal-200 bg-background px-2.5 py-1 text-xs text-right outline-none focus:border-teal-400 transition-all font-semibold"
+                      className="min-w-0 flex-1 rounded border border-teal-200 bg-background px-2.5 py-1 text-right text-xs font-semibold transition-all outline-none focus:border-teal-400"
                     />
                   </div>
                   <div className="flex items-center gap-2">
@@ -1265,9 +1493,11 @@ const POS = () => {
                         const val = e.target.value
                         setSplitOnlineAmount(val)
                         const onlineNum = parseFloat(val) || 0
-                        setSplitCashAmount(Math.max(0, roundedNet - onlineNum).toString())
+                        setSplitCashAmount(
+                          Math.max(0, roundedNet - onlineNum).toString()
+                        )
                       }}
-                      className="flex-1 min-w-0 rounded border border-teal-200 bg-background px-2.5 py-1 text-xs text-right outline-none focus:border-teal-400 transition-all font-semibold"
+                      className="min-w-0 flex-1 rounded border border-teal-200 bg-background px-2.5 py-1 text-right text-xs font-semibold transition-all outline-none focus:border-teal-400"
                     />
                   </div>
                 </div>
@@ -1278,7 +1508,9 @@ const POS = () => {
             <div className="space-y-2.5">
               {/* Total */}
               <div className="flex items-baseline justify-between">
-                <span className="text-base font-black text-foreground">Total</span>
+                <span className="text-base font-black text-foreground">
+                  Total
+                </span>
                 <span className="text-base font-black text-foreground tabular-nums">
                   {roundedNet.toFixed(2)}
                   <span className="text-xs font-semibold text-muted-foreground"></span>
@@ -1293,23 +1525,27 @@ const POS = () => {
                 <div className="relative">
                   <select
                     value={discountType}
-                    onChange={(e) => setDiscountType(e.target.value as "flat" | "percent")}
-                    className="appearance-none rounded-lg border border-border bg-muted/40 py-1.5 pl-2.5 pr-7 text-xs text-foreground outline-none focus:border-teal-400"
+                    onChange={(e) =>
+                      setDiscountType(e.target.value as "flat" | "percent")
+                    }
+                    className="appearance-none rounded-lg border border-border bg-muted/40 py-1.5 pr-7 pl-2.5 text-xs text-foreground outline-none focus:border-teal-400"
                   >
                     <option value="percent">Select</option>
                     <option value="flat">Flat</option>
                     <option value="percent">%</option>
                   </select>
-                  <ChevronDown className="pointer-events-none absolute right-1.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                  <ChevronDown className="pointer-events-none absolute top-1/2 right-1.5 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
                 </div>
                 <input
                   type="number"
                   min="0"
                   value={discountPercent}
                   onChange={(e) =>
-                    setDiscountPercent(Math.min(100, Math.max(0, Number(e.target.value))))
+                    setDiscountPercent(
+                      Math.min(100, Math.max(0, Number(e.target.value)))
+                    )
                   }
-                  className="flex-1 min-w-0 rounded-lg border border-border bg-muted/40 px-2.5 py-1.5 text-xs text-right text-foreground outline-none focus:border-teal-400 transition-all"
+                  className="min-w-0 flex-1 rounded-lg border border-border bg-muted/40 px-2.5 py-1.5 text-right text-xs text-foreground transition-all outline-none focus:border-teal-400"
                 />
               </div>
             </div>
@@ -1317,11 +1553,11 @@ const POS = () => {
         </div>
 
         {/* ── Action buttons ── */}
-        <div className="grid grid-cols-4 gap-2 border-t border-border bg-muted/30 px-4 py-3 flex-shrink-0">
+        <div className="grid flex-shrink-0 grid-cols-4 gap-2 border-t border-border bg-muted/30 px-4 py-3">
           <button
             onClick={resetPos}
             disabled={createInvoiceMutation.isPending}
-            className="rounded-lg bg-amber-500 py-2.5 text-xs font-bold text-white hover:bg-amber-600 transition-colors active:scale-95 disabled:opacity-40 text-center shadow-sm"
+            className="rounded-lg bg-amber-500 py-2.5 text-center text-xs font-bold text-white shadow-sm transition-colors hover:bg-amber-600 active:scale-95 disabled:opacity-40"
           >
             Reset
           </button>
@@ -1329,21 +1565,21 @@ const POS = () => {
             type="button"
             onClick={handleHoldBill}
             disabled={cart.length === 0 || createInvoiceMutation.isPending}
-            className="rounded-lg bg-blue-500 py-2.5 text-xs font-bold text-white hover:bg-blue-600 transition-colors active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed text-center shadow-sm"
+            className="rounded-lg bg-blue-500 py-2.5 text-center text-xs font-bold text-white shadow-sm transition-colors hover:bg-blue-600 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
           >
             Hold
           </button>
           <button
             onClick={() => handleCompletePayment(false)}
             disabled={cart.length === 0 || createInvoiceMutation.isPending}
-            className="rounded-lg bg-teal-500 py-2.5 text-xs font-bold text-white hover:bg-teal-600 transition-colors active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed text-center shadow-sm"
+            className="rounded-lg bg-teal-500 py-2.5 text-center text-xs font-bold text-white shadow-sm transition-colors hover:bg-teal-600 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {createInvoiceMutation.isPending ? "Saving..." : "Save"}
           </button>
           <button
             onClick={() => handleCompletePayment(true)}
             disabled={cart.length === 0 || createInvoiceMutation.isPending}
-            className="rounded-lg bg-teal-600 py-2.5 text-xs font-bold text-white hover:bg-teal-700 transition-colors active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed text-center shadow-sm"
+            className="rounded-lg bg-teal-600 py-2.5 text-center text-xs font-bold text-white shadow-sm transition-colors hover:bg-teal-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {createInvoiceMutation.isPending ? "Saving..." : "Save & Print"}
           </button>
@@ -1372,48 +1608,61 @@ const POS = () => {
 
       {/* Success / Receipt modal */}
       <Dialog open={successModalOpen} onOpenChange={setSuccessModalOpen}>
-        <DialogContent className="sm:max-w-md font-sans p-6 rounded-2xl text-center bg-card">
+        <DialogContent className="rounded-2xl bg-card p-6 text-center font-sans sm:max-w-md">
           <DialogHeader className="items-center">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500 mb-2 mx-auto">
+            <div className="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500">
               <CheckCircle2 className="h-9 w-9" />
             </div>
             <DialogTitle className="text-base font-black tracking-tight text-foreground uppercase">
               Transaction Success
             </DialogTitle>
-            <DialogDescription className="text-muted-foreground font-semibold text-xs">
+            <DialogDescription className="text-xs font-semibold text-muted-foreground">
               Invoice generated and stock updated.
             </DialogDescription>
           </DialogHeader>
 
           {successInvoiceDetails && (
             <div className="space-y-3 py-2 text-left">
-              <div className="rounded-xl border border-border bg-muted/40 p-4 text-[10px] font-bold text-muted-foreground space-y-1.5">
+              <div className="space-y-1.5 rounded-xl border border-border bg-muted/40 p-4 text-[10px] font-bold text-muted-foreground">
                 <div className="flex justify-between">
                   <span>Invoice ID</span>
-                  <span className="text-foreground font-extrabold">{successInvoiceDetails.id}</span>
+                  <span className="font-extrabold text-foreground">
+                    {successInvoiceDetails.id}
+                  </span>
                 </div>
                 {successInvoiceDetails.customerName && (
                   <div className="flex justify-between">
                     <span>Customer Name</span>
-                    <span className="text-foreground font-extrabold">{successInvoiceDetails.customerName}</span>
+                    <span className="font-extrabold text-foreground">
+                      {successInvoiceDetails.customerName}
+                    </span>
                   </div>
                 )}
                 {successInvoiceDetails.customerPhone && (
                   <div className="flex justify-between">
                     <span>Customer Phone</span>
-                    <span className="text-foreground font-extrabold">{successInvoiceDetails.customerPhone}</span>
+                    <span className="font-extrabold text-foreground">
+                      {successInvoiceDetails.customerPhone}
+                    </span>
                   </div>
                 )}
                 <div className="flex justify-between">
                   <span>Date &amp; Time</span>
-                  <span className="text-foreground font-extrabold">{successInvoiceDetails.date}</span>
+                  <span className="font-extrabold text-foreground">
+                    {successInvoiceDetails.date}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span>Payment Mode</span>
-                  <span className="text-teal-600 font-black uppercase">
+                  <span className="font-black text-teal-600 uppercase">
                     {successInvoiceDetails.paymentMode === "SPLIT" ? (
                       <span>
-                        Split (Cash: ₹{successInvoiceDetails.cashAmount?.toFixed(2) ?? "0.00"}, Online: ₹{successInvoiceDetails.onlineAmount?.toFixed(2) ?? "0.00"})
+                        Split (Cash: ₹
+                        {successInvoiceDetails.cashAmount?.toFixed(2) ?? "0.00"}
+                        , Online: ₹
+                        {successInvoiceDetails.onlineAmount?.toFixed(2) ??
+                          "0.00"}
+                        )
                       </span>
                     ) : (
                       successInvoiceDetails.paymentMode
@@ -1422,7 +1671,7 @@ const POS = () => {
                 </div>
               </div>
 
-              <div className="rounded-xl border border-border bg-card p-4 space-y-1.5 text-[10px] font-bold">
+              <div className="space-y-1.5 rounded-xl border border-border bg-card p-4 text-[10px] font-bold">
                 <div className="flex justify-between text-muted-foreground">
                   <span>Gross Total</span>
                   <span>₹{successInvoiceDetails.grossTotal.toFixed(2)}</span>
@@ -1430,7 +1679,9 @@ const POS = () => {
                 {successInvoiceDetails.overallDiscount > 0 && (
                   <div className="flex justify-between text-emerald-600">
                     <span>Discount</span>
-                    <span>−₹{successInvoiceDetails.overallDiscount.toFixed(2)}</span>
+                    <span>
+                      −₹{successInvoiceDetails.overallDiscount.toFixed(2)}
+                    </span>
                   </div>
                 )}
                 <div className="flex justify-between text-muted-foreground">
@@ -1439,7 +1690,7 @@ const POS = () => {
                 </div>
                 <div className="flex justify-between border-t border-border pt-2 text-xs font-black text-foreground">
                   <span>Net Paid</span>
-                  <span className="text-emerald-600 font-mono">
+                  <span className="font-mono text-emerald-600">
                     ₹{successInvoiceDetails.netPayable.toFixed(2)}
                   </span>
                 </div>
@@ -1447,18 +1698,18 @@ const POS = () => {
             </div>
           )}
 
-          <DialogFooter className="gap-2 border-t pt-4 -mx-6 -mb-6 bg-muted/40 p-4 rounded-b-2xl">
+          <DialogFooter className="-mx-6 -mb-6 gap-2 rounded-b-2xl border-t bg-muted/40 p-4 pt-4">
             <Button
               variant="outline"
               onClick={() => toast.success("Printing invoice...")}
-              className="flex-1 font-extrabold text-xs uppercase flex items-center justify-center gap-1.5"
+              className="flex flex-1 items-center justify-center gap-1.5 text-xs font-extrabold uppercase"
             >
               <Printer className="h-4 w-4" />
               Print
             </Button>
             <Button
               onClick={resetPos}
-              className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs uppercase"
+              className="flex-1 bg-emerald-600 text-xs font-extrabold text-white uppercase hover:bg-emerald-700"
             >
               New Sale
             </Button>

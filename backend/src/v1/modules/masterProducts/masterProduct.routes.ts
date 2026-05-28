@@ -1,3 +1,6 @@
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 import { Router } from "express";
 import multer from "multer";
 import { MasterProductController } from "./masterProduct.controller.js";
@@ -35,10 +38,25 @@ const router = Router();
  */
 router.get("/", isAuthenticated, MasterProductController.getAll);
 
+const uploadDir = path.join(os.tmpdir(), "master-product-imports");
+fs.mkdirSync(uploadDir, { recursive: true });
+
 const upload = multer({
-  storage: multer.memoryStorage(),
+  storage: multer.diskStorage({
+    destination: (_req, _file, cb) => cb(null, uploadDir),
+    filename: (_req, file, cb) =>
+      cb(null, `${Date.now()}-${file.originalname.replace(/\s+/g, "_")}`),
+  }),
   limits: {
-    fileSize: 100 * 1024 * 1024, // 100MB
+    fileSize: 50 * 1024 * 1024,
+  },
+  fileFilter: (_req, file, cb) => {
+    if (/\.(xlsx|xls|csv)$/i.test(file.originalname)) {
+      cb(null, true);
+      return;
+    }
+
+    cb(new Error("Only .xlsx, .xls, and .csv files are allowed"));
   },
 });
 

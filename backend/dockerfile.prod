@@ -24,6 +24,7 @@ RUN apk add --no-cache \
 
 ENV CHROMIUM_PATH=/usr/bin/chromium-browser
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+ENV NODE_OPTIONS=--max-old-space-size=768
 
 
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
