@@ -3,7 +3,7 @@ import { NavLink } from "react-router"
 import { ChevronDown, LogOut } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
+import { cn, getImageUrl } from "@/lib/utils"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
 import {
@@ -22,6 +22,25 @@ interface DashboardSidebarProps {
   isLoggingOut: boolean
   onLogout: () => void
   onNavigate?: (to?: string) => void
+}
+
+function isValidLogo(path: string | undefined | null): boolean {
+  if (!path) return false
+  const lowerPath = path.trim().toLowerCase()
+  if (
+    lowerPath === "tenant workspace" ||
+    lowerPath === "" ||
+    lowerPath.includes("manage tenants, users, and platform-wide settings")
+  ) {
+    return false
+  }
+  return (
+    path.startsWith("http") ||
+    path.startsWith("data:") ||
+    path.startsWith("/") ||
+    path.includes(".") ||
+    path.includes("/")
+  )
 }
 
 export function DashboardSidebar({
@@ -58,29 +77,47 @@ export function DashboardSidebar({
     setExpandedItems((current) => (current.includes(title) ? [] : [title]))
   }
 
+  const hasCustomLogo = isValidLogo(workspaceSubtitle)
+  const logoSrc = hasCustomLogo ? getImageUrl(workspaceSubtitle) : "/logo.png"
+
   return (
     <div className="flex h-full flex-col bg-sidebar  text-[#D1D5DB]">
       {/* Brand Header */}
       <div
         className={cn(
-          "flex h-16 shrink-0 items-center border-b border-white/10 dark:border-zinc-800",
-          isCollapsed ? "justify-center px-0" : "gap-3 px-6"
+          "flex shrink-0 flex-col items-center justify-center border-b border-white/10 dark:border-zinc-800 text-center",
+          isCollapsed ? "h-16 px-0" : "py-4 gap-2 px-4"
         )}
       >
-        <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white/5">
-          <img
-            src={workspaceSubtitle || "/logo.png"}
-            alt={workspaceTitle}
-            className="h-full w-full object-cover"
-          />
-        </div>
-
-        {!isCollapsed && (
-          <div className="min-w-0">
-            <h2 className="truncate text-base font-bold tracking-tight text-[#D1D5DB]">
-              {workspaceTitle}
-            </h2>
+        {isCollapsed ? (
+          <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white/5">
+            <img
+              src={logoSrc}
+              alt={workspaceTitle}
+              className={cn(
+                "h-full w-full",
+                hasCustomLogo ? "object-contain p-1" : "object-contain p-1.5"
+              )}
+            />
           </div>
+        ) : (
+          <>
+            <div className="flex h-12 w-full items-center justify-center overflow-hidden">
+              <img
+                src={logoSrc}
+                alt={workspaceTitle}
+                className={cn(
+                  "h-full w-full",
+                  hasCustomLogo ? "object-contain" : "object-contain p-1"
+                )}
+              />
+            </div>
+            <div className="w-full min-w-0">
+              <h2 className="truncate text-base font-bold tracking-tight text-[#D1D5DB]">
+                {workspaceTitle}
+              </h2>
+            </div>
+          </>
         )}
       </div>
 
