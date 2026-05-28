@@ -64,7 +64,7 @@ const SettingsContext = createContext<SettingsContextValue | undefined>(
 
 export function SettingsProvider({ children }: PropsWithChildren) {
   const queryClient = useQueryClient()
-  const { activeOrganizationId, activeBranchId } = useAuth()
+  const { activeOrganizationId, activeBranchId, user } = useAuth()
 
   const { data, isLoading, isFetching, refetch } = useQuery({
     queryKey: ["settings", activeOrganizationId, activeBranchId],
@@ -75,7 +75,7 @@ export function SettingsProvider({ children }: PropsWithChildren) {
 
       return await SettingsApi.getSettings()
     },
-    enabled: Boolean(activeOrganizationId),
+    enabled: Boolean(user && activeOrganizationId),
     staleTime: 60_000,
     refetchOnWindowFocus: false,
   })
