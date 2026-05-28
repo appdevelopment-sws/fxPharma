@@ -40,10 +40,12 @@ import {
 } from "@/constants/page/admin/invoices"
 import ProcessReturnDrawer from "@/components/dialog/ProcessReturnDrawer"
 import { useDisclosure } from "@/hooks/useDisclosure"
+import { useSettings } from "@/context/settingsContext"
 
 const formatCurrency = (value: number) => `\u20B9${value.toFixed(2)}`
 
 export default function RecentInvoicesPage() {
+  const { settings } = useSettings()
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(
     null
   )
@@ -90,10 +92,14 @@ export default function RecentInvoicesPage() {
     () => invoiceTemplatesData?.data.templates ?? [],
     [invoiceTemplatesData]
   )
-  const savedTemplateName =
-    invoiceTemplatesData?.data.invoice_template_name ||
-    invoiceTemplatesData?.data.defaultTemplate ||
-    "template1"
+  const savedTemplateName = useMemo(
+    () =>
+      settings.invoice_template_name ||
+      settings.invoice_template ||
+      invoiceTemplatesData?.data.defaultTemplate ||
+      "template1",
+    [invoiceTemplatesData?.data.defaultTemplate, settings]
+  )
 
   const defaultTemplate = useMemo(() => {
     if (invoiceTemplates.includes(savedTemplateName)) return savedTemplateName

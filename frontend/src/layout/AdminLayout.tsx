@@ -1,6 +1,7 @@
 import { useMemo, useCallback } from "react"
 import { useNavigate } from "react-router"
 import { useAuth } from "@/context/authContext"
+import { useSettings } from "@/context/settingsContext"
 import AuthApi from "@/services/authApi"
 import { queryClient } from "@/services/customQueryClient"
 import { queryKeys } from "@/lib/queryKeys"
@@ -12,12 +13,18 @@ import { WorkspaceShell } from "@/components/navigation/WorkspaceShell"
 
 const AdminLayout = () => {
   const { user } = useAuth()
+  const { settings } = useSettings()
   const navigate = useNavigate()
 
   const navigationGroups = useMemo(
     () => getVisibleAdminNavigation(user),
     [user]
   )
+
+  const storeName =
+    settings.store_name ||
+    user?.organizations?.[0]?.organization?.name ||
+    "Tenant Workspace"
 
   const handleLogout = useCallback(async () => {
     try {
@@ -39,12 +46,8 @@ const AdminLayout = () => {
     <WorkspaceShell
       appLabel="Dawa Dukaan"
       workspaceLabel={user?.name ?? "Tenant Workspace"}
-      workspaceTitle={
-        user?.organizations[0].organization.name ?? "Tenant Workspace"
-      }
-      workspaceSubtitle={
-        user?.organizations[0].organization.logo ?? "Tenant Workspace"
-      }
+      workspaceTitle={storeName}
+      workspaceSubtitle={settings.store_name ? storeName : "Tenant Workspace"}
       userName={user?.name ?? "Workspace User"}
       userRole={user?.role ?? "Member"}
       userEmail={user?.email}
