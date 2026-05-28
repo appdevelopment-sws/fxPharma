@@ -21,6 +21,7 @@ model User {
   auditLogs     AuditLog[]
 
   invitedMembers OrganizationMember[] @relation("MemberInvitedBy")
+  hsnCodes      Hsn[]
 
   @@index([email])
 }

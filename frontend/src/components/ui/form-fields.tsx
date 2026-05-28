@@ -13,6 +13,7 @@ import {
   Loader2,
   Upload,
   File as FileIcon,
+  Plus,
 } from "lucide-react"
 import { debounce } from "lodash"
 
@@ -809,3 +810,170 @@ export function FormFileUpload<T extends FieldValues>({
     />
   )
 }
+
+// ============================================================================
+// FormCreatableSelect Component
+// ============================================================================
+
+interface FormCreatableSelectProps<T extends FieldValues> {
+  control: Control<T>
+  name: Path<T>
+  label: string
+  placeholder?: string
+  options: Array<{ label: string; value: string }>
+  required?: boolean
+  disabled?: boolean
+  readOnly?: boolean
+  error?: string
+  tooltip?: string
+  searchValue?: string
+  onSearchChange?: (val: string) => void
+}
+
+/**
+ * Searchable select component that allows adding a custom option if not found
+ */
+export function FormCreatableSelect<T extends FieldValues>({
+  control,
+  name,
+  label,
+  placeholder = "Select or enter...",
+  options,
+  required,
+  disabled,
+  readOnly,
+  error,
+  tooltip,
+  searchValue,
+  onSearchChange,
+}: FormCreatableSelectProps<T>) {
+  const [open, setOpen] = React.useState(false)
+  const [internalSearch, setInternalSearch] = React.useState("")
+
+  const isControlledSearch = searchValue !== undefined && onSearchChange !== undefined
+  const currentSearch = isControlledSearch ? searchValue : internalSearch
+  const setCurrentSearch = isControlledSearch ? onSearchChange : setInternalSearch
+
+  const filteredOptions = React.useMemo(() => {
+    if (isControlledSearch) return options
+
+    if (!currentSearch) return options
+    const lowerVal = currentSearch.toLowerCase()
+    return options.filter((option) =>
+      option.label.toLowerCase().includes(lowerVal) ||
+      option.value.toLowerCase().includes(lowerVal)
+    )
+  }, [options, currentSearch, isControlledSearch])
+
+  const showCreateOption = React.useMemo(() => {
+    if (!currentSearch) return false
+    const exactMatch = options.some(
+      (opt) => opt.value.toLowerCase() === currentSearch.toLowerCase()
+    )
+    return !exactMatch
+  }, [options, currentSearch])
+
+  return (
+    <Controller
+      control={control}
+      name={name}
+      render={({ field }) => (
+        <div className="space-y-2">
+          <FieldLabel
+            htmlFor={String(name)}
+            label={label}
+            required={required}
+            tooltip={tooltip}
+          />
+
+          <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={open}
+                disabled={disabled || readOnly}
+                className={cn(
+                  "h-8 w-full justify-between rounded-lg px-3 font-normal",
+                  !field.value && "text-muted-foreground",
+                  readOnly && "bg-muted/30 opacity-90",
+                  error && "border-destructive"
+                )}
+              >
+                <span className="truncate">
+                  {field.value
+                    ? options.find((option) => option.value === field.value)
+                        ?.label || field.value
+                    : placeholder}
+                </span>
+                <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent
+              className="w-[--radix-popover-trigger-width] p-0"
+              align="start"
+            >
+              <div className="flex flex-col">
+                <div className="flex items-center border-b px-3 py-2">
+                  <Search className="mr-2 size-4 shrink-0 opacity-50" />
+                  <input
+                    className="flex h-8 w-full rounded-md bg-transparent text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                    placeholder="Search or type custom..."
+                    value={currentSearch}
+                    onChange={(e) => setCurrentSearch(e.target.value)}
+                  />
+                </div>
+                <div className="max-h-[300px] overflow-y-auto p-1">
+                  {filteredOptions.length === 0 && !showCreateOption ? (
+                    <div className="py-6 text-center text-sm text-muted-foreground">
+                      No results found.
+                    </div>
+                  ) : (
+                    filteredOptions.map((option) => (
+                      <div
+                        key={option.value}
+                        className={cn(
+                          "relative flex cursor-pointer items-center rounded-sm px-2 py-1.5 text-sm outline-none select-none hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+                          field.value === option.value &&
+                            "bg-accent text-accent-foreground"
+                        )}
+                        onClick={() => {
+                          field.onChange(option.value)
+                          setOpen(false)
+                        }}
+                      >
+                        <Check
+                          className={cn(
+                            "mr-2 h-4 w-4",
+                            field.value === option.value
+                              ? "opacity-100"
+                              : "opacity-0"
+                          )}
+                        />
+                        {option.label}
+                      </div>
+                    ))
+                  )}
+                  {showCreateOption && (
+                    <div
+                      className="relative flex cursor-pointer items-center rounded-sm px-2 py-1.5 text-sm text-primary font-medium outline-none select-none hover:bg-accent hover:text-accent-foreground border-t mt-1"
+                      onClick={() => {
+                        field.onChange(currentSearch)
+                        setOpen(false)
+                      }}
+                    >
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add custom HSN: "{currentSearch}"
+                    </div>
+                  )}
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+          {error && <p className="text-xs text-destructive">{error}</p>}
+        </div>
+      )}
+    />
+  )
+}
+

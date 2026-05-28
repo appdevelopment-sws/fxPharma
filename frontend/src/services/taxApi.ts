@@ -109,6 +109,9 @@ export const HsnApi = {
 
   createHsn: async (data: HsnFormValues) => api.post(HSN_BASE_URL, data),
 
+  createUserHsn: async (data: HsnFormValues) =>
+    api.post(`${HSN_BASE_URL}/user-hsn`, data),
+
   updateHsn: async (id: string, data: HsnFormValues) =>
     api.put(`${HSN_BASE_URL}/${id}`, data),
 
