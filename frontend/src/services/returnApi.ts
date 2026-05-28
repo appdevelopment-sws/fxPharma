@@ -163,6 +163,10 @@ const ReturnApi = {
   ): Promise<{ success: boolean }> => {
     return api.patch(`${BASE_URL}/${id}/status`, { status })
   },
+
+  deleteReturn: async (id: string): Promise<{ success: boolean }> => {
+    return api.delete(`${BASE_URL}/${id}`)
+  },
 }
 
 export default ReturnApi

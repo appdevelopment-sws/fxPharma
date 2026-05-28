@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import {
   Eye,
   CreditCard,
@@ -10,7 +10,9 @@ import {
   Download,
   RotateCcw,
   Printer,
+  Trash2,
 } from "lucide-react"
+import { ConfirmDialog } from "@/components/confirmDialog"
 import { toast } from "sonner"
 
 import DataTable, { type DataTableColumn } from "@/components/data-table"
@@ -51,6 +53,32 @@ export default function RecentInvoicesPage() {
   )
   const [selectedTemplate, setSelectedTemplate] = useState<string>("template1")
   const { filter, handleFilter } = useSearchFilter(INITIAL_INVOICE_FILTERS)
+
+  const queryClient = useQueryClient()
+  const deleteConfirm = useDisclosure<Invoice>()
+
+  const deleteInvoiceMutation = useMutation({
+    mutationFn: (id: string) => InvoiceApi.deleteInvoice(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.invoices.all })
+      queryClient.invalidateQueries({ queryKey: queryKeys.inventory.all })
+      toast.success("Invoice deleted successfully")
+      deleteConfirm.onClose()
+    },
+    onError: (error: unknown) => {
+      const errMsg =
+        (typeof error === "object" &&
+          error !== null &&
+          "response" in error &&
+          typeof (error as { response?: { data?: { message?: string } } }).response
+            ?.data?.message === "string" &&
+          (error as { response?: { data?: { message?: string } } }).response?.data
+            ?.message) ||
+        (error instanceof Error ? error.message : null) ||
+        "Failed to delete invoice"
+      toast.error(errMsg)
+    },
+  })
 
   const { data: invoicesData, isLoading: isLoadingInvoices } = useQuery({
     queryKey: queryKeys.invoices.list(filter),
@@ -328,6 +356,14 @@ export default function RecentInvoicesPage() {
             className="text-muted-foreground hover:text-foreground"
           >
             <RotateCcw className="size-4" />
+          </Button>
+          <Button
+            size="icon-sm"
+            variant="ghost"
+            onClick={() => deleteConfirm.onOpen(row)}
+            className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+          >
+            <Trash2 className="size-4" />
           </Button>
         </div>
       ),
@@ -613,6 +649,21 @@ export default function RecentInvoicesPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog
+        open={deleteConfirm.isOpen}
+        onOpenChange={deleteConfirm.onClose}
+        title="Delete Invoice"
+        description={`Are you sure you want to delete invoice ${deleteConfirm.data?.invoice_id}? This will also delete any associated returns and revert stock changes.`}
+        confirmText="Delete"
+        variant="danger"
+        isLoading={deleteInvoiceMutation.isPending}
+        onConfirm={() => {
+          if (deleteConfirm.data) {
+            deleteInvoiceMutation.mutate(deleteConfirm.data.id)
+          }
+        }}
+      />
     </div>
   )
 }

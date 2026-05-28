@@ -19,5 +19,6 @@ router.post(
   validate(createInvoiceSchema),
   InvoicesController.create,
 );
+router.delete("/:id", isAuthenticated, InvoicesController.delete);
 
 export default router;

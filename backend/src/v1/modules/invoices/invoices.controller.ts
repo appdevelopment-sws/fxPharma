@@ -705,4 +705,90 @@ export class InvoicesController {
       },
     });
   });
+
+  static delete = catchAsync(async (req: Request, res: Response) => {
+    const { organizationId, branchId } = getRequestScope(req);
+    const id = req.params.id as string;
+
+    await rootPrisma.$transaction(async (tx) => {
+      const invoice = await tx.invoice.findUnique({
+        where: { id },
+        include: {
+          items: true,
+          returns: {
+            where: { status: "REFUNDED" },
+            include: { items: true },
+          },
+        },
+      });
+
+      if (!invoice) {
+        throw new ErrorHandler("Invoice not found.", 404);
+      }
+
+      if (
+        invoice.organizationId !== organizationId ||
+        (branchId && invoice.branchId !== branchId)
+      ) {
+        throw new ErrorHandler("Access denied.", 403);
+      }
+
+      // Map of returned quantities by invoiceItemId
+      const returnedQtyMap = new Map<string, number>();
+      for (const ret of invoice.returns) {
+        for (const retItem of ret.items) {
+          if (retItem.invoiceItemId) {
+            const current = returnedQtyMap.get(retItem.invoiceItemId) || 0;
+            returnedQtyMap.set(retItem.invoiceItemId, current + retItem.returnQty);
+          }
+        }
+      }
+
+      // Revert stock adjustments for invoice items
+      for (const item of invoice.items) {
+        const returnedQty = returnedQtyMap.get(item.id) || 0;
+        const restockQty = item.qty - returnedQty;
+
+        if (restockQty > 0) {
+          const inventoryItem = await tx.inventory.findFirst({
+            where: { id: item.inventoryId, organizationId },
+          });
+
+          if (!inventoryItem) {
+            throw new ErrorHandler(`Inventory item ${item.inventoryName} not found.`, 404);
+          }
+
+          const nextStock = (inventoryItem.availableStock ?? 0) + restockQty;
+          await tx.inventory.update({
+            where: { id: inventoryItem.id },
+            data: { availableStock: nextStock },
+          });
+
+          if (item.batchId) {
+            const batch = await tx.inventoryBatch.findFirst({
+              where: { id: item.batchId, inventoryId: item.inventoryId },
+            });
+
+            if (!batch) {
+              throw new ErrorHandler(`Batch not found for item ${item.inventoryName}.`, 404);
+            }
+
+            const nextBatchQty = batch.availableQty + restockQty;
+            await tx.inventoryBatch.update({
+              where: { id: batch.id },
+              data: { availableQty: nextBatchQty },
+            });
+          }
+        }
+      }
+
+      // Delete the invoice (cascade deletes returns and items)
+      await tx.invoice.delete({
+        where: { id },
+      });
+    });
+
+    res.json({ success: true, message: "Invoice deleted successfully." });
+  });
 }
+
