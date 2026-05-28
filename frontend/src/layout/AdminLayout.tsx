@@ -44,7 +44,7 @@ const AdminLayout = () => {
 
   return (
     <WorkspaceShell
-      appLabel={user?.organizations[0].organization.logo}
+      appLabel={user?.organizations[0].organization.name ?? "Dawa Dukaan"}
       workspaceLabel={user?.name ?? "Tenant Workspace"}
       workspaceTitle={storeName}
       workspaceSubtitle={
