@@ -1,6 +1,7 @@
 import {
   Bar,
   BarChart,
+  Cell,
   Line,
   LineChart,
   Area,
@@ -27,6 +28,15 @@ export function DashboardBarChart({
   yKey = "value",
   color = "var(--primary)",
 }: BaseChartProps) {
+  const colors = [
+    "#10b981", // Teal/Green (e.g. POS)
+    "#0b4f9c", // Blue (e.g. Stock Management)
+    "#8b5cf6", // Purple/Violet (e.g. Sales Returns)
+    "#ff7a00", // Orange (e.g. Orders)
+    "#f59e0b", // Amber/Yellow
+    "#ec4899", // Pink
+  ]
+
   return (
     <ResponsiveContainer width="100%" height={height}>
       <BarChart
@@ -63,7 +73,11 @@ export function DashboardBarChart({
           }}
           itemStyle={{ color: "var(--foreground)" }}
         />
-        <Bar dataKey={yKey} fill={color} radius={[4, 4, 0, 0]} />
+        <Bar dataKey={yKey} radius={[4, 4, 0, 0]}>
+          {(data || []).map((_, index) => (
+            <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+          ))}
+        </Bar>
       </BarChart>
     </ResponsiveContainer>
   )
