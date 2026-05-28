@@ -38,16 +38,20 @@ router.get("/", isAuthenticated, MasterProductController.getAll);
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB
+    fileSize: 100 * 1024 * 1024, // 100MB
   },
 });
 
-router.get("/import-template", isAuthenticated, MasterProductController.downloadTemplate);
+router.get(
+  "/import-template",
+  isAuthenticated,
+  MasterProductController.downloadTemplate,
+);
 router.post(
   "/bulk-import",
   isAuthenticated,
   upload.single("file"),
-  MasterProductController.bulkImport
+  MasterProductController.bulkImport,
 );
 
 /**
