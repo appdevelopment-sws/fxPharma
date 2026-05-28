@@ -19,18 +19,21 @@ const AdminLayout = () => {
     [user]
   )
 
-  const handleLogout = useCallback(() => {
-    // Fast logout: clear client state and redirect instantly
-    queryClient.clear()
-    localStorage.removeItem("activeOrganizationId")
-    localStorage.removeItem("activeBranchId")
-    navigate("/admin/login", { replace: true })
+  const handleLogout = useCallback(async () => {
+    try {
+      queryClient.cancelQueries({ queryKey: queryKeys.auth.user() })
+      queryClient.setQueryData(queryKeys.auth.user(), null)
+      queryClient.removeQueries({ queryKey: queryKeys.auth.all })
+      localStorage.removeItem("activeOrganizationId")
+      localStorage.removeItem("activeBranchId")
 
-    // Fire server-side logout in the background (invalidate cookie)
-    AuthApi.logout().catch(() => {
-      // Silently ignore — client is already logged out
-    })
-  }, [navigate])
+      await AuthApi.logout()
+    } catch {
+      // Ignore server-side logout errors; the client session is already cleared.
+    } finally {
+      window.location.replace("/admin/login")
+    }
+  }, [])
 
   return (
     <WorkspaceShell

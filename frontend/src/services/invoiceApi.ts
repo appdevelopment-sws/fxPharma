@@ -69,6 +69,7 @@ export type InvoiceStats = {
 export type InvoiceTemplatesResponse = {
   templates: string[]
   defaultTemplate: string
+  invoice_template_name?: string
 }
 
 const BASE_URL = "/invoices"

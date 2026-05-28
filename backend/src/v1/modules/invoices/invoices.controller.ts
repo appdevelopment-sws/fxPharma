@@ -347,13 +347,16 @@ export class InvoicesController {
             },
           });
 
-          const totalAmount = invoicesInMonth.reduce((acc, inv) => acc + Number(inv.totalAmount), 0);
+          const totalAmount = invoicesInMonth.reduce(
+            (acc, inv) => acc + Number(inv.totalAmount),
+            0,
+          );
           const monthName = d.toLocaleString("en-US", { month: "short" });
           return {
             name: monthName,
             value: totalAmount,
           };
-        })
+        }),
       ),
     ]);
 
@@ -366,8 +369,14 @@ export class InvoicesController {
       0,
     );
 
-    const thisMonthSales = thisMonthInvoices.reduce((acc, inv) => acc + Number(inv.totalAmount), 0);
-    const lastMonthSales = lastMonthInvoices.reduce((acc, inv) => acc + Number(inv.totalAmount), 0);
+    const thisMonthSales = thisMonthInvoices.reduce(
+      (acc, inv) => acc + Number(inv.totalAmount),
+      0,
+    );
+    const lastMonthSales = lastMonthInvoices.reduce(
+      (acc, inv) => acc + Number(inv.totalAmount),
+      0,
+    );
 
     const todayCount = todayInvoices.length;
     const yesterdayCount = yesterdayInvoices.length;
@@ -418,7 +427,10 @@ export class InvoicesController {
         refunds_issued: todayRefunds,
         refunds_issued_trend: getTrendString(todayRefunds, yesterdayRefunds),
         monthly_sales_total: thisMonthSales,
-        monthly_sales_trend: getMonthTrendString(thisMonthSales, lastMonthSales),
+        monthly_sales_trend: getMonthTrendString(
+          thisMonthSales,
+          lastMonthSales,
+        ),
         low_stock_count: lowStockCount,
         monthly_sales_chart: monthlySalesChart,
         top_stock_medicines: topStockMedicines,
@@ -426,14 +438,48 @@ export class InvoicesController {
     });
   });
 
-  static getTemplates = catchAsync(async (_req: Request, res: Response) => {
+  static getTemplates = catchAsync(async (req: Request, res: Response) => {
+    const { organizationId, branchId } = getRequestScope(req);
     const templates = await invoiceTemplateService.getAvailableTemplates();
+
+    const orgSettings = await rootPrisma.setting.findMany({
+      where: { organizationId, branchId: null },
+    });
+
+    let branchSettings: any[] = [];
+    if (branchId) {
+      branchSettings = await rootPrisma.setting.findMany({
+        where: { organizationId, branchId },
+      });
+    }
+
+    const settingsMap: Record<string, string> = {};
+    orgSettings.forEach((setting) => {
+      settingsMap[setting.key] = setting.value;
+    });
+    branchSettings.forEach((setting) => {
+      settingsMap[setting.key] = setting.value;
+    });
+
+    const configuredTemplate =
+      settingsMap.invoice_template_name || settingsMap.invoice_template;
+
+    let defaultTemplate = invoiceTemplateService.getSafeTemplateName();
+    if (configuredTemplate) {
+      try {
+        defaultTemplate =
+          invoiceTemplateService.getSafeTemplateName(configuredTemplate);
+      } catch {
+        defaultTemplate = invoiceTemplateService.getSafeTemplateName();
+      }
+    }
 
     res.json({
       success: true,
       data: {
         templates,
-        defaultTemplate: invoiceTemplateService.getSafeTemplateName(),
+        defaultTemplate,
+        invoice_template_name: defaultTemplate,
       },
     });
   });

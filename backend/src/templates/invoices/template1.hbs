@@ -230,7 +230,7 @@
               </div>
             </td>
             <td style="vertical-align: top; text-align: right;">
-              <img src="{{brandLogo}}" alt="Logo" style="max-height: 60px; max-width: 220px;" onerror="this.style.display='none'" />
+              <img src="{{brandLogo}}" alt="Header Logo" style="max-height: 60px; max-width: 220px;" onerror="this.style.display='none'" />
             </td>
           </tr>
         </table>
@@ -321,11 +321,16 @@
         </div>
 
         <div class="signature-section">
-          <div>This is a computer-generated invoice and does not require a signature.</div>
+          <div style="display: flex; flex-direction: column; gap: 8px; align-items: flex-start;">
+            <div>This is a computer-generated invoice and does not require a signature.</div>
+            {{{directorSignatureBlock}}}
+          </div>
+          {{{paymentQrBlock}}}
         </div>
       </div>
 
       <div class="footer">
+        {{{footerImageBlock}}}
         <div style="font-weight: bold; color: #0d47a1; margin-bottom: 4px;">
           Contact us: {{companyContactBlock}}
         </div>
