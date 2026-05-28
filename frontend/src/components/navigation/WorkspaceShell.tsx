@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from "react"
+import { useMemo, useState, useEffect, type ReactNode } from "react"
 import { Outlet, useLocation } from "react-router"
 import { ChevronLeft, ChevronRight, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -46,6 +46,14 @@ export function WorkspaceShell({
   const [isCollapsed, setIsCollapsed] = useState(false)
   const location = useLocation()
 
+  useEffect(() => {
+    if (location.pathname.includes("/pos")) {
+      setIsCollapsed(true)
+    } else {
+      setIsCollapsed(false)
+    }
+  }, [location.pathname])
+
   const activeItem = useMemo(() => {
     const allItems = flattenNavigationItems(navigationGroups)
     return (
@@ -55,16 +63,16 @@ export function WorkspaceShell({
   }, [location.pathname, navigationGroups])
   console.log("workspaceSubtitle", workspaceSubtitle)
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="relative flex h-screen overflow-hidden">
       {/* Desktop Sidebar */}
       <aside
         onMouseEnter={() => {
-          if (isCollapsed) {
+          if (location.pathname.includes("/pos") && isCollapsed) {
             setIsCollapsed(false)
           }
         }}
         onMouseLeave={() => {
-          if (!isCollapsed) {
+          if (location.pathname.includes("/pos") && !isCollapsed) {
             setIsCollapsed(true)
           }
         }}
@@ -88,13 +96,18 @@ export function WorkspaceShell({
             }
           }}
         />
+      </aside>
 
-        {/* Collapse Toggle Button */}
-        {/* <Button
+      {/* Collapse Toggle Button */}
+      {!location.pathname.includes("/pos") && (
+        <Button
           type="button"
           variant="outline"
           size="icon"
-          className="absolute top-20 -right-3 z-50 size-6 rounded-full border-slate-200 bg-white text-[#2563EB] shadow-md transition-colors hover:bg-slate-50 hover:text-blue-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700 dark:hover:text-white"
+          className={cn(
+            "absolute top-20 z-50 size-6 rounded-full border-slate-200 bg-white text-[#2563EB] shadow-md transition-[left] duration-550 ease-out hover:bg-slate-50 hover:text-blue-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700 dark:hover:text-white hidden lg:flex items-center justify-center",
+            isCollapsed ? "left-[68px]" : "left-[208px]"
+          )}
           onClick={() => setIsCollapsed(!isCollapsed)}
         >
           {isCollapsed ? (
@@ -102,8 +115,8 @@ export function WorkspaceShell({
           ) : (
             <ChevronLeft className="size-3" />
           )}
-        </Button> */}
-      </aside>
+        </Button>
+      )}
 
       {/* Main Content Area */}
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">

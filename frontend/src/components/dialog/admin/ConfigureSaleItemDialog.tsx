@@ -300,10 +300,10 @@ export default function ConfigureSaleItemDialog({
                 setQty((q) => Math.min(q, activeBatch.stock))
               }}
               className={cn(
-                "flex-1 text-center py-2 text-xs font-black rounded-lg transition-all cursor-pointer",
+                "flex-1 text-center py-2 text-xs font-black rounded-lg transition-all cursor-pointer border",
                 sellUnit === "strip"
-                  ? "bg-white text-slate-900 shadow-2xs dark:bg-slate-900 dark:text-slate-100"
-                  : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                  ? "bg-white text-slate-900 border-blue-500 dark:border-blue-600 shadow-2xs dark:bg-slate-900 dark:text-slate-100"
+                  : "border-transparent text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
               )}
             >
               Strips ({activeBatch.stock} Available)
@@ -313,10 +313,10 @@ export default function ConfigureSaleItemDialog({
               disabled={qtyPerStrip <= 1}
               onClick={() => setSellUnit("piece")}
               className={cn(
-                "flex-1 text-center py-2 text-xs font-black rounded-lg transition-all disabled:opacity-40 cursor-pointer",
+                "flex-1 text-center py-2 text-xs font-black rounded-lg transition-all disabled:opacity-40 cursor-pointer border",
                 sellUnit === "piece"
-                  ? "bg-white text-slate-900 shadow-2xs dark:bg-slate-900 dark:text-slate-100"
-                  : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                  ? "bg-white text-slate-900 border-blue-500 dark:border-blue-600 shadow-2xs dark:bg-slate-900 dark:text-slate-100"
+                  : "border-transparent text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
               )}
             >
               Pieces ({activeBatch.stock * qtyPerStrip} Available)

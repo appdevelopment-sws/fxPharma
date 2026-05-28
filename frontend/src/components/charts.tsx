@@ -29,12 +29,12 @@ export function DashboardBarChart({
   color = "var(--primary)",
 }: BaseChartProps) {
   const colors = [
-    "#10b981", // Teal/Green (e.g. POS)
-    "#0b4f9c", // Blue (e.g. Stock Management)
-    "#8b5cf6", // Purple/Violet (e.g. Sales Returns)
-    "#ff7a00", // Orange (e.g. Orders)
-    "#f59e0b", // Amber/Yellow
-    "#ec4899", // Pink
+    "#88eeccff", // Teal/Green (e.g. POS)
+    "#6094d0ff", // Blue (e.g. Stock Management)
+    "#9874edff", // Purple/Violet (e.g. Sales Returns)
+    "#e3a265ff", // Orange (e.g. Orders)
+    "#e2b362ff", // Amber/Yellow
+    "#ea6baaff", // Pink
   ]
 
   return (
