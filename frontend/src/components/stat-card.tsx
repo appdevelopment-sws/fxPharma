@@ -9,6 +9,8 @@ export interface StatCardProps {
   icon?: ReactNode
   className?: string
   valueClassName?: string
+  onClick?: () => void
+  active?: boolean
 }
 
 const cardVariants = [
@@ -45,6 +47,8 @@ export function StatCard({
   icon,
   className,
   valueClassName,
+  onClick,
+  active,
 }: StatCardProps) {
   const variant = useMemo(() => {
     return cardVariants[Math.floor(Math.random() * cardVariants.length)]
@@ -52,10 +56,12 @@ export function StatCard({
 
   return (
     <Card
+      onClick={onClick}
       className={cn(
-        "group relative overflow-hidden rounded-xl border border-border/40",
-        "px-4 py-3 shadow-sm transition-all duration-300",
-        "hover:-translate-y-0.5 hover:shadow-md",
+        "group relative overflow-hidden rounded-xl border transition-all duration-300",
+        active ? "border-primary ring-1 ring-primary/35 bg-primary/[0.03]" : "border-border/40 bg-card",
+        "px-4 py-3 shadow-sm",
+        onClick ? "cursor-pointer hover:-translate-y-0.5 hover:shadow-md hover:border-primary/50" : "hover:-translate-y-0.5 hover:shadow-md",
         className
       )}
     >

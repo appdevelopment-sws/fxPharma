@@ -29,11 +29,20 @@ const INITIAL_LOW_STOCK_FILTERS = {
   page: 1,
   limit: 10,
   search: "",
+  status: "all",
 }
 
 export default function LowStock() {
   const { user } = useAuth()
   const { filter, handleFilter } = useSearchFilter(INITIAL_LOW_STOCK_FILTERS)
+
+  const handleStatusCardClick = useCallback(
+    (statusValue: string) => {
+      const newStatus = filter.status === statusValue ? "all" : statusValue
+      handleFilter({ status: newStatus, page: 1 })
+    },
+    [filter.status, handleFilter]
+  )
 
   const { data: reportData, isLoading: isLoadingReport } = useQuery({
     queryKey: queryKeys.inventory.lowStockReport(filter),
@@ -262,12 +271,16 @@ export default function LowStock() {
           value={String(stats.totalLowStock)}
           helper="Requires procurement review"
           icon={<AlertTriangle className="h-4 w-4 text-amber-500" />}
+          onClick={() => handleStatusCardClick("all")}
+          active={filter.status === "all" || !filter.status}
         />
         <StatCard
           title="Out of Stock"
           value={String(stats.outOfStock)}
           helper="Immediate reorder needed"
           icon={<ShieldCheck className="h-4 w-4 text-red-500" />}
+          onClick={() => handleStatusCardClick("OUT_OF_STOCK")}
+          active={filter.status === "OUT_OF_STOCK"}
         />
         <StatCard
           title="Critical Reorder Levels"
@@ -275,6 +288,8 @@ export default function LowStock() {
           helper="Stock below 50% of threshold"
           icon={<Building2 className="h-4 w-4 text-amber-600" />}
           valueClassName="capitalize text-2xl"
+          onClick={() => handleStatusCardClick("CRITICAL")}
+          active={filter.status === "CRITICAL"}
         />
       </div>
 
@@ -287,6 +302,7 @@ export default function LowStock() {
             <FilterBar
               values={{
                 search: filter.search || "",
+                status: filter.status || "all",
               }}
               onChange={handleFilterChange}
             >
@@ -294,6 +310,15 @@ export default function LowStock() {
                 name="search"
                 className="w-[30%]"
                 placeholder="Search medicine, salt, manufacturer..."
+              />
+              <FilterBar.Select
+                name="status"
+                placeholder="All Status"
+                options={[
+                  { label: "All Items", value: "all" },
+                  { label: "Out of Stock Only", value: "OUT_OF_STOCK" },
+                  { label: "Critical Reorder Only", value: "CRITICAL" },
+                ]}
               />
             </FilterBar>
           </div>
