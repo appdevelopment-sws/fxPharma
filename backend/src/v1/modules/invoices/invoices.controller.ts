@@ -347,13 +347,16 @@ export class InvoicesController {
             },
           });
 
-          const totalAmount = invoicesInMonth.reduce((acc, inv) => acc + Number(inv.totalAmount), 0);
+          const totalAmount = invoicesInMonth.reduce(
+            (acc, inv) => acc + Number(inv.totalAmount),
+            0,
+          );
           const monthName = d.toLocaleString("en-US", { month: "short" });
           return {
             name: monthName,
             value: totalAmount,
           };
-        })
+        }),
       ),
     ]);
 
@@ -366,8 +369,14 @@ export class InvoicesController {
       0,
     );
 
-    const thisMonthSales = thisMonthInvoices.reduce((acc, inv) => acc + Number(inv.totalAmount), 0);
-    const lastMonthSales = lastMonthInvoices.reduce((acc, inv) => acc + Number(inv.totalAmount), 0);
+    const thisMonthSales = thisMonthInvoices.reduce(
+      (acc, inv) => acc + Number(inv.totalAmount),
+      0,
+    );
+    const lastMonthSales = lastMonthInvoices.reduce(
+      (acc, inv) => acc + Number(inv.totalAmount),
+      0,
+    );
 
     const todayCount = todayInvoices.length;
     const yesterdayCount = yesterdayInvoices.length;
@@ -418,7 +427,10 @@ export class InvoicesController {
         refunds_issued: todayRefunds,
         refunds_issued_trend: getTrendString(todayRefunds, yesterdayRefunds),
         monthly_sales_total: thisMonthSales,
-        monthly_sales_trend: getMonthTrendString(thisMonthSales, lastMonthSales),
+        monthly_sales_trend: getMonthTrendString(
+          thisMonthSales,
+          lastMonthSales,
+        ),
         low_stock_count: lowStockCount,
         monthly_sales_chart: monthlySalesChart,
         top_stock_medicines: topStockMedicines,
@@ -455,9 +467,8 @@ export class InvoicesController {
     let defaultTemplate = invoiceTemplateService.getSafeTemplateName();
     if (configuredTemplate) {
       try {
-        defaultTemplate = invoiceTemplateService.getSafeTemplateName(
-          configuredTemplate
-        );
+        defaultTemplate =
+          invoiceTemplateService.getSafeTemplateName(configuredTemplate);
       } catch {
         defaultTemplate = invoiceTemplateService.getSafeTemplateName();
       }
