@@ -151,45 +151,117 @@ export default function LoginPage() {
         }
       `}</style>
 
-      <div className="login-page min-h-screen w-full bg-[var(--login-bg)] text-white flex flex-col lg:flex-row overflow-hidden selection:bg-[var(--login-primary)]/20 selection:text-[var(--login-primary)] relative">
-        
+      <div className="login-page relative flex min-h-screen w-full flex-col overflow-hidden bg-[var(--login-bg)] text-white selection:bg-[var(--login-primary)]/20 selection:text-[var(--login-primary)] lg:flex-row">
         {/* Left Column - Full Height Branding Banner with coppery-orange gradient from the screenshot */}
-        <div className="relative hidden lg:flex lg:w-1/2 p-16 flex-col justify-between overflow-hidden border-r border-white/5 bg-gradient-to-br from-[#2b1c12] via-[#141110] to-[#0c0c0e] animate-slide-left">
-          
+        <div className="animate-slide-left relative hidden flex-col justify-between overflow-hidden border-r border-white/5 bg-gradient-to-br from-[#2b1c12] via-[#141110] to-[#0c0c0e] p-16 lg:flex lg:w-1/2">
           {/* Twinkling stars on the left banner (increased density & size variations) */}
-          <div className="star star-sm star-twinkle-1" style={{ top: "8%", left: "15%" }} />
-          <div className="star star-md star-twinkle-2" style={{ top: "25%", left: "45%" }} />
-          <div className="star star-lg star-twinkle-3" style={{ top: "72%", left: "12%" }} />
-          <div className="star star-sm star-twinkle-1" style={{ top: "60%", left: "38%" }} />
-          <div className="star star-md star-twinkle-2" style={{ top: "45%", left: "82%" }} />
-          <div className="star star-lg star-twinkle-3" style={{ top: "88%", left: "65%" }} />
-          <div className="star star-sm star-twinkle-2" style={{ top: "18%", left: "28%" }} />
-          <div className="star star-md star-twinkle-1" style={{ top: "35%", left: "10%" }} />
-          <div className="star star-sm star-twinkle-3" style={{ top: "52%", left: "55%" }} />
-          <div className="star star-md star-twinkle-2" style={{ top: "80%", left: "30%" }} />
-          <div className="star star-lg star-twinkle-1" style={{ top: "15%", left: "75%" }} />
-          <div className="star star-sm star-twinkle-3" style={{ top: "68%", left: "88%" }} />
-          <div className="star star-md star-twinkle-1" style={{ top: "92%", left: "18%" }} />
-          <div className="star star-sm star-twinkle-2" style={{ top: "30%", left: "90%" }} />
+          <div
+            className="star star-sm star-twinkle-1"
+            style={{ top: "8%", left: "15%" }}
+          />
+          <div
+            className="star star-md star-twinkle-2"
+            style={{ top: "25%", left: "45%" }}
+          />
+          <div
+            className="star star-lg star-twinkle-3"
+            style={{ top: "72%", left: "12%" }}
+          />
+          <div
+            className="star star-sm star-twinkle-1"
+            style={{ top: "60%", left: "38%" }}
+          />
+          <div
+            className="star star-md star-twinkle-2"
+            style={{ top: "45%", left: "82%" }}
+          />
+          <div
+            className="star star-lg star-twinkle-3"
+            style={{ top: "88%", left: "65%" }}
+          />
+          <div
+            className="star star-sm star-twinkle-2"
+            style={{ top: "18%", left: "28%" }}
+          />
+          <div
+            className="star star-md star-twinkle-1"
+            style={{ top: "35%", left: "10%" }}
+          />
+          <div
+            className="star star-sm star-twinkle-3"
+            style={{ top: "52%", left: "55%" }}
+          />
+          <div
+            className="star star-md star-twinkle-2"
+            style={{ top: "80%", left: "30%" }}
+          />
+          <div
+            className="star star-lg star-twinkle-1"
+            style={{ top: "15%", left: "75%" }}
+          />
+          <div
+            className="star star-sm star-twinkle-3"
+            style={{ top: "68%", left: "88%" }}
+          />
+          <div
+            className="star star-md star-twinkle-1"
+            style={{ top: "92%", left: "18%" }}
+          />
+          <div
+            className="star star-sm star-twinkle-2"
+            style={{ top: "30%", left: "90%" }}
+          />
 
           {/* Shooting Stars on the left banner (increased frequency) */}
-          <div className="shooting-star" style={{ top: "12%", right: "12%", animation: "shoot 10s infinite ease-in-out", animationDelay: "1s" }} />
-          <div className="shooting-star" style={{ top: "32%", right: "20%", animation: "shoot 12s infinite ease-in-out", animationDelay: "4s" }} />
-          <div className="shooting-star" style={{ top: "55%", right: "25%", animation: "shoot 14s infinite ease-in-out", animationDelay: "7s" }} />
-          <div className="shooting-star" style={{ top: "78%", right: "10%", animation: "shoot 11s infinite ease-in-out", animationDelay: "9s" }} />
+          <div
+            className="shooting-star"
+            style={{
+              top: "12%",
+              right: "12%",
+              animation: "shoot 10s infinite ease-in-out",
+              animationDelay: "1s",
+            }}
+          />
+          <div
+            className="shooting-star"
+            style={{
+              top: "32%",
+              right: "20%",
+              animation: "shoot 12s infinite ease-in-out",
+              animationDelay: "4s",
+            }}
+          />
+          <div
+            className="shooting-star"
+            style={{
+              top: "55%",
+              right: "25%",
+              animation: "shoot 14s infinite ease-in-out",
+              animationDelay: "7s",
+            }}
+          />
+          <div
+            className="shooting-star"
+            style={{
+              top: "78%",
+              right: "10%",
+              animation: "shoot 11s infinite ease-in-out",
+              animationDelay: "9s",
+            }}
+          />
 
           {/* Animated internal warmth glow blob */}
-          <div className="absolute top-[-15%] left-[-15%] w-[70%] h-[70%] rounded-full bg-orange-600/10 blur-[95px] animate-pulse-slow pointer-events-none" />
-          
+          <div className="animate-pulse-slow pointer-events-none absolute top-[-15%] left-[-15%] h-[70%] w-[70%] rounded-full bg-orange-600/10 blur-[95px]" />
+
           {/* Top Logo / Brand Info */}
-          <div className="relative z-10 flex items-center gap-5 animate-slide-down">
-            <div className="h-24 w-24 rounded-2xl bg-white border border-neutral-200 flex items-center justify-center p-3 shadow-md">
+          <div className="animate-slide-down relative z-10 flex items-center gap-5">
+            <div className="flex items-center justify-center rounded-2xl border border-neutral-200 bg-white p-3 shadow-md">
               <img
-                src="/logo.png"
+                src="/logo111.png"
                 alt="Ojas Pharmacy Logo"
-                className="h-18 w-18 object-contain"
+                className="h-20 w-24 object-contain"
                 onError={(e) => {
-                  console.error("Logo image failed to load");
+                  console.error("Logo image failed to load")
                 }}
               />
             </div>
@@ -199,35 +271,40 @@ export default function LoginPage() {
           </div>
 
           {/* Middle Marketing Copy */}
-          <div className="relative z-10 space-y-6 my-auto pt-8 pb-8">
+          <div className="relative z-10 my-auto space-y-6 pt-8 pb-8">
             <div className="animate-slide-left delay-100">
-              <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider text-[var(--login-primary)] bg-[var(--login-primary-glow)] border border-[var(--login-primary)]/20 mb-6">
+              <div className="mb-6 inline-flex items-center rounded-full border border-[var(--login-primary)]/20 bg-[var(--login-primary-glow)] px-3 py-1 text-xs font-semibold tracking-wider text-[var(--login-primary)] uppercase">
                 Enterprise Ready
               </div>
-              <h1 className="text-5xl xl:text-6xl font-extrabold leading-tight text-white tracking-tight">
+              <h1 className="text-5xl leading-tight font-extrabold tracking-tight text-white xl:text-6xl">
                 Intelligence at the <br />
-                <span className="text-[var(--login-primary)] relative">
+                <span className="relative text-[var(--login-primary)]">
                   Core
                 </span>{" "}
                 of Pharmacy.
               </h1>
             </div>
-            <p className="text-base xl:text-lg leading-relaxed font-light text-[var(--login-text-muted)] max-w-[460px] animate-slide-left delay-200">
-              Securely manage inventory, billing, doctor prescriptions, and supplier settlements in one unified cloud ecosystem.
+            <p className="animate-slide-left max-w-[460px] text-base leading-relaxed font-light text-[var(--login-text-muted)] delay-200 xl:text-lg">
+              Securely manage inventory, billing, doctor prescriptions, and
+              supplier settlements in one unified cloud ecosystem.
             </p>
           </div>
 
           {/* Bottom Statistics */}
-          <div className="relative z-10 grid grid-cols-2 gap-6 border-t border-white/5 pt-8 animate-slide-up delay-300">
+          <div className="animate-slide-up relative z-10 grid grid-cols-2 gap-6 border-t border-white/5 pt-8 delay-300">
             <div>
-              <div className="text-4xl font-bold text-white tracking-tight">500+</div>
-              <div className="text-[10px] text-[var(--login-text-muted)] font-bold uppercase tracking-widest mt-1">
+              <div className="text-4xl font-bold tracking-tight text-white">
+                500+
+              </div>
+              <div className="mt-1 text-[10px] font-bold tracking-widest text-[var(--login-text-muted)] uppercase">
                 Stores Integrated
               </div>
             </div>
             <div>
-              <div className="text-4xl font-bold text-white tracking-tight">1M+</div>
-              <div className="text-[10px] text-[var(--login-text-muted)] font-bold uppercase tracking-widest mt-1">
+              <div className="text-4xl font-bold tracking-tight text-white">
+                1M+
+              </div>
+              <div className="mt-1 text-[10px] font-bold tracking-widest text-[var(--login-text-muted)] uppercase">
                 Prescriptions Monthly
               </div>
             </div>
@@ -235,41 +312,113 @@ export default function LoginPage() {
         </div>
 
         {/* Right Column - Full Height Login Form Canvas */}
-        <div className="relative w-full lg:w-1/2 min-h-screen flex items-center justify-center p-8 sm:p-12 md:p-16 bg-[#08080a] animate-slide-right delay-100">
-          
+        <div className="animate-slide-right relative flex min-h-screen w-full items-center justify-center bg-[#08080a] p-8 delay-100 sm:p-12 md:p-16 lg:w-1/2">
           {/* Twinkling stars on the right form side (increased density & size variations) */}
-          <div className="star star-md star-twinkle-2" style={{ top: "10%", left: "35%" }} />
-          <div className="star star-lg star-twinkle-3" style={{ top: "32%", left: "82%" }} />
-          <div className="star star-sm star-twinkle-1" style={{ top: "82%", left: "55%" }} />
-          <div className="star star-md star-twinkle-2" style={{ top: "90%", left: "75%" }} />
-          <div className="star star-lg star-twinkle-3" style={{ top: "48%", left: "88%" }} />
-          <div className="star star-sm star-twinkle-1" style={{ top: "68%", left: "22%" }} />
-          <div className="star star-sm star-twinkle-2" style={{ top: "5%", left: "15%" }} />
-          <div className="star star-md star-twinkle-3" style={{ top: "20%", left: "60%" }} />
-          <div className="star star-sm star-twinkle-1" style={{ top: "42%", left: "10%" }} />
-          <div className="star star-md star-twinkle-2" style={{ top: "60%", left: "95%" }} />
-          <div className="star star-lg star-twinkle-1" style={{ top: "75%", left: "45%" }} />
-          <div className="star star-sm star-twinkle-3" style={{ top: "15%", left: "80%" }} />
-          <div className="star star-md star-twinkle-1" style={{ top: "55%", left: "68%" }} />
-          <div className="star star-sm star-twinkle-2" style={{ top: "85%", left: "32%" }} />
+          <div
+            className="star star-md star-twinkle-2"
+            style={{ top: "10%", left: "35%" }}
+          />
+          <div
+            className="star star-lg star-twinkle-3"
+            style={{ top: "32%", left: "82%" }}
+          />
+          <div
+            className="star star-sm star-twinkle-1"
+            style={{ top: "82%", left: "55%" }}
+          />
+          <div
+            className="star star-md star-twinkle-2"
+            style={{ top: "90%", left: "75%" }}
+          />
+          <div
+            className="star star-lg star-twinkle-3"
+            style={{ top: "48%", left: "88%" }}
+          />
+          <div
+            className="star star-sm star-twinkle-1"
+            style={{ top: "68%", left: "22%" }}
+          />
+          <div
+            className="star star-sm star-twinkle-2"
+            style={{ top: "5%", left: "15%" }}
+          />
+          <div
+            className="star star-md star-twinkle-3"
+            style={{ top: "20%", left: "60%" }}
+          />
+          <div
+            className="star star-sm star-twinkle-1"
+            style={{ top: "42%", left: "10%" }}
+          />
+          <div
+            className="star star-md star-twinkle-2"
+            style={{ top: "60%", left: "95%" }}
+          />
+          <div
+            className="star star-lg star-twinkle-1"
+            style={{ top: "75%", left: "45%" }}
+          />
+          <div
+            className="star star-sm star-twinkle-3"
+            style={{ top: "15%", left: "80%" }}
+          />
+          <div
+            className="star star-md star-twinkle-1"
+            style={{ top: "55%", left: "68%" }}
+          />
+          <div
+            className="star star-sm star-twinkle-2"
+            style={{ top: "85%", left: "32%" }}
+          />
 
           {/* Shooting Stars on the right form side (increased frequency) */}
-          <div className="shooting-star" style={{ top: "8%", right: "18%", animation: "shoot 9s infinite ease-in-out", animationDelay: "2s" }} />
-          <div className="shooting-star" style={{ top: "28%", right: "32%", animation: "shoot 11s infinite ease-in-out", animationDelay: "5s" }} />
-          <div className="shooting-star" style={{ top: "62%", right: "30%", animation: "shoot 13s infinite ease-in-out", animationDelay: "8s" }} />
-          <div className="shooting-star" style={{ top: "80%", right: "15%", animation: "shoot 10s infinite ease-in-out", animationDelay: "11s" }} />
+          <div
+            className="shooting-star"
+            style={{
+              top: "8%",
+              right: "18%",
+              animation: "shoot 9s infinite ease-in-out",
+              animationDelay: "2s",
+            }}
+          />
+          <div
+            className="shooting-star"
+            style={{
+              top: "28%",
+              right: "32%",
+              animation: "shoot 11s infinite ease-in-out",
+              animationDelay: "5s",
+            }}
+          />
+          <div
+            className="shooting-star"
+            style={{
+              top: "62%",
+              right: "30%",
+              animation: "shoot 13s infinite ease-in-out",
+              animationDelay: "8s",
+            }}
+          />
+          <div
+            className="shooting-star"
+            style={{
+              top: "80%",
+              right: "15%",
+              animation: "shoot 10s infinite ease-in-out",
+              animationDelay: "11s",
+            }}
+          />
 
           {/* Subtle Background Glow Blobs on Form Side */}
-          <div className="absolute top-[-10%] left-[20%] w-[50%] h-[50%] rounded-full bg-orange-600/[0.015] blur-[120px] pointer-events-none animate-blob-1" />
-          <div className="absolute bottom-[-10%] right-[10%] w-[60%] h-[60%] rounded-full bg-violet-600/[0.01] blur-[120px] pointer-events-none animate-blob-2" />
-          
-          <div className="w-full max-w-[420px] space-y-8 relative z-10">
-            
+          <div className="animate-blob-1 pointer-events-none absolute top-[-10%] left-[20%] h-[50%] w-[50%] rounded-full bg-orange-600/[0.015] blur-[120px]" />
+          <div className="animate-blob-2 pointer-events-none absolute right-[10%] bottom-[-10%] h-[60%] w-[60%] rounded-full bg-violet-600/[0.01] blur-[120px]" />
+
+          <div className="relative z-10 w-full max-w-[420px] space-y-8">
             {/* Header Info */}
             <div className="space-y-2 text-center lg:text-left">
               {/* Mobile-only Logo */}
-              <div className="flex justify-center lg:hidden mb-8 animate-slide-down">
-                <div className="h-24 w-24 rounded-[24px] bg-white border border-neutral-200 flex items-center justify-center p-3.5 shadow-md">
+              <div className="animate-slide-down mb-8 flex justify-center lg:hidden">
+                <div className="flex h-24 w-24 items-center justify-center rounded-[24px] border border-neutral-200 bg-white p-3.5 shadow-md">
                   <img
                     src="/logo.png"
                     alt="Ojas Pharmacy Logo"
@@ -280,21 +429,23 @@ export default function LoginPage() {
               <h2 className="text-3xl font-extrabold tracking-tight text-white">
                 Welcome Back
               </h2>
-              <p className="text-sm text-[var(--login-text-muted)] font-light">
+              <p className="text-sm font-light text-[var(--login-text-muted)]">
                 Please enter your credentials to access the pharmacy dashboard.
               </p>
             </div>
 
             {/* Form container */}
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-              
               {/* Identity Input */}
               <div className="space-y-2">
-                <label htmlFor="email" className="text-[10px] font-bold tracking-wider text-[var(--login-text-muted)] uppercase">
+                <label
+                  htmlFor="email"
+                  className="text-[10px] font-bold tracking-wider text-[var(--login-text-muted)] uppercase"
+                >
                   Identity
                 </label>
-                <div className="relative group">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-[var(--login-primary)] transition-colors duration-200">
+                <div className="group relative">
+                  <span className="absolute top-1/2 left-4 -translate-y-1/2 text-zinc-500 transition-colors duration-200 group-focus-within:text-[var(--login-primary)]">
                     <User className="h-5 w-5" />
                   </span>
                   <input
@@ -302,14 +453,15 @@ export default function LoginPage() {
                     type="email"
                     placeholder="Email or 10-digit Phone"
                     className={cn(
-                      "h-12 w-full pl-12 pr-4 rounded-xl border border-[var(--login-input-border)] bg-[var(--login-input-bg)] text-white placeholder-zinc-600 focus:outline-none focus:border-[var(--login-input-focus)] focus:ring-1 focus:ring-[var(--login-input-focus)] transition-all duration-200",
-                      errors.email && "border-red-500/50 focus:border-red-500 focus:ring-red-500"
+                      "h-12 w-full rounded-xl border border-[var(--login-input-border)] bg-[var(--login-input-bg)] pr-4 pl-12 text-white placeholder-zinc-600 transition-all duration-200 focus:border-[var(--login-input-focus)] focus:ring-1 focus:ring-[var(--login-input-focus)] focus:outline-none",
+                      errors.email &&
+                        "border-red-500/50 focus:border-red-500 focus:ring-red-500"
                     )}
                     {...register("email")}
                   />
                 </div>
                 {errors.email && (
-                  <p className="text-xs font-medium text-red-500 mt-1">
+                  <p className="mt-1 text-xs font-medium text-red-500">
                     {errors.email.message}
                   </p>
                 )}
@@ -318,18 +470,21 @@ export default function LoginPage() {
               {/* Secret Input */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label htmlFor="password" className="text-[10px] font-bold tracking-wider text-[var(--login-text-muted)] uppercase">
+                  <label
+                    htmlFor="password"
+                    className="text-[10px] font-bold tracking-wider text-[var(--login-text-muted)] uppercase"
+                  >
                     Secret
                   </label>
                   <a
                     href="#"
-                    className="text-xs font-semibold text-[var(--login-primary)] hover:brightness-110 transition-all"
+                    className="text-xs font-semibold text-[var(--login-primary)] transition-all hover:brightness-110"
                   >
                     Forgot Password?
                   </a>
                 </div>
-                <div className="relative group">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-[var(--login-primary)] transition-colors duration-200">
+                <div className="group relative">
+                  <span className="absolute top-1/2 left-4 -translate-y-1/2 text-zinc-500 transition-colors duration-200 group-focus-within:text-[var(--login-primary)]">
                     <Lock className="h-5 w-5" />
                   </span>
                   <input
@@ -337,17 +492,18 @@ export default function LoginPage() {
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
                     className={cn(
-                      "h-12 w-full pl-12 pr-11 rounded-xl border border-[var(--login-input-border)] bg-[var(--login-input-bg)] text-white placeholder-zinc-600 focus:outline-none focus:border-[var(--login-input-focus)] focus:ring-1 focus:ring-[var(--login-input-focus)] transition-all duration-200",
-                      errors.password && "border-red-500/50 focus:border-red-500 focus:ring-red-500"
+                      "h-12 w-full rounded-xl border border-[var(--login-input-border)] bg-[var(--login-input-bg)] pr-11 pl-12 text-white placeholder-zinc-600 transition-all duration-200 focus:border-[var(--login-input-focus)] focus:ring-1 focus:ring-[var(--login-input-focus)] focus:outline-none",
+                      errors.password &&
+                        "border-red-500/50 focus:border-red-500 focus:ring-red-500"
                     )}
                     {...register("password")}
                   />
-                  
+
                   {/* Toggle password visibility */}
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white transition-colors duration-200"
+                    className="absolute top-1/2 right-3.5 -translate-y-1/2 text-zinc-500 transition-colors duration-200 hover:text-white"
                   >
                     {showPassword ? (
                       <EyeOff className="h-5 w-5" />
@@ -357,7 +513,7 @@ export default function LoginPage() {
                   </button>
                 </div>
                 {errors.password && (
-                  <p className="text-xs font-medium text-red-500 mt-1">
+                  <p className="mt-1 text-xs font-medium text-red-500">
                     {errors.password.message}
                   </p>
                 )}
@@ -365,25 +521,29 @@ export default function LoginPage() {
 
               {/* Remember Me Checkbox */}
               <div className="flex items-center gap-3 pt-1">
-                <div className="relative flex items-center justify-center h-5 w-5">
+                <div className="relative flex h-5 w-5 items-center justify-center">
                   <input
                     type="checkbox"
                     id="remember"
-                    className="peer absolute inset-0 rounded border border-[var(--login-input-border)] bg-[var(--login-input-bg)] text-[var(--login-primary)] cursor-pointer appearance-none transition-all duration-200 checked:bg-[var(--login-primary)] checked:border-[var(--login-primary)]"
+                    className="peer absolute inset-0 cursor-pointer appearance-none rounded border border-[var(--login-input-border)] bg-[var(--login-input-bg)] text-[var(--login-primary)] transition-all duration-200 checked:border-[var(--login-primary)] checked:bg-[var(--login-primary)]"
                   />
                   <svg
-                    className="absolute h-3 w-3 text-white pointer-events-none hidden peer-checked:block"
+                    className="pointer-events-none absolute hidden h-3 w-3 text-white peer-checked:block"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
                     strokeWidth="4"
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M5 13l4 4L19 7"
+                    />
                   </svg>
                 </div>
                 <label
                   htmlFor="remember"
-                  className="text-sm font-medium text-[var(--login-text-muted)] cursor-pointer select-none hover:text-white transition-colors duration-200"
+                  className="cursor-pointer text-sm font-medium text-[var(--login-text-muted)] transition-colors duration-200 select-none hover:text-white"
                 >
                   Remember my account
                 </label>
@@ -394,12 +554,12 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={loginMutation.isPending}
-                  className="h-12 w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[var(--login-primary)] to-[#e06c00] text-white font-bold tracking-wide transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer animate-pulse-glow hover:brightness-105 active:scale-[0.98]"
+                  className="animate-pulse-glow flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[var(--login-primary)] to-[#e06c00] font-bold tracking-wide text-white transition-all duration-200 hover:brightness-105 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {loginMutation.isPending ? (
                     <span className="flex items-center gap-2">
                       <svg
-                        className="animate-spin h-5 w-5 text-white"
+                        className="h-5 w-5 animate-spin text-white"
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
                         viewBox="0 0 24 24"
@@ -431,12 +591,11 @@ export default function LoginPage() {
             </form>
 
             {/* Contact Admin Text */}
-            <p className="text-center text-xs text-[var(--login-text-muted)] font-medium pt-4 animate-slide-up delay-600">
+            <p className="animate-slide-up pt-4 text-center text-xs font-medium text-[var(--login-text-muted)] delay-600">
               Please contact administration for access.
             </p>
           </div>
         </div>
-
       </div>
     </>
   )
