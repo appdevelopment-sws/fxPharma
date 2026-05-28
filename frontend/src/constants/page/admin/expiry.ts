@@ -19,6 +19,8 @@ export const INITIAL_EXPIRY_FILTERS = {
 export const EXPIRY_STATUS_OPTIONS = [
   { label: "All Stock", value: "all" },
   { label: "Expired Only", value: "EXPIRED" },
-  { label: "Expiring Soon", value: "EXPIRING_SOON" },
+  { label: "Expiring < 15 Days", value: "EXPIRING_15" },
+  { label: "Expiring < 30 Days", value: "EXPIRING_30" },
+  { label: "Expiring < 90 Days", value: "EXPIRING_90" },
   { label: "Healthy Stock", value: "ACTIVE" },
 ]

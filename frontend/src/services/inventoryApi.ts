@@ -188,6 +188,7 @@ export type ExpiryReportItem = {
 
 export type ExpiryReportStats = {
   alreadyExpired: number
+  expiring15: number
   expiring30: number
   expiring90: number
   valueAtRisk: number

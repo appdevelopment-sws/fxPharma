@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from "react"
 import { format } from "date-fns"
 import { type DateRange } from "react-day-picker"
 import { useQuery } from "@tanstack/react-query"
-import { ShieldCheck, LayoutGrid, Building2, Activity, Eye, Printer, FileDown, Calendar as CalendarIcon, RotateCcw, Package } from "lucide-react"
+import { ShieldCheck, LayoutGrid, Building2, Activity, Eye, Printer, FileDown, Calendar as CalendarIcon, RotateCcw, Package, AlertCircle } from "lucide-react"
 import { toast } from "sonner"
 
 import { useAuth } from "@/context/authContext"
@@ -40,6 +40,7 @@ const formatCurrency = (value: number) =>
 
 const fallbackStats = {
   alreadyExpired: 0,
+  expiring15: 0,
   expiring30: 0,
   expiring90: 0,
   valueAtRisk: 0,
@@ -49,6 +50,14 @@ export default function ExpiryReports() {
   const { user } = useAuth()
   const { filter, handleFilter } = useSearchFilter(INITIAL_EXPIRY_FILTERS)
   const [dateRange, setDateRange] = useState<DateRange | undefined>()
+
+  const handleStatusCardClick = useCallback(
+    (statusValue: string) => {
+      const newStatus = filter.status === statusValue ? "all" : statusValue
+      handleFilter({ status: newStatus, page: 1 })
+    },
+    [filter.status, handleFilter]
+  )
 
   const reportFilters = useMemo(
     () => ({
@@ -354,29 +363,43 @@ export default function ExpiryReports() {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
         <StatCard
           title="Already Expired"
-          value={String(expiryStats.alreadyExpired)}
+          value={String(expiryStats.alreadyExpired ?? 0)}
           helper="Requires immediate disposal"
           icon={<ShieldCheck className="h-4 w-4" />}
+          onClick={() => handleStatusCardClick("EXPIRED")}
+          active={filter.status === "EXPIRED"}
+        />
+        <StatCard
+          title="Expiring < 15 Days"
+          value={String(expiryStats.expiring15 ?? 0)}
+          helper="Requires urgent attention"
+          icon={<AlertCircle className="h-4 w-4 text-rose-500" />}
+          onClick={() => handleStatusCardClick("EXPIRING_15")}
+          active={filter.status === "EXPIRING_15"}
         />
         <StatCard
           title="Expiring < 30 Days"
-          value={String(expiryStats.expiring30)}
+          value={String(expiryStats.expiring30 ?? 0)}
           helper="Needs attention soon"
           icon={<LayoutGrid className="h-4 w-4" />}
+          onClick={() => handleStatusCardClick("EXPIRING_30")}
+          active={filter.status === "EXPIRING_30"}
         />
         <StatCard
           title="Expiring < 90 Days"
-          value={String(expiryStats.expiring90)}
+          value={String(expiryStats.expiring90 ?? 0)}
           helper="Plan for clearance"
           icon={<Building2 className="h-4 w-4" />}
           valueClassName="capitalize text-2xl"
+          onClick={() => handleStatusCardClick("EXPIRING_90")}
+          active={filter.status === "EXPIRING_90"}
         />
         <StatCard
           title="Value at Risk"
-          value={`₹${(expiryStats.valueAtRisk / 1000).toFixed(1)}k`}
+          value={`₹${((expiryStats.valueAtRisk ?? 0) / 1000).toFixed(1)}k`}
           helper="Total value of flagged stock"
           icon={<Activity className="h-4 w-4" />}
         />

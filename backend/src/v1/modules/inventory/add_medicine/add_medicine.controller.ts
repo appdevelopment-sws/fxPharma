@@ -354,22 +354,14 @@ export class InventoryController {
           }
         }
 
-        if (statusFilter !== "all" && row.status !== statusFilter) {
-          return false;
-        }
-
         return true;
       });
-
-    const total = rows.length;
-    const totalPages = Math.max(1, Math.ceil(total / limit));
-    const start = (page - 1) * limit;
-    const data = rows.slice(start, start + limit);
 
     const stats = rows.reduce(
       (
         acc: {
           alreadyExpired: number;
+          expiring15: number;
           expiring30: number;
           expiring90: number;
           valueAtRisk: number;
@@ -381,12 +373,16 @@ export class InventoryController {
         if (row.remainingDays !== null) {
           if (row.remainingDays <= 0) {
             acc.alreadyExpired += 1;
-          } else if (row.remainingDays <= 30) {
-            acc.expiring30 += 1;
-          }
-
-          if (row.remainingDays > 0 && row.remainingDays <= 90) {
-            acc.expiring90 += 1;
+          } else {
+            if (row.remainingDays <= 15) {
+              acc.expiring15 += 1;
+            }
+            if (row.remainingDays <= 30) {
+              acc.expiring30 += 1;
+            }
+            if (row.remainingDays <= 90) {
+              acc.expiring90 += 1;
+            }
           }
         }
 
@@ -394,11 +390,37 @@ export class InventoryController {
       },
       {
         alreadyExpired: 0,
+        expiring15: 0,
         expiring30: 0,
         expiring90: 0,
         valueAtRisk: 0,
       },
     );
+
+    const filteredRows = rows.filter((row: ReturnType<typeof buildExpiryReportRow>) => {
+      if (statusFilter !== "all") {
+        if (statusFilter === "EXPIRED") {
+          if (row.remainingDays === null || row.remainingDays > 0) return false;
+        } else if (statusFilter === "EXPIRING_15") {
+          if (row.remainingDays === null || row.remainingDays <= 0 || row.remainingDays > 15) return false;
+        } else if (statusFilter === "EXPIRING_30") {
+          if (row.remainingDays === null || row.remainingDays <= 0 || row.remainingDays > 30) return false;
+        } else if (statusFilter === "EXPIRING_90") {
+          if (row.remainingDays === null || row.remainingDays <= 0 || row.remainingDays > 90) return false;
+        } else if (statusFilter === "ACTIVE") {
+          if (row.status !== "ACTIVE") return false;
+        } else if (row.status !== statusFilter) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+
+    const total = filteredRows.length;
+    const totalPages = Math.max(1, Math.ceil(total / limit));
+    const start = (page - 1) * limit;
+    const data = filteredRows.slice(start, start + limit);
 
     res.json({
       success: true,
@@ -425,6 +447,8 @@ export class InventoryController {
     );
     const search =
       typeof req.query.search === "string" ? req.query.search.trim() : "";
+    const statusFilter =
+      typeof req.query.status === "string" ? req.query.status.trim() : "all";
 
     const where: any = {
       organizationId,
@@ -471,26 +495,40 @@ export class InventoryController {
       orderBy: { availableStock: "asc" }
     });
 
-    const lowStockItems = items.filter(item => {
+    const allLowStockItems = items.filter(item => {
       const threshold = item.minQty && item.minQty > 0 ? item.minQty : 10;
       return (item.availableStock ?? 0) <= threshold;
     });
 
-    const total = lowStockItems.length;
-    const totalPages = Math.max(1, Math.ceil(total / limit));
-    const start = (page - 1) * limit;
-    const data = lowStockItems.slice(start, start + limit);
-
-    // Calculate stats
+    // Calculate stats on all matching low stock items
     const stats = {
-      totalLowStock: total,
-      outOfStock: lowStockItems.filter(item => (item.availableStock ?? 0) === 0).length,
-      nearReorder: lowStockItems.filter(item => {
+      totalLowStock: allLowStockItems.length,
+      outOfStock: allLowStockItems.filter(item => (item.availableStock ?? 0) === 0).length,
+      nearReorder: allLowStockItems.filter(item => {
         const threshold = item.minQty && item.minQty > 0 ? item.minQty : 10;
         const stock = item.availableStock ?? 0;
         return stock > 0 && stock <= threshold / 2;
       }).length,
     };
+
+    const filteredLowStockItems = allLowStockItems.filter(item => {
+      if (statusFilter !== "all") {
+        const threshold = item.minQty && item.minQty > 0 ? item.minQty : 10;
+        if (statusFilter === "OUT_OF_STOCK") {
+          return (item.availableStock ?? 0) === 0;
+        }
+        if (statusFilter === "CRITICAL") {
+          const stock = item.availableStock ?? 0;
+          return stock > 0 && stock <= threshold / 2;
+        }
+      }
+      return true;
+    });
+
+    const total = filteredLowStockItems.length;
+    const totalPages = Math.max(1, Math.ceil(total / limit));
+    const start = (page - 1) * limit;
+    const data = filteredLowStockItems.slice(start, start + limit);
 
     res.json({
       success: true,
