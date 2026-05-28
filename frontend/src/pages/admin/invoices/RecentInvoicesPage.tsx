@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import {
   Eye,
@@ -69,8 +69,13 @@ export default function RecentInvoicesPage() {
         avg_order_value_trend: "3% vs yesterday",
         refunds_issued: 120.0,
         refunds_issued_trend: "1 return today",
+        monthly_sales_total: 0,
+        monthly_sales_trend: "0% vs yesterday",
+        low_stock_count: 0,
+        monthly_sales_chart: [],
+        top_stock_medicines: [],
       },
-    },
+    } as any,
   })
 
   const { data: invoiceTemplatesData, isLoading: isLoadingTemplates } =
@@ -85,8 +90,28 @@ export default function RecentInvoicesPage() {
     () => invoiceTemplatesData?.data.templates ?? [],
     [invoiceTemplatesData]
   )
-  const defaultTemplate =
-    invoiceTemplatesData?.data.defaultTemplate || "template1"
+  const savedTemplateName =
+    invoiceTemplatesData?.data.invoice_template_name ||
+    invoiceTemplatesData?.data.defaultTemplate ||
+    "template1"
+
+  const defaultTemplate = useMemo(() => {
+    if (invoiceTemplates.includes(savedTemplateName)) return savedTemplateName
+    return invoiceTemplates[0] || savedTemplateName || "template1"
+  }, [invoiceTemplates, savedTemplateName])
+
+  useEffect(() => {
+    if (invoiceTemplates.length === 0) {
+      setSelectedTemplate(defaultTemplate)
+      return
+    }
+
+    setSelectedTemplate((prev) => {
+      if (invoiceTemplates.includes(prev)) return prev
+      return defaultTemplate
+    })
+  }, [defaultTemplate, invoiceTemplates])
+
   const activeTemplate = invoiceTemplates.includes(selectedTemplate)
     ? selectedTemplate
     : defaultTemplate
@@ -313,7 +338,7 @@ export default function RecentInvoicesPage() {
           value={selectedTemplate}
           onChange={(e) => setSelectedTemplate(e.target.value)}
           disabled={isLoadingTemplates || invoiceTemplates.length === 0}
-          className="h-9 min-w-[180px] rounded-lg border border-border bg-background px-3 text-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-60"
+          className="h-9 min-w-45 rounded-lg border border-border bg-background px-3 text-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {(invoiceTemplates.length > 0
             ? invoiceTemplates

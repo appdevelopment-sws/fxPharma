@@ -217,6 +217,10 @@ function buildInvoiceData(
   templateName?: string | null,
   settingsMap: Record<string, string> = {},
 ) {
+  const toBoolean = (value?: string | null) => {
+    if (value == null) return true;
+    return !["false", "0", "off", "no"].includes(String(value).toLowerCase());
+  };
   const safeTemplateName = sanitizeTemplateName(templateName);
   const createdAt = formatDateTime(invoice.createdAt);
   const customerName = invoice.customerName?.trim() || "Walk-in Customer";
@@ -258,11 +262,13 @@ function buildInvoiceData(
         "India";
 
   const brandPhone =
+    settingsMap["invoice_phone"] ||
     settingsMap["phone"] ||
     settingsMap["invoice_company_phone"] ||
     process.env.INVOICE_COMPANY_PHONE ||
     "";
   const brandEmail =
+    settingsMap["invoice_email"] ||
     settingsMap["email"] ||
     settingsMap["invoice_company_email"] ||
     process.env.INVOICE_COMPANY_EMAIL ||
@@ -273,15 +279,29 @@ function buildInvoiceData(
     process.env.INVOICE_COMPANY_GSTIN ||
     "";
   const brandLogo =
-    settingsMap["store_logo"] || settingsMap["invoice_company_logo"] || "";
+    settingsMap["invoice_header_image"] ||
+    settingsMap["store_logo"] ||
+    settingsMap["invoice_company_logo"] ||
+    "";
+  const brandFooterImage = settingsMap["invoice_footer_image"] || "";
+  const brandDirectorSignature =
+    settingsMap["invoice_director_signature"] || "";
+  const paymentQrCode = settingsMap["invoice_payment_qr_code"] || "";
 
   const brandLicense20 =
     settingsMap["drug_license_20"] || settingsMap["license_number"] || "";
   const brandLicense21 = settingsMap["drug_license_21"] || "";
   const brandFssai = settingsMap["fssai_no"] || "";
 
-  const showGst = settingsMap["show_gst"] !== "false";
-  const showLicense = settingsMap["show_license"] !== "false";
+  const showGst = toBoolean(
+    settingsMap["invoice_show_gst"] ?? settingsMap["show_gst"],
+  );
+  const showLicense = toBoolean(
+    settingsMap["invoice_show_license"] ?? settingsMap["show_license"],
+  );
+  const showPaymentQr = toBoolean(
+    settingsMap["invoice_show_payment_qr"] ?? settingsMap["show_payment_qr"],
+  );
 
   const licenseParts: string[] = [];
   if (showGst && brandGstin) {
@@ -306,6 +326,23 @@ function buildInvoiceData(
     ? `<div style="text-align: center; font-style: italic; margin-top: 5px;">${escapeHtml(invoiceFooter)}</div>`
     : "";
 
+  const directorSignatureBlock = brandDirectorSignature
+    ? `<img src="${escapeHtml(brandDirectorSignature)}" alt="Director Signature" style="max-height: 42px; max-width: 160px;" onerror="this.style.display='none'" />`
+    : "";
+
+  const paymentQrBlock = showPaymentQr && paymentQrCode
+    ? `<div style="text-align: right;">
+         <div style="font-size: 10px; color: #555; margin-bottom: 4px;">Scan to pay</div>
+         <img src="${escapeHtml(paymentQrCode)}" alt="Payment QR" style="max-height: 80px; max-width: 80px;" onerror="this.style.display='none'" />
+       </div>`
+    : "";
+
+  const footerImageBlock = brandFooterImage
+    ? `<div style="margin-bottom: 8px;">
+         <img src="${escapeHtml(brandFooterImage)}" alt="Footer Image" style="max-height: 60px; max-width: 100%;" onerror="this.style.display='none'" />
+       </div>`
+    : "";
+
   return {
     safeTemplateName,
     brandName,
@@ -315,6 +352,12 @@ function buildInvoiceData(
     brandEmail,
     brandGstin,
     brandLogo,
+    brandFooterImage,
+    brandDirectorSignature,
+    paymentQrCode,
+    directorSignatureBlock,
+    paymentQrBlock,
+    footerImageBlock,
     brandLicenseBlock,
     invoiceTermsBlock,
     invoiceFooterBlock,
@@ -377,10 +420,10 @@ class InvoiceTemplateService {
     }
 
     const settingsMap: Record<string, string> = {};
-    orgSettings.forEach((s) => {
+    orgSettings.forEach((s: { key: string; value: string }) => {
       settingsMap[s.key] = s.value;
     });
-    branchSettings.forEach((s) => {
+    branchSettings.forEach((s: { key: string; value: string }) => {
       settingsMap[s.key] = s.value;
     });
 
