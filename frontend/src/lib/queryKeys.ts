@@ -24,6 +24,8 @@ export const queryKeys = {
     detail: (id: string) => [...queryKeys.inventory.all, id] as const,
     expiryReport: (filters?: any) =>
       [...queryKeys.inventory.all, "expiry-report", filters] as const,
+    lowStockReport: (filters?: any) =>
+      [...queryKeys.inventory.all, "low-stock-report", filters] as const,
   },
   taxes: {
     all: ["taxes"] as const,

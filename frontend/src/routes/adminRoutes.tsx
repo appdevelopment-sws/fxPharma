@@ -21,6 +21,7 @@ import AllInterStoreTransfer from "@/pages/admin/InterStoreTransfer/AllInterStor
 import DailyTransactionReport from "@/pages/admin/reports/DailyTransactionReport"
 import ExpiryReports from "@/pages/admin/reports/ExpiryReports"
 import GstReport from "@/pages/admin/reports/GstReport"
+import LowStock from "@/pages/admin/reports/LowStock"
 import Branch from "@/pages/admin/Branch/Branch"
 
 import AttributesPage from "@/pages/shared/Attributes/AttributesPage"
@@ -127,6 +128,10 @@ export const AdminRoutes = () => {
           <Route
             path="reports/daily-transaction-report"
             element={<DailyTransactionReport />}
+          />
+          <Route
+            path="reports/low-stock"
+            element={<LowStock />}
           />
           <Route
             element={

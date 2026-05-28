@@ -21,6 +21,7 @@ import {
   KeyRound,
   Layers,
   Settings,
+  AlertTriangle,
 } from "lucide-react"
 import type { AuthUser } from "@/context/authContext"
 import {
@@ -171,6 +172,12 @@ export const adminNavigationGroups: SidebarNavigationGroup[] = [
             to: "/admin/reports/gst-report",
             description: "Input and Output GST summary",
             icon: FileText,
+          },
+          {
+            title: "Low Stock",
+            to: "/admin/reports/low-stock",
+            description: "Low stock alert report",
+            icon: AlertTriangle,
           },
         ],
       },
