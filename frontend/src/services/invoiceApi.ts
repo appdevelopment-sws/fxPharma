@@ -242,6 +242,10 @@ const InvoiceApi = {
     window.open(previewUrl, "_blank", "noopener,noreferrer")
     window.setTimeout(() => window.URL.revokeObjectURL(previewUrl), 1000)
   },
+
+  deleteInvoice: async (id: string): Promise<{ success: boolean }> => {
+    return api.delete(`${BASE_URL}/${id}`)
+  },
 }
 
 export default InvoiceApi

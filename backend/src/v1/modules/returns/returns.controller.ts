@@ -535,4 +535,50 @@ export class ReturnsController {
 
     res.json({ success: true, data: salesReturn });
   });
+
+  static delete = catchAsync(async (req: Request, res: Response) => {
+    const { organizationId, branchId } = getRequestScope(req);
+    const id = req.params.id as string;
+
+    await rootPrisma.$transaction(async (tx) => {
+      const salesReturn = await tx.salesReturn.findUnique({
+        where: { id },
+        include: { items: true },
+      });
+
+      if (!salesReturn) {
+        throw new ErrorHandler("Sales return not found.", 404);
+      }
+
+      if (
+        salesReturn.organizationId !== organizationId ||
+        (branchId && salesReturn.branchId !== branchId)
+      ) {
+        throw new ErrorHandler("Access denied.", 403);
+      }
+
+      // Revert stock adjustment if status was REFUNDED
+      if (salesReturn.status === "REFUNDED") {
+        for (const item of salesReturn.items) {
+          await applyStockDelta({
+            tx,
+            organizationId,
+            item,
+            delta: -item.returnQty,
+          });
+        }
+      }
+
+      // Delete the sales return (cascade deletes items)
+      await tx.salesReturn.delete({
+        where: { id },
+      });
+
+      // Refresh parent invoice status
+      await refreshInvoiceStatus(tx, salesReturn.invoiceId);
+    });
+
+    res.json({ success: true, message: "Sales return deleted successfully." });
+  });
 }
+

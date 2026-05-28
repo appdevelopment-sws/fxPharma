@@ -9,7 +9,9 @@ import {
   Package,
   CreditCard,
   Clock,
+  Trash2,
 } from "lucide-react"
+import { ConfirmDialog } from "@/components/confirmDialog"
 import { toast } from "sonner"
 
 import DataTable, { type DataTableColumn } from "@/components/data-table"
@@ -38,6 +40,32 @@ export default function ReturnsPage() {
   const returnDrawer = useDisclosure()
   const processReturnDrawer = useDisclosure<string>()
   const { filter, handleFilter } = useSearchFilter(INITIAL_RETURN_FILTERS)
+
+  const deleteConfirm = useDisclosure<SalesReturn>()
+
+  const deleteReturnMutation = useMutation({
+    mutationFn: (id: string) => ReturnApi.deleteReturn(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.returns.all })
+      queryClient.invalidateQueries({ queryKey: queryKeys.invoices.all })
+      queryClient.invalidateQueries({ queryKey: queryKeys.inventory.all })
+      toast.success("Sales return deleted successfully")
+      deleteConfirm.onClose()
+    },
+    onError: (error: unknown) => {
+      const errMsg =
+        (typeof error === "object" &&
+          error !== null &&
+          "response" in error &&
+          typeof (error as { response?: { data?: { message?: string } } }).response
+            ?.data?.message === "string" &&
+          (error as { response?: { data?: { message?: string } } }).response?.data
+            ?.message) ||
+        (error instanceof Error ? error.message : null) ||
+        "Failed to delete sales return"
+      toast.error(errMsg)
+    },
+  })
 
   const { data: returnsData, isLoading: isLoadingReturns } = useQuery({
     queryKey: queryKeys.returns.list(filter),
@@ -206,6 +234,14 @@ export default function ReturnsPage() {
               <Printer className="size-4" />
             </Button>
           )}
+          <Button
+            size="icon-sm"
+            variant="ghost"
+            onClick={() => deleteConfirm.onOpen(row)}
+            className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+          >
+            <Trash2 className="size-4" />
+          </Button>
         </div>
       ),
     },
@@ -309,6 +345,21 @@ export default function ReturnsPage() {
           />
         </div>
       </SectionCard>
+
+      <ConfirmDialog
+        open={deleteConfirm.isOpen}
+        onOpenChange={deleteConfirm.onClose}
+        title="Delete Sales Return"
+        description={`Are you sure you want to delete sales return ${deleteConfirm.data?.return_id}? This will revert any stock changes and update the parent invoice status.`}
+        confirmText="Delete"
+        variant="danger"
+        isLoading={deleteReturnMutation.isPending}
+        onConfirm={() => {
+          if (deleteConfirm.data) {
+            deleteReturnMutation.mutate(deleteConfirm.data.id)
+          }
+        }}
+      />
     </div>
   )
 }

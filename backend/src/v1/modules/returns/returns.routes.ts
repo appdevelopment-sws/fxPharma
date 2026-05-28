@@ -24,5 +24,6 @@ router.patch(
   validate(updateReturnStatusSchema),
   ReturnsController.updateStatus,
 );
+router.delete("/:id", isAuthenticated, ReturnsController.delete);
 
 export default router;
