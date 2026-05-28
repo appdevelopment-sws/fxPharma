@@ -1,3 +1,4 @@
+import fs from "node:fs/promises";
 import { Request, Response } from "express";
 import XLSX from "xlsx";
 import ExcelJS from "exceljs";
@@ -398,222 +399,247 @@ export class MasterProductController {
   });
 
   static bulkImport = catchAsync(async (req: Request, res: Response) => {
+    console.log(
+      "Received file for bulk import:",
+      req.file?.originalname,
+      "size:",
+      req.file?.size,
+    );
     const { organizationId, branchId } = getRequestScope(req);
 
     if (!req.file) {
       throw new ErrorHandler("No file uploaded", 400);
     }
 
-    const workbook = XLSX.read(req.file.buffer, { type: "buffer" });
-    const sheetName = workbook.SheetNames[0];
-    if (!sheetName) {
-      throw new ErrorHandler("Excel file is empty", 400);
-    }
-    const worksheet = workbook.Sheets[sheetName];
-    const rows = XLSX.utils.sheet_to_json<any>(worksheet);
+    const filePath = req.file.path;
 
     let successCount = 0;
     let errorCount = 0;
     const errors: string[] = [];
 
-    for (let i = 0; i < rows.length; i++) {
-      const row = rows[i];
-      const rowNum = i + 2;
-      try {
-        const productName =
-          row["Product Name"] || row["name"] || row["Product Full Name"];
-        if (
-          !productName ||
-          typeof productName !== "string" ||
-          !productName.trim()
-        ) {
-          errors.push(`Row ${rowNum}: Product Name is required`);
-          errorCount++;
-          continue;
-        }
+    try {
+      const workbook = XLSX.readFile(filePath, {
+        dense: false,
+        cellDates: false,
+        raw: false,
+      });
+      const sheetName = workbook.SheetNames[0];
+      if (!sheetName) {
+        throw new ErrorHandler("Excel file is empty", 400);
+      }
 
-        // Category
-        let categoryId: string | null = null;
-        const categoryName = row["Category"] || row["category"];
-        if (
-          categoryName &&
-          typeof categoryName === "string" &&
-          categoryName.trim()
-        ) {
-          const trimmed = categoryName.trim();
-          let category = await rootPrisma.category.findFirst({
-            where: {
-              name: { equals: trimmed, mode: "insensitive" },
-              organizationId,
-            },
-          });
-          if (!category) {
-            category = await rootPrisma.category.create({
-              data: { name: trimmed, organizationId, branchId },
-            });
+      const worksheet = workbook.Sheets[sheetName];
+      const rows = XLSX.utils.sheet_to_json<any>(worksheet, {
+        raw: false,
+        defval: "",
+      });
+
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        const rowNum = i + 2;
+
+        try {
+          const productName =
+            row["Product Name"] || row["name"] || row["Product Full Name"];
+          if (
+            !productName ||
+            typeof productName !== "string" ||
+            !productName.trim()
+          ) {
+            errors.push(`Row ${rowNum}: Product Name is required`);
+            errorCount++;
+            continue;
           }
-          categoryId = category.id;
-        }
 
-        // Brand
-        let brandId: string | null = null;
-        const brandName = row["Brand"] || row["brand"] || row["Brand Name"];
-        if (brandName && typeof brandName === "string" && brandName.trim()) {
-          const trimmed = brandName.trim();
-          let brand = await rootPrisma.brand.findFirst({
-            where: {
-              name: { equals: trimmed, mode: "insensitive" },
-              organizationId,
-            },
-          });
-          if (!brand) {
-            brand = await rootPrisma.brand.create({
-              data: { name: trimmed, organizationId, branchId },
-            });
-          }
-          brandId = brand.id;
-        }
-
-        // Manufacturer
-        let manufacturerId: string | null = null;
-        const manufacturerName =
-          row["Manufacturer"] ||
-          row["manufacturer"] ||
-          row["Parent Manufacturer"];
-        if (
-          manufacturerName &&
-          typeof manufacturerName === "string" &&
-          manufacturerName.trim()
-        ) {
-          const trimmed = manufacturerName.trim();
-          let manufacturer = await rootPrisma.manufacturer.findFirst({
-            where: {
-              name: { equals: trimmed, mode: "insensitive" },
-              organizationId,
-            },
-          });
-          if (!manufacturer) {
-            manufacturer = await rootPrisma.manufacturer.create({
-              data: {
-                name: trimmed,
-                email: "",
-                phone: "",
-                address: "",
+          // Category
+          let categoryId: string | null = null;
+          const categoryName = row["Category"] || row["category"];
+          if (
+            categoryName &&
+            typeof categoryName === "string" &&
+            categoryName.trim()
+          ) {
+            const trimmed = categoryName.trim();
+            let category = await rootPrisma.category.findFirst({
+              where: {
+                name: { equals: trimmed, mode: "insensitive" },
                 organizationId,
-                isGlobal: true,
-                branchId,
               },
             });
+            if (!category) {
+              category = await rootPrisma.category.create({
+                data: { name: trimmed, organizationId, branchId },
+              });
+            }
+            categoryId = category.id;
           }
-          manufacturerId = manufacturer.id;
-        }
 
-        // HSN
-        let hsnId: string | null = null;
-        const hsnCode = row["HSN Code"] || row["hsn"] || row["HSN/SAC Code"];
-        if (hsnCode) {
-          const trimmed = String(hsnCode).trim();
-          let hsn = await rootPrisma.hsn.findFirst({
-            where: { hsncode: { equals: trimmed, mode: "insensitive" } },
-          });
-          if (!hsn) {
-            hsn = await rootPrisma.hsn.create({
-              data: {
-                hsncode: trimmed,
-                description: "Auto created on import",
+          // Brand
+          let brandId: string | null = null;
+          const brandName = row["Brand"] || row["brand"] || row["Brand Name"];
+          if (brandName && typeof brandName === "string" && brandName.trim()) {
+            const trimmed = brandName.trim();
+            let brand = await rootPrisma.brand.findFirst({
+              where: {
+                name: { equals: trimmed, mode: "insensitive" },
+                organizationId,
               },
             });
+            if (!brand) {
+              brand = await rootPrisma.brand.create({
+                data: { name: trimmed, organizationId, branchId },
+              });
+            }
+            brandId = brand.id;
           }
-          hsnId = hsn.id;
-        }
 
-        const parseBool = (val: any) => {
-          if (val === undefined || val === null) return false;
-          const s = String(val).trim().toLowerCase();
-          return s === "yes" || s === "true" || s === "1";
-        };
-
-        const isNarcotic = parseBool(
-          row["Narcotic Drug"] || row["is_narcotic"] || row["narcotic"],
-        );
-        const isScheduleH = parseBool(
-          row["Schedule H"] || row["is_schedule_h"] || row["schedule_h"],
-        );
-        const isScheduleH1 = parseBool(
-          row["Schedule H1"] || row["is_schedule_h1"] || row["schedule_h1"],
-        );
-
-        // Barcodes
-        const barcodeString =
-          row["Barcodes"] || row["barcode"] || row["Registered Barcodes"];
-        const barcodesToCreate: { value: string }[] = [];
-        if (barcodeString) {
-          const codes = String(barcodeString)
-            .split(",")
-            .map((c) => c.trim())
-            .filter(Boolean);
-
-          for (const code of codes) {
-            const exists = await rootPrisma.masterProductBarcode.findUnique({
-              where: { value: code },
+          // Manufacturer
+          let manufacturerId: string | null = null;
+          const manufacturerName =
+            row["Manufacturer"] ||
+            row["manufacturer"] ||
+            row["Parent Manufacturer"];
+          if (
+            manufacturerName &&
+            typeof manufacturerName === "string" &&
+            manufacturerName.trim()
+          ) {
+            const trimmed = manufacturerName.trim();
+            let manufacturer = await rootPrisma.manufacturer.findFirst({
+              where: {
+                name: { equals: trimmed, mode: "insensitive" },
+                organizationId,
+              },
             });
-            if (!exists) {
-              barcodesToCreate.push({ value: code });
-            } else {
-              console.log(
-                `Skipping barcode "${code}" on row ${rowNum} because it already exists in DB`,
-              );
+            if (!manufacturer) {
+              manufacturer = await rootPrisma.manufacturer.create({
+                data: {
+                  name: trimmed,
+                  email: "",
+                  phone: "",
+                  address: "",
+                  organizationId,
+                  isGlobal: true,
+                  branchId,
+                },
+              });
+            }
+            manufacturerId = manufacturer.id;
+          }
+
+          // HSN
+          let hsnId: string | null = null;
+          const hsnCode = row["HSN Code"] || row["hsn"] || row["HSN/SAC Code"];
+          if (hsnCode) {
+            const trimmed = String(hsnCode).trim();
+            let hsn = await rootPrisma.hsn.findFirst({
+              where: { hsncode: { equals: trimmed, mode: "insensitive" } },
+            });
+            if (!hsn) {
+              hsn = await rootPrisma.hsn.create({
+                data: {
+                  hsncode: trimmed,
+                  description: "Auto created on import",
+                },
+              });
+            }
+            hsnId = hsn.id;
+          }
+
+          const parseBool = (val: any) => {
+            if (val === undefined || val === null) return false;
+            const s = String(val).trim().toLowerCase();
+            return s === "yes" || s === "true" || s === "1";
+          };
+
+          const isNarcotic = parseBool(
+            row["Narcotic Drug"] || row["is_narcotic"] || row["narcotic"],
+          );
+          const isScheduleH = parseBool(
+            row["Schedule H"] || row["is_schedule_h"] || row["schedule_h"],
+          );
+          const isScheduleH1 = parseBool(
+            row["Schedule H1"] || row["is_schedule_h1"] || row["schedule_h1"],
+          );
+
+          // Barcodes
+          const barcodeString =
+            row["Barcodes"] || row["barcode"] || row["Registered Barcodes"];
+          const barcodesToCreate: { value: string }[] = [];
+          if (barcodeString) {
+            const codes = String(barcodeString)
+              .split(",")
+              .map((c) => c.trim())
+              .filter(Boolean);
+
+            for (const code of codes) {
+              const exists = await rootPrisma.masterProductBarcode.findUnique({
+                where: { value: code },
+              });
+              if (!exists) {
+                barcodesToCreate.push({ value: code });
+              } else {
+                console.log(
+                  `Skipping barcode "${code}" on row ${rowNum} because it already exists in DB`,
+                );
+              }
             }
           }
+
+          const categoryType = String(
+            row["Category Type"] || row["category_type"] || "TAB",
+          )
+            .trim()
+            .toUpperCase();
+          const status = String(row["Status"] || row["status"] || "CONTINUE")
+            .trim()
+            .toUpperCase();
+          const colorType = String(
+            row["Color Type"] || row["color_type"] || "NORMAL",
+          )
+            .trim()
+            .toUpperCase();
+          const industrySegment = String(
+            row["Industry Segment"] || row["industry_segment"] || "1",
+          ).trim();
+
+          await rootPrisma.masterProduct.create({
+            data: {
+              name: productName.trim(),
+              industrySegment,
+              categoryId,
+              brandId,
+              manufacturerId,
+              salt: row["Salt Composition"] || row["salt"] || null,
+              hsnId,
+              categoryType,
+              status,
+              colorType,
+              isNarcotic,
+              isScheduleH,
+              isScheduleH1,
+
+              barcodes:
+                barcodesToCreate.length > 0
+                  ? {
+                      create: barcodesToCreate,
+                    }
+                  : undefined,
+            },
+          });
+
+          successCount++;
+        } catch (err: any) {
+          console.error(`Error importing row ${rowNum}:`, err);
+          errors.push(`Row ${rowNum}: ${err.message || "Unknown error"}`);
+          errorCount++;
         }
-
-        const categoryType = String(
-          row["Category Type"] || row["category_type"] || "TAB",
-        )
-          .trim()
-          .toUpperCase();
-        const status = String(row["Status"] || row["status"] || "CONTINUE")
-          .trim()
-          .toUpperCase();
-        const colorType = String(
-          row["Color Type"] || row["color_type"] || "NORMAL",
-        )
-          .trim()
-          .toUpperCase();
-        const industrySegment = String(
-          row["Industry Segment"] || row["industry_segment"] || "1",
-        ).trim();
-
-        await rootPrisma.masterProduct.create({
-          data: {
-            name: productName.trim(),
-            industrySegment,
-            categoryId,
-            brandId,
-            manufacturerId,
-            salt: row["Salt Composition"] || row["salt"] || null,
-            hsnId,
-            categoryType,
-            status,
-            colorType,
-            isNarcotic,
-            isScheduleH,
-            isScheduleH1,
-
-            barcodes:
-              barcodesToCreate.length > 0
-                ? {
-                    create: barcodesToCreate,
-                  }
-                : undefined,
-          },
-        });
-
-        successCount++;
-      } catch (err: any) {
-        console.error(`Error importing row ${rowNum}:`, err);
-        errors.push(`Row ${rowNum}: ${err.message || "Unknown error"}`);
-        errorCount++;
+      }
+    } finally {
+      try {
+        await fs.unlink(filePath);
+      } catch {
+        // Ignore cleanup errors; temp file will be removed by the environment eventually.
       }
     }
 

@@ -10,10 +10,12 @@ services:
       - "5000:5000"
     env_file:
       - ./backend/.env
+    environment:
+      NODE_OPTIONS: --max-old-space-size=768
     depends_on:
       - db
     mem_limit:
-      512m
+      1g
 
       # - redis
 
