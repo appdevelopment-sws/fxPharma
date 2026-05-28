@@ -58,8 +58,18 @@ export function WorkspaceShell({
     <div className="flex h-screen overflow-hidden">
       {/* Desktop Sidebar */}
       <aside
+        onMouseEnter={() => {
+          if (isCollapsed) {
+            setIsCollapsed(false)
+          }
+        }}
+        onMouseLeave={() => {
+          if (!isCollapsed) {
+            setIsCollapsed(true)
+          }
+        }}
         className={cn(
-          "relative z-40 hidden h-screen shrink-0 border-r border-white/20 bg-sidebar transition-all duration-300 lg:block dark:border-primary dark:bg-primary",
+          "relative z-40 hidden h-screen shrink-0 overflow-hidden border-r border-white/20 bg-sidebar transition-[width] duration-550 ease-out will-change-[width] lg:block dark:border-primary dark:bg-primary",
           isCollapsed ? "w-20" : "w-[220px]"
         )}
       >
@@ -80,7 +90,7 @@ export function WorkspaceShell({
         />
 
         {/* Collapse Toggle Button */}
-        <Button
+        {/* <Button
           type="button"
           variant="outline"
           size="icon"
@@ -92,7 +102,7 @@ export function WorkspaceShell({
           ) : (
             <ChevronLeft className="size-3" />
           )}
-        </Button>
+        </Button> */}
       </aside>
 
       {/* Main Content Area */}

@@ -107,7 +107,7 @@ export function DashboardSidebar({
           </div>
         ) : (
           <>
-            <div className="flex h-24 w-full items-center justify-center overflow-hidden">
+            <div className="flex h-20 w-full items-center justify-center overflow-hidden">
               <img
                 src={logoSrc}
                 alt={workspaceTitle}
@@ -206,7 +206,7 @@ function SidebarItem({
     "group flex w-full items-center transition-all duration-200",
     isCollapsed
       ? "mx-auto justify-center rounded-full p-3"
-      : "gap-x-2 rounded-full border-l-4 px-3 py-2.5",
+      : "my-5 gap-x-2 rounded-full border-l-4 px-3 py-2.5",
     isActive || isExpanded
       ? cn(
           "font-semibold text-white",
