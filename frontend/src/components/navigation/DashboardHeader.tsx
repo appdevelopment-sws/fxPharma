@@ -28,6 +28,7 @@ interface DashboardHeaderProps {
   userName: string
   userRole: string
   userEmail?: string
+  userAvatar?: string
   onOpenSidebar: () => void
   onOpenProfile?: () => void
   onOpenSettings?: () => void
@@ -41,6 +42,7 @@ export function DashboardHeader({
   activeItemTitle,
   userName,
   userRole,
+  userAvatar,
   userEmail,
   onOpenSidebar,
   onOpenProfile,
@@ -79,7 +81,7 @@ export function DashboardHeader({
   }
 
   return (
-    <header className="sticky top-0 z-30 h-16 border-b border-border dark:border-zinc-800 bg-white dark:bg-zinc-950 text-foreground dark:text-zinc-100 shadow-sm">
+    <header className="sticky top-0 z-30 h-16 border-b border-border bg-white text-foreground shadow-sm dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100">
       <div className="flex h-full items-center justify-between px-4 sm:px-6">
         {/* Left: Mobile trigger & Breadcrumbs */}
         <div className="flex items-center gap-4">
@@ -104,7 +106,9 @@ export function DashboardHeader({
             {activeItemTitle && (
               <>
                 <ChevronRight className="size-3.5 opacity-50" />
-                <span className="font-bold text-foreground">{activeItemTitle}</span>
+                <span className="font-bold text-foreground">
+                  {activeItemTitle}
+                </span>
               </>
             )}
           </div>
@@ -114,15 +118,22 @@ export function DashboardHeader({
         <div className="flex items-center gap-2 sm:gap-4">
           {/* Search - Desktop only for now */}
 
-
           <div className="flex items-center gap-1 border-r border-border pr-2 sm:gap-2">
             {/* Live Clock & Date */}
-            <div className="hidden sm:flex flex-col items-end justify-center mr-2 border-r border-border pr-4">
-              <span className="text-xs font-bold text-foreground tracking-wide leading-none">
-                {now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+            <div className="mr-2 hidden flex-col items-end justify-center border-r border-border pr-4 sm:flex">
+              <span className="text-xs leading-none font-bold tracking-wide text-foreground">
+                {now.toLocaleTimeString("en-IN", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  second: "2-digit",
+                })}
               </span>
-              <span className="text-[9px] text-muted-foreground font-medium uppercase tracking-widest mt-1">
-                {now.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
+              <span className="mt-1 text-[9px] font-medium tracking-widest text-muted-foreground uppercase">
+                {now.toLocaleDateString("en-IN", {
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                })}
               </span>
             </div>
 
@@ -153,10 +164,7 @@ export function DashboardHeader({
           </div>
 
           {/* User Profile */}
-          <Popover
-            open={isProfileMenuOpen}
-            onOpenChange={setIsProfileMenuOpen}
-          >
+          <Popover open={isProfileMenuOpen} onOpenChange={setIsProfileMenuOpen}>
             <PopoverTrigger asChild>
               <button
                 type="button"
@@ -170,11 +178,12 @@ export function DashboardHeader({
                     {userRole}
                   </p>
                 </div>
-                <div className="relative flex size-9 items-center justify-center rounded-full bg-primary dark:bg-zinc-800 text-xs font-bold text-white shadow-sm ring-2 ring-slate-100 transition-all group-hover:ring-slate-200">
-                  {userName
-                    .split(" ")
-                    .map((n) => n[0])
-                    .join("")}
+                <div className="relative flex size-9 items-center justify-center rounded-full border-2 border-primary text-xs font-bold ring-2 ring-slate-100 transition-all group-hover:ring-slate-200 dark:bg-zinc-800">
+                  <img
+                    src={userAvatar}
+                    alt="User Avatar"
+                    className="size-full rounded-full object-cover"
+                  />
                   <div className="absolute right-0 bottom-0 size-2.5 rounded-full border-2 border-white bg-green-500 ring-1 ring-white/10" />
                 </div>
                 <ChevronDown className="hidden size-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180 sm:block" />
@@ -183,11 +192,11 @@ export function DashboardHeader({
             <PopoverContent
               align="end"
               sideOffset={10}
-              className="w-80 border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-3 text-slate-900 dark:text-zinc-100 shadow-xl"
+              className="w-80 border border-slate-200 bg-white p-3 text-slate-900 shadow-xl dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100"
             >
-              <div className="space-y-3 border-b border-slate-200 dark:border-zinc-800 pb-3">
+              <div className="space-y-3 border-b border-slate-200 pb-3 dark:border-zinc-800">
                 <div className="flex items-center gap-3">
-                  <div className="flex size-11 items-center justify-center rounded-full bg-primary dark:bg-zinc-800 text-sm font-bold text-white shadow-sm">
+                  <div className="flex size-11 items-center justify-center rounded-full bg-primary text-sm font-bold text-white shadow-sm dark:bg-zinc-800">
                     {userName
                       .split(" ")
                       .map((n) => n[0])
@@ -218,7 +227,7 @@ export function DashboardHeader({
                       onOpenProfile()
                     }}
                     className={cn(
-                      "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-slate-700 dark:text-slate-300 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+                      "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
                     )}
                   >
                     <UserCircle2 className="size-4 text-slate-500" />
@@ -234,7 +243,7 @@ export function DashboardHeader({
                       onOpenSettings()
                     }}
                     className={cn(
-                      "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-slate-700 dark:text-slate-300 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+                      "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
                     )}
                   >
                     <Settings className="size-4 text-slate-500" />
@@ -251,7 +260,7 @@ export function DashboardHeader({
                     }}
                     disabled={isLoggingOut}
                     className={cn(
-                      "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-rose-600 dark:text-rose-500 transition-colors hover:bg-rose-50 dark:hover:bg-rose-950/30 disabled:cursor-not-allowed disabled:opacity-60"
+                      "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-rose-600 transition-colors hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-60 dark:text-rose-500 dark:hover:bg-rose-950/30"
                     )}
                   >
                     <LogOut className="size-4" />

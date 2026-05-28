@@ -4,7 +4,11 @@ import { ChevronDown, LogOut } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { cn, getImageUrl } from "@/lib/utils"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 
 import {
   isNavigationItemActive,
@@ -78,15 +82,16 @@ export function DashboardSidebar({
   }
 
   const hasCustomLogo = isValidLogo(workspaceSubtitle)
-  const logoSrc = hasCustomLogo ? getImageUrl(workspaceSubtitle) : "/logo.png"
+  // const logoSrc = hasCustomLogo ? getImageUrl(workspaceSubtitle) : "/logo.png"
+  const logoSrc = "/logo.png"
 
   return (
-    <div className="flex h-full flex-col bg-sidebar  text-[#D1D5DB]">
+    <div className="flex h-full flex-col bg-sidebar text-[#D1D5DB]">
       {/* Brand Header */}
       <div
         className={cn(
-          "flex shrink-0 flex-col items-center justify-center border-b border-white/10 dark:border-zinc-800 text-center",
-          isCollapsed ? "h-16 px-0" : "py-4 gap-2 px-4"
+          "flex shrink-0 flex-col items-center justify-center border-b border-white/10 text-center dark:border-zinc-800",
+          isCollapsed ? "h-16 px-0" : "gap-2 px-4 py-4"
         )}
       >
         {isCollapsed ? (
@@ -148,7 +153,7 @@ export function DashboardSidebar({
       </nav>
 
       {/* Footer / Logout */}
-      <div className="border-t border-white/10 dark:border-zinc-800 bg-white/5 dark:bg-zinc-900/50 p-4">
+      <div className="border-t border-white/10 bg-white/5 p-4 dark:border-zinc-800 dark:bg-zinc-900/50">
         <Button
           type="button"
           variant="ghost"
@@ -199,9 +204,14 @@ function SidebarItem({
 
   const baseStyles = cn(
     "group flex w-full items-center transition-all duration-200",
-    isCollapsed ? "mx-auto justify-center p-3 rounded-full" : "gap-x-2 px-3 py-2.5 rounded-full border-l-4",
+    isCollapsed
+      ? "mx-auto justify-center rounded-full p-3"
+      : "gap-x-2 rounded-full border-l-4 px-3 py-2.5",
     isActive || isExpanded
-      ? cn(" font-semibold text-white", !isCollapsed && "border-l-4 border-[#FF7A00] pl-2")
+      ? cn(
+          "font-semibold text-white",
+          !isCollapsed && "border-l-4 border-[#FF7A00] pl-2"
+        )
       : "text-[#D1D5DB] hover:bg-[#163B68] hover:text-white"
   )
 
@@ -246,14 +256,12 @@ function SidebarItem({
     if (isCollapsed) {
       return (
         <Popover open={showPopup} onOpenChange={setShowPopup}>
-          <PopoverTrigger asChild>
-            {triggerButton}
-          </PopoverTrigger>
+          <PopoverTrigger asChild>{triggerButton}</PopoverTrigger>
           <PopoverContent
             side="right"
             align="start"
             sideOffset={12}
-            className="w-56 rounded-xl border border-slate-200 bg-white p-2 shadow-2xl z-[9999]"
+            className="z-[9999] w-56 rounded-xl border border-slate-200 bg-white p-2 shadow-2xl"
           >
             {/* TITLE */}
             <div className="mb-2 px-3 py-2 text-xs font-semibold tracking-wide text-slate-500 uppercase">
@@ -275,7 +283,7 @@ function SidebarItem({
                       onNavigate?.(child.to)
                     }}
                     className={cn(
-                      "flex items-center gap-2 px-3 py-2 text-sm transition-all duration-200 rounded-full border-l-[3px]",
+                      "flex items-center gap-2 rounded-full border-l-[3px] px-3 py-2 text-sm transition-all duration-200",
                       childIsActive
                         ? "bg-blue-50 font-medium text-[#0B4F9C]"
                         : "text-slate-700 hover:bg-slate-100"
@@ -311,7 +319,7 @@ function SidebarItem({
                   to={child.to ?? "#"}
                   onClick={() => onNavigate?.(child.to)}
                   className={cn(
-                    "flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium transition-all duration-200 rounded-full border-l-[3px]",
+                    "flex items-center gap-2.5 rounded-full border-l-[3px] px-3 py-2 text-[13px] font-medium transition-all duration-200",
                     childIsActive
                       ? "bg-[#0B4F9C] text-white shadow-sm"
                       : "text-[#D1D5DB] hover:bg-[#163B68] hover:text-white"
