@@ -21,6 +21,7 @@ const SuperAdminLayout = () => {
 
   const handleLogout = useCallback(async () => {
     try {
+      queryClient.cancelQueries({ queryKey: queryKeys.auth.user() })
       queryClient.setQueryData(queryKeys.auth.user(), null)
       queryClient.removeQueries({ queryKey: queryKeys.auth.all })
       localStorage.removeItem("activeOrganizationId")
@@ -30,9 +31,9 @@ const SuperAdminLayout = () => {
     } catch {
       // Ignore server-side logout errors; the client session is already cleared.
     } finally {
-      navigate("/admin/login", { replace: true })
+      window.location.replace("/admin/login")
     }
-  }, [navigate])
+  }, [])
 
   return (
     <WorkspaceShell
