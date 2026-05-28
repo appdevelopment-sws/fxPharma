@@ -53,7 +53,7 @@ export function WorkspaceShell({
       allItems.find((item) => isNavigationItemActive(item, location.pathname))
     )
   }, [location.pathname, navigationGroups])
-
+  console.log("workspaceSubtitle", workspaceSubtitle)
   return (
     <div className="flex h-screen overflow-hidden">
       {/* Desktop Sidebar */}

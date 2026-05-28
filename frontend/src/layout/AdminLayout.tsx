@@ -47,7 +47,9 @@ const AdminLayout = () => {
       appLabel="Dawa Dukaan"
       workspaceLabel={user?.name ?? "Tenant Workspace"}
       workspaceTitle={storeName}
-      workspaceSubtitle={settings.store_name ? storeName : "Tenant Workspace"}
+      workspaceSubtitle={
+        user?.organizations[0].organization.logo ?? "Tenant Workspace"
+      }
       userName={user?.name ?? "Workspace User"}
       userRole={user?.role ?? "Member"}
       userEmail={user?.email}

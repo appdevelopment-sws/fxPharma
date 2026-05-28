@@ -79,6 +79,7 @@ export function DashboardHeader({
       }
     }
   }
+  console.log("userAvatar", userAvatar)
 
   return (
     <header className="sticky top-0 z-30 h-16 border-b border-border bg-white text-foreground shadow-sm dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100">
