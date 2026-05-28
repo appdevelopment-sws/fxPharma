@@ -197,7 +197,7 @@ export function DashboardHeader({
             >
               <div className="space-y-3 border-b border-slate-200 pb-3 dark:border-zinc-800">
                 <div className="flex items-center gap-3">
-                  <div className="flex size-11 items-center justify-center rounded-full bg-primary text-sm font-bold text-white shadow-sm dark:bg-zinc-800">
+                  <div className="flex size-11 items-center justify-center rounded-full border-2 border-primary shadow-sm dark:bg-zinc-800">
                     {userAvatar ? (
                       <img
                         src={userAvatar}
