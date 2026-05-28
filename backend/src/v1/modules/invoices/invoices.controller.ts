@@ -76,15 +76,13 @@ export class InvoicesController {
         where: { organizationId },
       });
       const nextNum = (isNaN(startingSeq) ? 1 : startingSeq) + count;
-      let invoiceId = `${prefix}${String(nextNum).padStart(6, "0")}`;
 
-      // Verify uniqueness
-      const existing = await tx.invoice.findFirst({
-        where: { invoiceId, organizationId },
-      });
-      if (existing) {
-        invoiceId = `${prefix}${String(nextNum).padStart(6, "0")}-${Math.floor(100 + Math.random() * 900)}`;
-      }
+      // Short timestamp + random
+      const uniqueSuffix =
+        Date.now().toString().slice(-6) + // last 6 digits of timestamp
+        Math.floor(100 + Math.random() * 900); // 3 random digits
+
+      const invoiceId = `${prefix}${String(nextNum).padStart(6, "0")}-${uniqueSuffix}`;
 
       // 2. Decrement stock for each item
       for (const item of items) {
@@ -438,48 +436,14 @@ export class InvoicesController {
     });
   });
 
-  static getTemplates = catchAsync(async (req: Request, res: Response) => {
-    const { organizationId, branchId } = getRequestScope(req);
+  static getTemplates = catchAsync(async (_req: Request, res: Response) => {
     const templates = await invoiceTemplateService.getAvailableTemplates();
-
-    const orgSettings = await rootPrisma.setting.findMany({
-      where: { organizationId, branchId: null },
-    });
-
-    let branchSettings: any[] = [];
-    if (branchId) {
-      branchSettings = await rootPrisma.setting.findMany({
-        where: { organizationId, branchId },
-      });
-    }
-
-    const settingsMap: Record<string, string> = {};
-    orgSettings.forEach((setting) => {
-      settingsMap[setting.key] = setting.value;
-    });
-    branchSettings.forEach((setting) => {
-      settingsMap[setting.key] = setting.value;
-    });
-
-    const configuredTemplate =
-      settingsMap.invoice_template_name || settingsMap.invoice_template;
-
-    let defaultTemplate = invoiceTemplateService.getSafeTemplateName();
-    if (configuredTemplate) {
-      try {
-        defaultTemplate =
-          invoiceTemplateService.getSafeTemplateName(configuredTemplate);
-      } catch {
-        defaultTemplate = invoiceTemplateService.getSafeTemplateName();
-      }
-    }
 
     res.json({
       success: true,
       data: {
         templates,
-        defaultTemplate,
-        invoice_template_name: defaultTemplate,
+        defaultTemplate: invoiceTemplateService.getSafeTemplateName(),
       },
     });
   });

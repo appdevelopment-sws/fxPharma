@@ -398,6 +398,12 @@ export class MasterProductController {
   });
 
   static bulkImport = catchAsync(async (req: Request, res: Response) => {
+    console.log(
+      "Received file for bulk import:",
+      req.file?.originalname,
+      "size:",
+      req.file?.size,
+    );
     const { organizationId, branchId } = getRequestScope(req);
 
     if (!req.file) {
