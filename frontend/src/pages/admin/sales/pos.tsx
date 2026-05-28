@@ -1040,7 +1040,7 @@ const POS = () => {
         {/* ── Table header ── */}
         <div
           className="grid flex-shrink-0 items-center border-b border-border bg-muted/40 px-3 py-2.5 text-xs font-bold uppercase tracking-wider text-muted-foreground"
-          style={{ gridTemplateColumns: "40px 1fr 70px 56px 108px 84px 76px" }}
+          style={{ gridTemplateColumns: "52px 1fr 70px 56px 108px 84px 76px" }}
         >
           <span>Image</span>
           <span>Items</span>
@@ -1069,7 +1069,7 @@ const POS = () => {
                 <div
                   key={item.id}
                   className="grid items-center px-3 py-3 hover:bg-muted/30 transition-colors border-b border-border/30"
-                  style={{ gridTemplateColumns: "40px 1fr 70px 56px 108px 84px 76px" }}
+                  style={{ gridTemplateColumns: "52px 1fr 70px 56px 108px 84px 76px" }}
                 >
                   {/* Thumbnail */}
                   <div className="h-9 w-9 overflow-hidden rounded-md bg-muted/60 flex items-center justify-center flex-shrink-0">
@@ -1185,6 +1185,27 @@ const POS = () => {
                 />
               </div>
 
+              {/* Payment Type */}
+              <div className="flex items-center gap-2">
+                <label className="w-28 flex-shrink-0 text-xs font-semibold text-muted-foreground">
+                  Payment Type
+                </label>
+                <div className="relative flex-1 min-w-0">
+                  <select
+                    value={paymentMode}
+                    onChange={(e) => setPaymentMode(e.target.value)}
+                    className="w-full appearance-none rounded-lg border border-border bg-muted/40 py-1.5 pl-2.5 pr-7 text-xs text-foreground outline-none focus:border-teal-400 transition-all"
+                  >
+                    <option>Cash</option>
+                    <option>Card / POS</option>
+                    <option>UPI / QR</option>
+                    <option>Split Payment</option>
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                </div>
+              </div>
+
+
               {/* Receive Amount */}
               <div className="flex items-center gap-2">
                 <label className="w-28 flex-shrink-0 text-xs font-semibold text-muted-foreground">
@@ -1211,25 +1232,6 @@ const POS = () => {
                 />
               </div>
 
-              {/* Payment Type */}
-              <div className="flex items-center gap-2">
-                <label className="w-28 flex-shrink-0 text-xs font-semibold text-muted-foreground">
-                  Payment Type
-                </label>
-                <div className="relative flex-1 min-w-0">
-                  <select
-                    value={paymentMode}
-                    onChange={(e) => setPaymentMode(e.target.value)}
-                    className="w-full appearance-none rounded-lg border border-border bg-muted/40 py-1.5 pl-2.5 pr-7 text-xs text-foreground outline-none focus:border-teal-400 transition-all"
-                  >
-                    <option>Cash</option>
-                    <option>Card / POS</option>
-                    <option>UPI / QR</option>
-                    <option>Split Payment</option>
-                  </select>
-                  <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-                </div>
-              </div>
 
               {/* Split Payment Amounts */}
               {paymentMode === "Split Payment" && (

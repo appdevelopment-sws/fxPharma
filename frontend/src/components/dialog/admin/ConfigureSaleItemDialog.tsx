@@ -187,7 +187,7 @@ export default function ConfigureSaleItemDialog({
       <div className="space-y-5 pb-2 text-xs">
         {/* Batch and Expiry Dropdown Selector */}
         <div className="space-y-2">
-          <span className="text-[9px] font-black text-slate-450 dark:text-slate-400 uppercase tracking-widest block">
+          <span className="text-[9px] font-black text-slate-400 dark:text-slate-400 uppercase tracking-widest block">
             Select Batch & Expiry Date
           </span>
           <div className="relative">
@@ -201,10 +201,15 @@ export default function ConfigureSaleItemDialog({
                   setQty((q) => Math.min(q, maxStock))
                 }
               }}
-              className="w-full appearance-none rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-955 px-3.5 py-2.5 pr-10 text-xs font-semibold outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition-all text-slate-800 dark:text-slate-100"
+              className="w-full appearance-none rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950 px-3.5 py-2.5 pr-10 text-xs font-semibold outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition-all text-slate-800 dark:text-slate-100 [color-scheme:light] dark:[color-scheme:dark]"
             >
               {product.batches.map((b) => (
-                <option key={b.id} value={b.id} disabled={b.stock <= 0}>
+                <option
+                  key={b.id}
+                  value={b.id}
+                  disabled={b.stock <= 0}
+                  className="bg-background text-foreground disabled:text-muted-foreground"
+                >
                   {b.number} (Exp: {b.expiry}) {b.stock <= 0 ? "[OUT OF STOCK]" : `— ${b.stock} Strips`}
                 </option>
               ))}
@@ -234,14 +239,14 @@ export default function ConfigureSaleItemDialog({
               Expiry: <span className="text-slate-700 dark:text-slate-200 font-black">{activeBatch.expiry}</span>
             </span>
             <span>
-              Stock: <span className="text-slate-750 dark:text-slate-200 font-black">{activeBatch.stock} Strps ({activeBatch.stock * qtyPerStrip} Pcs)</span>
+              Stock: <span className="text-slate-700 dark:text-slate-200 font-black">{activeBatch.stock} Strps ({activeBatch.stock * qtyPerStrip} Pcs)</span>
             </span>
           </div>
         </div>
 
         {/* Visual rate option cards */}
         <div className="space-y-2">
-          <span className="text-[9px] font-black text-slate-450 dark:text-slate-400 uppercase tracking-widest block">
+          <span className="text-[9px] font-black text-slate-400 dark:text-slate-400 uppercase tracking-widest block">
             Select Rate Option
           </span>
           <div className="grid grid-cols-2 gap-3">
@@ -261,14 +266,14 @@ export default function ConfigureSaleItemDialog({
                   )}
                 >
                   {isSelected && (
-                    <div className="absolute right-2.5 top-2.5 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-blue-650 text-white shadow-xs">
+                    <div className="absolute right-2.5 top-2.5 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-blue-600 text-white shadow-xs">
                       <Check className="h-3 w-3" />
                     </div>
                   )}
                   <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
                     {rate.label}
                   </span>
-                  <span className="font-mono font-black text-slate-850 dark:text-slate-100 text-sm mt-1">
+                  <span className="font-mono font-black text-slate-800 dark:text-slate-100 text-sm mt-1">
                     ₹{rate.val.toFixed(2)}
                   </span>
                   {sellUnit === "piece" && (
@@ -284,10 +289,10 @@ export default function ConfigureSaleItemDialog({
 
         {/* Visual Sell Unit Selector (Segmented buttons) */}
         <div className="space-y-2">
-          <span className="text-[9px] font-black text-slate-450 dark:text-slate-400 uppercase tracking-widest block">
+          <span className="text-[9px] font-black text-slate-400 dark:text-slate-400 uppercase tracking-widest block">
             Select Unit Type
           </span>
-          <div className="flex gap-2 p-1 bg-slate-100/50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800">
+          <div className="flex gap-2 p-1 bg-slate-100/50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">
             <button
               type="button"
               onClick={() => {
@@ -298,7 +303,7 @@ export default function ConfigureSaleItemDialog({
                 "flex-1 text-center py-2 text-xs font-black rounded-lg transition-all cursor-pointer",
                 sellUnit === "strip"
                   ? "bg-white text-slate-900 shadow-2xs dark:bg-slate-900 dark:text-slate-100"
-                  : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-350"
+                  : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
               )}
             >
               Strips ({activeBatch.stock} Available)
@@ -311,26 +316,25 @@ export default function ConfigureSaleItemDialog({
                 "flex-1 text-center py-2 text-xs font-black rounded-lg transition-all disabled:opacity-40 cursor-pointer",
                 sellUnit === "piece"
                   ? "bg-white text-slate-900 shadow-2xs dark:bg-slate-900 dark:text-slate-100"
-                  : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-350"
+                  : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
               )}
             >
               Pieces ({activeBatch.stock * qtyPerStrip} Available)
             </button>
           </div>
         </div>
-
         {/* Quantity and Discount row */}
         <div className="grid grid-cols-2 gap-4">
           {/* Quantity selector */}
           <div className="space-y-2">
-            <span className="text-[9px] font-black text-slate-450 dark:text-slate-400 uppercase tracking-widest block">
+            <span className="text-[9px] font-black text-slate-400 dark:text-slate-400 uppercase tracking-widest block">
               Sales Quantity
             </span>
-            <div className="flex items-center overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-850 dark:bg-slate-950 w-full h-[42px] focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/10 transition-all">
+            <div className="flex items-center overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950 w-full h-[42px] focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/10 transition-all">
               <button
                 type="button"
                 onClick={() => setQty((q) => Math.max(1, q - 1))}
-                className="px-3.5 py-2 text-slate-455 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors"
+                className="px-3.5 py-2 text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors"
               >
                 <Minus className="h-3.5 w-3.5" />
               </button>
@@ -342,12 +346,12 @@ export default function ConfigureSaleItemDialog({
                   const parsed = parseInt(e.target.value, 10) || 1
                   setQty(Math.min(maxStock, Math.max(1, parsed)))
                 }}
-                className="w-full bg-transparent text-center text-xs font-black text-slate-850 dark:text-slate-100 outline-none"
+                className="w-full bg-transparent text-center text-xs font-black text-slate-800 dark:text-slate-100 outline-none"
               />
               <button
                 type="button"
                 onClick={() => setQty((q) => Math.min(maxStock, q + 1))}
-                className="px-3.5 py-2 text-slate-455 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors"
+                className="px-3.5 py-2 text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors"
               >
                 <Plus className="h-3.5 w-3.5" />
               </button>
@@ -356,20 +360,20 @@ export default function ConfigureSaleItemDialog({
 
           {/* Discount Percentage input */}
           <div className="space-y-2">
-            <span className="text-[9px] font-black text-slate-450 dark:text-slate-400 uppercase tracking-widest block">
+            <span className="text-[9px] font-black text-slate-400 dark:text-slate-400 uppercase tracking-widest block">
               Item Discount
             </span>
-            <div className="flex items-center rounded-xl border border-slate-200 bg-white dark:border-slate-850 dark:bg-slate-955 overflow-hidden w-full h-[42px] focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/10 transition-all">
+            <div className="flex items-center rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950 overflow-hidden w-full h-[42px] focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/10 transition-all">
               <input
                 type="number"
                 min="0"
                 max="100"
                 value={itemDiscount}
                 onChange={(e) => setItemDiscount(Math.min(100, Math.max(0, Number(e.target.value))))}
-                className="w-full bg-transparent px-4.5 text-right text-xs font-black text-slate-850 dark:text-slate-100 outline-none"
+                className="w-full bg-transparent px-4.5 text-right text-xs font-black text-slate-800 dark:text-slate-100 outline-none"
                 placeholder="0"
               />
-              <span className="border-l border-slate-105 dark:border-slate-850 bg-slate-50 dark:bg-slate-900 px-4 h-full flex items-center text-[11px] font-bold text-slate-400">
+              <span className="border-l border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-4 h-full flex items-center text-[11px] font-bold text-slate-400">
                 %
               </span>
             </div>
@@ -399,7 +403,7 @@ export default function ConfigureSaleItemDialog({
               <span>GST Tax ({cgstRate + sgstRate}%)</span>
               <span className="text-slate-700 dark:text-slate-300">₹{taxVal.toFixed(2)}</span>
             </div>
-            <div className="flex justify-between items-center pt-2.5 border-t border-slate-200 dark:border-slate-850/80 text-slate-900 dark:text-slate-100 font-extrabold text-xs uppercase tracking-wider">
+            <div className="flex justify-between items-center pt-2.5 border-t border-slate-200 dark:border-slate-800/80 text-slate-900 dark:text-slate-100 font-extrabold text-xs uppercase tracking-wider">
               <span>Total Net</span>
               <span className="text-blue-600 dark:text-blue-400 font-mono text-base font-black">₹{netVal.toFixed(2)}</span>
             </div>
