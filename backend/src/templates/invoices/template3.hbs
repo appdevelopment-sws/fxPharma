@@ -2,195 +2,384 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Bill - {{invoiceId}}</title>
+    <title>Invoice - {{invoiceId}}</title>
     <style>
-      body {
-        font-family: Arial, sans-serif;
-        font-size: 12px;
-        background: #f1f5f9;
-        color: #222;
-        line-height: 1.3;
+      * {
+        box-sizing: border-box;
         margin: 0;
         padding: 0;
+      }
+
+      body {
+        font-family: "Segoe UI", Arial, sans-serif;
+        font-size: 12px;
+        background: #f4f6fa;
+        color: #1a1a2e;
+        line-height: 1.4;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
       }
-      .page {
+
+      .invoice-page {
         width: 210mm;
         min-height: 297mm;
         margin: 0 auto;
-        background: #ffffff;
-        padding: 12mm;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        background: #fff;
+        overflow: hidden;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
       }
-      .bill-container {
-        position: relative;
-        background: #fff;
-        overflow: hidden;
-      }
-      .section-title {
-        font-size: 14px;
-        font-weight: bold;
-        margin-top: 15px;
-        margin-bottom: 5px;
-        color: #333;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-      }
-      .info-table,
-      .charges-table,
-      .account-table {
+
+      /* ── BANNER HEADER ── */
+      .banner-header {
         width: 100%;
-        border-collapse: collapse;
+        background: #0d47a1;
+        padding: 28px 32px 22px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .brand-name {
+        font-size: 24px;
+        font-weight: 700;
+        color: #ffffff;
+        letter-spacing: 0.5px;
+        margin-bottom: 4px;
+      }
+
+      .brand-tagline {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.75);
         margin-bottom: 10px;
       }
-      .info-table td,
-      .account-table td {
-        padding: 4px 6px;
-        vertical-align: top;
+
+      .brand-contact {
+        font-size: 10.5px;
+        color: rgba(255, 255, 255, 0.85);
+        line-height: 1.8;
       }
-      .charges-table th,
-      .charges-table td,
-      .account-table th,
-      .account-table td {
-        border: 1px solid #ccc;
-        padding: 6px;
-        color: black;
-        vertical-align: top;
+
+      .banner-header img {
+        max-height: 60px;
+        max-width: 140px;
+        display: block;
+        margin-left: auto;
       }
-      .charges-table th {
-        background: #f8f8f8;
-        text-align: left;
+
+      /* ── TITLE BAR ── */
+      .invoice-title-bar {
+        background: #e8f0fe;
+        padding: 10px 32px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 2px solid #1565c0;
       }
-      .charges-table td {
-        text-align: right;
+
+      .invoice-label {
+        font-size: 14px;
+        font-weight: 700;
+        color: #0d47a1;
+        letter-spacing: 1px;
+        text-transform: uppercase;
       }
-      .charges-table td.description,
-      .charges-table th.description {
-        text-align: left;
-        white-space: normal;
-        overflow-wrap: anywhere;
-        word-break: normal;
+
+      .invoice-badge {
+        background: #0d47a1;
+        color: #ffffff;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 3px 14px;
+        border-radius: 20px;
+        letter-spacing: 0.5px;
       }
-      .charges-table td.amount {
+
+      /* ── BODY ── */
+      .body-content {
+        padding: 20px 32px;
+        flex: 1;
+      }
+
+      /* ── INFO CARDS ── */
+      .two-col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 20px;
+      }
+
+      .info-card {
+        background: #f8faff;
+        border: 0.5px solid #d0d9f0;
+        border-radius: 8px;
+        padding: 12px 14px;
+      }
+
+      .info-card-title {
+        font-size: 9px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #0d47a1;
+        margin-bottom: 8px;
+        padding-bottom: 6px;
+        border-bottom: 1px solid #d0d9f0;
+      }
+
+      .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 3px 0;
+        font-size: 11px;
+      }
+
+      .info-row .label {
+        color: #6b7a99;
+        font-weight: 500;
+      }
+
+      .info-row .value {
+        color: #1a1a2e;
+        font-weight: 600;
+      }
+
+      .status-pill {
+        display: inline-block;
+        padding: 1px 10px;
+        border-radius: 12px;
+        font-size: 10px;
+        font-weight: 700;
+        background: #e3fcec;
+        color: #0a7d3e;
+        letter-spacing: 0.3px;
+      }
+
+      /* ── SECTION HEADER ── */
+      .section-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+        margin-top: 4px;
+      }
+
+      .section-label {
+        font-size: 9px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #0d47a1;
         white-space: nowrap;
       }
 
-      .table-container {
-        border: 1px solid #ccc;
-        margin-bottom: 10px;
-        height: 480px;
-        display: flex;
-        background-color: #ffffff;
+      .section-line {
+        flex: 1;
+        height: 1px;
+        background: #d0d9f0;
       }
 
-      .charges-table-fixed {
+      /* ── ITEMS TABLE ── */
+      table.items-table {
         width: 100%;
         border-collapse: collapse;
-        height: 100%;
-      }
-
-      .charges-table-fixed th,
-      .charges-table-fixed td {
-        border: 1px solid #ccc;
-        padding: 6px;
-        color: black;
-        vertical-align: top;
-      }
-
-      .charges-table-fixed th {
-        background-color: #0d47a1;
-        color: #ffffff;
-        text-align: left;
-        font-size: 12px;
-        font-weight: bold;
-      }
-
-      .charges-table-fixed td {
-        text-align: right;
         font-size: 11.5px;
+        margin-bottom: 4px;
       }
 
-      .charges-table-fixed td.cell-center,
-      .charges-table-fixed th.cell-center {
+      table.items-table thead tr {
+        background: #0d47a1;
+        color: #ffffff;
+      }
+
+      table.items-table thead th {
+        padding: 8px 10px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 10.5px;
+        letter-spacing: 0.4px;
+      }
+
+      table.items-table thead th.cell-right {
+        text-align: right;
+      }
+      table.items-table thead th.cell-center {
         text-align: center;
       }
 
-      .charges-table-fixed td.cell-right,
-      .charges-table-fixed th.cell-right {
+      table.items-table tbody tr:nth-child(even) {
+        background: #f4f7ff;
+      }
+      table.items-table tbody tr:nth-child(odd) {
+        background: #ffffff;
+      }
+
+      table.items-table tbody td {
+        padding: 9px 10px;
+        border-bottom: 0.5px solid #e4e9f5;
+        vertical-align: top;
+        color: #1a1a2e;
+      }
+
+      table.items-table tbody td.cell-right {
         text-align: right;
       }
-
-      .charges-table-fixed tr.spacer-row {
-        height: 100%;
+      table.items-table tbody td.cell-center {
+        text-align: center;
       }
 
-      .charges-table-fixed tr.spacer-row td {
-        border-top: none;
-        border-bottom: none;
-        padding: 0;
+      .item-name {
+        font-weight: 600;
+        font-size: 11.5px;
       }
-
-      .item-title {
-        font-weight: bold;
-        text-align: left;
-      }
-
       .item-meta {
         font-size: 10px;
-        color: #555;
-        display: flex;
-        gap: 8px;
-        margin-top: 3px;
+        color: #6b7a99;
+        margin-top: 2px;
       }
 
-      .summary-table {
-        width: 100%;
-        border-collapse: collapse;
-      }
-
-      .summary-table td {
-        padding: 4px 6px;
-        font-size: 11.5px;
-        color: black;
+      .table-spacer td {
+        height: 32px;
         border: none !important;
-        text-align: left;
+        background: #ffffff;
       }
 
-      .summary-table td.cell-right {
-        text-align: right;
-        font-weight: bold;
+      /* ── SUMMARY + NOTES ── */
+      .summary-notes-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-top: 16px;
+        margin-bottom: 20px;
       }
 
-      /* Style Net Amount row (5th child: Total Amount) */
-      .summary-table tr:nth-child(5) td {
-        border-top: 1px solid #ccc !important;
-        border-bottom: 1px solid #ccc !important;
-        font-weight: bold;
-      }
-      /* Hide Change row */
-      .summary-table tr:nth-child(7) {
-        display: none;
+      .notes-box {
+        background: #f8faff;
+        border: 0.5px dashed #b0bde8;
+        border-radius: 8px;
+        padding: 12px 14px;
+        font-size: 10.5px;
+        color: #4a5270;
+        line-height: 1.6;
       }
 
-      .signature-section {
+      .notes-box-title {
+        font-size: 9px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #0d47a1;
+        margin-bottom: 6px;
+      }
+
+      .summary-box {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+      }
+
+      .summary-row {
         display: flex;
         justify-content: space-between;
-        margin-top: 30px;
-        padding-top: 10px;
-        font-size: 11px;
-      }
-      .footer {
-        text-align: center;
-        padding: 10px;
-        border-top: 1px solid #0d47a1;
-        margin-top: 20px;
-        font-size: 11px;
+        padding: 5px 0;
+        font-size: 11.5px;
+        border-bottom: 0.5px solid #edf0f8;
       }
 
+      .summary-row .s-label {
+        color: #6b7a99;
+      }
+      .summary-row .s-value {
+        font-weight: 600;
+        color: #1a1a2e;
+      }
+
+      .summary-total {
+        display: flex;
+        justify-content: space-between;
+        padding: 9px 14px;
+        background: #0d47a1;
+        border-radius: 6px;
+        margin-top: 8px;
+        font-size: 13px;
+        font-weight: 700;
+        color: #ffffff;
+      }
+
+      /* ── TERMS ── */
+      .terms-block {
+        border-top: 1px dashed #cdd5ea;
+        padding-top: 12px;
+        margin-bottom: 16px;
+        font-size: 10px;
+        color: #6b7a99;
+        line-height: 1.7;
+      }
+
+      /* ── SIGNATURE / QR ── */
+      .sig-qr-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        margin-bottom: 20px;
+      }
+
+      .sig-block {
+        font-size: 10px;
+        color: #6b7a99;
+        line-height: 1.6;
+      }
+
+      .sig-line {
+        width: 140px;
+        border-top: 1px solid #9aa5c4;
+        margin-top: 28px;
+        margin-bottom: 4px;
+      }
+
+      /* ── BANNER FOOTER ── */
+      .banner-footer {
+        width: 100%;
+        background: #0d47a1;
+        padding: 16px 32px 14px;
+        text-align: center;
+      }
+
+      .footer-accent-bar {
+        width: 100%;
+        height: 6px;
+        background: repeating-linear-gradient(
+          90deg,
+          #1976d2 0px,
+          #1976d2 20px,
+          #0d47a1 20px,
+          #0d47a1 40px
+        );
+        margin-bottom: 10px;
+      }
+
+      .footer-logo img {
+        max-height: 40px;
+        max-width: 160px;
+        margin: 0 auto 8px;
+        display: block;
+        opacity: 0.9;
+      }
+
+      .footer-contact {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.9);
+        font-weight: 500;
+        margin-bottom: 2px;
+      }
+
+      .footer-sub {
+        font-size: 10px;
+        color: rgba(255, 255, 255, 0.6);
+      }
+
+      /* ── PRINT ── */
       @page {
         size: A4;
         margin: 0;
@@ -199,165 +388,173 @@
       @media print {
         body {
           background: none !important;
-          color: #000000 !important;
         }
-        .page {
-          box-shadow: none !important;
-          padding: 8mm !important;
+        .invoice-page {
           width: 100% !important;
-          min-height: 0 !important;
+          box-shadow: none !important;
         }
       }
     </style>
   </head>
 
   <body>
-    <main class="page">
-      <div class="bill-container">
-        <!-- Header -->
-        <table
-          width="100%"
-          style="border-bottom: 2px solid #0d47a1; margin-bottom: 20px; padding-bottom: 15px;"
-        >
-          <tr>
-            <td style="text-align: left; vertical-align: top;">
-              <div
-                style="font-size: 18px; font-weight: bold; color: #0d47a1; margin-bottom: 5px;"
-              >
-                {{brandName}}
-              </div>
-              <div style="font-size: 12px; color: #555; line-height: 1.4;">
-                {{brandTagline}}<br />
-                Address:
-                {{brandAddress}}<br />
-                Contact:
-                {{companyContactBlock}}<br />
-                {{brandLicenseBlock}}
-              </div>
-            </td>
-            <td style="vertical-align: top; text-align: right;">
-              <img
-                src="{{brandLogo}}"
-                alt="Header Logo"
-                style="max-height: 60px; max-width: 220px;"
-                onerror="this.style.display='none'"
-              />
-            </td>
-          </tr>
-        </table>
+    <div class="invoice-page">
 
-        <!-- Client Info -->
-        <div class="section-title">Bill To</div>
-        <table class="info-table">
-          <tr>
-            <td style="width: 15%;"><strong>Invoice No:</strong></td>
-            <td style="width: 35%;">{{invoiceId}}</td>
-            <td style="width: 15%;"><strong>Date:</strong></td>
-            <td style="width: 35%;">{{createdAt}}</td>
-          </tr>
-          <tr>
-            <td><strong>Client Name:</strong></td>
-            <td>{{customerName}}</td>
-            <td><strong>Phone:</strong></td>
-            <td>{{customerPhone}}</td>
-          </tr>
-          <tr>
-            <td><strong>Payment:</strong></td>
-            <td>{{paymentMode}}</td>
-            <td><strong>Status:</strong></td>
-            <td>{{invoiceStatus}}</td>
-          </tr>
-          <tr>
-            <td><strong>Items:</strong></td>
-            <td colspan="3">{{itemCount}}</td>
-          </tr>
-        </table>
+      <!-- ═══ BANNER HEADER ═══ -->
+      <div class="banner-header">
+        <div>
+          <div class="brand-name">{{brandName}}</div>
+          <div class="brand-tagline">{{brandTagline}}</div>
+          <div class="brand-contact">
+            Address:
+            {{brandAddress}}<br />
+            Contact:
+            {{companyContactBlock}}<br />
+            {{brandLicenseBlock}}
+          </div>
+        </div>
+        <img
+          src="{{brandLogo}}"
+          alt="{{brandName}} Logo"
+          onerror="this.style.display='none'"
+        />
+      </div>
 
-        <!-- Charges Table (Height-fixed container to draw columns all the way down) -->
-        <div class="section-title">Charges</div>
-        <div class="table-container">
-          <table class="charges-table-fixed">
-            <colgroup>
-              <col style="width: 50px;" />
-              <col />
-              <col style="width: 65px;" />
-              <col style="width: 105px;" />
-              <col style="width: 95px;" />
-              <col style="width: 115px;" />
-            </colgroup>
-            <thead>
-              <tr>
-                <th class="cell-center">Serial No.</th>
-                <th>Description</th>
-                <th class="cell-center">Qty</th>
-                <th class="cell-right">Rate</th>
-                <th class="cell-right">Discount</th>
-                <th class="cell-right">Amount</th>
-              </tr>
-            </thead>
-            <tbody>
-              {{{itemsRows}}}
-              <tr class="spacer-row">
-                <td>&nbsp;</td>
-                <td>&nbsp;</td>
-                <td>&nbsp;</td>
-                <td>&nbsp;</td>
-                <td>&nbsp;</td>
-                <td>&nbsp;</td>
-              </tr>
-            </tbody>
-          </table>
+      <!-- ═══ TITLE BAR ═══ -->
+      <div class="invoice-title-bar">
+        <span class="invoice-label">Tax Invoice</span>
+        <span class="invoice-badge"># {{invoiceId}}</span>
+      </div>
+
+      <!-- ═══ BODY ═══ -->
+      <div class="body-content">
+
+        <!-- Info Cards -->
+        <div class="two-col">
+          <div class="info-card">
+            <div class="info-card-title">Bill To</div>
+            <div class="info-row">
+              <span class="label">Client Name</span>
+              <span class="value">{{customerName}}</span>
+            </div>
+            <div class="info-row">
+              <span class="label">Phone</span>
+              <span class="value">{{customerPhone}}</span>
+            </div>
+            <div class="info-row">
+              <span class="label">Payment</span>
+              <span class="value">{{paymentMode}}</span>
+            </div>
+            <div class="info-row">
+              <span class="label">Status</span>
+              <span class="value">
+                <span class="status-pill">{{invoiceStatus}}</span>
+              </span>
+            </div>
+          </div>
+
+          <div class="info-card">
+            <div class="info-card-title">Invoice Details</div>
+            <div class="info-row">
+              <span class="label">Invoice No.</span>
+              <span class="value">{{invoiceId}}</span>
+            </div>
+            <div class="info-row">
+              <span class="label">Date</span>
+              <span class="value">{{createdAt}}</span>
+            </div>
+            <div class="info-row">
+              <span class="label">Total Items</span>
+              <span class="value">{{itemCount}}</span>
+            </div>
+          </div>
         </div>
 
-        <!-- Summary -->
-        <table class="charges-table">
-          <tr>
-            <td
-              style="text-align: left; font-weight: bold; width: 45%; vertical-align: top;"
-            >
-              {{{notesBlock}}}
-            </td>
-            <td style="text-align: right; padding: 0; vertical-align: top;">
-              <table class="summary-table">
-                <tbody>
-                  {{{summaryRows}}}
-                </tbody>
-              </table>
-            </td>
-          </tr>
+        <!-- Items Table -->
+        <div class="section-header">
+          <span class="section-label">Itemised Charges</span>
+          <div class="section-line"></div>
+        </div>
+
+        <table class="items-table">
+          <colgroup>
+            <col style="width: 44px;" />
+            <col />
+            <col style="width: 55px;" />
+            <col style="width: 100px;" />
+            <col style="width: 90px;" />
+            <col style="width: 105px;" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th class="cell-center">S.No</th>
+              <th>Description</th>
+              <th class="cell-center">Qty</th>
+              <th class="cell-right">Rate</th>
+              <th class="cell-right">Discount</th>
+              <th class="cell-right">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{{itemsRows}}}
+            <tr class="table-spacer">
+              <td></td><td></td><td></td><td></td><td></td><td></td>
+            </tr>
+          </tbody>
         </table>
 
-        <!-- Terms and Footer Message -->
-        <div
-          style="margin-top: 15px; border-top: 1px dashed #ccc; padding-top: 10px; font-size: 10px; color: #555;"
-        >
+        <!-- Notes + Summary -->
+        <div class="summary-notes-row">
+          <div class="notes-box">
+            <div class="notes-box-title">Notes</div>
+            {{{notesBlock}}}
+          </div>
+
+          <div class="summary-box">
+            {{{summaryRows}}}
+            <div class="summary-total">
+              <span>Net Payable</span>
+              <span>{{totalAmount}}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Terms & Footer Message -->
+        <div class="terms-block">
           {{{invoiceTermsBlock}}}
           {{{invoiceFooterBlock}}}
         </div>
 
-        <div class="signature-section">
-          <div
-            style="display: flex; flex-direction: column; gap: 8px; align-items: flex-start;"
-          >
+        <!-- Signature & QR -->
+        <div class="sig-qr-row">
+          <div class="sig-block">
             <div>This is a computer-generated invoice and does not require a
               signature.</div>
             {{{directorSignatureBlock}}}
+            <div class="sig-line"></div>
+            <div>Authorised Signatory</div>
           </div>
           {{{paymentQrBlock}}}
         </div>
-      </div>
 
-      <div class="footer">
-        {{{footerImageBlock}}}
-        <div style="font-weight: bold; color: #0d47a1; margin-bottom: 4px;">
+      </div>
+      <!-- end .body-content -->
+
+      <!-- ═══ BANNER FOOTER ═══ -->
+      <div class="banner-footer">
+        <div class="footer-accent-bar"></div>
+        <div class="footer-logo">
+          {{{footerImageBlock}}}
+        </div>
+        <div class="footer-contact">
           Contact us:
           {{companyContactBlock}}
-        </div>
-        <div>
-          Generated for
+          &nbsp;|&nbsp;
           {{brandName}}
         </div>
+        <div class="footer-sub">Thank you for your business!</div>
       </div>
-    </main>
+
+    </div>
   </body>
 </html>

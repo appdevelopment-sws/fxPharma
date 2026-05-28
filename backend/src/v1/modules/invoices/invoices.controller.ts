@@ -426,14 +426,49 @@ export class InvoicesController {
     });
   });
 
-  static getTemplates = catchAsync(async (_req: Request, res: Response) => {
+  static getTemplates = catchAsync(async (req: Request, res: Response) => {
+    const { organizationId, branchId } = getRequestScope(req);
     const templates = await invoiceTemplateService.getAvailableTemplates();
+
+    const orgSettings = await rootPrisma.setting.findMany({
+      where: { organizationId, branchId: null },
+    });
+
+    let branchSettings: any[] = [];
+    if (branchId) {
+      branchSettings = await rootPrisma.setting.findMany({
+        where: { organizationId, branchId },
+      });
+    }
+
+    const settingsMap: Record<string, string> = {};
+    orgSettings.forEach((setting) => {
+      settingsMap[setting.key] = setting.value;
+    });
+    branchSettings.forEach((setting) => {
+      settingsMap[setting.key] = setting.value;
+    });
+
+    const configuredTemplate =
+      settingsMap.invoice_template_name || settingsMap.invoice_template;
+
+    let defaultTemplate = invoiceTemplateService.getSafeTemplateName();
+    if (configuredTemplate) {
+      try {
+        defaultTemplate = invoiceTemplateService.getSafeTemplateName(
+          configuredTemplate
+        );
+      } catch {
+        defaultTemplate = invoiceTemplateService.getSafeTemplateName();
+      }
+    }
 
     res.json({
       success: true,
       data: {
         templates,
-        defaultTemplate: invoiceTemplateService.getSafeTemplateName(),
+        defaultTemplate,
+        invoice_template_name: defaultTemplate,
       },
     });
   });
