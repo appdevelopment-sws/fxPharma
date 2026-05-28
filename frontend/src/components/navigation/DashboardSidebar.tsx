@@ -91,7 +91,7 @@ export function DashboardSidebar({
       <div
         className={cn(
           "flex shrink-0 flex-col items-center justify-center border-b border-white/10 text-center dark:border-zinc-800",
-          isCollapsed ? "h-16 px-0" : "gap-2 px-4 py-4"
+          isCollapsed ? "h-16 px-0" : "gap-2 px-0 py-1"
         )}
       >
         {isCollapsed ? (
@@ -107,7 +107,7 @@ export function DashboardSidebar({
           </div>
         ) : (
           <>
-            <div className="flex h-12 w-full items-center justify-center overflow-hidden">
+            <div className="flex h-24 w-full items-center justify-center overflow-hidden">
               <img
                 src={logoSrc}
                 alt={workspaceTitle}
