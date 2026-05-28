@@ -209,7 +209,7 @@ function SidebarItem({
       : "my-5 gap-x-2 rounded-full border-l-4 px-3 py-2.5",
     isActive || isExpanded
       ? cn(
-          "font-semibold text-white",
+          "bg-[#163B68] font-semibold text-white",
           !isCollapsed && "border-l-4 border-[#FF7A00] pl-2"
         )
       : "text-[#D1D5DB] hover:bg-[#163B68] hover:text-white"

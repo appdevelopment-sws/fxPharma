@@ -48,6 +48,13 @@ export const adminNavigationGroups: SidebarNavigationGroup[] = [
         icon: Barcode,
         permissions: [PERMISSIONS.ORDER_CREATE],
       },
+      {
+        title: "Recent Invoices",
+        to: "/admin/invoices",
+        description: "Transaction history",
+        icon: FileText,
+        permissions: [PERMISSIONS.ORDER_VIEW],
+      },
     ],
   },
   {
@@ -107,14 +114,6 @@ export const adminNavigationGroups: SidebarNavigationGroup[] = [
   {
     title: "Orders & Sales",
     items: [
-      ,
-      {
-        title: "Recent Invoices",
-        to: "/admin/invoices",
-        description: "Transaction history",
-        icon: FileText,
-        permissions: [PERMISSIONS.ORDER_VIEW],
-      },
       {
         title: "Sales Returns",
         to: "/admin/returns",

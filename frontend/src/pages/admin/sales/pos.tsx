@@ -164,31 +164,31 @@ const getRelationName = (value: unknown) => {
 const buildPosProduct = (inventoryItem: any): PosProduct => {
   const batches = Array.isArray(inventoryItem?.batches)
     ? inventoryItem.batches.map((batch: any) => {
-        const mrp = toNumber(batch.mrp ?? 0)
-        const rateA = toNumber(batch.rateA ?? batch.rate_a ?? 0)
-        const rateB = toNumber(batch.rateB ?? batch.rate_b ?? 0)
-        const rateC = toNumber(batch.rateC ?? batch.rate_c ?? 0)
-        const purchaseRate = toNumber(
-          batch.purchaseRate ?? batch.purchase_rate ?? 0
-        )
-        const price = mrp || purchaseRate || 0
-        const stock = toNumber(batch.availableQty ?? batch.receivedQty ?? 0)
-        return {
-          id: batch.id,
-          number: batch.batchNo || batch.number || "-",
-          expiry: formatExpiry(batch.expiryDate || batch.expiry),
-          stock,
-          price,
-          isNearExpiry: isNearExpiry(batch.expiryDate || batch.expiry),
-          rateA,
-          rateB,
-          rateC,
-          mrp,
-          purchaseRate,
-          cgst: toNumber(inventoryItem?.cgst ?? 0),
-          sgst: toNumber(inventoryItem?.sgst ?? 0),
-        }
-      })
+      const mrp = toNumber(batch.mrp ?? 0)
+      const rateA = toNumber(batch.rateA ?? batch.rate_a ?? 0)
+      const rateB = toNumber(batch.rateB ?? batch.rate_b ?? 0)
+      const rateC = toNumber(batch.rateC ?? batch.rate_c ?? 0)
+      const purchaseRate = toNumber(
+        batch.purchaseRate ?? batch.purchase_rate ?? 0
+      )
+      const price = mrp || purchaseRate || 0
+      const stock = toNumber(batch.availableQty ?? batch.receivedQty ?? 0)
+      return {
+        id: batch.id,
+        number: batch.batchNo || batch.number || "-",
+        expiry: formatExpiry(batch.expiryDate || batch.expiry),
+        stock,
+        price,
+        isNearExpiry: isNearExpiry(batch.expiryDate || batch.expiry),
+        rateA,
+        rateB,
+        rateC,
+        mrp,
+        purchaseRate,
+        cgst: toNumber(inventoryItem?.cgst ?? 0),
+        sgst: toNumber(inventoryItem?.sgst ?? 0),
+      }
+    })
     : []
 
   const fallbackStock = toNumber(inventoryItem?.availableStock ?? 0)
@@ -196,24 +196,24 @@ const buildPosProduct = (inventoryItem: any): PosProduct => {
     batches.length > 0
       ? batches
       : [
-          {
-            id: `${inventoryItem.id}-batch`,
-            number: "N/A",
-            expiry: "-",
-            stock: fallbackStock,
-            price: toNumber(
-              inventoryItem?.mrp ?? inventoryItem?.purchaseRate ?? 0
-            ),
-            isNearExpiry: false,
-            rateA: toNumber(inventoryItem?.rateA ?? 0),
-            rateB: toNumber(inventoryItem?.rateB ?? 0),
-            rateC: toNumber(inventoryItem?.rateC ?? 0),
-            mrp: toNumber(inventoryItem?.mrp ?? 0),
-            purchaseRate: toNumber(inventoryItem?.purchaseRate ?? 0),
-            cgst: toNumber(inventoryItem?.cgst ?? 0),
-            sgst: toNumber(inventoryItem?.sgst ?? 0),
-          },
-        ]
+        {
+          id: `${inventoryItem.id}-batch`,
+          number: "N/A",
+          expiry: "-",
+          stock: fallbackStock,
+          price: toNumber(
+            inventoryItem?.mrp ?? inventoryItem?.purchaseRate ?? 0
+          ),
+          isNearExpiry: false,
+          rateA: toNumber(inventoryItem?.rateA ?? 0),
+          rateB: toNumber(inventoryItem?.rateB ?? 0),
+          rateC: toNumber(inventoryItem?.rateC ?? 0),
+          mrp: toNumber(inventoryItem?.mrp ?? 0),
+          purchaseRate: toNumber(inventoryItem?.purchaseRate ?? 0),
+          cgst: toNumber(inventoryItem?.cgst ?? 0),
+          sgst: toNumber(inventoryItem?.sgst ?? 0),
+        },
+      ]
 
   return {
     id: inventoryItem.id,
@@ -907,7 +907,7 @@ const POS = () => {
     return (
       sum +
       (itemTaxable * (toNumber(item.batch.cgst) + toNumber(item.batch.sgst))) /
-        100
+      100
     )
   }, 0)
 
@@ -1381,11 +1381,16 @@ const POS = () => {
         {/* ── Payment fields ── */}
         <div className="flex-shrink-0 border-t border-border bg-card px-4 pt-3.5 pb-2.5">
           <div className="grid grid-cols-2 gap-x-6 gap-y-2.5">
-            {/* ── Left column ── */}
-            <div className="space-y-2.5">
+
+            {/* ── Left column: Customer & Payment Details ── */}
+            <div className="space-y-3 rounded-xl border border-border bg-muted/20 p-3.5 shadow-sm">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80">
+                Customer & Payment Info
+              </div>
+
               {/* Customer Name */}
               <div className="flex items-center gap-2">
-                <label className="w-28 flex-shrink-0 text-xs font-semibold text-muted-foreground">
+                <label className="w-24 flex-shrink-0 text-xs font-semibold text-muted-foreground">
                   Cust. Name
                 </label>
                 <input
@@ -1393,13 +1398,13 @@ const POS = () => {
                   placeholder="Walk-in Customer"
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
-                  className="min-w-0 flex-1 rounded-lg border border-border bg-muted/40 px-2.5 py-1.5 text-xs text-foreground transition-all outline-none placeholder:text-muted-foreground/50 focus:border-teal-400 focus:ring-1 focus:ring-teal-300/20"
+                  className="flex-1 min-w-0 rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs text-foreground placeholder:text-muted-foreground/40 outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-300/20 transition-all"
                 />
               </div>
 
               {/* Customer Phone */}
               <div className="flex items-center gap-2">
-                <label className="w-28 flex-shrink-0 text-xs font-semibold text-muted-foreground">
+                <label className="w-24 flex-shrink-0 text-xs font-semibold text-muted-foreground">
                   Cust. Phone
                 </label>
                 <input
@@ -1407,20 +1412,20 @@ const POS = () => {
                   placeholder="Phone number"
                   value={customerPhone}
                   onChange={(e) => setCustomerPhone(e.target.value)}
-                  className="min-w-0 flex-1 rounded-lg border border-border bg-muted/40 px-2.5 py-1.5 text-xs text-foreground transition-all outline-none placeholder:text-muted-foreground/50 focus:border-teal-400 focus:ring-1 focus:ring-teal-300/20"
+                  className="flex-1 min-w-0 rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs text-foreground placeholder:text-muted-foreground/40 outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-300/20 transition-all"
                 />
               </div>
 
               {/* Payment Type */}
               <div className="flex items-center gap-2">
-                <label className="w-28 flex-shrink-0 text-xs font-semibold text-muted-foreground">
+                <label className="w-24 flex-shrink-0 text-xs font-semibold text-muted-foreground">
                   Payment Type
                 </label>
                 <div className="relative min-w-0 flex-1">
                   <select
                     value={paymentMode}
                     onChange={(e) => setPaymentMode(e.target.value)}
-                    className="w-full appearance-none rounded-lg border border-border bg-muted/40 py-1.5 pr-7 pl-2.5 text-xs text-foreground transition-all outline-none focus:border-teal-400"
+                    className="w-full appearance-none rounded-lg border border-border bg-background py-1.5 pl-2.5 pr-7 text-xs text-foreground outline-none focus:border-teal-500 transition-all cursor-pointer"
                   >
                     <option>Cash</option>
                     <option>Card / POS</option>
@@ -1431,40 +1436,12 @@ const POS = () => {
                 </div>
               </div>
 
-              {/* Receive Amount */}
-              <div className="flex items-center gap-2">
-                <label className="w-28 flex-shrink-0 text-xs font-semibold text-muted-foreground">
-                  Receive Amount
-                </label>
-                <input
-                  type="number"
-                  value={receiveAmount}
-                  onChange={(e) => setReceiveAmount(e.target.value)}
-                  placeholder="0"
-                  className="min-w-0 flex-1 rounded-lg border border-border bg-muted/40 px-2.5 py-1.5 text-right text-xs text-foreground transition-all outline-none focus:border-teal-400 focus:ring-1 focus:ring-teal-300/20"
-                />
-              </div>
-
-              {/* Due Amount */}
-              <div className="flex items-center gap-2">
-                <label className="w-28 flex-shrink-0 text-xs font-semibold text-muted-foreground">
-                  Due Amount
-                </label>
-                <input
-                  readOnly
-                  value={
-                    dueAmount > 0 ? dueAmount.toFixed(2) : roundedNet.toFixed(2)
-                  }
-                  className="min-w-0 flex-1 rounded-lg border border-border bg-muted/40 px-2.5 py-1.5 text-right text-xs font-semibold text-foreground outline-none"
-                />
-              </div>
-
               {/* Split Payment Amounts */}
               {paymentMode === "Split Payment" && (
-                <div className="space-y-2 rounded-lg border border-teal-200 bg-teal-500/5 p-2.5 transition-all">
+                <div className="space-y-2 rounded-lg border border-teal-200/50 bg-teal-500/5 p-2 transition-all">
                   <div className="flex items-center gap-2">
-                    <label className="w-24 flex-shrink-0 text-[10px] font-bold text-teal-700">
-                      Cash Amount
+                    <label className="w-20 flex-shrink-0 text-[10px] font-bold text-teal-700 dark:text-teal-400">
+                      Cash Amt
                     </label>
                     <input
                       type="number"
@@ -1478,12 +1455,12 @@ const POS = () => {
                           Math.max(0, roundedNet - cashNum).toString()
                         )
                       }}
-                      className="min-w-0 flex-1 rounded border border-teal-200 bg-background px-2.5 py-1 text-right text-xs font-semibold transition-all outline-none focus:border-teal-400"
+                      className="flex-1 min-w-0 rounded border border-teal-200/30 bg-background px-2.5 py-1 text-xs text-right outline-none focus:border-teal-500 transition-all font-semibold"
                     />
                   </div>
                   <div className="flex items-center gap-2">
-                    <label className="w-24 flex-shrink-0 text-[10px] font-bold text-teal-700">
-                      Online Amount
+                    <label className="w-20 flex-shrink-0 text-[10px] font-bold text-teal-700 dark:text-teal-400">
+                      Online Amt
                     </label>
                     <input
                       type="number"
@@ -1497,61 +1474,85 @@ const POS = () => {
                           Math.max(0, roundedNet - onlineNum).toString()
                         )
                       }}
-                      className="min-w-0 flex-1 rounded border border-teal-200 bg-background px-2.5 py-1 text-right text-xs font-semibold transition-all outline-none focus:border-teal-400"
+                      className="flex-1 min-w-0 rounded border border-teal-200/30 bg-background px-2.5 py-1 text-xs text-right outline-none focus:border-teal-500 transition-all font-semibold"
                     />
                   </div>
                 </div>
               )}
             </div>
 
-            {/* ── Right column ── */}
-            <div className="space-y-2.5">
-              {/* Total */}
-              <div className="flex items-baseline justify-between">
-                <span className="text-base font-black text-foreground">
-                  Total
-                </span>
-                <span className="text-base font-black text-foreground tabular-nums">
-                  {roundedNet.toFixed(2)}
-                  <span className="text-xs font-semibold text-muted-foreground"></span>
-                </span>
-              </div>
-
-              {/* Discount */}
-              <div className="flex items-center gap-1.5">
-                <label className="w-16 flex-shrink-0 text-xs font-semibold text-muted-foreground">
-                  Discount
-                </label>
-                <div className="relative">
-                  <select
-                    value={discountType}
-                    onChange={(e) =>
-                      setDiscountType(e.target.value as "flat" | "percent")
-                    }
-                    className="appearance-none rounded-lg border border-border bg-muted/40 py-1.5 pr-7 pl-2.5 text-xs text-foreground outline-none focus:border-teal-400"
-                  >
-                    <option value="percent">Select</option>
-                    <option value="flat">Flat</option>
-                    <option value="percent">%</option>
-                  </select>
-                  <ChevronDown className="pointer-events-none absolute top-1/2 right-1.5 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+            {/* ── Right column: Totals & Payments Summary ── */}
+            <div className="space-y-3 rounded-xl border border-border bg-muted/20 p-3.5 shadow-sm flex flex-col justify-between">
+              <div className="space-y-2.5">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80 pb-0.5">
+                  Billing Summary
                 </div>
-                <input
-                  type="number"
-                  min="0"
-                  value={discountPercent}
-                  onChange={(e) =>
-                    setDiscountPercent(
-                      Math.min(100, Math.max(0, Number(e.target.value)))
-                    )
-                  }
-                  className="min-w-0 flex-1 rounded-lg border border-border bg-muted/40 px-2.5 py-1.5 text-right text-xs text-foreground transition-all outline-none focus:border-teal-400"
-                />
+
+                {/* Total */}
+                <div className="flex items-baseline justify-between border-b border-border/50 pb-1.5">
+                  <span className="text-sm font-semibold text-muted-foreground">Total Payable</span>
+                  <span className="text-xl font-extrabold text-foreground tabular-nums">
+                    ₹{roundedNet.toFixed(2)}
+                  </span>
+                </div>
+
+                {/* Discount */}
+                <div className="flex items-center justify-between gap-1.5">
+                  <label className="text-xs font-semibold text-muted-foreground">
+                    Discount
+                  </label>
+                  <div className="flex items-center gap-1.5">
+                    <div className="relative">
+                      <select
+                        value={discountType}
+                        onChange={(e) => setDiscountType(e.target.value as "flat" | "percent")}
+                        className="appearance-none rounded-lg border border-border bg-background py-1 pl-2 pr-6 text-xs text-foreground outline-none focus:border-teal-500 h-7 cursor-pointer"
+                      >
+                        <option value="percent">Select</option>
+                        <option value="flat">Flat</option>
+                        <option value="percent">%</option>
+                      </select>
+                      <ChevronDown className="pointer-events-none absolute right-1.5 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground" />
+                    </div>
+                    <input
+                      type="number"
+                      min="0"
+                      value={discountPercent}
+                      onChange={(e) =>
+                        setDiscountPercent(Math.min(100, Math.max(0, Number(e.target.value))))
+                      }
+                      className="w-16 rounded-lg border border-border bg-background px-2 py-1 text-xs text-right text-foreground outline-none focus:border-teal-500 transition-all h-7"
+                    />
+                  </div>
+                </div>
+
+                {/* Due Amount */}
+                <div className="flex items-center justify-between gap-2 pt-1 border-t border-border/50">
+                  <span className="text-xs font-semibold text-muted-foreground">Due Amount</span>
+                  <input
+                    readOnly
+                    value={dueAmount > 0 ? dueAmount.toFixed(2) : "0.00"}
+                    className="w-24 rounded-lg border border-border bg-muted/40 px-2.5 py-1 text-xs text-right font-bold text-rose-500 outline-none h-7"
+                  />
+                </div>
+
+                {/* Final Amount (Tendered/Received) */}
+                <div className="flex items-center justify-between gap-2 pt-1.5 border-t border-border/50">
+                  <label className="text-xs font-bold text-foreground">
+                    Final Amount
+                  </label>
+                  <input
+                    type="number"
+                    value={receiveAmount}
+                    onChange={(e) => setReceiveAmount(e.target.value)}
+                    placeholder="0.00"
+                    className="w-24 rounded-lg border border-border bg-background px-2.5 py-1 text-xs text-right font-bold text-foreground outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-300/20 transition-all h-7"
+                  />
+                </div>
               </div>
             </div>
           </div>
         </div>
-
         {/* ── Action buttons ── */}
         <div className="grid flex-shrink-0 grid-cols-4 gap-2 border-t border-border bg-muted/30 px-4 py-3">
           <button
