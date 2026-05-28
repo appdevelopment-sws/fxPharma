@@ -57,10 +57,13 @@ export default function MasterProductDialog({
     queryKeys.hsnCodes.all,
     (search) => HsnApi.getHsnCodes({ search }),
     (data) =>
-      (data?.data || []).map((hsn: any) => ({
-        label: `${hsn.hsncode} - ${hsn.description || ""}`,
-        value: String(hsn.id),
-      })),
+      (data?.data || []).map((hsn: any) => {
+        const rate = hsn.hsnMappings?.[0]?.tax?.rate ?? 0
+        return {
+          label: `${hsn.hsncode} - ${rate}%`,
+          value: String(hsn.id),
+        }
+      }),
     open
   )
 

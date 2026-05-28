@@ -24,6 +24,8 @@ model Hsn {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   isGlobal    Boolean  @default(false)
+  createdById String?   @map("created_by_id")
+  createdBy   User?     @relation(fields: [createdById], references: [id], onDelete: Cascade)
   hsnMappings HsnMapping[]
   masterProducts MasterProduct[]
 }
