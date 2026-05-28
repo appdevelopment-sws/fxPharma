@@ -53,6 +53,7 @@ router.get("/", isAuthenticated, InventoryController.getAll);
  *         description: Expiry report rows
  */
 router.get("/expiry-report", isAuthenticated, InventoryController.getExpiryReport);
+router.get("/low-stock-report", isAuthenticated, InventoryController.getLowStockReport);
 
 /**
  * @swagger

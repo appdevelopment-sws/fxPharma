@@ -206,6 +206,25 @@ export type ExpiryReportResponse = {
   stats?: ExpiryReportStats
 }
 
+export type LowStockReportStats = {
+  totalLowStock: number
+  outOfStock: number
+  nearReorder: number
+}
+
+export type LowStockReportResponse = {
+  data: InventoryItem[]
+  meta?: {
+    total: number
+    page: number
+    limit: number
+    totalPages: number
+    hasNextPage?: boolean
+    hasPrevPage?: boolean
+  }
+  stats?: LowStockReportStats
+}
+
 const BASE_URL = "/inventory/add-medicine"
 const EXPIRY_REPORT_URL = `${BASE_URL}/expiry-report`
 
@@ -224,6 +243,26 @@ const InventoryApi = {
   ): Promise<ExpiryReportResponse> => {
     const queryParams = normalizeParams(params)
     const res = await api.get<any>(EXPIRY_REPORT_URL, {
+      params: queryParams,
+    })
+
+    return {
+      data: Array.isArray(res.data) ? res.data : [],
+      meta: res.meta
+        ? {
+            ...res.meta,
+            totalPages: res.meta.totalPages ?? res.meta.pages ?? 1,
+          }
+        : res.meta,
+      stats: res.stats,
+    }
+  },
+
+  getLowStockReport: async (
+    params?: any
+  ): Promise<LowStockReportResponse> => {
+    const queryParams = normalizeParams(params)
+    const res = await api.get<any>(`${BASE_URL}/low-stock-report`, {
       params: queryParams,
     })
 

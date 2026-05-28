@@ -415,6 +415,98 @@ export class InventoryController {
     });
   });
 
+  static getLowStockReport = catchAsync(async (req: Request, res: Response) => {
+    const { organizationId, branchId } = getRequestScope(req);
+
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = Math.max(
+      1,
+      Math.min(100, parseInt((req.query.limit as string) || "10") || 10),
+    );
+    const search =
+      typeof req.query.search === "string" ? req.query.search.trim() : "";
+
+    const where: any = {
+      organizationId,
+      ...(branchId
+        ? {
+            OR: [{ branchId }, { branchId: null }],
+          }
+        : {}),
+    };
+
+    if (search) {
+      where.AND = [
+        {
+          OR: [
+            { name: { contains: search, mode: "insensitive" } },
+            { saltComposition: { contains: search, mode: "insensitive" } },
+            {
+              manufacturer: {
+                is: {
+                  name: { contains: search, mode: "insensitive" },
+                },
+              },
+            },
+            {
+              category: {
+                is: {
+                  name: { contains: search, mode: "insensitive" },
+                },
+              },
+            },
+          ],
+        },
+      ];
+    }
+
+    const items = await rootPrisma.inventory.findMany({
+      where,
+      include: {
+        manufacturer: true,
+        category: true,
+        brand: true,
+        unit: true,
+      },
+      orderBy: { availableStock: "asc" }
+    });
+
+    const lowStockItems = items.filter(item => {
+      const threshold = item.minQty && item.minQty > 0 ? item.minQty : 10;
+      return (item.availableStock ?? 0) <= threshold;
+    });
+
+    const total = lowStockItems.length;
+    const totalPages = Math.max(1, Math.ceil(total / limit));
+    const start = (page - 1) * limit;
+    const data = lowStockItems.slice(start, start + limit);
+
+    // Calculate stats
+    const stats = {
+      totalLowStock: total,
+      outOfStock: lowStockItems.filter(item => (item.availableStock ?? 0) === 0).length,
+      nearReorder: lowStockItems.filter(item => {
+        const threshold = item.minQty && item.minQty > 0 ? item.minQty : 10;
+        const stock = item.availableStock ?? 0;
+        return stock > 0 && stock <= threshold / 2;
+      }).length,
+    };
+
+    res.json({
+      success: true,
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1,
+      },
+      stats,
+    });
+  });
+
   static getById = catchAsync(async (req: Request, res: Response) => {
     const { organizationId } = getRequestScope(req);
 

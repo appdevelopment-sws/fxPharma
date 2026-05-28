@@ -99,6 +99,7 @@ interface KpiCardProps {
   icon: React.ElementType
   trend?: "up" | "down" | "neutral"
   trendLabel?: string
+  to?: string
   colors: {
     shape1: string
     shape2: string
@@ -115,10 +116,11 @@ function KpiCard({
   icon: Icon,
   trend = "neutral",
   trendLabel,
+  to,
   colors,
 }: KpiCardProps) {
-  return (
-    <div className="group relative overflow-hidden rounded-xl border border-border/40 bg-card px-4 py-3 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg">
+  const content = (
+    <>
       {/* Decorative shapes */}
       <div className="pointer-events-none absolute inset-0">
         <div className={cn("absolute -top-6 -right-6 h-20 w-20 rounded-full opacity-20", colors.shape1)} />
@@ -148,6 +150,25 @@ function KpiCard({
           <Icon className="h-4 w-4" />
         </div>
       </div>
+    </>
+  )
+
+  const className = cn(
+    "group relative overflow-hidden rounded-xl border border-border/40 bg-card px-4 py-3 shadow-sm transition-all duration-300 block hover:-translate-y-0.5 hover:shadow-lg hover:no-underline",
+    to ? "cursor-pointer" : ""
+  )
+
+  if (to) {
+    return (
+      <Link to={to} className={className}>
+        {content}
+      </Link>
+    )
+  }
+
+  return (
+    <div className={className}>
+      {content}
     </div>
   )
 }
@@ -253,6 +274,7 @@ export default function AdminDashboard() {
         : stats?.total_invoices_trend?.startsWith("-")
         ? "down"
         : "neutral",
+      to: "/admin/invoices",
       colors: {
         shape1: "bg-emerald-500",
         shape2: "bg-teal-400",
@@ -270,6 +292,7 @@ export default function AdminDashboard() {
       icon: AlertCircle,
       trend: (stats?.low_stock_count ?? 0) > 0 ? "down" : "up",
       trendLabel: (stats?.low_stock_count ?? 0) > 0 ? "Warning" : "Good",
+      to: "/admin/reports/low-stock",
       colors: {
         shape1: "bg-rose-500",
         shape2: "bg-orange-400",
