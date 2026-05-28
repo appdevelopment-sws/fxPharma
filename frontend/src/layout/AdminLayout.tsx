@@ -21,8 +21,7 @@ const AdminLayout = () => {
 
   const handleLogout = useCallback(() => {
     // Fast logout: clear client state and redirect instantly
-    queryClient.setQueryData(queryKeys.auth.user(), null)
-    queryClient.removeQueries({ queryKey: queryKeys.auth.all })
+    queryClient.clear()
     localStorage.removeItem("activeOrganizationId")
     localStorage.removeItem("activeBranchId")
     navigate("/admin/login", { replace: true })

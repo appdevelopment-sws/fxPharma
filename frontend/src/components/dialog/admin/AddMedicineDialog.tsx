@@ -10,6 +10,7 @@ import {
   FormSelectField,
   FormSwitch,
   FormFileUpload,
+  FormCreatableSelect,
 } from "@/components/ui/form-fields"
 
 import sectionHeader from "@/components/sectionHeader"
@@ -31,7 +32,7 @@ import BrandApi, {
 } from "@/services/attributesApi"
 import { COLOR_TYPE_OPTIONS } from "@/constants/shared/form-options"
 import { formatDateForInput } from "@/lib/utils"
-import { HsnApi } from "@/services/taxApi"
+import TaxApi, { HsnApi } from "@/services/taxApi"
 import { uploadApi } from "@/services/uploadApi"
 
 interface MedicineStockDialogProps {
@@ -263,9 +264,17 @@ export default function MedicineStockDialog({
       BrandApi.getBrands({ limit: 20, includeGlobal: includeGlobal }),
     enabled: open,
   })
+  const [hsnSearch, setHsnSearch] = useState("")
+
+  useEffect(() => {
+    if (!open) {
+      setHsnSearch("")
+    }
+  }, [open])
+
   const { data: hsnData } = useQuery({
-    queryKey: queryKeys.hsnCodes.list({ limit: 20, includeGlobal }),
-    queryFn: () => HsnApi.getHsnCodes({ limit: 20, includeGlobal }),
+    queryKey: queryKeys.hsnCodes.list({ limit: 100, search: hsnSearch, includeGlobal }),
+    queryFn: () => HsnApi.getHsnCodes({ limit: 100, search: hsnSearch, includeGlobal }),
     enabled: open,
   })
 
@@ -309,26 +318,45 @@ export default function MedicineStockDialog({
     [categoriesData, product]
   )
 
-  const hsnOptions = useMemo(
-    () =>
-      withSelectedOption(
-        hsnData?.data?.map((hsn: any) => ({
-          label: `${hsn.hsncode} - ${hsn.hsnMappings[0]?.tax?.rate ?? 0}%`,
-          value: hsn.hsncode,
-        })) ?? [],
-        product?.hsn_code ||
-        product?.hsnCode ||
-        product?.hsn?.hsncode ||
-        product?.hsn?.code,
-        product?.hsn?.description || product?.hsn?.label
-      ),
-    [product, hsnData]
-  )
+  const watchedCgst = useWatch({
+    control,
+    name: "cgst",
+  })
+
+  const watchedSgst = useWatch({
+    control,
+    name: "sgst",
+  })
 
   const selectedHsnCode = useWatch({
     control,
     name: "hsn_code",
   })
+
+  const hsnOptions = useMemo(() => {
+    const cgstVal = toNumber(watchedCgst)
+    const sgstVal = toNumber(watchedSgst)
+    const currentRate = cgstVal + sgstVal
+
+    const baseOptions = hsnData?.data?.map((hsn: any) => {
+      const isSelected = String(hsn.hsncode) === String(selectedHsnCode)
+      const rate = isSelected ? currentRate : (hsn.hsnMappings[0]?.tax?.rate ?? 0)
+      return {
+        label: `${hsn.hsncode} - ${rate}%`,
+        value: hsn.hsncode,
+      }
+    }) ?? []
+
+    const hasSelected = baseOptions.some(opt => String(opt.value) === String(selectedHsnCode))
+    if (selectedHsnCode && !hasSelected) {
+      baseOptions.unshift({
+        value: String(selectedHsnCode),
+        label: `${selectedHsnCode} - ${currentRate}%`
+      })
+    }
+
+    return baseOptions
+  }, [hsnData, selectedHsnCode, watchedCgst, watchedSgst])
 
   const selectedInnerPackType = useWatch({
     control,
@@ -467,7 +495,51 @@ export default function MedicineStockDialog({
     },
   })
 
-  const onSubmit: SubmitHandler<any> = (data) => {
+  const onSubmit: SubmitHandler<any> = async (data) => {
+    const isNewHsn = data.hsn_code && !hsnData?.data?.some(
+      (hsn: any) => String(hsn.hsncode) === String(data.hsn_code)
+    )
+
+    if (isNewHsn) {
+      const toastId = toast.loading("Creating custom HSN code...")
+      try {
+        const cgstVal = toNumber(data.cgst)
+        const sgstVal = toNumber(data.sgst)
+        const totalRate = cgstVal + sgstVal
+
+        // Fetch taxes to see if we have one with totalRate
+        const taxesRes = await TaxApi.getTaxes({ limit: 100 })
+        let taxId = taxesRes.data?.find((t: any) => t.rate === totalRate)?.id
+
+        if (!taxId) {
+          const newTax = await TaxApi.createTax({
+            name: `${totalRate}% GST`,
+            rate: totalRate,
+            taxType: "Exclusive",
+            isActive: true,
+          })
+          taxId = newTax.data.id
+        }
+
+        await HsnApi.createUserHsn({
+          hsncode: data.hsn_code,
+          description: `Custom HSN created by admin`,
+          isActive: true,
+          taxIds: taxId ? [taxId] : [],
+        } as any)
+
+        toast.success("Custom HSN created successfully!", { id: toastId })
+        // Invalidate HSN codes query to ensure the dropdown contains the new option
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.hsnCodes.list({ limit: 20, includeGlobal }),
+        })
+      } catch (err: any) {
+        console.error(err)
+        toast.error(err.response?.data?.message || err.message || "Failed to create HSN code", { id: toastId })
+        return
+      }
+    }
+
     handleMutation.mutate(data)
   }
 
@@ -671,12 +743,16 @@ export default function MedicineStockDialog({
           </div>
 
           <div className="mt-5 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-            <FormSelectField
+            <FormCreatableSelect
               control={control}
               name="hsn_code"
               label="HSN / SAC"
               required
               options={hsnOptions}
+              placeholder="Select or enter HSN code"
+              readOnly={isViewMode}
+              searchValue={hsnSearch}
+              onSearchChange={setHsnSearch}
             />
             <FormSelectField
               control={control}

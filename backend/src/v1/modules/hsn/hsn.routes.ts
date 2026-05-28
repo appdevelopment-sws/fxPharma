@@ -81,6 +81,13 @@ router.post(
   HsnController.create,
 );
 
+router.post(
+  "/user-hsn",
+  isAuthenticated,
+  validate(createHsnSchema),
+  HsnController.createUserHsn,
+);
+
 /**
  * @swagger
  * /hsn/{id}:

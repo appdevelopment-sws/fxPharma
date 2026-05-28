@@ -7,8 +7,20 @@ import { rootPrisma } from "@/lib/prisma.js";
 
 export class HsnController {
   static getAll = catchAsync(async (req: Request, res: Response) => {
+    const userId = (req as any).user?.id;
     await paginate(res, req.query, async (skip, take, search) => {
-      const where = buildSearchFilter(search, ["hsncode", "description"]);
+      const searchFilter = buildSearchFilter(search, ["hsncode", "description"]);
+      const where = {
+        AND: [
+          searchFilter,
+          {
+            OR: [
+              { isGlobal: true },
+              { createdById: userId || null },
+            ]
+          }
+        ]
+      };
 
       const [data, total] = await Promise.all([
         rootPrisma.hsn.findMany({
@@ -62,7 +74,63 @@ export class HsnController {
 
     const hsn = await rootPrisma.$transaction(async (tx) => {
       const created = await tx.hsn.create({
-        data: hsnData,
+        data: {
+          ...hsnData,
+          isGlobal: true,
+          createdById: null,
+        },
+      });
+
+      if (taxIds?.length > 0) {
+        await tx.hsnMapping.createMany({
+          data: taxIds.map((taxid: string) => ({
+            hsnid: created.id,
+            taxid,
+          })),
+        });
+      }
+
+      return tx.hsn.findUnique({
+        where: { id: created.id },
+        include: {
+          hsnMappings: {
+            include: { tax: true },
+          },
+        },
+      });
+    });
+
+    res.status(201).json({
+      success: true,
+      data: hsn,
+    });
+  });
+
+  static createUserHsn = catchAsync(async (req: Request, res: Response) => {
+    const { taxIds, ...hsnData } = req.body;
+    const userId = (req as any).user?.id;
+
+    const existing = await rootPrisma.hsn.findFirst({
+      where: {
+        hsncode: hsnData.hsncode,
+        OR: [
+          { isGlobal: true },
+          { createdById: userId || null }
+        ]
+      },
+    });
+
+    if (existing) {
+      throw new ErrorHandler("HSN code already exists", 400);
+    }
+
+    const hsn = await rootPrisma.$transaction(async (tx) => {
+      const created = await tx.hsn.create({
+        data: {
+          ...hsnData,
+          createdById: userId || null,
+          isGlobal: false,
+        },
       });
 
       if (taxIds?.length > 0) {
