@@ -117,11 +117,11 @@ export function DashboardSidebar({
                 )}
               />
             </div>
-            <div className="w-full min-w-0">
+            {/* <div className="w-full min-w-0">
               <h2 className="truncate text-base font-bold tracking-tight text-[#D1D5DB]">
                 {workspaceTitle}
               </h2>
-            </div>
+            </div> */}
           </>
         )}
       </div>

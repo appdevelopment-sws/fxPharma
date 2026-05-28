@@ -40,7 +40,7 @@ const SuperAdminLayout = () => {
       appLabel="Dawa Dukaan"
       workspaceLabel="Super Admin"
       workspaceTitle={user?.name ?? "Platform Console"}
-      workspaceSubtitle="Manage tenants, users, and platform-wide settings"
+      workspaceSubtitle="Super Admin Dashboard"
       userName={user?.name ?? "Super Admin"}
       userRole={user?.role ?? "Super Admin"}
       userEmail={user?.email}
