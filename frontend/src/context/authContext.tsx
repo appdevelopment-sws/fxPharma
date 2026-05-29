@@ -76,11 +76,17 @@ export function AuthProvider({ children }: PropsWithChildren) {
     localStorage.getItem("activeBranchId")
   )
 
+  const isAuthPage =
+    typeof window !== "undefined" &&
+    (window.location.pathname.startsWith("/admin/login") ||
+      window.location.pathname.startsWith("/admin/register"))
+
   const { data, isLoading } = useQuery({
     queryKey: queryKeys.auth.user(),
     queryFn: AuthApi.getCurrentUser,
     retry: false,
     staleTime: 60_000,
+    enabled: !isAuthPage,
   })
 
   const rawUser = data?.data ?? null
