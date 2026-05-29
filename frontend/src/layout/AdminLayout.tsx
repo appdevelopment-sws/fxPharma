@@ -48,7 +48,7 @@ const AdminLayout = () => {
       workspaceLabel={user?.name ?? "Tenant Workspace"}
       workspaceTitle={storeName}
       workspaceSubtitle={
-        user?.organizations[0].organization.logo ?? "Tenant Workspace"
+        user?.organizations[0].organization.logo ?? "/logo.png"
       }
       userName={user?.name ?? "Workspace User"}
       userRole={user?.role ?? "Member"}
