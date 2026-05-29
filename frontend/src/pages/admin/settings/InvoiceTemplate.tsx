@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react"
 import { useForm, type SubmitHandler } from "react-hook-form"
 import { toast } from "sonner"
-import { Loader2, Save, ShieldAlert } from "lucide-react"
+import { ArrowUpRight, Loader2, Save, ShieldAlert } from "lucide-react"
 
 import { useAuth } from "@/context/authContext"
 import SettingsApi from "@/services/settingsApi"
@@ -40,10 +40,13 @@ export default function InvoiceTemplates() {
     handleSubmit,
     control,
     reset,
+    watch,
     formState: { isSubmitting, isDirty },
   } = useForm<InvoiceTemplatesFormValues>({
     defaultValues: DEFAULT_PHARMACY_SETTINGS,
   })
+
+  const selectedTemplate = watch("invoice_template_name")
 
   // Load settings from backend database settings API
   useEffect(() => {
@@ -111,6 +114,15 @@ export default function InvoiceTemplates() {
       toast.success("Pharmacy settings updated successfully")
     } catch (e: any) {
       toast.error(e?.message || "Failed to update pharmacy settings")
+    }
+  }
+
+  const handlePreviewTemplate = async () => {
+    try {
+      await InvoiceApi.openInvoiceTemplatePreview(selectedTemplate)
+      toast.success(`Opened template preview for ${selectedTemplate}`)
+    } catch {
+      // toast.error("Could not open template preview.")
     }
   }
 
@@ -207,7 +219,7 @@ export default function InvoiceTemplates() {
               Choose the invoice template that will be used for PDF/HTML
               invoices.
             </p>
-            <div>
+            <div className="space-y-4">
               <FormSelectField
                 control={control}
                 name="invoice_template_name"
@@ -225,6 +237,16 @@ export default function InvoiceTemplates() {
                 }
                 disabled={templatesLoading}
               />
+              <Button
+                type="button"
+                variant="outline"
+                disabled={templatesLoading || !selectedTemplate}
+                onClick={handlePreviewTemplate}
+                className="w-full sm:w-auto"
+              >
+                <ArrowUpRight className="mr-2 h-4 w-4" />
+                Preview Template
+              </Button>
             </div>
           </div>
         </div>
