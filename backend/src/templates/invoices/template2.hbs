@@ -237,9 +237,9 @@
   <body>
     <main class="page">
       <section class="sheet">
+        <img src="{{brandLogo}}" alt="Header Banner" style="width: 100%; height: auto; display: block;" onerror="this.style.display='none'" />
         <header class="topbar" style="display: flex; justify-content: space-between; align-items: flex-start;">
           <div style="display: flex; align-items: flex-start; gap: 16px;">
-            <img src="{{brandLogo}}" alt="Logo" style="max-height: 60px; max-width: 60px; border-radius: 8px; object-fit: contain; background: rgba(255,255,255,0.15); padding: 4px;" onerror="this.style.display='none'" />
             <div>
               <span class="badge" style="margin-bottom: 6px;">Invoice</span>
               <h1 style="margin: 0 0 4px; font-size: 24px;">{{brandName}}</h1>
@@ -315,6 +315,7 @@
             {{{invoiceFooterBlock}}}
           </div>
         </div>
+        <img src="{{brandFooterImage}}" alt="Footer Banner" style="width: 100%; height: auto; display: block;" onerror="this.style.display='none'" />
       </section>
     </main>
   </body>
