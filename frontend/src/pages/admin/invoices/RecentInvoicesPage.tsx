@@ -349,14 +349,14 @@ export default function RecentInvoicesPage() {
 
             {/* <ArrowUpRight className="size-4" /> */}
           </Button>
-          <Button
+          {row.status != "REFUNDED" && (<Button
             size="icon-sm"
             variant="ghost"
             onClick={() => returnDrawer.onOpen(row)}
             className="text-muted-foreground hover:text-foreground"
           >
             <RotateCcw className="size-4" />
-          </Button>
+          </Button>)}
           <Button
             size="icon-sm"
             variant="ghost"
@@ -373,7 +373,7 @@ export default function RecentInvoicesPage() {
   const sectionAction = (
     <div className="flex flex-col gap-3 xl:flex-row xl:items-end">
       <div className="space-y-1">
-        <label className="text-xs font-medium text-muted-foreground">
+        <label className="text-xs font-medium sm:mx-3 text-muted-foreground">
           Invoice Template
         </label>
         <select
@@ -403,7 +403,7 @@ export default function RecentInvoicesPage() {
           <ArrowUpRight className="mr-2 size-4" />
           Preview Template
         </Button>
-        <Button
+        {/* <Button
           type="button"
           variant="outline"
           disabled={!selectedInvoice}
@@ -413,8 +413,8 @@ export default function RecentInvoicesPage() {
         >
           <Eye className="mr-2 size-4" />
           Preview Selected
-        </Button>
-        <Button
+        </Button> */}
+        {/* <Button
           type="button"
           variant="outline"
           disabled={!selectedInvoice}
@@ -424,7 +424,7 @@ export default function RecentInvoicesPage() {
         >
           <Download className="mr-2 size-4" />
           Download PDF
-        </Button>
+        </Button> */}
       </div>
     </div>
   )
