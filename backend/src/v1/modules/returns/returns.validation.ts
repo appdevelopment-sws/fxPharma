@@ -31,7 +31,7 @@ export const createReturnSchema = z.object({
   invoiceNumber: z.string().optional(),
   invoiceId: z.string().optional(),
   original_invoice: z.string().optional(),
-  reason_for_return: z.string().min(1, "Reason for return is required"),
+  reason_for_return: z.string().optional().nullable(),
   refund_method: z.string().min(1, "Refund method is required"),
   restocking_fee: z.coerce.number().default(0),
   note: z.string().optional().nullable(),
