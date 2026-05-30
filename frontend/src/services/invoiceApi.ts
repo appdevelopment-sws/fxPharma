@@ -210,7 +210,7 @@ const InvoiceApi = {
     return res.data as Blob
   },
 
-  openInvoiceHtml: async (id: string, template?: string) => {
+  openInvoiceHtml: async (id: string, template?: string, autoPrint = false) => {
     const params = new URLSearchParams()
     if (template) params.set("template", template)
     params.set("format", "html")
@@ -221,7 +221,16 @@ const InvoiceApi = {
       responseType: "text",
     })
 
-    const blob = new Blob([html], { type: "text/html" })
+    let finalHtml = html
+    if (autoPrint) {
+      if (html.includes("</body>")) {
+        finalHtml = html.replace("</body>", "<script>window.onload = function() { window.print(); };</script></body>")
+      } else {
+        finalHtml = html + "<script>window.onload = function() { window.print(); };</script>"
+      }
+    }
+
+    const blob = new Blob([finalHtml], { type: "text/html" })
     const previewUrl = window.URL.createObjectURL(blob)
     window.open(previewUrl, "_blank", "noopener,noreferrer")
     window.setTimeout(() => window.URL.revokeObjectURL(previewUrl), 1000)

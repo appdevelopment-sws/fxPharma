@@ -211,6 +211,17 @@ export default function RecentInvoicesPage() {
     [activeTemplate]
   )
 
+  const handlePrintInvoice = useCallback(
+    async (invoice: Invoice) => {
+      try {
+        await InvoiceApi.openInvoiceHtml(invoice.id, activeTemplate, true)
+      } catch {
+        toast.error("Could not print invoice.")
+      }
+    },
+    [activeTemplate]
+  )
+
   const handlePreviewTemplate = useCallback(async () => {
     try {
       await InvoiceApi.openInvoiceTemplatePreview(activeTemplate)
@@ -342,12 +353,10 @@ export default function RecentInvoicesPage() {
           <Button
             size="icon-sm"
             variant="ghost"
-            onClick={() => handleDownloadInvoice(row)}
+            onClick={() => handlePrintInvoice(row)}
             className="text-muted-foreground hover:text-foreground"
           >
             <Printer className="size-4" />
-
-            {/* <ArrowUpRight className="size-4" /> */}
           </Button>
           {row.status != "REFUNDED" && (<Button
             size="icon-sm"
