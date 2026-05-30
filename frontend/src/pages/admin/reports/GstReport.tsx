@@ -7,7 +7,7 @@ import { useAuth } from "@/context/authContext"
 import { StatCard } from "@/components/stat-card"
 import { ChartCard } from "@/components/chart-card"
 import { DashboardBarChart } from "@/components/charts"
-import { ShieldCheck, LayoutGrid, Building2, Eye, FileDown, ChevronDown, FileText, Calendar as CalendarIcon } from "lucide-react"
+import { ShieldCheck, LayoutGrid, Building2, Eye, FileDown, ChevronDown, FileText, Calendar as CalendarIcon, FileJson } from "lucide-react"
 import SectionCard from "@/components/SectionCard"
 import DataTable, { type DataTableColumn } from "@/components/data-table"
 import { Button } from "@/components/ui/button"
@@ -15,6 +15,7 @@ import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { toast } from "sonner"
 import InvoiceApi from "@/services/invoiceApi"
+import { useSettings } from "@/context/settingsContext"
 
 export default function GstReport() {
   const [date, setDate] = useState<DateRange | undefined>({
@@ -24,6 +25,7 @@ export default function GstReport() {
   const [activeTab, setActiveTab] = useState<"sales" | "purchases">("sales")
 
   const { user } = useAuth()
+  const { settings } = useSettings()
 
   const { data: gstData, isLoading } = useQuery({
     queryKey: ["gst-summary", date?.from?.toISOString(), date?.to?.toISOString()],
@@ -223,6 +225,212 @@ export default function GstReport() {
     toast.success("GST Report exported successfully")
   }
 
+  const handleExportJSON = () => {
+    if (activeTab === "sales") {
+      if (!reportData.salesList?.length) {
+        toast.error("No sales data available to export")
+        return
+      }
+
+      // Helper to extract State Code from GSTIN
+      const getStateCode = (gstin?: string) => {
+        if (gstin && gstin.trim().length >= 2) {
+          const code = gstin.trim().substring(0, 2)
+          if (/^\d{2}$/.test(code)) {
+            return code
+          }
+        }
+        return "09" // Default to UP if not configured
+      }
+
+      // Helper to map calculated rates to standard GST slabs
+      const mapToStandardRate = (rate: number): number => {
+        if (rate < 2.5) return 0
+        if (rate < 8.5) return 5
+        if (rate < 15) return 12
+        if (rate < 23) return 18
+        return 28
+      }
+
+      const gstin = settings.gst_number || ""
+      const storeStateCode = getStateCode(gstin)
+      const fp = format(date?.to || new Date(), "MMyyyy")
+
+      const b2bMap: Record<string, {
+        ctin: string
+        inv: any[]
+      }> = {}
+
+      const b2csGroups: Record<string, {
+        sply_ty: "INTRA" | "INTER"
+        pos: string
+        typ: "OE"
+        rt: number
+        txval: number
+        camt: number
+        samt: number
+        iamt: number
+        csamt: number
+      }> = {}
+
+      reportData.salesList.forEach((row: any) => {
+        const txval = Number(row.grossAmount) || 0
+        const taxAmt = Number(row.taxAmount) || 0
+        const rate = txval > 0 ? (taxAmt / txval) * 100 : 0
+        const rt = mapToStandardRate(rate)
+
+        // Try to extract GSTIN (15-character alphanumeric format)
+        const gstinRegex = /[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}/i
+        let customerGstin: string | null = null
+        if (row.customerPhone && gstinRegex.test(row.customerPhone)) {
+          customerGstin = row.customerPhone.match(gstinRegex)?.[0]?.toUpperCase() || null
+        } else if (row.customerName && gstinRegex.test(row.customerName)) {
+          customerGstin = row.customerName.match(gstinRegex)?.[0]?.toUpperCase() || null
+        } else if (row.notes && gstinRegex.test(row.notes)) {
+          customerGstin = row.notes.match(gstinRegex)?.[0]?.toUpperCase() || null
+        }
+
+        const cgst = Number(row.cgst) || 0
+        const sgst = Number(row.sgst) || 0
+        const totalVal = Number(row.totalAmount) || 0
+        const idt = format(new Date(row.createdAt), "dd-MM-yyyy")
+
+        if (customerGstin) {
+          // B2B Supply
+          const pos = customerGstin.substring(0, 2)
+          const isIntra = pos === storeStateCode
+
+          if (!b2bMap[customerGstin]) {
+            b2bMap[customerGstin] = {
+              ctin: customerGstin,
+              inv: []
+            }
+          }
+
+          const existingInvIdx = b2bMap[customerGstin].inv.findIndex((i: any) => i.inum === row.invoiceId)
+          if (existingInvIdx === -1) {
+            b2bMap[customerGstin].inv.push({
+              inum: row.invoiceId,
+              idt: idt,
+              val: Number(totalVal.toFixed(2)),
+              pos: pos,
+              rchrg: "N",
+              inv_typ: "R",
+              itms: [
+                {
+                  num: 1,
+                  itm_det: {
+                    txval: Number(txval.toFixed(2)),
+                    rt: rt,
+                    iamt: isIntra ? 0 : Number(taxAmt.toFixed(2)),
+                    camt: isIntra ? Number(cgst.toFixed(2)) : 0,
+                    samt: isIntra ? Number(sgst.toFixed(2)) : 0,
+                    csamt: 0
+                  }
+                }
+              ]
+            })
+          }
+        } else {
+          // B2CS Supply
+          const pos = storeStateCode
+          const sply_ty = pos === storeStateCode ? "INTRA" : "INTER"
+          const key = `${pos}_${rt}`
+
+          if (!b2csGroups[key]) {
+            b2csGroups[key] = {
+              sply_ty,
+              pos,
+              typ: "OE",
+              rt,
+              txval: 0,
+              camt: 0,
+              samt: 0,
+              iamt: 0,
+              csamt: 0
+            }
+          }
+
+          b2csGroups[key].txval += txval
+          if (sply_ty === "INTRA") {
+            b2csGroups[key].camt += cgst
+            b2csGroups[key].samt += sgst
+          } else {
+            b2csGroups[key].iamt += taxAmt
+          }
+        }
+      })
+
+      const b2bList = Object.values(b2bMap)
+      const b2csList = Object.values(b2csGroups).map(group => ({
+        sply_ty: group.sply_ty,
+        pos: group.pos,
+        typ: group.typ,
+        rt: group.rt,
+        txval: Number(group.txval.toFixed(2)),
+        ...(group.sply_ty === "INTRA" ? {
+          camt: Number(group.camt.toFixed(2)),
+          samt: Number(group.samt.toFixed(2))
+        } : {
+          iamt: Number(group.iamt.toFixed(2))
+        }),
+        csamt: 0
+      }))
+
+      const gstr1Json = {
+        gstin,
+        fp,
+        version: "GST1.4.2",
+        hash: "default",
+        b2b: b2bList,
+        b2cs: b2csList
+      }
+
+      if (!gstin) {
+        toast.warning("GSTIN is not configured in Organization Settings. Exported file contains an empty gstin field.")
+      }
+
+      const jsonString = JSON.stringify(gstr1Json, null, 2)
+      const blob = new Blob([jsonString], { type: "application/json;charset=utf-8;" })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.setAttribute("href", url)
+      link.setAttribute("download", `gstr1_sales_report_${fp}.json`)
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    } else {
+      if (!reportData.purchasesList?.length) {
+        toast.error("No purchase data available to export")
+        return
+      }
+
+      const purchasesJson = reportData.purchasesList.map((row: any) => ({
+        itemName: row.itemName,
+        batchNo: row.batchNo,
+        receivedDate: format(new Date(row.receivedAt), "yyyy-MM-dd"),
+        qty: row.qty,
+        rate: row.rate,
+        taxableAmount: row.taxableAmount,
+        cgstPaid: row.cgst,
+        sgstPaid: row.sgst,
+        totalGst: row.totalGst,
+        totalValue: row.totalAmount
+      }))
+
+      const jsonString = JSON.stringify(purchasesJson, null, 2)
+      const blob = new Blob([jsonString], { type: "application/json;charset=utf-8;" })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.setAttribute("href", url)
+      link.setAttribute("download", `gst_purchases_report_${format(new Date(), "yyyy-MM-dd")}.json`)
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    }
+    toast.success("GST Report exported to JSON successfully")
+  }
+
   if (!user) return null
 
   return (
@@ -283,6 +491,14 @@ export default function GstReport() {
           >
             <FileDown className="mr-2 size-4 text-muted-foreground" />
             Export CSV
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleExportJSON}
+            className="h-10 rounded-lg border-border/60 bg-background/50 px-4 font-medium transition-all hover:bg-background hover:ring-1 hover:ring-primary/20"
+          >
+            <FileJson className="mr-2 size-4 text-muted-foreground" />
+            Export JSON
           </Button>
         </div>
       </div>
