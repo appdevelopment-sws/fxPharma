@@ -275,10 +275,10 @@ export class ReturnsController {
     const { organizationId, branchId } = getRequestScope(req);
     const invoiceNumber = String(
       req.body.invoice_number ||
-        req.body.invoiceNumber ||
-        req.body.invoiceId ||
-        req.body.original_invoice ||
-        "",
+      req.body.invoiceNumber ||
+      req.body.invoiceId ||
+      req.body.original_invoice ||
+      "",
     ).trim();
 
     if (!invoiceNumber) {
