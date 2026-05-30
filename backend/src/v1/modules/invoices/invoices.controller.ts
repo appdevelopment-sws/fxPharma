@@ -627,6 +627,7 @@ export class InvoicesController {
         cgst: tax / 2,
         sgst: tax / 2,
         totalAmount: net,
+        notes: inv.notes,
       };
     });
 
