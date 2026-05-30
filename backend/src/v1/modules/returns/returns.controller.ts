@@ -387,7 +387,7 @@ export class ReturnsController {
           unitPrice,
           purchasedQty: invoiceItem.qty,
           returnQty,
-          reason: getValue(input, "reason") || req.body.reason_for_return,
+          reason: getValue(input, "reason") || req.body.reason_for_return || "",
           refundAmt,
         };
       });
@@ -438,7 +438,7 @@ export class ReturnsController {
           customerName: invoice.customerName,
           customerPhone: invoice.customerPhone,
           returnValue,
-          reason: req.body.reason_for_return,
+          reason: req.body.reason_for_return || "",
           status,
           itemsRestocked: status === "REFUNDED" ? sumReturnQty(returnItems) : 0,
           subtotal,
