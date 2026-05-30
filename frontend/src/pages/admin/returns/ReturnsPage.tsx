@@ -18,6 +18,7 @@ import DataTable, { type DataTableColumn } from "@/components/data-table"
 import { FilterBar } from "@/components/filter-bar"
 import ProcessReturnDrawer from "@/components/dialog/ProcessReturnDrawer"
 import ReturnInvoiceSearchDrawer from "@/components/dialog/ReturnInvoiceSearchDrawer"
+import ViewReturnDrawer from "@/components/dialog/ViewReturnDrawer"
 import SectionCard from "@/components/SectionCard"
 import { Button } from "@/components/ui/button"
 import { useDisclosure } from "@/hooks/useDisclosure"
@@ -39,6 +40,7 @@ export default function ReturnsPage() {
   const queryClient = useQueryClient()
   const returnDrawer = useDisclosure()
   const processReturnDrawer = useDisclosure<string>()
+  const viewReturnDrawer = useDisclosure<string>()
   const { filter, handleFilter } = useSearchFilter(INITIAL_RETURN_FILTERS)
 
   const deleteConfirm = useDisclosure<SalesReturn>()
@@ -221,11 +223,12 @@ export default function ReturnsPage() {
           <Button
             size="icon-sm"
             variant="ghost"
+            onClick={() => viewReturnDrawer.onOpen(row.id)}
             className="text-muted-foreground hover:text-foreground"
           >
             <Eye className="size-4" />
           </Button>
-          {row.status === "REFUNDED" && (
+          {/* {row.status === "REFUNDED" && (
             <Button
               size="icon-sm"
               variant="ghost"
@@ -233,7 +236,7 @@ export default function ReturnsPage() {
             >
               <Printer className="size-4" />
             </Button>
-          )}
+          )} */}
           <Button
             size="icon-sm"
             variant="ghost"
@@ -283,6 +286,12 @@ export default function ReturnsPage() {
         open={processReturnDrawer.isOpen}
         onClose={processReturnDrawer.onClose}
         invoiceId={processReturnDrawer.data ?? null}
+      />
+
+      <ViewReturnDrawer
+        open={viewReturnDrawer.isOpen}
+        onClose={viewReturnDrawer.onClose}
+        returnId={viewReturnDrawer.data ?? null}
       />
 
       <SectionCard
