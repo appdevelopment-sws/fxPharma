@@ -23,6 +23,7 @@ import ConfigureSaleItemDialog from "@/components/dialog/admin/ConfigureSaleItem
 import HeldBillsDialog from "@/components/dialog/admin/HeldBillsDialog"
 import { cn, getImageUrl } from "@/lib/utils"
 import { queryKeys } from "@/lib/queryKeys"
+import { useSettings } from "@/context/settingsContext"
 import { CategoryApi, ManufacturerApi } from "@/services/attributesApi"
 import InventoryApi from "@/services/inventoryApi"
 import {
@@ -558,6 +559,7 @@ const getProductIllustration = (
 // ─── POS Component ────────────────────────────────────────────────────────────
 
 const POS = () => {
+  const { settings } = useSettings()
   // Cart
   const [cart, setCart] = useState<CartItem[]>([])
 
@@ -661,7 +663,8 @@ const POS = () => {
 
       const responseData = response.data
       setSuccessInvoiceDetails({
-        id: responseData.invoice_id || responseData.id,
+        id: responseData.id,
+        invoiceId: responseData.invoice_id,
         customerName: responseData.customer_name,
         customerPhone: responseData.customer_phone,
         items: responseData.items || cart,
@@ -946,6 +949,16 @@ const POS = () => {
 
   // ── Payment ───────────────────────────────────────────────────────────────
 
+  const handlePrint = async (invoiceId: string) => {
+    try {
+      const activeTemplate = settings.invoice_template_name || settings.invoice_template || "template1"
+      await InvoiceApi.openInvoiceHtml(invoiceId, activeTemplate, true)
+    } catch (error) {
+      toast.error("Failed to print invoice.")
+      console.error(error)
+    }
+  }
+
   const handleCompletePayment = (printOnSuccess = false) => {
     if (cart.length === 0) return
 
@@ -1010,9 +1023,9 @@ const POS = () => {
     }
 
     createInvoiceMutation.mutate(payload, {
-      onSuccess: () => {
-        if (printOnSuccess) {
-          toast.info("Preparing print...")
+      onSuccess: (response) => {
+        if (printOnSuccess && response?.data?.id) {
+          handlePrint(response.data.id)
         }
       },
     })
@@ -1628,7 +1641,7 @@ const POS = () => {
                 <div className="flex justify-between">
                   <span>Invoice ID</span>
                   <span className="font-extrabold text-foreground">
-                    {successInvoiceDetails.id}
+                    {successInvoiceDetails.invoiceId || successInvoiceDetails.id}
                   </span>
                 </div>
                 {successInvoiceDetails.customerName && (
@@ -1702,7 +1715,11 @@ const POS = () => {
           <DialogFooter className="-mx-6 -mb-6 gap-2 rounded-b-2xl border-t bg-muted/40 p-4 pt-4">
             <Button
               variant="outline"
-              onClick={() => toast.success("Printing invoice...")}
+              onClick={() => {
+                if (successInvoiceDetails?.id) {
+                  handlePrint(successInvoiceDetails.id)
+                }
+              }}
               className="flex flex-1 items-center justify-center gap-1.5 text-xs font-extrabold uppercase"
             >
               <Printer className="h-4 w-4" />
