@@ -31,9 +31,10 @@ model MasterProduct {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+  searchText String? @map("search_text")
 
   @@index([name])
+  @@index([searchText(ops: raw("gin_trgm_ops"))], type: Gin)
 }
 
 

@@ -8,6 +8,42 @@ import ErrorHandler from "../../../utils/ErrorHandler.js";
 import { rootPrisma } from "@/lib/prisma.js";
 import { getRequestScope } from "@/helpers/requestScope.js";
 
+export function computeSearchText(data: {
+  name: string;
+  salt?: string | null;
+  categoryType?: string | null;
+  brandName?: string | null;
+  manufacturerName?: string | null;
+  categoryName?: string | null;
+  hsncode?: string | null;
+  hsnDescription?: string | null;
+  barcodes?: string[] | { value: string }[] | null;
+}) {
+  const parts: string[] = [];
+  if (data.name) parts.push(data.name);
+  if (data.salt) parts.push(data.salt);
+  if (data.categoryType) parts.push(data.categoryType);
+  if (data.brandName) parts.push(data.brandName);
+  if (data.manufacturerName) parts.push(data.manufacturerName);
+  if (data.categoryName) parts.push(data.categoryName);
+  if (data.hsncode) parts.push(data.hsncode);
+  if (data.hsnDescription) parts.push(data.hsnDescription);
+
+  if (data.barcodes) {
+    if (Array.isArray(data.barcodes)) {
+      for (const b of data.barcodes) {
+        if (typeof b === "string") {
+          parts.push(b);
+        } else if (b && typeof b === "object" && "value" in b && b.value) {
+          parts.push(b.value);
+        }
+      }
+    }
+  }
+
+  return parts.join(" ").replace(/\s+/g, " ").trim();
+}
+
 const getFilterValue = (value: unknown) => {
   const normalized = Array.isArray(value) ? value[0] : value;
   return typeof normalized === "string" && normalized !== "all"
@@ -56,86 +92,10 @@ export class MasterProductController {
           status ? { status } : {},
           search
             ? {
-                OR: [
-                  {
-                    name: {
-                      contains: search,
-                      mode: "insensitive",
-                    },
-                  },
-                  {
-                    salt: {
-                      contains: search,
-                      mode: "insensitive",
-                    },
-                  },
-                  {
-                    categoryType: {
-                      contains: search,
-                      mode: "insensitive",
-                    },
-                  },
-                  {
-                    brand: {
-                      is: {
-                        name: {
-                          contains: search,
-                          mode: "insensitive",
-                        },
-                      },
-                    },
-                  },
-                  {
-                    manufacturer: {
-                      is: {
-                        name: {
-                          contains: search,
-                          mode: "insensitive",
-                        },
-                      },
-                    },
-                  },
-                  {
-                    category: {
-                      is: {
-                        name: {
-                          contains: search,
-                          mode: "insensitive",
-                        },
-                      },
-                    },
-                  },
-                  {
-                    hsn: {
-                      is: {
-                        OR: [
-                          {
-                            hsncode: {
-                              contains: search,
-                              mode: "insensitive",
-                            },
-                          },
-                          {
-                            description: {
-                              contains: search,
-                              mode: "insensitive",
-                            },
-                          },
-                        ],
-                      },
-                    },
-                  },
-                  {
-                    barcodes: {
-                      some: {
-                        value: {
-                          contains: search,
-                          mode: "insensitive",
-                        },
-                      },
-                    },
-                  },
-                ],
+                searchText: {
+                  contains: search,
+                  mode: "insensitive",
+                },
               }
             : {},
         ],
@@ -153,7 +113,7 @@ export class MasterProductController {
             hsn: true,
             barcodes: true,
           },
-          orderBy: {
+          orderBy: search ? undefined : {
             createdAt: "desc",
           },
         }),
@@ -187,11 +147,63 @@ export class MasterProductController {
   });
 
   static create = catchAsync(async (req: Request, res: Response) => {
-    const { barcodes } = req.body;
+    const {
+      name,
+      salt,
+      category_type,
+      brand_id,
+      manufacturer_id,
+      category_id,
+      hsn_code_id,
+      barcodes,
+    } = req.body;
+
+    let brandName = "";
+    let manufacturerName = "";
+    let categoryName = "";
+    let hsncode = "";
+    let hsnDescription = "";
+
+    if (brand_id) {
+      const b = await rootPrisma.brand.findUnique({ where: { id: brand_id } });
+      if (b) brandName = b.name;
+    }
+    if (manufacturer_id) {
+      const m = await rootPrisma.manufacturer.findUnique({ where: { id: manufacturer_id } });
+      if (m) manufacturerName = m.name || "";
+    }
+    if (category_id) {
+      const c = await rootPrisma.category.findUnique({ where: { id: category_id } });
+      if (c) categoryName = c.name;
+    }
+    if (hsn_code_id) {
+      const h = await rootPrisma.hsn.findUnique({ where: { id: hsn_code_id } });
+      if (h) {
+        hsncode = h.hsncode;
+        hsnDescription = h.description || "";
+      }
+    }
+
+    const validBarcodes = barcodes
+      ? barcodes.filter((b: any) => b.value).map((b: any) => b.value)
+      : [];
+
+    const searchText = computeSearchText({
+      name,
+      salt,
+      categoryType: category_type,
+      brandName,
+      manufacturerName,
+      categoryName,
+      hsncode,
+      hsnDescription,
+      barcodes: validBarcodes,
+    });
 
     const product = await rootPrisma.masterProduct.create({
       data: {
         ...this.mapToPrisma(req.body),
+        searchText,
         barcodes: barcodes
           ? {
               create: barcodes
@@ -228,10 +240,67 @@ export class MasterProductController {
 
     const { barcodes } = req.body;
 
+    const name = req.body.name !== undefined ? req.body.name : existing.name;
+    const salt = req.body.salt !== undefined ? req.body.salt : existing.salt;
+    const category_type = req.body.category_type !== undefined ? req.body.category_type : existing.categoryType;
+    const brand_id = req.body.brand_id !== undefined ? req.body.brand_id : existing.brandId;
+    const manufacturer_id = req.body.manufacturer_id !== undefined ? req.body.manufacturer_id : existing.manufacturerId;
+    const category_id = req.body.category_id !== undefined ? req.body.category_id : existing.categoryId;
+    const hsn_code_id = req.body.hsn_code_id !== undefined ? req.body.hsn_code_id : existing.hsnId;
+
+    let brandName = "";
+    let manufacturerName = "";
+    let categoryName = "";
+    let hsncode = "";
+    let hsnDescription = "";
+
+    if (brand_id) {
+      const b = await rootPrisma.brand.findUnique({ where: { id: brand_id } });
+      if (b) brandName = b.name;
+    }
+    if (manufacturer_id) {
+      const m = await rootPrisma.manufacturer.findUnique({ where: { id: manufacturer_id } });
+      if (m) manufacturerName = m.name || "";
+    }
+    if (category_id) {
+      const c = await rootPrisma.category.findUnique({ where: { id: category_id } });
+      if (c) categoryName = c.name;
+    }
+    if (hsn_code_id) {
+      const h = await rootPrisma.hsn.findUnique({ where: { id: hsn_code_id } });
+      if (h) {
+        hsncode = h.hsncode;
+        hsnDescription = h.description || "";
+      }
+    }
+
+    let validBarcodes: string[] = [];
+    if (req.body.barcodes !== undefined) {
+      validBarcodes = req.body.barcodes.filter((b: any) => b.value).map((b: any) => b.value);
+    } else {
+      const existingBarcodes = await rootPrisma.masterProductBarcode.findMany({
+        where: { masterProductId: existing.id },
+      });
+      validBarcodes = existingBarcodes.map((b) => b.value);
+    }
+
+    const searchText = computeSearchText({
+      name,
+      salt,
+      categoryType: category_type,
+      brandName,
+      manufacturerName,
+      categoryName,
+      hsncode,
+      hsnDescription,
+      barcodes: validBarcodes,
+    });
+
     const product = await rootPrisma.masterProduct.update({
       where: { id: req.params.id as string },
       data: {
         ...this.mapToPrisma(req.body),
+        searchText,
         barcodes: barcodes
           ? {
               deleteMany: {},
@@ -630,6 +699,7 @@ export class MasterProductController {
         isScheduleH: boolean;
         isScheduleH1: boolean;
         barcodes: string[];
+        searchText: string;
       };
 
       const parsedProducts: ParsedProduct[] = [];
@@ -712,6 +782,17 @@ export class MasterProductController {
             row["Industry Segment"] || row["industry_segment"] || "1",
           ).trim();
 
+          const searchText = computeSearchText({
+            name: productName.trim(),
+            salt: row["Salt Composition"] || row["salt"] || null,
+            categoryType,
+            brandName: brandName ? String(brandName).trim() : null,
+            manufacturerName: manufacturerName ? String(manufacturerName).trim() : null,
+            categoryName: categoryName ? String(categoryName).trim() : null,
+            hsncode: hsnCode ? String(hsnCode).trim() : null,
+            barcodes: validBarcodes,
+          });
+
           parsedProducts.push({
             rowNum,
             name: productName.trim(),
@@ -728,6 +809,7 @@ export class MasterProductController {
             isScheduleH: parseBool(row["Schedule H"] || row["is_schedule_h"] || row["schedule_h"]),
             isScheduleH1: parseBool(row["Schedule H1"] || row["is_schedule_h1"] || row["schedule_h1"]),
             barcodes: validBarcodes,
+            searchText,
           });
         } catch (err: any) {
           errors.push(`Row ${rowNum}: ${err.message || "Unknown error"}`);
@@ -757,6 +839,7 @@ export class MasterProductController {
                   isNarcotic: product.isNarcotic,
                   isScheduleH: product.isScheduleH,
                   isScheduleH1: product.isScheduleH1,
+                  searchText: product.searchText,
                 },
               });
 
