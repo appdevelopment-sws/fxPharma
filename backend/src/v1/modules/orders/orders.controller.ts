@@ -4,6 +4,7 @@ import { catchAsync } from "../../../utils/catchAsync.js";
 import { paginate } from "../../../utils/pagination.js";
 import { rootPrisma } from "@/lib/prisma.js";
 import { getRequestScope } from "@/helpers/requestScope.js";
+import { InvoiceParserService } from "./invoiceParser.service.js";
 
 const ORDER_STATUS_VALUES = [
   "DRAFT",
@@ -548,5 +549,53 @@ export class OrdersController {
     });
 
     res.json({ success: true, message: "Order deleted successfully" });
+  });
+
+  static parseBill = catchAsync(async (req: Request, res: Response) => {
+    const { organizationId, branchId } = getRequestScope(req);
+    const orderId = req.params.id as string;
+
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: "No bill file uploaded" });
+    }
+
+    const order = await rootPrisma.order.findUnique({
+      where: { id: orderId },
+      select: { id: true, organizationId: true, branchId: true },
+    });
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: "Order not found" });
+    }
+
+    if (!OrdersController.canAccessOrder(order, organizationId, branchId)) {
+      return res.status(404).json({ success: false, message: "Order not found" });
+    }
+
+    let parsedResult;
+    const mimeType = req.file.mimetype;
+
+    if (mimeType === "application/pdf") {
+      parsedResult = await InvoiceParserService.parsePDF(req.file.buffer);
+    } else if (
+      mimeType === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+      mimeType === "application/vnd.ms-excel" ||
+      mimeType === "text/csv" ||
+      req.file.originalname.endsWith(".xlsx") ||
+      req.file.originalname.endsWith(".xls") ||
+      req.file.originalname.endsWith(".csv")
+    ) {
+      parsedResult = InvoiceParserService.parseExcel(req.file.buffer);
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: "Unsupported file format. Please upload a PDF or Excel/CSV file.",
+      });
+    }
+
+    res.json({
+      success: true,
+      data: parsedResult,
+    });
   });
 }

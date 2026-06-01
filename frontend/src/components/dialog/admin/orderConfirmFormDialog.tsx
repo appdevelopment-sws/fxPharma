@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import {
@@ -10,6 +10,7 @@ import {
   Plus,
   Trash2,
   Truck,
+  Upload,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -274,6 +275,136 @@ export default function OrderConfirmFormDialog({
   order,
 }: OrderConfirmFormDialogProps) {
   const queryClient = useQueryClient()
+
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [isParsingBill, setIsParsingBill] = useState(false)
+
+  const triggerFileSelect = () => {
+    fileInputRef.current?.click()
+  }
+
+  const handleBillUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    setIsParsingBill(true)
+    const toastId = toast.loading("Uploading and parsing bill...")
+
+    try {
+      const res = await ordersApi.parseBill(order.id, file)
+      if (res.success && res.data) {
+        const parsedData = res.data
+        
+        if (parsedData.invoiceNo) {
+          setValue("invoiceNo", parsedData.invoiceNo, { shouldDirty: true })
+        }
+        
+        const currentItems = getValues("items") || []
+        const parsedItems = parsedData.items || []
+        
+        let matchCount = 0
+        const updatedItems = [...currentItems]
+        
+        parsedItems.forEach((pItem: any) => {
+          const pNameNormalized = pItem.name.toLowerCase().trim().replace(/[^a-z0-9]/g, "")
+          
+          let bestMatchIndex = -1
+          let bestMatchScore = 0
+          
+          updatedItems.forEach((uItem: any, idx: number) => {
+            if (!uItem.name) return
+            const uNameNormalized = uItem.name.toLowerCase().trim().replace(/[^a-z0-9]/g, "")
+            
+            if (pNameNormalized === uNameNormalized) {
+              bestMatchIndex = idx
+              bestMatchScore = 1
+              return
+            }
+            
+            if (pNameNormalized.includes(uNameNormalized) || uNameNormalized.includes(pNameNormalized)) {
+              if (bestMatchScore < 0.8) {
+                bestMatchIndex = idx
+                bestMatchScore = 0.8
+              }
+            }
+          });
+          
+          if (bestMatchIndex !== -1) {
+            const matchedItem = updatedItems[bestMatchIndex]
+            
+            if (pItem.batchNo) matchedItem.batchNo = pItem.batchNo
+            if (pItem.expiry) matchedItem.expiry = pItem.expiry
+            if (pItem.mrp) matchedItem.mrp = pItem.mrp
+            if (pItem.purchaseRate) {
+              matchedItem.unitRate = pItem.purchaseRate
+            }
+            if (pItem.discountPercent !== undefined) {
+              matchedItem.discount = pItem.discountPercent
+              matchedItem.discount_type = "percentage"
+            }
+            if (pItem.cgst !== undefined) matchedItem.cgst = pItem.cgst
+            if (pItem.sgst !== undefined) matchedItem.sgst = pItem.sgst
+            if (pItem.qty) {
+              matchedItem.qty = pItem.qty
+            }
+            if (pItem.freeQty !== undefined) {
+              matchedItem.freeQty = pItem.freeQty
+              matchedItem.freeQtyInput = String(pItem.freeQty)
+            }
+            
+            setValue(`items.${bestMatchIndex}.batchNo`, matchedItem.batchNo, { shouldDirty: true })
+            setValue(`items.${bestMatchIndex}.expiry`, matchedItem.expiry, { shouldDirty: true })
+            setValue(`items.${bestMatchIndex}.mrp`, matchedItem.mrp, { shouldDirty: true })
+            setValue(`items.${bestMatchIndex}.unitRate`, matchedItem.unitRate, { shouldDirty: true })
+            setValue(`items.${bestMatchIndex}.qty`, matchedItem.qty, { shouldDirty: true })
+            setValue(`items.${bestMatchIndex}.freeQty`, matchedItem.freeQty, { shouldDirty: true })
+            setValue(`items.${bestMatchIndex}.freeQtyInput`, matchedItem.freeQtyInput, { shouldDirty: true })
+            setValue(`items.${bestMatchIndex}.cgst`, matchedItem.cgst, { shouldDirty: true })
+            setValue(`items.${bestMatchIndex}.sgst`, matchedItem.sgst, { shouldDirty: true })
+            setValue(`items.${bestMatchIndex}.discount`, matchedItem.discount, { shouldDirty: true })
+            setValue(`items.${bestMatchIndex}.discount_type`, matchedItem.discount_type, { shouldDirty: true })
+            
+            handleRowCalculation(bestMatchIndex)
+            matchCount++
+          } else {
+            const newRow = buildBlankRow()
+            newRow.name = pItem.name
+            if (pItem.batchNo) newRow.batchNo = pItem.batchNo
+            if (pItem.expiry) newRow.expiry = pItem.expiry
+            if (pItem.mrp) newRow.mrp = pItem.mrp
+            if (pItem.purchaseRate) newRow.unitRate = pItem.purchaseRate
+            if (pItem.qty) newRow.qty = pItem.qty
+            if (pItem.freeQty !== undefined) {
+              newRow.freeQty = pItem.freeQty
+              newRow.freeQtyInput = String(pItem.freeQty)
+            }
+            if (pItem.discountPercent !== undefined) {
+              newRow.discount = pItem.discountPercent
+              newRow.discount_type = "percentage"
+            }
+            if (pItem.cgst !== undefined) newRow.cgst = pItem.cgst
+            if (pItem.sgst !== undefined) newRow.sgst = pItem.sgst
+            
+            if (newRow.unitRate && newRow.qty) {
+              newRow.purchaseRate = Math.round((newRow.unitRate * newRow.qty) * 100) / 100
+            }
+            
+            append(newRow)
+          }
+        })
+        
+        toast.success(`Bill parsed successfully! Matched ${matchCount} items out of ${parsedItems.length}.`, { id: toastId })
+      } else {
+        toast.error("Failed to parse bill details.", { id: toastId })
+      }
+    } catch (err: any) {
+      console.error(err)
+      toast.error(err.response?.data?.message || err.message || "Failed to parse bill.", { id: toastId })
+    } finally {
+      setIsParsingBill(false)
+      if (fileInputRef.current) fileInputRef.current.value = ""
+    }
+  }
 
   const { control, register, handleSubmit, reset, setValue, getValues } =
     useForm<OrderConfirmFormValues>({
@@ -576,6 +707,23 @@ export default function OrderConfirmFormDialog({
           </div>
 
           <div className="flex flex-wrap gap-2">
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleBillUpload}
+              accept=".pdf,.xlsx,.xls,.csv"
+              style={{ display: "none" }}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              className="h-9 rounded-lg border-border/60 bg-background px-4 text-xs font-semibold text-foreground shadow-xs transition-all duration-200 hover:bg-muted/30"
+              disabled={isParsingBill}
+              onClick={triggerFileSelect}
+            >
+              <Upload className="mr-1.5 size-4" />
+              {isParsingBill ? "Parsing..." : "Upload Bill (PDF/Excel)"}
+            </Button>
             <Button
               type="button"
               variant="outline"

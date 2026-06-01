@@ -3,6 +3,9 @@ import { OrdersController } from "./orders.controller.js";
 import { validate } from "@/middlewares/validate.js";
 import { createOrderSchema, updateOrderSchema } from "./orders.validation.js";
 import { isAuthenticated } from "@/middlewares/isAuthenticated.js";
+import multer from "multer";
+
+const upload = multer({ storage: multer.memoryStorage() });
 
 const router = Router();
 
@@ -92,5 +95,12 @@ router.put(
  *         description: Success
  */
 router.delete("/:id", isAuthenticated, OrdersController.delete);
+
+router.post(
+  "/:id/parse-bill",
+  isAuthenticated,
+  upload.single("bill"),
+  OrdersController.parseBill
+);
 
 export default router;
