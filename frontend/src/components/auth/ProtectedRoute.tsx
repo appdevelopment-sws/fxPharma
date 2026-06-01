@@ -30,8 +30,9 @@ export default function ProtectedRoute({
       </div>
     )
   }
-
+  console.log("IS AUTHENTICATED", isAuthenticated)
   if (!isAuthenticated) {
+    console.log("User is not authenticated, redirecting to login.")
     return <Navigate to="/admin/login" replace state={{ from: location }} />
   }
   if (allowedRoles && user) {

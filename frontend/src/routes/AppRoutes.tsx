@@ -14,7 +14,9 @@ export default function AppRoutes() {
   return (
     <BrowserRouter>
       <Routes>
-        {user?.role === "SUPER_ADMIN" ? SuperAdminRoutes() : AdminRoutes()}
+        {/* Always register both route groups. Access is protected inside each group by ProtectedRoute/PublicOnlyRoute. */}
+        {AdminRoutes()}
+        {SuperAdminRoutes()}
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
         <Route path="*" element={<Navigate to="/admin/login" replace />} />
       </Routes>

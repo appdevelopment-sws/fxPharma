@@ -16,7 +16,7 @@ export default function LoginPage() {
     resolver: zodResolver(loginSchema),
     mode: "onChange",
   })
-
+  console.log("LOGIN PAGE RENDER")
   const loginMutation = useLogin()
 
   const onSubmit = (data: loginSchema) => {
