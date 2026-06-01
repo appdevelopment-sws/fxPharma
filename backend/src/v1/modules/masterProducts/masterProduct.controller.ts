@@ -417,6 +417,12 @@ export class MasterProductController {
     let errorCount = 0;
     const errors: string[] = [];
 
+    const parseBool = (val: any) => {
+      if (val === undefined || val === null) return false;
+      const s = String(val).trim().toLowerCase();
+      return s === "yes" || s === "true" || s === "1";
+    };
+
     try {
       const workbook = XLSX.readFile(filePath, {
         dense: false,
@@ -433,6 +439,200 @@ export class MasterProductController {
         raw: false,
         defval: "",
       });
+
+      if (rows.length === 0) {
+        throw new ErrorHandler("Excel file has no data rows", 400);
+      }
+
+      console.log(`Bulk import: Processing ${rows.length} rows with batch strategy...`);
+
+      // ─── PHASE 1: Pre-fetch all existing reference data into Maps ───
+      // This replaces N individual findFirst calls with just 4 bulk queries.
+
+      const buildMap = (items: { id: string; name: string | null }[]) => {
+        const map = new Map<string, string>();
+        for (const item of items) {
+          if (item.name) map.set(item.name.toLowerCase().trim(), item.id);
+        }
+        return map;
+      };
+
+      const [existingCategories, existingBrands, existingManufacturers, existingHsn] =
+        await Promise.all([
+          rootPrisma.category.findMany({
+            where: { organizationId },
+            select: { id: true, name: true },
+          }),
+          rootPrisma.brand.findMany({
+            where: { organizationId },
+            select: { id: true, name: true },
+          }),
+          rootPrisma.manufacturer.findMany({
+            where: { organizationId },
+            select: { id: true, name: true },
+          }),
+          rootPrisma.hsn.findMany({
+            select: { id: true, hsncode: true },
+          }),
+        ]);
+
+      const categoryMap = buildMap(existingCategories);
+      const brandMap = buildMap(existingBrands);
+      const manufacturerMap = buildMap(existingManufacturers);
+      // HSN uses hsncode instead of name
+      const hsnMap = new Map<string, string>();
+      for (const h of existingHsn) {
+        hsnMap.set(h.hsncode.toLowerCase().trim(), h.id);
+      }
+
+      // ─── PHASE 2: Collect all unique new names from the file ───
+
+      const newCategoryNames = new Set<string>();
+      const newBrandNames = new Set<string>();
+      const newManufacturerNames = new Set<string>();
+      const newHsnCodes = new Set<string>();
+
+      for (const row of rows) {
+        const catName = row["Category"] || row["category"];
+        if (catName && typeof catName === "string" && catName.trim()) {
+          const key = catName.trim().toLowerCase();
+          if (!categoryMap.has(key)) newCategoryNames.add(catName.trim());
+        }
+
+        const bName = row["Brand"] || row["brand"] || row["Brand Name"];
+        if (bName && typeof bName === "string" && bName.trim()) {
+          const key = bName.trim().toLowerCase();
+          if (!brandMap.has(key)) newBrandNames.add(bName.trim());
+        }
+
+        const mName =
+          row["Manufacturer"] || row["manufacturer"] || row["Parent Manufacturer"];
+        if (mName && typeof mName === "string" && mName.trim()) {
+          const key = mName.trim().toLowerCase();
+          if (!manufacturerMap.has(key)) newManufacturerNames.add(mName.trim());
+        }
+
+        const hCode = row["HSN Code"] || row["hsn"] || row["HSN/SAC Code"];
+        if (hCode) {
+          const key = String(hCode).trim().toLowerCase();
+          if (!hsnMap.has(key)) newHsnCodes.add(String(hCode).trim());
+        }
+      }
+
+      // ─── PHASE 3: Batch-create missing reference entities ───
+
+      if (newCategoryNames.size > 0) {
+        await rootPrisma.category.createMany({
+          data: Array.from(newCategoryNames).map((name) => ({
+            name,
+            organizationId,
+            branchId,
+          })),
+          skipDuplicates: true,
+        });
+        // Re-fetch to get new IDs
+        const fresh = await rootPrisma.category.findMany({
+          where: { organizationId },
+          select: { id: true, name: true },
+        });
+        categoryMap.clear();
+        for (const item of fresh) {
+          categoryMap.set(item.name.toLowerCase().trim(), item.id);
+        }
+      }
+
+      if (newBrandNames.size > 0) {
+        await rootPrisma.brand.createMany({
+          data: Array.from(newBrandNames).map((name) => ({
+            name,
+            organizationId,
+            branchId,
+          })),
+          skipDuplicates: true,
+        });
+        const fresh = await rootPrisma.brand.findMany({
+          where: { organizationId },
+          select: { id: true, name: true },
+        });
+        brandMap.clear();
+        for (const item of fresh) {
+          brandMap.set(item.name.toLowerCase().trim(), item.id);
+        }
+      }
+
+      if (newManufacturerNames.size > 0) {
+        await rootPrisma.manufacturer.createMany({
+          data: Array.from(newManufacturerNames).map((name) => ({
+            name,
+            email: "",
+            phone: "",
+            address: "",
+            organizationId,
+            isGlobal: true,
+            branchId,
+          })),
+          skipDuplicates: true,
+        });
+        const fresh = await rootPrisma.manufacturer.findMany({
+          where: { organizationId },
+          select: { id: true, name: true },
+        });
+        manufacturerMap.clear();
+        for (const item of fresh) {
+          if (item.name) manufacturerMap.set(item.name.toLowerCase().trim(), item.id);
+        }
+      }
+
+      if (newHsnCodes.size > 0) {
+        await rootPrisma.hsn.createMany({
+          data: Array.from(newHsnCodes).map((code) => ({
+            hsncode: code,
+            description: "Auto created on import",
+          })),
+          skipDuplicates: true,
+        });
+        const fresh = await rootPrisma.hsn.findMany({
+          select: { id: true, hsncode: true },
+        });
+        hsnMap.clear();
+        for (const h of fresh) {
+          hsnMap.set(h.hsncode.toLowerCase().trim(), h.id);
+        }
+      }
+
+      // ─── PHASE 4: Pre-fetch all existing barcodes into a Set ───
+
+      const existingBarcodes = await rootPrisma.masterProductBarcode.findMany({
+        select: { value: true },
+      });
+      const existingBarcodeSet = new Set<string>(
+        existingBarcodes.map((b) => b.value),
+      );
+
+      // ─── PHASE 5: Build product data and batch insert in chunks ───
+
+      const CHUNK_SIZE = 1000;
+
+      // Parsed row data with resolved IDs
+      type ParsedProduct = {
+        rowNum: number;
+        name: string;
+        industrySegment: string;
+        categoryId: string | null;
+        brandId: string | null;
+        manufacturerId: string | null;
+        salt: string | null;
+        hsnId: string | null;
+        categoryType: string;
+        status: string;
+        colorType: string;
+        isNarcotic: boolean;
+        isScheduleH: boolean;
+        isScheduleH1: boolean;
+        barcodes: string[];
+      };
+
+      const parsedProducts: ParsedProduct[] = [];
 
       for (let i = 0; i < rows.length; i++) {
         const row = rows[i];
@@ -451,121 +651,39 @@ export class MasterProductController {
             continue;
           }
 
-          // Category
+          // Resolve Category ID from map
           let categoryId: string | null = null;
           const categoryName = row["Category"] || row["category"];
-          if (
-            categoryName &&
-            typeof categoryName === "string" &&
-            categoryName.trim()
-          ) {
-            const trimmed = categoryName.trim();
-            let category = await rootPrisma.category.findFirst({
-              where: {
-                name: { equals: trimmed, mode: "insensitive" },
-                organizationId,
-              },
-            });
-            if (!category) {
-              category = await rootPrisma.category.create({
-                data: { name: trimmed, organizationId, branchId },
-              });
-            }
-            categoryId = category.id;
+          if (categoryName && typeof categoryName === "string" && categoryName.trim()) {
+            categoryId = categoryMap.get(categoryName.trim().toLowerCase()) || null;
           }
 
-          // Brand
+          // Resolve Brand ID from map
           let brandId: string | null = null;
           const brandName = row["Brand"] || row["brand"] || row["Brand Name"];
           if (brandName && typeof brandName === "string" && brandName.trim()) {
-            const trimmed = brandName.trim();
-            let brand = await rootPrisma.brand.findFirst({
-              where: {
-                name: { equals: trimmed, mode: "insensitive" },
-                organizationId,
-              },
-            });
-            if (!brand) {
-              brand = await rootPrisma.brand.create({
-                data: { name: trimmed, organizationId, branchId },
-              });
-            }
-            brandId = brand.id;
+            brandId = brandMap.get(brandName.trim().toLowerCase()) || null;
           }
 
-          // Manufacturer
+          // Resolve Manufacturer ID from map
           let manufacturerId: string | null = null;
           const manufacturerName =
-            row["Manufacturer"] ||
-            row["manufacturer"] ||
-            row["Parent Manufacturer"];
-          if (
-            manufacturerName &&
-            typeof manufacturerName === "string" &&
-            manufacturerName.trim()
-          ) {
-            const trimmed = manufacturerName.trim();
-            let manufacturer = await rootPrisma.manufacturer.findFirst({
-              where: {
-                name: { equals: trimmed, mode: "insensitive" },
-                organizationId,
-              },
-            });
-            if (!manufacturer) {
-              manufacturer = await rootPrisma.manufacturer.create({
-                data: {
-                  name: trimmed,
-                  email: "",
-                  phone: "",
-                  address: "",
-                  organizationId,
-                  isGlobal: true,
-                  branchId,
-                },
-              });
-            }
-            manufacturerId = manufacturer.id;
+            row["Manufacturer"] || row["manufacturer"] || row["Parent Manufacturer"];
+          if (manufacturerName && typeof manufacturerName === "string" && manufacturerName.trim()) {
+            manufacturerId = manufacturerMap.get(manufacturerName.trim().toLowerCase()) || null;
           }
 
-          // HSN
+          // Resolve HSN ID from map
           let hsnId: string | null = null;
           const hsnCode = row["HSN Code"] || row["hsn"] || row["HSN/SAC Code"];
           if (hsnCode) {
-            const trimmed = String(hsnCode).trim();
-            let hsn = await rootPrisma.hsn.findFirst({
-              where: { hsncode: { equals: trimmed, mode: "insensitive" } },
-            });
-            if (!hsn) {
-              hsn = await rootPrisma.hsn.create({
-                data: {
-                  hsncode: trimmed,
-                  description: "Auto created on import",
-                },
-              });
-            }
-            hsnId = hsn.id;
+            hsnId = hsnMap.get(String(hsnCode).trim().toLowerCase()) || null;
           }
 
-          const parseBool = (val: any) => {
-            if (val === undefined || val === null) return false;
-            const s = String(val).trim().toLowerCase();
-            return s === "yes" || s === "true" || s === "1";
-          };
-
-          const isNarcotic = parseBool(
-            row["Narcotic Drug"] || row["is_narcotic"] || row["narcotic"],
-          );
-          const isScheduleH = parseBool(
-            row["Schedule H"] || row["is_schedule_h"] || row["schedule_h"],
-          );
-          const isScheduleH1 = parseBool(
-            row["Schedule H1"] || row["is_schedule_h1"] || row["schedule_h1"],
-          );
-
-          // Barcodes
+          // Collect valid barcodes (skip already existing ones)
           const barcodeString =
             row["Barcodes"] || row["barcode"] || row["Registered Barcodes"];
-          const barcodesToCreate: { value: string }[] = [];
+          const validBarcodes: string[] = [];
           if (barcodeString) {
             const codes = String(barcodeString)
               .split(",")
@@ -573,66 +691,100 @@ export class MasterProductController {
               .filter(Boolean);
 
             for (const code of codes) {
-              const exists = await rootPrisma.masterProductBarcode.findUnique({
-                where: { value: code },
-              });
-              if (!exists) {
-                barcodesToCreate.push({ value: code });
-              } else {
-                console.log(
-                  `Skipping barcode "${code}" on row ${rowNum} because it already exists in DB`,
-                );
+              if (!existingBarcodeSet.has(code)) {
+                validBarcodes.push(code);
+                // Mark as existing so later rows don't duplicate
+                existingBarcodeSet.add(code);
               }
             }
           }
 
           const categoryType = String(
             row["Category Type"] || row["category_type"] || "TAB",
-          )
-            .trim()
-            .toUpperCase();
-          const status = String(row["Status"] || row["status"] || "CONTINUE")
-            .trim()
-            .toUpperCase();
+          ).trim().toUpperCase();
+          const status = String(
+            row["Status"] || row["status"] || "CONTINUE",
+          ).trim().toUpperCase();
           const colorType = String(
             row["Color Type"] || row["color_type"] || "NORMAL",
-          )
-            .trim()
-            .toUpperCase();
+          ).trim().toUpperCase();
           const industrySegment = String(
             row["Industry Segment"] || row["industry_segment"] || "1",
           ).trim();
 
-          await rootPrisma.masterProduct.create({
-            data: {
-              name: productName.trim(),
-              industrySegment,
-              categoryId,
-              brandId,
-              manufacturerId,
-              salt: row["Salt Composition"] || row["salt"] || null,
-              hsnId,
-              categoryType,
-              status,
-              colorType,
-              isNarcotic,
-              isScheduleH,
-              isScheduleH1,
-
-              barcodes:
-                barcodesToCreate.length > 0
-                  ? {
-                      create: barcodesToCreate,
-                    }
-                  : undefined,
-            },
+          parsedProducts.push({
+            rowNum,
+            name: productName.trim(),
+            industrySegment,
+            categoryId,
+            brandId,
+            manufacturerId,
+            salt: row["Salt Composition"] || row["salt"] || null,
+            hsnId,
+            categoryType,
+            status,
+            colorType,
+            isNarcotic: parseBool(row["Narcotic Drug"] || row["is_narcotic"] || row["narcotic"]),
+            isScheduleH: parseBool(row["Schedule H"] || row["is_schedule_h"] || row["schedule_h"]),
+            isScheduleH1: parseBool(row["Schedule H1"] || row["is_schedule_h1"] || row["schedule_h1"]),
+            barcodes: validBarcodes,
           });
-
-          successCount++;
         } catch (err: any) {
-          console.error(`Error importing row ${rowNum}:`, err);
           errors.push(`Row ${rowNum}: ${err.message || "Unknown error"}`);
           errorCount++;
+        }
+      }
+
+      // Process in chunks using transactions
+      for (let c = 0; c < parsedProducts.length; c += CHUNK_SIZE) {
+        const chunk = parsedProducts.slice(c, c + CHUNK_SIZE);
+
+        try {
+          await rootPrisma.$transaction(async (tx) => {
+            for (const product of chunk) {
+              const created = await tx.masterProduct.create({
+                data: {
+                  name: product.name,
+                  industrySegment: product.industrySegment,
+                  categoryId: product.categoryId,
+                  brandId: product.brandId,
+                  manufacturerId: product.manufacturerId,
+                  salt: product.salt,
+                  hsnId: product.hsnId,
+                  categoryType: product.categoryType,
+                  status: product.status,
+                  colorType: product.colorType,
+                  isNarcotic: product.isNarcotic,
+                  isScheduleH: product.isScheduleH,
+                  isScheduleH1: product.isScheduleH1,
+                },
+              });
+
+              if (product.barcodes.length > 0) {
+                await tx.masterProductBarcode.createMany({
+                  data: product.barcodes.map((value) => ({
+                    value,
+                    masterProductId: created.id,
+                  })),
+                  skipDuplicates: true,
+                });
+              }
+            }
+          }, {
+            timeout: 120000, // 2 minute timeout for large chunks
+          });
+
+          successCount += chunk.length;
+          console.log(
+            `Bulk import: Chunk ${Math.floor(c / CHUNK_SIZE) + 1} done (${Math.min(c + CHUNK_SIZE, parsedProducts.length)}/${parsedProducts.length} products)`,
+          );
+        } catch (err: any) {
+          console.error(`Error importing chunk starting at index ${c}:`, err);
+          // Mark all rows in the failed chunk as errors
+          for (const product of chunk) {
+            errors.push(`Row ${product.rowNum}: ${err.message || "Chunk insert failed"}`);
+          }
+          errorCount += chunk.length;
         }
       }
     } finally {
@@ -642,6 +794,10 @@ export class MasterProductController {
         // Ignore cleanup errors; temp file will be removed by the environment eventually.
       }
     }
+
+    console.log(
+      `Bulk import complete: ${successCount} success, ${errorCount} errors`,
+    );
 
     res.status(200).json({
       success: true,

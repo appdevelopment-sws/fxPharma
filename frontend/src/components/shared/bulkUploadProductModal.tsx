@@ -1,6 +1,6 @@
 import React, { useState } from "react"
 import { useForm } from "react-hook-form"
-import { Download, FileSpreadsheet } from "lucide-react"
+import { Download, FileSpreadsheet, AlertTriangle } from "lucide-react"
 import { FormContainer } from "@/components/formContainer"
 import { Button } from "@/components/ui/button"
 import { FormFileUpload } from "@/components/ui/form-fields"
@@ -13,6 +13,8 @@ interface BulkUploadProductModalProps {
   open: boolean
   onClose: (open: boolean) => void
 }
+
+const FILE_SIZE_WARNING_THRESHOLD = 2 * 1024 * 1024 // 2MB
 
 export default function BulkUploadProductModal({
   open,
@@ -27,6 +29,7 @@ export default function BulkUploadProductModal({
   })
 
   const selectedFile = watch("file")
+  const isLargeFile = selectedFile && selectedFile.size > FILE_SIZE_WARNING_THRESHOLD
 
   const handleDownloadSample = async () => {
     const toastId = toast.loading("Downloading template...")
@@ -50,7 +53,11 @@ export default function BulkUploadProductModal({
   const onSubmit = async (data: any) => {
     if (!data.file) return
     setIsUploading(true)
-    const toastId = toast.loading("Uploading and importing products...")
+    const toastId = toast.loading(
+      isLargeFile
+        ? "Importing products... This may take a moment for large files."
+        : "Uploading and importing products..."
+    )
     try {
       const res = await ProductApi.bulkImport(data.file)
       
@@ -102,7 +109,7 @@ export default function BulkUploadProductModal({
             onClick={handleSubmit(onSubmit)}
             disabled={!selectedFile || isUploading}
           >
-            {isUploading ? "Uploading..." : "Upload Data"}
+            {isUploading ? "Importing..." : "Upload Data"}
           </Button>
         </div>
       }
@@ -148,8 +155,27 @@ export default function BulkUploadProductModal({
               disabled={isUploading}
             />
           </form>
+
+          {isLargeFile && !isUploading && (
+            <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 dark:border-amber-900/30 dark:bg-amber-950/20 dark:text-amber-300">
+              <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+              <span>
+                Large file detected ({(selectedFile.size / (1024 * 1024)).toFixed(1)}MB). Import may take several minutes — please don't close this window.
+              </span>
+            </div>
+          )}
+
+          {isUploading && (
+            <div className="mt-3 flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 p-3 text-xs text-blue-800 dark:border-blue-900/30 dark:bg-blue-950/20 dark:text-blue-300">
+              <div className="size-4 shrink-0 animate-spin rounded-full border-2 border-blue-300 border-t-blue-600" />
+              <span>
+                Processing file... Please wait, this window will auto-close when done.
+              </span>
+            </div>
+          )}
         </div>
       </div>
     </FormContainer>
   )
 }
+

@@ -86,6 +86,7 @@ const ProductApi = {
       headers: {
         "Content-Type": "multipart/form-data",
       },
+      timeout: 10 * 60 * 1000, // 10 minutes – very large files (30MB+) need more time
     })
   },
 }
