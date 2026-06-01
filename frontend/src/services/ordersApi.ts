@@ -186,4 +186,13 @@ export const ordersApi = {
   delete: async (id: string) => {
     return await api.delete(`${BASE_URL}/${id}`)
   },
+
+  parseBill: async (orderId: string, file: File) => {
+    const formData = new FormData()
+    formData.append("bill", file)
+    const res = await api.post<any>(`${BASE_URL}/${orderId}/parse-bill`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    })
+    return res
+  },
 }
