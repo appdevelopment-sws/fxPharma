@@ -5,193 +5,569 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Bill - {{invoiceId}}</title>
     <style>
+      :root {
+        --slate-900: #0f172a;
+        --slate-800: #1e293b;
+        --slate-600: #475569;
+        --slate-500: #64748b;
+        --slate-100: #f1f5f9;
+        --border-color: #94a3b8;    /* Professional slate border */
+        --border-thin: 1px solid var(--border-color);
+        --muted-bg: #f8fafc;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
       body {
-        font-family: Arial, sans-serif;
-        font-size: 12px;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 10px;
         background: #f1f5f9;
-        color: #222;
+        color: #000;
         line-height: 1.3;
         margin: 0;
         padding: 0;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
       }
+
       .page {
         width: 210mm;
-        min-height: 297mm;
+        height: 297mm;
         margin: 0 auto;
         background: #ffffff;
-        padding: 12mm;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        padding: 8mm 10mm;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         display: flex;
         flex-direction: column;
         justify-content: space-between;
       }
+
       .bill-container {
         position: relative;
         background: #fff;
-        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
       }
-      .section-title {
-        font-size: 14px;
-        font-weight: bold;
-        margin-top: 15px;
-        margin-bottom: 5px;
-        color: #333;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-      }
-      .info-table,
-      .charges-table,
-      .account-table {
+
+      /* ─── HEADER SECTION (Marg ERP High Density Style) ─── */
+      .header-table {
         width: 100%;
         border-collapse: collapse;
-        margin-bottom: 10px;
+        margin-bottom: 6px;
       }
-      .info-table td,
-      .account-table td {
-        padding: 4px 6px;
+
+      .header-table td {
+        padding: 0;
         vertical-align: top;
       }
-      .charges-table th,
-      .charges-table td,
-      .account-table th,
-      .account-table td {
-        border: 1px solid #ccc;
-        padding: 6px;
-        color: black;
-        vertical-align: top;
+
+      .logo-col {
+        width: 65px;
+        padding-right: 8px;
       }
-      .charges-table th {
-        background: #f8f8f8;
+
+      .logo-img {
+        max-height: 52px;
+        max-width: 58px;
+        object-fit: contain;
+        display: block;
+      }
+
+      .brand-title-col {
         text-align: left;
       }
-      .charges-table td {
+
+      .brand-title {
+        font-size: 18px;
+        font-weight: bold;
+        color: #000;
+        margin: 0 0 1px 0;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .brand-address {
+        font-size: 9px;
+        color: #000;
+        line-height: 1.3;
+      }
+
+      .brand-contact {
+        font-size: 9px;
+        font-weight: bold;
+        color: #000;
+        margin-top: 1px;
+      }
+
+      .promo-col {
         text-align: right;
+        font-size: 14px;
+        font-weight: bold;
+        text-transform: uppercase;
+        color: #334155;
+        vertical-align: middle;
       }
-      .charges-table td.description,
-      .charges-table th.description {
-        text-align: left;
-        white-space: normal;
-        overflow-wrap: anywhere;
-        word-break: normal;
+
+      /* Tagline Banner */
+      .tagline-banner {
+        border-top: 1px solid #000;
+        border-bottom: 1px solid #000;
+        text-align: center;
+        padding: 2.5px 0;
+        font-size: 9.5px;
+        font-weight: bold;
+        margin-bottom: 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
       }
-      .charges-table td.amount {
-        white-space: nowrap;
+
+      /* ─── GSTIN & LICENSE BAR ─── */
+      .tax-invoice-bar {
+        border: var(--border-thin);
+        width: 100%;
+        margin-bottom: 6px;
+        border-collapse: collapse;
+      }
+
+      .tax-invoice-bar td {
+        padding: 4px 6px;
+        font-size: 10px;
+        font-weight: bold;
+        vertical-align: middle;
+      }
+
+      .tax-invoice-title {
+        text-align: center;
+        font-size: 13px;
+        letter-spacing: 0.75px;
+      }
+
+      .tax-invoice-right {
+        text-align: right;
+        font-size: 9px;
+      }
+
+      /* ─── CLIENT & INVOICE DETAILS GRID (Marg ERP style table borders) ─── */
+      .details-grid {
+        display: grid;
+        grid-template-columns: 1.4fr 1fr;
+        border: var(--border-thin);
+        margin-bottom: 6px;
+      }
+
+      .details-col-left {
+        border-right: var(--border-thin);
+      }
+
+      .section-header-row {
+        background-color: var(--muted-bg);
+        border-bottom: var(--border-thin);
+        text-align: center;
+        font-size: 9px;
+        font-weight: bold;
+        padding: 3px 0;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .details-content-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      .details-content-table td {
+        padding: 3.5px 6px;
+        font-size: 10px;
+        vertical-align: top;
+      }
+
+      .details-content-table td.label-cell {
+        width: 25%;
+        font-weight: bold;
+        color: #333;
+      }
+
+      .details-content-table td.val-cell {
+        width: 75%;
+        font-weight: bold;
+      }
+
+      /* Right column invoice details table */
+      .invoice-info-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      .invoice-info-table td {
+        padding: 5px 6px;
+        font-size: 10px;
+        border-bottom: 1px solid #cbd5e1;
+      }
+
+      .invoice-info-table tr:last-child td {
+        border-bottom: none;
+      }
+
+      .invoice-info-table td.label-cell {
+        font-weight: bold;
+        width: 45%;
+        color: #333;
       }
       
+      .invoice-info-table td.val-cell {
+        font-weight: bold;
+      }
+
+      /* ─── CHARGES TABLE (Marg ERP style columns) ─── */
       .table-container {
-        border: 1px solid #ccc;
-        margin-bottom: 10px;
-        height: 480px;
+        border: var(--border-thin);
+        margin-bottom: 6px;
+        height: 395px; /* Enforces A4 height alignment */
         display: flex;
         background-color: #ffffff;
       }
-      
+
       .charges-table-fixed {
         width: 100%;
         border-collapse: collapse;
         height: 100%;
       }
-      
-      .charges-table-fixed th,
+
+      .charges-table-fixed th {
+        border-bottom: var(--border-thin);
+        border-right: var(--border-thin);
+        padding: 5px 6px;
+        font-size: 9.5px;
+        font-weight: bold;
+        background-color: var(--muted-bg);
+        color: #000;
+        text-align: left;
+        text-transform: uppercase;
+      }
+
+      .charges-table-fixed th:last-child {
+        border-right: none;
+      }
+
       .charges-table-fixed td {
-        border: 1px solid #ccc;
-        padding: 6px;
-        color: black;
+        border-right: var(--border-thin);
+        border-bottom: 1px solid #cbd5e1;
+        padding: 4.5px 6px;
+        font-size: 10px;
         vertical-align: top;
       }
-      
-      .charges-table-fixed th {
-        background-color: #0d47a1;
-        color: #ffffff;
-        text-align: left;
-        font-size: 12px;
-        font-weight: bold;
+
+      .charges-table-fixed td:last-child {
+        border-right: none;
       }
-      
-      .charges-table-fixed td {
-        text-align: right;
-        font-size: 11.5px;
-      }
-      
+
       .charges-table-fixed td.cell-center,
       .charges-table-fixed th.cell-center {
         text-align: center;
       }
-      
+
       .charges-table-fixed td.cell-right,
       .charges-table-fixed th.cell-right {
         text-align: right;
       }
-      
+
       .charges-table-fixed tr.spacer-row {
         height: 100%;
       }
-      
+
       .charges-table-fixed tr.spacer-row td {
         border-top: none;
         border-bottom: none;
+        border-right: var(--border-thin);
         padding: 0;
+        background: #ffffff;
+      }
+
+      .charges-table-fixed tr.spacer-row td:last-child {
+        border-right: none;
       }
 
       .item-title {
         font-weight: bold;
+      }
+
+      .item-meta {
+        font-size: 8.5px;
+        color: #333;
+        margin-top: 1.5px;
+        font-weight: bold;
+      }
+
+      .item-meta span {
+        margin-right: 8px;
+        background-color: #f1f5f9;
+        padding: 0.5px 3px;
+        border-radius: 2px;
+        border: 1px solid #e2e8f0;
+      }
+
+      /* ─── SUMMARY BLOCK ─── */
+      .summary-section-table {
+        width: 100%;
+        border-collapse: collapse;
+        border: var(--border-thin);
+        margin-bottom: 6px;
+      }
+
+      .summary-section-table td {
+        padding: 0;
+        vertical-align: top;
+      }
+
+      .notes-cell {
+        width: 50%;
+        border-right: var(--border-thin);
+        padding: 5px 6px;
+      }
+
+      .notes {
+        background: none;
+        border: none;
+        padding: 0;
         text-align: left;
       }
-      
-      .item-meta {
-        font-size: 10px;
-        color: #555;
-        display: flex;
-        gap: 8px;
-        margin-top: 3px;
+
+      .notes-label {
+        font-size: 9px;
+        font-weight: bold;
+        text-transform: uppercase;
+        color: #333;
+        margin-bottom: 3px;
+      }
+
+      .notes-value {
+        font-size: 9.5px;
+        color: #000;
+        line-height: 1.3;
+      }
+
+      /* Right Summary Table */
+      .summary-table-container {
+        width: 100%;
       }
 
       .summary-table {
         width: 100%;
         border-collapse: collapse;
       }
-      
+
       .summary-table td {
         padding: 4px 6px;
-        font-size: 11.5px;
-        color: black;
-        border: none !important;
+        font-size: 10px;
+        color: #000;
+        border-bottom: 1px solid #cbd5e1;
+        font-weight: bold;
         text-align: left;
       }
-      
+
+      .summary-table tr:last-child td {
+        border-bottom: none;
+      }
+
       .summary-table td.cell-right {
         text-align: right;
         font-weight: bold;
       }
-      
-      /* Style Net Amount row (5th child: Total Amount) */
+
+      /* Grand Total Row style */
       .summary-table tr:nth-child(5) td {
-        border-top: 1px solid #ccc !important;
-        border-bottom: 1px solid #ccc !important;
-        font-weight: bold;
+        background-color: var(--muted-bg);
+        font-size: 11px;
+        border-top: var(--border-thin);
+        border-bottom: var(--border-thin);
       }
-      /* Hide Change row */
+
+      /* Hide Delivery row (4th child: Delivery) */
+      .summary-table tr:nth-child(4) {
+        display: none;
+      }
+
+      /* Hide Change Row */
       .summary-table tr:nth-child(7) {
         display: none;
       }
 
-      .signature-section {
+      /* ─── BOTTOM SECTIONS (Payment Details, QR, Signature) ─── */
+      .bottom-blocks-grid {
+        display: grid;
+        grid-template-columns: 1.35fr 1fr;
+        border: var(--border-thin);
+        margin-bottom: 6px;
+      }
+
+      .bank-details-panel {
+        border-right: var(--border-thin);
+        padding: 6px;
+      }
+
+      .bank-panel-title {
+        font-size: 9px;
+        font-weight: bold;
+        text-align: center;
+        background-color: var(--muted-bg);
+        border-bottom: var(--border-thin);
+        margin: -6px -6px 6px -6px;
+        padding: 3px 0;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .bank-table-qr-container {
         display: flex;
         justify-content: space-between;
-        margin-top: 30px;
-        padding-top: 10px;
-        font-size: 11px;
+        align-items: center;
       }
-      .footer {
+
+      .bank-details-table {
+        width: 65%;
+        border-collapse: collapse;
+      }
+
+      .bank-details-table td {
+        padding: 2px 2px;
+        font-size: 9.5px;
+      }
+
+      .bank-details-table td.label-col {
+        font-weight: bold;
+        width: 38%;
+        color: #333;
+      }
+
+      .bank-details-table td.val-col {
+        width: 62%;
+        font-weight: bold;
+      }
+
+      .upi-qr-section {
+        width: 32%;
         text-align: center;
-        padding: 10px;
-        border-top: 1px solid #0d47a1;
-        margin-top: 20px;
-        font-size: 11px;
       }
-      
+
+      .upi-qr-section div {
+        font-size: 8px !important;
+        font-weight: bold !important;
+        margin-top: 1.5px !important;
+        color: #000 !important;
+        text-align: center !important;
+        margin-bottom: 0px !important;
+      }
+
+      .upi-qr-section img {
+        max-height: 52px !important;
+        max-width: 52px !important;
+        border: 1px solid #cbd5e1 !important;
+        padding: 1.5px !important;
+        background: #fff !important;
+        display: block !important;
+        margin: 0 auto !important;
+      }
+
+      /* Right Signature Panel */
+      .signature-panel {
+        padding: 6px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        min-height: 98px;
+        text-align: center;
+      }
+
+      .sig-notice {
+        font-size: 8px;
+        color: #333;
+      }
+
+      .sig-brand-line {
+        font-size: 9.5px;
+        font-weight: bold;
+        margin-top: 2px;
+        text-transform: uppercase;
+      }
+
+      .sig-image-placeholder {
+        margin: auto;
+      }
+
+      .sig-image-placeholder img {
+        max-height: 35px;
+        max-width: 130px;
+        display: block;
+        margin: 0 auto;
+      }
+
+      .sig-label-wrapper {
+        border-top: 1px solid #000;
+        margin-top: 6px;
+        padding-top: 2px;
+        font-size: 9px;
+        font-weight: bold;
+        text-transform: uppercase;
+      }
+
+      /* Terms block */
+      .terms-conditions-wrapper {
+        border: var(--border-thin);
+        padding: 5px 6px;
+        font-size: 8.5px;
+        color: #000;
+        line-height: 1.35;
+        margin-bottom: 6px;
+      }
+
+      .terms-title {
+        font-size: 9px;
+        font-weight: bold;
+        margin-bottom: 2.5px;
+        text-transform: uppercase;
+        border-bottom: 1px solid #cbd5e1;
+        padding-bottom: 1.5px;
+        color: #333;
+      }
+
+      /* Footer */
+      .footer-row {
+        text-align: center;
+        font-size: 9.5px;
+        color: #333;
+        border-top: 1.5px solid var(--border-color);
+        padding-top: 5px;
+        margin-top: auto;
+      }
+
+      /* Status Pill */
+      .status-badge {
+        display: inline-block;
+        padding: 1px 6px;
+        border-radius: 9999px;
+        font-size: 8.5px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        border: 1px solid transparent;
+      }
+
+      .status-paid {
+        background: #e6fcf5;
+        color: #10b981;
+        border-color: rgba(16, 185, 129, 0.15);
+      }
+
+      .status-unpaid {
+        background: #fffbeb;
+        color: #f59e0b;
+        border-color: rgba(245, 158, 11, 0.15);
+      }
+
+      /* Print optimizations */
       @page {
         size: A4;
         margin: 0;
@@ -204,9 +580,16 @@
         }
         .page {
           box-shadow: none !important;
-          padding: 8mm !important;
-          width: 100% !important;
-          min-height: 0 !important;
+          padding: 6mm 8mm !important;
+          width: 210mm !important;
+          height: 297mm !important;
+          margin: 0 !important;
+          page-break-after: avoid;
+          page-break-before: avoid;
+        }
+        .table-container {
+          box-shadow: none;
+          height: 395px;
         }
       }
     </style>
@@ -216,68 +599,98 @@
     <main class="page">
       <div class="bill-container">
         <!-- Header -->
-        <table width="100%" style="border-bottom: 2px solid #0d47a1; margin-bottom: 20px; padding-bottom: 15px;">
+        <table class="header-table">
           <tr>
-            <td style="text-align: left; vertical-align: top;">
-              <div style="font-size: 18px; font-weight: bold; color: #0d47a1; margin-bottom: 5px;">
-                {{brandName}}
+            <!-- Left: Dynamic Brand Logo -->
+            <td class="logo-col">
+              <img src="{{brandLogo}}" alt="{{brandName}} Logo" class="logo-img" onerror="this.src='https://img.icons8.com/color/96/000000/medical-cross.png';" />
+            </td>
+            <!-- Brand name & Address -->
+            <td class="brand-title-col">
+              <h1 class="brand-title">{{brandName}}</h1>
+              <div class="brand-address">
+                {{brandAddress}}
               </div>
-              <div style="font-size: 12px; color: #555; line-height: 1.4;">
-                {{brandTagline}}<br />
-                Address: {{brandAddress}}<br />
-                Contact: {{companyContactBlock}}<br />
-                {{brandLicenseBlock}}
+              <div class="brand-contact">
+                Contact: {{companyContactBlock}}
               </div>
             </td>
-            <td style="vertical-align: top; text-align: right;">
-              <img src="{{brandLogo}}" alt="Header Logo" style="max-height: 60px; max-width: 220px;" onerror="this.style.display='none'" />
+            <td class="promo-col">
+              E. & O.E.
             </td>
           </tr>
         </table>
 
-        <!-- Client Info -->
-        <div class="section-title">Bill To</div>
-        <table class="info-table">
+        <!-- Center dynamic tagline banner -->
+        <div class="tagline-banner">
+          {{brandTagline}}
+        </div>
+
+        <!-- GSTIN & Tax Invoice Bar -->
+        <table class="tax-invoice-bar">
           <tr>
-            <td style="width: 15%;"><strong>Invoice No:</strong></td>
-            <td style="width: 35%;">{{invoiceId}}</td>
-            <td style="width: 15%;"><strong>Date:</strong></td>
-            <td style="width: 35%;">{{createdAt}}</td>
-          </tr>
-          <tr>
-            <td><strong>Client Name:</strong></td>
-            <td>{{customerName}}</td>
-            <td><strong>Phone:</strong></td>
-            <td>{{customerPhone}}</td>
-          </tr>
-          <tr>
-            <td><strong>Payment:</strong></td>
-            <td>{{paymentMode}}</td>
-            <td><strong>Status:</strong></td>
-            <td>{{invoiceStatus}}</td>
-          </tr>
-          <tr>
-            <td><strong>Items:</strong></td>
-            <td colspan="3">{{itemCount}}</td>
+            <td style="width: 55%; font-size: 9px; font-weight: bold; padding: 4px 6px;">{{brandLicenseBlock}}</td>
+            <td class="tax-invoice-title" style="width: 25%;">TAX INVOICE</td>
+            <td class="tax-invoice-right" style="width: 20%;">ORIGINAL FOR RECIPIENT</td>
           </tr>
         </table>
 
-        <!-- Charges Table (Height-fixed container to draw columns all the way down) -->
-        <div class="section-title">Charges</div>
+        <!-- Details Grid (Billing & Invoice) -->
+        <div class="details-grid">
+          <!-- Left: Customer Details -->
+          <div class="details-col-left">
+            <div class="section-header-row">Customer Detail</div>
+            <table class="details-content-table">
+              <tr>
+                <td class="label-cell">M/S:</td>
+                <td class="val-cell">{{customerName}}</td>
+              </tr>
+              <tr>
+                <td class="label-cell">Phone:</td>
+                <td class="val-cell">{{customerPhone}}</td>
+              </tr>
+              <tr>
+                <td class="label-cell">Payment:</td>
+                <td class="val-cell">{{paymentMode}}</td>
+              </tr>
+              <tr>
+                <td class="label-cell">Status:</td>
+                <td class="val-cell"><span class="status-badge" id="badgeEl">{{invoiceStatus}}</span></td>
+              </tr>
+            </table>
+          </div>
+
+          <!-- Right: Invoice Details -->
+          <div>
+            <div class="section-header-row">Invoice Details</div>
+            <table class="invoice-info-table">
+              <tr>
+                <td class="label-cell">Invoice No:</td>
+                <td class="val-cell">{{invoiceId}}</td>
+              </tr>
+              <tr>
+                <td class="label-cell">Invoice Date:</td>
+                <td class="val-cell">{{createdAt}}</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+
+        <!-- Line Items Table -->
         <div class="table-container">
           <table class="charges-table-fixed">
             <colgroup>
-              <col style="width: 50px;" />
+              <col style="width: 45px;" />
               <col />
-              <col style="width: 65px;" />
-              <col style="width: 105px;" />
-              <col style="width: 95px;" />
-              <col style="width: 115px;" />
+              <col style="width: 60px;" />
+              <col style="width: 100px;" />
+              <col style="width: 90px;" />
+              <col style="width: 110px;" />
             </colgroup>
             <thead>
               <tr>
-                <th class="cell-center">Serial No.</th>
-                <th>Description</th>
+                <th class="cell-center">S.No.</th>
+                <th>Name of Product / Service</th>
                 <th class="cell-center">Qty</th>
                 <th class="cell-right">Rate</th>
                 <th class="cell-right">Discount</th>
@@ -298,46 +711,108 @@
           </table>
         </div>
 
-        <!-- Summary -->
-        <table class="charges-table">
+        <!-- Notes & Summary -->
+        <table class="summary-section-table">
           <tr>
-            <td style="text-align: left; font-weight: bold; width: 45%; vertical-align: top;">
+            <td class="notes-cell">
               {{{notesBlock}}}
             </td>
-            <td style="text-align: right; padding: 0; vertical-align: top;">
-              <table class="summary-table">
-                <tbody>
-                  {{{summaryRows}}}
-                </tbody>
-              </table>
+            <td>
+              <div class="summary-table-container">
+                <table class="summary-table">
+                  <tbody>
+                    {{{summaryRows}}}
+                  </tbody>
+                </table>
+              </div>
             </td>
           </tr>
         </table>
 
-        <!-- Terms and Footer Message -->
-        <div style="margin-top: 15px; border-top: 1px dashed #ccc; padding-top: 10px; font-size: 10px; color: #555;">
+        <!-- Terms Block -->
+        <div class="terms-conditions-wrapper" id="termsBox">
+          <div class="terms-title">Terms & Conditions</div>
           {{{invoiceTermsBlock}}}
           {{{invoiceFooterBlock}}}
         </div>
 
-        <div class="signature-section">
-          <div style="display: flex; flex-direction: column; gap: 8px; align-items: flex-start;">
-            <div>This is a computer-generated invoice and does not require a signature.</div>
-            {{{directorSignatureBlock}}}
+        <!-- Bottom Blocks (Payment Details, QR, Signature) -->
+        <div class="bottom-blocks-grid">
+          <!-- Left: Payment details & QR -->
+          <div class="bank-details-panel">
+            <div class="bank-panel-title">Payment details</div>
+            <div class="bank-table-qr-container">
+              <table class="bank-details-table">
+                <tr>
+                  <td class="label-col">Store Name:</td>
+                  <td class="val-col">{{brandName}}</td>
+                </tr>
+                <tr>
+                  <td class="label-col">Payment Mode:</td>
+                  <td class="val-col">{{paymentMode}}</td>
+                </tr>
+                <tr>
+                  <td class="label-col">Status:</td>
+                  <td class="val-col"><span class="status-badge" id="payBadgeEl">{{invoiceStatus}}</span></td>
+                </tr>
+                <tr>
+                  <td class="label-col">Contact Email:</td>
+                  <td class="val-col">{{brandEmail}}</td>
+                </tr>
+              </table>
+              <div class="upi-qr-section">
+                {{{paymentQrBlock}}}
+              </div>
+            </div>
           </div>
-          {{{paymentQrBlock}}}
-        </div>
-      </div>
 
-      <div class="footer">
-        {{{footerImageBlock}}}
-        <div style="font-weight: bold; color: #0d47a1; margin-bottom: 4px;">
-          Contact us: {{companyContactBlock}}
+          <!-- Right: Signature -->
+          <div class="signature-panel">
+            <div class="sig-notice">Certified that the particulars given above are true and correct.</div>
+            <div class="sig-brand-line">For {{brandName}}</div>
+            <div class="sig-image-placeholder">
+              {{{directorSignatureBlock}}}
+            </div>
+            <div class="sig-label-wrapper">Authorised Signatory</div>
+          </div>
         </div>
-        <div>
-          Generated for {{brandName}}
+
+        <!-- Footer Row -->
+        <div class="footer-row">
+          {{{footerImageBlock}}}
+          Wish you a speedy recovery! Thanks for your business.
         </div>
       </div>
     </main>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        // Adjust badge styles
+        const badges = [document.getElementById("badgeEl"), document.getElementById("payBadgeEl")];
+        badges.forEach(badge => {
+          if (badge) {
+            const statusText = badge.textContent.trim().toLowerCase();
+            if (statusText.includes("paid") && !statusText.includes("unpaid")) {
+              badge.className = "status-badge status-paid";
+            } else if (statusText.includes("unpaid") || statusText.includes("due") || statusText.includes("pending")) {
+              badge.className = "status-badge status-unpaid";
+            } else {
+              badge.className = "status-badge";
+              badge.style.backgroundColor = "#e0e0e0";
+              badge.style.color = "#333";
+            }
+          }
+        });
+
+        // Hide empty terms box if no terms are set
+        const termsBox = document.getElementById("termsBox");
+        if (termsBox) {
+          const text = termsBox.textContent.trim();
+          if (text === "Terms & Conditions" || !text) {
+            termsBox.style.display = "none";
+          }
+        }
+      });
+    </script>
   </body>
 </html>
