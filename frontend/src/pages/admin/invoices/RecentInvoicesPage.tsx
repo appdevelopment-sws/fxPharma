@@ -44,6 +44,16 @@ import ProcessReturnDrawer from "@/components/dialog/ProcessReturnDrawer"
 import { useDisclosure } from "@/hooks/useDisclosure"
 import { useSettings } from "@/context/settingsContext"
 
+const WhatsAppIcon = ({ className }: { className?: string }) => (
+  <svg
+    className={className}
+    fill="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.73-1.45L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.416 9.863-9.848.001-2.63-1.019-5.101-2.873-6.957C16.608 1.986 14.137.965 11.957.965c-5.438 0-9.863 4.417-9.866 9.851-.001 1.95.518 3.851 1.503 5.5l-.993 3.626 3.71-.973zm11.514-6.491c-.305-.153-1.805-.891-2.084-.993-.278-.102-.482-.153-.684.153-.203.305-.785.993-.962 1.197-.178.203-.356.229-.661.076-.305-.152-1.287-.475-2.451-1.514-.906-.809-1.517-1.809-1.695-2.114-.178-.305-.019-.47.133-.621.137-.137.305-.356.457-.534.153-.178.203-.305.305-.509.102-.203.051-.381-.025-.534-.076-.153-.684-1.648-.939-2.26-.249-.597-.501-.517-.684-.526-.178-.009-.381-.01-.584-.01-.203 0-.534.076-.813.381-.278.305-1.062 1.042-1.062 2.542 0 1.5 1.092 2.946 1.244 3.15.153.203 2.15 3.284 5.207 4.602.727.314 1.294.502 1.737.643.73.232 1.393.199 1.918.121.585-.087 1.805-.737 2.059-1.448.254-.712.254-1.322.178-1.448-.076-.127-.278-.203-.584-.356z" />
+  </svg>
+)
+
 const formatCurrency = (value: number) => `\u20B9${value.toFixed(2)}`
 
 export default function RecentInvoicesPage() {
@@ -222,6 +232,41 @@ export default function RecentInvoicesPage() {
     [activeTemplate]
   )
 
+  const handleShareWhatsapp = useCallback(
+    (invoice: Invoice) => {
+      const template =
+        settings.whatsapp_invoice_template ||
+        "Hi *{{customerName}}*, your invoice *{{invoiceNumber}}* from *{{storeName}}* is ready. You can download it here: {{downloadLink}}"
+
+      const customerName = invoice.customer_name || "Customer"
+      const invoiceNumber = invoice.invoice_id
+      const storeName = settings.store_name || "Dawa Dukaan"
+      
+      const downloadLink = `${window.location.origin}/api/v1/invoices/${invoice.id}/public-download?format=pdf`
+
+      const message = template
+        .replace(/{{\s*customerName\s*}}/g, customerName)
+        .replace(/{{\s*invoiceNumber\s*}}/g, invoiceNumber)
+        .replace(/{{\s*storeName\s*}}/g, storeName)
+        .replace(/{{\s*downloadLink\s*}}/g, downloadLink)
+
+      const encodedText = encodeURIComponent(message)
+      const rawPhone = invoice.customer_phone || ""
+      const cleanedPhone = rawPhone.replace(/\D/g, "")
+      let whatsappPhone = ""
+      if (cleanedPhone) {
+        whatsappPhone = cleanedPhone.length === 10 ? "91" + cleanedPhone : cleanedPhone
+      }
+
+      const whatsappUrl = whatsappPhone
+        ? `https://api.whatsapp.com/send?phone=${whatsappPhone}&text=${encodedText}`
+        : `https://api.whatsapp.com/send?text=${encodedText}`
+
+      window.open(whatsappUrl, "_blank", "noopener,noreferrer")
+    },
+    [settings]
+  )
+
   const handlePreviewTemplate = useCallback(async () => {
     try {
       await InvoiceApi.openInvoiceTemplatePreview(activeTemplate)
@@ -357,6 +402,15 @@ export default function RecentInvoicesPage() {
             className="text-muted-foreground hover:text-foreground"
           >
             <Printer className="size-4" />
+          </Button>
+          <Button
+            size="icon-sm"
+            variant="ghost"
+            onClick={() => handleShareWhatsapp(row)}
+            className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/20"
+            title="Share on WhatsApp"
+          >
+            <WhatsAppIcon className="size-4" />
           </Button>
           {row.status != "REFUNDED" && (<Button
             size="icon-sm"
@@ -560,6 +614,14 @@ export default function RecentInvoicesPage() {
                 >
                   <Download className="mr-2 size-4" />
                   Download PDF
+                </Button>
+                <Button
+                  type="button"
+                  className="bg-emerald-600 text-white hover:bg-emerald-700 gap-2 border-none"
+                  onClick={() => handleShareWhatsapp(selectedInvoice)}
+                >
+                  <WhatsAppIcon className="size-4" />
+                  Share on WhatsApp
                 </Button>
               </div>
               <div className="grid gap-3 rounded-lg border border-border/60 p-3 text-sm sm:grid-cols-2">

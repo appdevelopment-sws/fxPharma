@@ -30,6 +30,7 @@ interface InvoiceSettingsFormValues {
   invoice_director_signature: string
   invoice_payment_qr_code: string
   invoice_show_payment_qr: boolean
+  whatsapp_invoice_template: string
 }
 const DEFAULT_INVOICE_SETTINGS: InvoiceSettingsFormValues = {
   invoice_prefix: "INV-",
@@ -48,6 +49,8 @@ const DEFAULT_INVOICE_SETTINGS: InvoiceSettingsFormValues = {
   invoice_director_signature: "",
   invoice_payment_qr_code: "",
   invoice_show_payment_qr: false,
+  whatsapp_invoice_template:
+    "Hi *{{customerName}}*, your invoice *{{invoiceNumber}}* from *{{storeName}}* is ready. You can download it here: {{downloadLink}}",
 }
 export default function InvoiceSettings() {
   const { activeOrganizationId } = useAuth()
@@ -107,6 +110,9 @@ export default function InvoiceSettings() {
 
             invoice_show_payment_qr:
               res.data.invoice_show_payment_qr !== "false",
+            whatsapp_invoice_template:
+              res.data.whatsapp_invoice_template ??
+              DEFAULT_INVOICE_SETTINGS.whatsapp_invoice_template,
           })
         }
       })
@@ -140,6 +146,7 @@ export default function InvoiceSettings() {
         invoice_director_signature: data.invoice_director_signature,
         invoice_payment_qr_code: data.invoice_payment_qr_code,
         invoice_show_payment_qr: String(data.invoice_show_payment_qr),
+        whatsapp_invoice_template: data.whatsapp_invoice_template,
       }
 
       await SettingsApi.updateSettings(payload)
@@ -309,6 +316,37 @@ export default function InvoiceSettings() {
                   label="FOOTER / THANKS MESSAGE"
                   placeholder="A short greeting or thank you note..."
                   rows={2}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* WhatsApp Sharing Settings */}
+          <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+            <div className="mb-4 flex items-center gap-2">
+              <svg className="h-5 w-5 text-emerald-500" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.73-1.45L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.416 9.863-9.848.001-2.63-1.019-5.101-2.873-6.957C16.608 1.986 14.137.965 11.957.965c-5.438 0-9.863 4.417-9.866 9.851-.001 1.95.518 3.851 1.503 5.5l-.993 3.626 3.71-.973zm11.514-6.491c-.305-.153-1.805-.891-2.084-.993-.278-.102-.482-.153-.684.153-.203.305-.785.993-.962 1.197-.178.203-.356.229-.661.076-.305-.152-1.287-.475-2.451-1.514-.906-.809-1.517-1.809-1.695-2.114-.178-.305-.019-.47.133-.621.137-.137.305-.356.457-.534.153-.178.203-.305.305-.509.102-.203.051-.381-.025-.534-.076-.153-.684-1.648-.939-2.26-.249-.597-.501-.517-.684-.526-.178-.009-.381-.01-.584-.01-.203 0-.534.076-.813.381-.278.305-1.062 1.042-1.062 2.542 0 1.5 1.092 2.946 1.244 3.15.153.203 2.15 3.284 5.207 4.602.727.314 1.294.502 1.737.643.73.232 1.393.199 1.918.121.585-.087 1.805-.737 2.059-1.448.254-.712.254-1.322.178-1.448-.076-.127-.278-.203-.584-.356z" />
+              </svg>
+              <h3 className="text-lg font-semibold text-card-foreground">
+                WhatsApp Sharing Settings
+              </h3>
+            </div>
+            <p className="mb-4 text-sm text-muted-foreground">
+              Customize the message template sent to customers on WhatsApp. You can use variables like:
+              <br />
+              <code className="text-xs font-bold text-primary bg-primary/5 px-1 py-0.5 rounded">{"{{customerName}}"}</code>,{" "}
+              <code className="text-xs font-bold text-primary bg-primary/5 px-1 py-0.5 rounded">{"{{invoiceNumber}}"}</code>,{" "}
+              <code className="text-xs font-bold text-primary bg-primary/5 px-1 py-0.5 rounded">{"{{storeName}}"}</code>, and{" "}
+              <code className="text-xs font-bold text-primary bg-primary/5 px-1 py-0.5 rounded">{"{{downloadLink}}"}</code>.
+            </p>
+            <div className="grid gap-4">
+              <div>
+                <FormTextarea
+                  control={control}
+                  name="whatsapp_invoice_template"
+                  label="WHATSAPP INVOICE MESSAGE TEMPLATE"
+                  placeholder="e.g. Hi {{customerName}}, your invoice {{invoiceNumber}} from {{storeName}} is ready. You can download it here: {{downloadLink}}"
+                  rows={4}
                 />
               </div>
             </div>
