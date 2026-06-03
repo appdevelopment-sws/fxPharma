@@ -47,6 +47,7 @@ export type SettingsStore = {
   street_address?: string
   timezone?: string
   zip_code?: string
+  whatsapp_invoice_template?: string
   [key: string]: string | undefined
 }
 

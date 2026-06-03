@@ -569,6 +569,53 @@ export class InvoicesController {
     return res.status(200).send(pdfBuffer);
   });
 
+  static publicDownload = catchAsync(async (req: Request, res: Response) => {
+    const id = req.params.id as string;
+    const templateName =
+      (req.query.template as string | undefined) ||
+      (req.query.templateName as string | undefined) ||
+      undefined;
+    const format = req.query.format === "html" ? "html" : "pdf";
+
+    const invoice = await rootPrisma.invoice.findUnique({
+      where: { id },
+      include: {
+        items: true,
+      },
+    });
+
+    if (!invoice) {
+      throw new ErrorHandler("Invoice not found.", 404);
+    }
+
+    if (format === "html") {
+      const html = await invoiceTemplateService.renderInvoiceHtml(
+        invoice,
+        templateName,
+      );
+      res.setHeader("Content-Type", "text/html; charset=utf-8");
+      res.setHeader(
+        "Content-Disposition",
+        `inline; filename="${invoice.invoiceId}-${invoiceTemplateService.getSafeTemplateName(templateName)}.html"`,
+      );
+      return res.status(200).send(html);
+    }
+
+    const pdfBuffer = await invoiceTemplateService.renderInvoicePdf(
+      invoice,
+      templateName,
+    );
+    const safeTemplateName =
+      invoiceTemplateService.getSafeTemplateName(templateName);
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${invoice.invoiceId}-${safeTemplateName}.pdf"`,
+    );
+    return res.status(200).send(pdfBuffer);
+  });
+
   static getGstSummary = catchAsync(async (req: Request, res: Response) => {
     const { organizationId, branchId } = getRequestScope(req);
     const { startDate, endDate } = req.query;
