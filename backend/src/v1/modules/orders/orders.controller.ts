@@ -488,15 +488,19 @@ export class OrdersController {
             continue;
           }
 
-          await (tx as any).inventoryBatch.create({
-            data: buildInventoryBatchData({
-              orderId: receivedOrder.id,
-              orderItemId: orderItem.id,
-              organizationId,
-              branchId: existing.branchId ?? branchId,
-              item: sourceItem,
-            }),
-          });
+          // Only create batch if batch number and expiry are provided
+          const batchNo = String(sourceItem.batchNo ?? "").trim();
+          if (batchNo && sourceItem.expiry) {
+            await (tx as any).inventoryBatch.create({
+              data: buildInventoryBatchData({
+                orderId: receivedOrder.id,
+                orderItemId: orderItem.id,
+                organizationId,
+                branchId: existing.branchId ?? branchId,
+                item: sourceItem,
+              }),
+            });
+          }
         }
       }
 
@@ -556,7 +560,9 @@ export class OrdersController {
     const orderId = req.params.id as string;
 
     if (!req.file) {
-      return res.status(400).json({ success: false, message: "No bill file uploaded" });
+      return res
+        .status(400)
+        .json({ success: false, message: "No bill file uploaded" });
     }
 
     const order = await rootPrisma.order.findUnique({
@@ -565,11 +571,15 @@ export class OrdersController {
     });
 
     if (!order) {
-      return res.status(404).json({ success: false, message: "Order not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Order not found" });
     }
 
     if (!OrdersController.canAccessOrder(order, organizationId, branchId)) {
-      return res.status(404).json({ success: false, message: "Order not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Order not found" });
     }
 
     let parsedResult;
@@ -578,7 +588,8 @@ export class OrdersController {
     if (mimeType === "application/pdf") {
       parsedResult = await InvoiceParserService.parsePDF(req.file.buffer);
     } else if (
-      mimeType === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+      mimeType ===
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
       mimeType === "application/vnd.ms-excel" ||
       mimeType === "text/csv" ||
       req.file.originalname.endsWith(".xlsx") ||
@@ -589,7 +600,8 @@ export class OrdersController {
     } else {
       return res.status(400).json({
         success: false,
-        message: "Unsupported file format. Please upload a PDF or Excel/CSV file.",
+        message:
+          "Unsupported file format. Please upload a PDF or Excel/CSV file.",
       });
     }
 
