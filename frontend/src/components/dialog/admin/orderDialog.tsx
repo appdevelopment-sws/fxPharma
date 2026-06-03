@@ -285,7 +285,7 @@ export default function OrderDialog({
             type="button"
             variant="outline"
             onClick={() => onClose(false)}
-            className="h-9 rounded-lg border-border/60 text-xs font-semibold hover:bg-muted/30 transition-all duration-200"
+            className="h-9 rounded-lg border-border/60 text-xs font-semibold transition-all duration-200 hover:bg-muted/30"
           >
             {isViewMode ? "Close" : "Cancel"}
           </Button>
@@ -294,7 +294,7 @@ export default function OrderDialog({
               type="submit"
               form="order-dialog-form"
               disabled={saveMutation.isPending || isSubmitting}
-              className="h-9 rounded-lg px-5 text-xs font-semibold bg-primary hover:bg-primary/95 text-primary-foreground transition-all duration-200 shadow-xs"
+              className="h-9 rounded-lg bg-primary px-5 text-xs font-semibold text-primary-foreground shadow-xs transition-all duration-200 hover:bg-primary/95"
             >
               {saveMutation.isPending || isSubmitting
                 ? "Saving..."
@@ -311,7 +311,7 @@ export default function OrderDialog({
         onSubmit={handleSubmit(onSubmit)}
         className="mx-auto max-w-[1800px] space-y-4"
       >
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between border-b border-border/20 pb-3">
+        <div className="flex flex-col gap-3 border-b border-border/20 pb-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="space-y-1">
             <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 font-semibold text-primary">
@@ -327,48 +327,48 @@ export default function OrderDialog({
         </div>
 
         <div className="grid gap-3 sm:grid-cols-3">
-          <div className="relative overflow-hidden rounded-xl border border-border/40 bg-gradient-to-br from-card via-card to-primary/5 p-3 shadow-xs hover:-translate-y-0.5 hover:shadow-xs transition-all duration-300">
+          <div className="relative overflow-hidden rounded-xl border border-border/40 bg-gradient-to-br from-card via-card to-primary/5 p-3 shadow-xs transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xs">
             <div className="flex items-center gap-3">
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
                 <Clock className="size-4.5" />
               </div>
               <div className="min-w-0">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                <p className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase">
                   Total Items
                 </p>
-                <p className="text-base font-extrabold text-foreground truncate mt-0.5">
+                <p className="mt-0.5 truncate text-base font-extrabold text-foreground">
                   {totalItems} Lines
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="relative overflow-hidden rounded-xl border border-border/40 bg-gradient-to-br from-card via-card to-violet-500/5 p-3 shadow-xs hover:-translate-y-0.5 hover:shadow-xs transition-all duration-300">
+          <div className="relative overflow-hidden rounded-xl border border-border/40 bg-gradient-to-br from-card via-card to-violet-500/5 p-3 shadow-xs transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xs">
             <div className="flex items-center gap-3">
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-violet-500/10 text-violet-600">
                 <Plus className="size-4.5" />
               </div>
               <div className="min-w-0">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                <p className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase">
                   Total Quantity
                 </p>
-                <p className="text-base font-extrabold text-foreground truncate mt-0.5">
+                <p className="mt-0.5 truncate text-base font-extrabold text-foreground">
                   {totalQty} Units
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="relative overflow-hidden rounded-xl border border-border/40 bg-gradient-to-br from-card via-card to-emerald-500/5 p-3 shadow-xs hover:-translate-y-0.5 hover:shadow-xs transition-all duration-300">
+          <div className="relative overflow-hidden rounded-xl border border-border/40 bg-gradient-to-br from-card via-card to-emerald-500/5 p-3 shadow-xs transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xs">
             <div className="flex items-center gap-3">
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600">
                 <Truck className="size-4.5" />
               </div>
               <div className="min-w-0">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                <p className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase">
                   Supplier
                 </p>
-                <p className="text-xs font-bold text-foreground mt-0.5 truncate max-w-[240px]">
+                <p className="mt-0.5 max-w-[240px] truncate text-xs font-bold text-foreground">
                   {selectedSupplier?.companyName || "Not selected"}
                 </p>
               </div>
@@ -379,51 +379,53 @@ export default function OrderDialog({
         <div className="grid gap-4 md:grid-cols-3">
           <div className="space-y-4 md:col-span-2">
             {/* Order Items Table Card */}
-            <div className="rounded-xl border border-border/50 bg-card overflow-hidden shadow-xs">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-border/40 bg-muted/5 p-4">
+            <div className="overflow-auto rounded-xl border border-border/50 bg-card shadow-xs">
+              <div className="flex flex-col gap-3 border-b border-border/40 bg-muted/5 p-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <h3 className="text-sm font-bold text-foreground">Order Items</h3>
+                  <h3 className="text-sm font-bold text-foreground">
+                    Order Items
+                  </h3>
                   <p className="text-[11px] text-muted-foreground">
                     Search existing medicines and add them to the purchase list.
                   </p>
                 </div>
                 <div className="w-full max-w-sm">
                   <div ref={dropdownRef} className="relative w-full">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1 block">
+                    <span className="mb-1 block text-[10px] font-bold tracking-wider text-muted-foreground uppercase">
                       Medicine
                     </span>
                     <button
                       type="button"
                       disabled={isViewMode}
                       onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                      className="flex h-9 w-full items-center justify-between rounded-lg border border-border/60 bg-background px-3 text-xs font-semibold text-foreground hover:border-primary/30 focus:outline-none focus:ring-4 focus:ring-primary/10 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex h-9 w-full items-center justify-between rounded-lg border border-border/60 bg-background px-3 text-xs font-semibold text-foreground transition-all duration-200 hover:border-primary/30 focus:ring-4 focus:ring-primary/10 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       <span className="text-muted-foreground">Search...</span>
-                      <span className="text-[9px] text-muted-foreground font-mono">
+                      <span className="font-mono text-[9px] text-muted-foreground">
                         {isDropdownOpen ? "▲" : "▼"}
                       </span>
                     </button>
 
                     {isDropdownOpen && (
-                      <div className="absolute top-full left-0 right-0 z-30 mt-1 rounded-xl border border-border/60 bg-card shadow-lg flex flex-col overflow-hidden backdrop-blur-md bg-card/95">
-                        <div className="p-2 border-b border-border/40 bg-muted/5">
+                      <div className="absolute top-full right-0 left-0 z-30 mt-1 flex flex-col overflow-hidden rounded-xl border border-border/60 bg-card bg-card/95 shadow-lg backdrop-blur-md">
+                        <div className="border-b border-border/40 bg-muted/5 p-2">
                           <input
                             type="text"
                             value={productSearch}
                             onChange={(e) => setProductSearch(e.target.value)}
                             placeholder=""
                             autoFocus
-                            className="h-8 w-full rounded-lg border border-border/60 bg-background px-2.5 text-xs text-foreground focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all duration-200"
+                            className="h-8 w-full rounded-lg border border-border/60 bg-background px-2.5 text-xs text-foreground transition-all duration-200 focus:border-primary/50 focus:ring-2 focus:ring-primary/10 focus:outline-none"
                           />
                         </div>
 
-                        <div className="max-h-60 overflow-y-auto p-1 space-y-0.5">
-                          <div className="flex items-center px-3 py-1.5 text-xs font-semibold rounded-md bg-primary text-primary-foreground">
+                        <div className="max-h-60 space-y-0.5 overflow-y-auto p-1">
+                          <div className="flex items-center rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground">
                             Search...
                           </div>
 
                           {isSearchingInventory || isLoadingInventory ? (
-                            <div className="p-3 text-xs text-muted-foreground text-center">
+                            <div className="p-3 text-center text-xs text-muted-foreground">
                               Searching...
                             </div>
                           ) : (
@@ -434,7 +436,7 @@ export default function OrderDialog({
                                   : suggestedProducts
                               if (listToDisplay.length === 0) {
                                 return (
-                                  <div className="p-3 text-xs text-muted-foreground text-center">
+                                  <div className="p-3 text-center text-xs text-muted-foreground">
                                     No medicines found.
                                   </div>
                                 )
@@ -452,11 +454,11 @@ export default function OrderDialog({
                                 >
                                   <div className="truncate pr-2">
                                     <span>{prod.name}</span>
-                                    <span className="text-muted-foreground font-normal ml-1.5">
+                                    <span className="ml-1.5 font-normal text-muted-foreground">
                                       (Stk: {prod.availableStock ?? 0})
                                     </span>
                                   </div>
-                                  <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-150">
+                                  <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary transition-all duration-150 hover:bg-primary hover:text-primary-foreground">
                                     <Plus className="size-3" />
                                   </div>
                                 </button>
@@ -470,17 +472,18 @@ export default function OrderDialog({
                 </div>
               </div>
 
-              <div className="grid grid-cols-12 px-4 py-2 text-[10px] font-bold tracking-wider text-muted-foreground uppercase bg-muted/15 border-b border-border/40">
+              <div className="grid grid-cols-12 border-b border-border/40 bg-muted/15 px-4 py-2 text-[10px] font-bold tracking-wider text-muted-foreground uppercase">
                 <div className="col-span-6">Medicine</div>
                 <div className="col-span-3 text-center">Quantity</div>
                 <div className="col-span-2 text-center">Unit</div>
                 <div className="col-span-1 text-right">Action</div>
               </div>
 
-              <div className="divide-y divide-border/40 max-h-[30vh] overflow-y-auto pr-1">
+              <div className="max-h-[30vh] divide-y divide-border/40 overflow-y-auto pr-1">
                 {fields.length === 0 ? (
-                  <div className="p-8 text-center text-xs text-muted-foreground bg-muted/5">
-                    No medicines added yet. Use search or suggestions to compile order.
+                  <div className="bg-muted/5 p-8 text-center text-xs text-muted-foreground">
+                    No medicines added yet. Use search or suggestions to compile
+                    order.
                   </div>
                 ) : (
                   fields.map((field, index) => {
@@ -489,13 +492,13 @@ export default function OrderDialog({
                     return (
                       <div
                         key={field.id}
-                        className="grid grid-cols-12 items-center gap-3 px-4 py-2.5 hover:bg-muted/10 transition-colors duration-150"
+                        className="grid grid-cols-12 items-center gap-3 px-4 py-2.5 transition-colors duration-150 hover:bg-muted/10"
                       >
                         <div className="col-span-6">
                           <p className="text-xs font-bold text-foreground">
                             {item?.inventory?.name || item?.name || "Medicine"}
                           </p>
-                          <p className="text-[10px] text-muted-foreground line-clamp-1">
+                          <p className="line-clamp-1 text-[10px] text-muted-foreground">
                             {item?.description ||
                               item?.inventory?.saltComposition ||
                               "No description"}
@@ -503,11 +506,11 @@ export default function OrderDialog({
                         </div>
 
                         <div className="col-span-3 flex justify-center">
-                          <div className="flex items-center overflow-hidden rounded-lg border border-border/60 bg-background hover:border-primary/30 focus-within:border-primary/50 focus-within:ring-4 focus-within:ring-primary/10 transition-all duration-200">
+                          <div className="flex items-center overflow-hidden rounded-lg border border-border/60 bg-background transition-all duration-200 focus-within:border-primary/50 focus-within:ring-4 focus-within:ring-primary/10 hover:border-primary/30">
                             <button
                               type="button"
                               onClick={() => updateQty(index, -1)}
-                              className="flex h-8 w-8 items-center justify-center bg-muted/20 hover:bg-muted/50 text-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed border-r border-border/60"
+                              className="flex h-8 w-8 items-center justify-center border-r border-border/60 bg-muted/20 text-foreground transition-colors hover:bg-muted/50 disabled:cursor-not-allowed disabled:opacity-50"
                               disabled={isViewMode}
                             >
                               <Minus className="size-3" />
@@ -525,13 +528,13 @@ export default function OrderDialog({
                                   }
                                 )
                               }
-                              className="h-8 w-12 border-0 bg-transparent text-center text-xs font-semibold focus:outline-none focus:ring-0 text-foreground [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                              className="h-8 w-12 [appearance:textfield] border-0 bg-transparent text-center text-xs font-semibold text-foreground focus:ring-0 focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                               readOnly={isViewMode}
                             />
                             <button
                               type="button"
                               onClick={() => updateQty(index, 1)}
-                              className="flex h-8 w-8 items-center justify-center bg-muted/20 hover:bg-muted/50 text-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed border-l border-border/60"
+                              className="flex h-8 w-8 items-center justify-center border-l border-border/60 bg-muted/20 text-foreground transition-colors hover:bg-muted/50 disabled:cursor-not-allowed disabled:opacity-50"
                               disabled={isViewMode}
                             >
                               <Plus className="size-3" />
@@ -544,7 +547,7 @@ export default function OrderDialog({
                             value={item?.unit || "strip"}
                             onChange={(e) => updateUnit(index, e.target.value)}
                             disabled={isViewMode}
-                            className="h-8 w-full rounded-lg border border-border/60 bg-background px-2 text-xs font-semibold text-foreground outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 disabled:cursor-not-allowed disabled:opacity-80 transition-all duration-200"
+                            className="h-8 w-full rounded-lg border border-border/60 bg-background px-2 text-xs font-semibold text-foreground transition-all duration-200 outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 disabled:cursor-not-allowed disabled:opacity-80"
                           >
                             {PACKAGING_TYPE_OPTIONS.map((option) => (
                               <option key={option.value} value={option.value}>
@@ -561,7 +564,7 @@ export default function OrderDialog({
                               variant="ghost"
                               size="icon"
                               onClick={() => removeItem(index)}
-                              className="h-8 w-8 rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors duration-200"
+                              className="h-8 w-8 rounded-lg text-muted-foreground transition-colors duration-200 hover:bg-destructive/10 hover:text-destructive"
                             >
                               <Trash2 className="size-4" />
                             </Button>
@@ -575,21 +578,23 @@ export default function OrderDialog({
             </div>
 
             {/* Suggested to Order Card */}
-            <div className="rounded-xl border border-border/50 bg-card overflow-hidden shadow-xs">
+            <div className="overflow-visible rounded-xl border border-border/50 bg-card shadow-xs">
+              {" "}
               <div className="flex items-center gap-3 border-b border-border/40 bg-muted/5 p-4">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
                   <CheckCircle2 className="size-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-foreground">Suggested to Order</h3>
+                  <h3 className="text-sm font-bold text-foreground">
+                    Suggested to Order
+                  </h3>
                   <p className="text-[11px] text-muted-foreground">
                     Quick-add medicines that are currently low in stock.
                   </p>
                 </div>
               </div>
-
-              <div className="p-4 bg-muted/5">
-                <div className="grid gap-2 sm:grid-cols-2 max-h-[160px] overflow-y-auto pr-1">
+              <div className="bg-muted/5 p-4">
+                <div className="grid max-h-[160px] gap-2 overflow-y-auto pr-1 sm:grid-cols-2">
                   {isLoadingInventory ? (
                     <p className="col-span-2 p-4 text-center text-xs text-muted-foreground">
                       Loading suggestions...
@@ -602,13 +607,13 @@ export default function OrderDialog({
                     suggestedProducts.map((item: any) => (
                       <div
                         key={item.id}
-                        className="flex items-center justify-between rounded-lg border border-border/40 bg-card p-2.5 hover:border-primary/20 hover:bg-muted/10 transition-all duration-150"
+                        className="flex items-center justify-between rounded-lg border border-border/40 bg-card p-2.5 transition-all duration-150 hover:border-primary/20 hover:bg-muted/10"
                       >
-                        <div className="space-y-0.5 truncate mr-2">
-                          <p className="text-xs font-semibold text-foreground truncate">
+                        <div className="mr-2 space-y-0.5 truncate">
+                          <p className="truncate text-xs font-semibold text-foreground">
                             {item.name}
                           </p>
-                          <p className="text-[10px] text-muted-foreground truncate">
+                          <p className="truncate text-[10px] text-muted-foreground">
                             {item.manufacturer?.name || "Manufacturer"}
                           </p>
                         </div>
@@ -616,7 +621,7 @@ export default function OrderDialog({
                           type="button"
                           size="icon"
                           variant="ghost"
-                          className="h-7 w-7 rounded-md bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-200 shrink-0"
+                          className="h-7 w-7 shrink-0 rounded-md bg-primary/10 text-primary transition-all duration-200 hover:bg-primary hover:text-primary-foreground"
                           onClick={() => addItem(item)}
                           disabled={isViewMode}
                         >
@@ -632,20 +637,22 @@ export default function OrderDialog({
 
           {/* Sidebar Area: Supplier Selection and contact summary */}
           <div className="space-y-4">
-            <div className="rounded-xl border border-border/50 bg-card overflow-hidden shadow-xs">
+            <div className="overflow-hidden rounded-xl border border-border/50 bg-card shadow-xs">
               <div className="flex items-center gap-3 border-b border-border/40 bg-muted/5 p-4">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-500/10 text-orange-500">
                   <Truck className="size-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-foreground">Supplier Details</h3>
+                  <h3 className="text-sm font-bold text-foreground">
+                    Supplier Details
+                  </h3>
                   <p className="text-[11px] text-muted-foreground">
                     Select a supplier and review contact details.
                   </p>
                 </div>
               </div>
 
-              <div className="p-4.5 space-y-4">
+              <div className="space-y-4 p-4.5">
                 <FormSelectField
                   control={control}
                   name="supplierId"
@@ -667,25 +674,33 @@ export default function OrderDialog({
                   {selectedSupplier ? (
                     <div className="space-y-3 text-xs">
                       <div className="flex justify-between gap-4">
-                        <span className="text-muted-foreground font-medium">Company Name</span>
+                        <span className="font-medium text-muted-foreground">
+                          Company Name
+                        </span>
                         <span className="text-right font-semibold text-foreground">
                           {selectedSupplier.companyName || "—"}
                         </span>
                       </div>
                       <div className="flex justify-between gap-4">
-                        <span className="text-muted-foreground font-medium">Supplier Email</span>
+                        <span className="font-medium text-muted-foreground">
+                          Supplier Email
+                        </span>
                         <span className="text-right font-semibold text-foreground select-all">
                           {selectedSupplier.email || "—"}
                         </span>
                       </div>
                       <div className="flex justify-between gap-4">
-                        <span className="text-muted-foreground font-medium">Supplier Phone</span>
+                        <span className="font-medium text-muted-foreground">
+                          Supplier Phone
+                        </span>
                         <span className="text-right font-semibold text-foreground select-all">
                           {selectedSupplier.phone || "—"}
                         </span>
                       </div>
                       <div className="flex justify-between gap-4">
-                        <span className="text-muted-foreground font-medium">Preferred Status</span>
+                        <span className="font-medium text-muted-foreground">
+                          Preferred Status
+                        </span>
                         <span className="text-right font-semibold text-foreground">
                           {selectedSupplier.isPreferred
                             ? "Preferred supplier"
@@ -693,14 +708,16 @@ export default function OrderDialog({
                         </span>
                       </div>
                       <div className="flex justify-between gap-4 border-t border-border/20 pt-2.5">
-                        <span className="text-muted-foreground font-medium">Total Unique Items</span>
+                        <span className="font-medium text-muted-foreground">
+                          Total Unique Items
+                        </span>
                         <span className="text-right font-bold text-foreground">
                           {totalItems}
                         </span>
                       </div>
                     </div>
                   ) : (
-                    <div className="rounded-lg border border-dashed border-border/60 p-5 text-center bg-muted/5">
+                    <div className="rounded-lg border border-dashed border-border/60 bg-muted/5 p-5 text-center">
                       <p className="text-xs text-muted-foreground">
                         Select a supplier above to view contact details
                       </p>
