@@ -111,6 +111,8 @@ export default function RecentInvoicesPage() {
         refunds_issued_trend: "1 return today",
         monthly_sales_total: 0,
         monthly_sales_trend: "0% vs yesterday",
+        total_sales: 0,
+        total_invoices_all_time: 0,
         low_stock_count: 0,
         monthly_sales_chart: [],
         top_stock_medicines: [],
@@ -503,15 +505,15 @@ export default function RecentInvoicesPage() {
       />
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
-          title="Today's Sales"
-          value={`₹${stats.todays_sales.toLocaleString()}`}
-          helper={stats.todays_sales_trend}
-          icon={<CreditCard className="size-5" />}
-        />
-        <StatCard
-          title="Total Invoices"
+          title="Today's Invoice"
           value={String(stats.total_invoices)}
           helper={stats.total_invoices_trend}
+          icon={<FileText className="size-5" />}
+        />
+        <StatCard
+          title="Total Invoice"
+          value={String(stats.total_invoices_all_time)}
+          helper="All-time invoices"
           icon={<FileText className="size-5" />}
         />
         <StatCard

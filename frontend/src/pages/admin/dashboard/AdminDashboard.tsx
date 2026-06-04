@@ -243,17 +243,13 @@ export default function AdminDashboard() {
       },
     },
     {
-      title: "Monthly Revenue",
+      title: "Total Revenue",
       value: isLoading
         ? "..."
-        : `₹${Number(stats?.monthly_sales_total ?? 0).toLocaleString("en-IN")}`,
-      helper: isLoading ? "Loading..." : (stats?.monthly_sales_trend ?? "0% vs last month"),
+        : `₹${Number(stats?.total_sales ?? 0).toLocaleString("en-IN")}`,
+      helper: isLoading ? "Loading..." : "All-time sales revenue",
       icon: TrendingUp,
-      trend: stats?.monthly_sales_trend?.startsWith("+")
-        ? "up"
-        : stats?.monthly_sales_trend?.startsWith("-")
-        ? "down"
-        : "neutral",
+      trend: "neutral",
       colors: {
         shape1: "bg-violet-500",
         shape2: "bg-purple-400",

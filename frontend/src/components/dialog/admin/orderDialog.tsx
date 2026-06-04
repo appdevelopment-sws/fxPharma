@@ -68,6 +68,12 @@ const toNumber = (value: unknown) => {
   return Number.isFinite(parsed) ? parsed : 0
 }
 
+const ORDER_UNIT_OPTIONS = [
+  ...PACKAGING_TYPE_OPTIONS,
+  { label: "Box", value: "box" },
+]
+
+
 const buildItemFromInventory = (inventoryItem: any): OrderItemFormValue => ({
   tempId: createTempId(),
   inventoryId: inventoryItem.id,
@@ -549,7 +555,7 @@ export default function OrderDialog({
                             disabled={isViewMode}
                             className="h-8 w-full rounded-lg border border-border/60 bg-background px-2 text-xs font-semibold text-foreground transition-all duration-200 outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 disabled:cursor-not-allowed disabled:opacity-80"
                           >
-                            {PACKAGING_TYPE_OPTIONS.map((option) => (
+                            {ORDER_UNIT_OPTIONS.map((option) => (
                               <option key={option.value} value={option.value}>
                                 {option.label}
                               </option>

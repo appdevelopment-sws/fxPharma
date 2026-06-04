@@ -300,6 +300,8 @@ export class InvoicesController {
       lowStockCount,
       topStock,
       monthlySalesChart,
+      allTimeRevenueAggregate,
+      allTimeInvoicesCount,
     ] = await Promise.all([
       rootPrisma.invoice.findMany({ where: filtersToday }),
       rootPrisma.invoice.findMany({ where: filtersYesterday }),
@@ -356,6 +358,22 @@ export class InvoicesController {
           };
         }),
       ),
+      rootPrisma.invoice.aggregate({
+        where: {
+          organizationId,
+          status: "PAID",
+          ...(branchId ? { branchId } : {}),
+        },
+        _sum: {
+          totalAmount: true,
+        },
+      }),
+      rootPrisma.invoice.count({
+        where: {
+          organizationId,
+          ...(branchId ? { branchId } : {}),
+        },
+      }),
     ]);
 
     const todaySales = todayInvoices.reduce(
@@ -413,6 +431,8 @@ export class InvoicesController {
       value: item.availableStock ?? 0,
     }));
 
+    const totalSalesAllTime = Number(allTimeRevenueAggregate._sum.totalAmount || 0);
+
     res.json({
       success: true,
       data: {
@@ -429,6 +449,8 @@ export class InvoicesController {
           thisMonthSales,
           lastMonthSales,
         ),
+        total_sales: totalSalesAllTime,
+        total_invoices_all_time: allTimeInvoicesCount,
         low_stock_count: lowStockCount,
         monthly_sales_chart: monthlySalesChart,
         top_stock_medicines: topStockMedicines,
