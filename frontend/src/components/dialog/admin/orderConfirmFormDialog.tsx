@@ -160,8 +160,17 @@ const normUnit = (u?: string) => {
 }
 
 const buildRowFromItem = (item: any): OrderConfirmItem => {
-  const qty = toNumber(item.qty || item.ordQty || 1)
-  const freeQty = toNumber(item.freeQty || item.free || 0)
+  let qty = toNumber(item.qty || item.ordQty || 1)
+  let freeQty = toNumber(item.freeQty || item.free || 0)
+  let unit = normUnit(item.unit)
+
+  if (unit === "box") {
+    const packQty2 = Math.max(1, toNumber(item.inventory?.packQty2 ?? item.inventory?.pack_qty_2 ?? 1))
+    qty = qty * packQty2
+    freeQty = freeQty * packQty2
+    unit = normUnit(item.inventory?.unit1st ?? item.inventory?.unit_1st ?? "strip")
+  }
+
   const dbPurchaseRate = toNumber(item.purchaseRate)
   const purchaseRate = dbPurchaseRate * (qty + freeQty)
   const unitRate = qty > 0 ? purchaseRate / qty : dbPurchaseRate
@@ -169,7 +178,7 @@ const buildRowFromItem = (item: any): OrderConfirmItem => {
   return {
     tempId: item.tempId || item.id || createTempId(),
     inventoryId: item.inventoryId || item.inventory?.id,
-    unit: normUnit(item.unit),
+    unit,
     name: item.inventory?.name || item.name || "",
     description: item.inventory?.saltComposition || item.description || "",
     qty,
@@ -185,7 +194,7 @@ const buildRowFromItem = (item: any): OrderConfirmItem => {
     rate3: toNumber(item.inventory?.rateC),
     cgst: toNumber(item.inventory?.cgst),
     sgst: toNumber(item.inventory?.sgst),
-    freeUnit: normUnit(item.freeUnit),
+    freeUnit: normUnit(item.freeUnit === "box" ? (item.inventory?.unit1st ?? item.inventory?.unit_1st ?? "strip") : item.freeUnit),
     discount: toNumber(item.discount || 0),
     discount_type: item.discount_type || item.discountType || "flat",
   }
