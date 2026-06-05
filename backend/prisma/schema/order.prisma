@@ -3,7 +3,8 @@ model Order {
   id              String      @id @default(cuid())
   organizationId  String      @map("organization_id")
   branchId        String?     @map("branch_id")
-  
+  orderId         String?      @unique @map("order_id") // <- ADD THIS
+
   supplierId      String?     @map("supplier_id")
   supplier        Supplier?   @relation(fields: [supplierId], references: [id], onDelete: SetNull)
 

@@ -13,7 +13,30 @@ const ORDER_STATUS_VALUES = [
   "COMPLETED",
   "CANCELLED",
 ] as const;
+const generateOrderId = async (
+  tx: Prisma.TransactionClient,
+  organizationId: string,
+) => {
+  const lastOrder = await tx.order.findFirst({
+    where: { organizationId },
+    orderBy: {
+      createdAt: "desc",
+    },
+    select: {
+      orderId: true,
+    },
+  });
 
+  let nextNumber = 1;
+
+  if (lastOrder?.orderId) {
+    const numberPart = Number(lastOrder.orderId.replace(/\D/g, ""));
+
+    nextNumber = numberPart + 1;
+  }
+
+  return `PO${String(nextNumber).padStart(5, "0")}`;
+};
 const toNumber = (value: unknown) => {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : 0;
@@ -333,11 +356,13 @@ export class OrdersController {
       branchId: orderData.branchId === "" ? null : orderData.branchId,
       receivedAt: parseOptionalDate(orderData.receivedAt),
     };
-
+    const generatedOrderId = await generateOrderId(tx, organizationId);
     const order = await rootPrisma.$transaction(async (tx) => {
       const created = await tx.order.create({
         data: {
           ...cleanedOrderData,
+          orderId: generatedOrderId,
+
           status: normalizeOrderStatus(cleanedOrderData.status) || undefined,
           organizationId,
           branchId,

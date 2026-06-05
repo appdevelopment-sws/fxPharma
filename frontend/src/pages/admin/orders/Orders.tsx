@@ -182,7 +182,9 @@ const Orders = () => {
       {
         key: "id",
         header: "Order ID",
-        render: (row) => <span className="font-mono text-xs">{row.id}</span>,
+        render: (row) => (
+          <span className="font-mono text-xs">{row.orderId || row.id}</span>
+        ),
       },
       {
         key: "supplier",
