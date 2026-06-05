@@ -112,6 +112,7 @@ export default function InvoiceTemplates() {
       await SettingsApi.updateSettings(payload)
       reset(data)
       toast.success("Pharmacy settings updated successfully")
+      window.location.reload()
     } catch (e: any) {
       toast.error(e?.message || "Failed to update pharmacy settings")
     }

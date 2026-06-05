@@ -330,12 +330,13 @@ function buildInvoiceData(
     ? `<img src="${escapeHtml(brandDirectorSignature)}" alt="Director Signature" style="max-height: 42px; max-width: 160px;" onerror="this.style.display='none'" />`
     : "";
 
-  const paymentQrBlock = showPaymentQr && paymentQrCode
-    ? `<div style="text-align: right;">
+  const paymentQrBlock =
+    showPaymentQr && paymentQrCode
+      ? `<div style="text-align: right;">
          <div style="font-size: 10px; color: #555; margin-bottom: 4px;">Scan to pay</div>
          <img src="${escapeHtml(paymentQrCode)}" alt="Payment QR" style="max-height: 80px; max-width: 80px;" onerror="this.style.display='none'" />
        </div>`
-    : "";
+      : "";
 
   const footerImageBlock = brandFooterImage
     ? `<div style="margin-bottom: 8px;">
@@ -451,6 +452,7 @@ class InvoiceTemplateService {
         if (org.licenseNo) settingsMap["license_number"] = org.licenseNo;
       }
     }
+    const halfPrint = settingsMap["invoice_half_print"] === "true";
 
     const data = buildInvoiceData(invoice, safeTemplateName, settingsMap);
 

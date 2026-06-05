@@ -33,7 +33,7 @@ const SettingsView = () => {
             </TabsTrigger>
             <TabsTrigger value="invoice-templates" className="gap-2 p-4">
               <ShieldAlert className="size-4" />
-              Invoice Templates
+              Common Settings
             </TabsTrigger>
             {/* <TabsTrigger value="pharmacy" className="gap-2 p-4">
               <ShieldAlert className="size-4" />

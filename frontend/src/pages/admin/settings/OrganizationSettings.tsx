@@ -120,7 +120,7 @@ export default function OrganizationSettings() {
     }
     try {
       await updateMutation.mutateAsync(data)
-      
+
       const settingsPayload = {
         store_name: data.store_name,
         description: data.description,
@@ -139,6 +139,7 @@ export default function OrganizationSettings() {
         currency: data.currency,
       }
       await SettingsApi.updateSettings(settingsPayload)
+      window.location.reload()
     } catch (e) {
       console.error("Failed to sync settings", e)
     }

@@ -30,6 +30,7 @@ import BrandApi, {
   CategoryApi,
   ManufacturerApi,
 } from "@/services/attributesApi"
+import SettingsApi from "@/services/settingsApi"
 import { COLOR_TYPE_OPTIONS } from "@/constants/shared/form-options"
 import { formatDateForInput } from "@/lib/utils"
 import TaxApi, { HsnApi } from "@/services/taxApi"
@@ -273,8 +274,19 @@ export default function MedicineStockDialog({
   }, [open])
 
   const { data: hsnData } = useQuery({
-    queryKey: queryKeys.hsnCodes.list({ limit: 100, search: hsnSearch, includeGlobal }),
-    queryFn: () => HsnApi.getHsnCodes({ limit: 100, search: hsnSearch, includeGlobal }),
+    queryKey: queryKeys.hsnCodes.list({
+      limit: 100,
+      search: hsnSearch,
+      includeGlobal,
+    }),
+    queryFn: () =>
+      HsnApi.getHsnCodes({ limit: 100, search: hsnSearch, includeGlobal }),
+    enabled: open,
+  })
+
+  const { data: settingsData } = useQuery({
+    queryKey: ["settings"],
+    queryFn: () => SettingsApi.getSettings(),
     enabled: open,
   })
 
@@ -286,8 +298,8 @@ export default function MedicineStockDialog({
           value: manufacturer.id,
         })) ?? [],
         product?.manufacturerId ||
-        product?.manufacturer_id ||
-        product?.manufacturer?.id,
+          product?.manufacturer_id ||
+          product?.manufacturer?.id,
         product?.manufacturer?.name || product?.manufacturer?.label
       ),
     [manufacturersData, product]
@@ -318,6 +330,13 @@ export default function MedicineStockDialog({
     [categoriesData, product]
   )
 
+  const showInventoryAdditionalFields = useMemo(() => {
+    return (
+      settingsData?.data?.inventory_additional_fields_enabled === "true" ||
+      settingsData?.data?.inventory_additional_fields_enabled === true
+    )
+  }, [settingsData])
+
   const watchedCgst = useWatch({
     control,
     name: "cgst",
@@ -338,20 +357,25 @@ export default function MedicineStockDialog({
     const sgstVal = toNumber(watchedSgst)
     const currentRate = cgstVal + sgstVal
 
-    const baseOptions = hsnData?.data?.map((hsn: any) => {
-      const isSelected = String(hsn.hsncode) === String(selectedHsnCode)
-      const rate = isSelected ? currentRate : (hsn.hsnMappings[0]?.tax?.rate ?? 0)
-      return {
-        label: `${hsn.hsncode} - ${rate}%`,
-        value: hsn.hsncode,
-      }
-    }) ?? []
+    const baseOptions =
+      hsnData?.data?.map((hsn: any) => {
+        const isSelected = String(hsn.hsncode) === String(selectedHsnCode)
+        const rate = isSelected
+          ? currentRate
+          : (hsn.hsnMappings[0]?.tax?.rate ?? 0)
+        return {
+          label: `${hsn.hsncode} - ${rate}%`,
+          value: hsn.hsncode,
+        }
+      }) ?? []
 
-    const hasSelected = baseOptions.some(opt => String(opt.value) === String(selectedHsnCode))
+    const hasSelected = baseOptions.some(
+      (opt) => String(opt.value) === String(selectedHsnCode)
+    )
     if (selectedHsnCode && !hasSelected) {
       baseOptions.unshift({
         value: String(selectedHsnCode),
-        label: `${selectedHsnCode} - ${currentRate}%`
+        label: `${selectedHsnCode} - ${currentRate}%`,
       })
     }
 
@@ -489,16 +513,18 @@ export default function MedicineStockDialog({
     onError: (error: any) => {
       toast.error(
         error?.response?.data?.message ||
-        error?.message ||
-        "Failed to save inventory item"
+          error?.message ||
+          "Failed to save inventory item"
       )
     },
   })
 
   const onSubmit: SubmitHandler<any> = async (data) => {
-    const isNewHsn = data.hsn_code && !hsnData?.data?.some(
-      (hsn: any) => String(hsn.hsncode) === String(data.hsn_code)
-    )
+    const isNewHsn =
+      data.hsn_code &&
+      !hsnData?.data?.some(
+        (hsn: any) => String(hsn.hsncode) === String(data.hsn_code)
+      )
 
     if (isNewHsn) {
       const toastId = toast.loading("Creating custom HSN code...")
@@ -535,7 +561,12 @@ export default function MedicineStockDialog({
         })
       } catch (err: any) {
         console.error(err)
-        toast.error(err.response?.data?.message || err.message || "Failed to create HSN code", { id: toastId })
+        toast.error(
+          err.response?.data?.message ||
+            err.message ||
+            "Failed to create HSN code",
+          { id: toastId }
+        )
         return
       }
     }
@@ -625,7 +656,6 @@ export default function MedicineStockDialog({
               control={control}
               name="status"
               label="Status"
-
               options={PRODUCT_STATUS_OPTIONS}
               readOnly={isViewMode}
             />
@@ -869,158 +899,162 @@ export default function MedicineStockDialog({
         </div>
 
         {/* Bottom Grid */}
-        <div className="grid gap-6 xl:grid-cols-2">
-          {/* Inventory */}
-          <div className="rounded-xl border p-6">
-            {sectionHeader("04", "Inventory Thresholds")}
+        {showInventoryAdditionalFields && (
+          <>
+            <div className="grid gap-6 xl:grid-cols-2">
+              {/* Inventory */}
+              <div className="rounded-xl border p-6">
+                {sectionHeader("04", "Inventory Thresholds")}
 
-            <div className="grid gap-5 md:grid-cols-2">
-              <FormField
-                control={control}
-                name="minimum_qty"
-                label="Minimum Qty"
-                inputType="number"
-              />
-              <FormField
-                control={control}
-                name="maximum_qty"
-                label="Maximum Qty"
-                inputType="number"
-              />
-              {/* <FormField
+                <div className="grid gap-5 md:grid-cols-2">
+                  <FormField
+                    control={control}
+                    name="minimum_qty"
+                    label="Minimum Qty"
+                    inputType="number"
+                  />
+                  <FormField
+                    control={control}
+                    name="maximum_qty"
+                    label="Maximum Qty"
+                    inputType="number"
+                  />
+                  {/* <FormField
                 control={control}
                 name="reorder_qty"
                 label="Reorder Qty"
                 inputType="number"
               /> */}
-              <FormField
-                control={control}
-                name="days_limit"
-                label="Expiry date"
-                inputType="date"
-              />
-              <FormField
-                control={control}
-                name="temperature_limit"
-                label="Temperature Limit"
-                inputType="number"
-              />
-              {/* <FormField
+                  <FormField
+                    control={control}
+                    name="days_limit"
+                    label="Expiry date"
+                    inputType="date"
+                  />
+                  <FormField
+                    control={control}
+                    name="temperature_limit"
+                    label="Temperature Limit"
+                    inputType="number"
+                  />
+                  {/* <FormField
                 control={control}
                 name="conv_stri"
                 label="Conv. Stri"
                 inputType="number"
                 step="0.01"
               /> */}
-              {/* <FormField
+                  {/* <FormField
                 control={control}
                 name="conv_cas"
                 label="Conv. Cas"
                 inputType="number"
                 step="0.01"
               /> */}
-            </div>
-          </div>
+                </div>
+              </div>
 
-          {/* Discount */}
-          <div className="rounded-xl border p-6">
-            {sectionHeader("05", "Discounts & Margins")}
+              {/* Discount */}
+              <div className="rounded-xl border p-6">
+                {sectionHeader("05", "Discounts & Margins")}
 
-            <div className="grid gap-5 md:grid-cols-2">
-              <FormField
-                control={control}
-                name="volume_discount"
-                label="Volume Discount"
-                inputType="number"
-                step="0.01"
-              />
-              <FormField
-                control={control}
-                name="item_discount"
-                label="Item Discount"
-                inputType="number"
-                step="0.01"
-              />
-              <FormField
-                control={control}
-                name="maximum_discount"
-                label="Maximum Discount"
-                inputType="number"
-                step="0.01"
-              />
-              <FormField
-                control={control}
-                name="minimum_margin"
-                label="Minimum Margin"
-                inputType="number"
-                step="0.01"
-              />
-              <FormField
-                control={control}
-                name="special_discount"
-                label="Special Disc."
-                inputType="number"
-                step="0.01"
-              />
-              {/* <FormField
+                <div className="grid gap-5 md:grid-cols-2">
+                  <FormField
+                    control={control}
+                    name="volume_discount"
+                    label="Volume Discount"
+                    inputType="number"
+                    step="0.01"
+                  />
+                  <FormField
+                    control={control}
+                    name="item_discount"
+                    label="Item Discount"
+                    inputType="number"
+                    step="0.01"
+                  />
+                  <FormField
+                    control={control}
+                    name="maximum_discount"
+                    label="Maximum Discount"
+                    inputType="number"
+                    step="0.01"
+                  />
+                  <FormField
+                    control={control}
+                    name="minimum_margin"
+                    label="Minimum Margin"
+                    inputType="number"
+                    step="0.01"
+                  />
+                  <FormField
+                    control={control}
+                    name="special_discount"
+                    label="Special Disc."
+                    inputType="number"
+                    step="0.01"
+                  />
+                  {/* <FormField
                 control={control}
                 name="purchase_discount"
                 label="Purc. Disc."
                 inputType="number"
                 step="0.01"
               /> */}
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
 
-        {/* Flags */}
-        <div className="rounded-xl border p-6">
-          {sectionHeader("06", "Regulatory & Product Flags")}
+            {/* Flags */}
+            <div className="rounded-xl border p-6">
+              {sectionHeader("06", "Regulatory & Product Flags")}
 
-          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-            <FormSwitch
-              control={control}
-              name="is_narcotic"
-              label="Narcotic Drug"
-              description="Requires special tracking"
-            />
+              <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+                <FormSwitch
+                  control={control}
+                  name="is_narcotic"
+                  label="Narcotic Drug"
+                  description="Requires special tracking"
+                />
 
-            <FormSwitch
-              control={control}
-              name="is_schedule_h"
-              label="Schedule H"
-              description="Prescription required"
-            />
+                <FormSwitch
+                  control={control}
+                  name="is_schedule_h"
+                  label="Schedule H"
+                  description="Prescription required"
+                />
 
-            <FormSwitch
-              control={control}
-              name="is_schedule_h1"
-              label="Schedule H1"
-              description="Strict audit logging"
-            />
+                <FormSwitch
+                  control={control}
+                  name="is_schedule_h1"
+                  label="Schedule H1"
+                  description="Strict audit logging"
+                />
 
-            <FormSwitch
-              control={control}
-              name="hide_product"
-              label="Hide Product"
-              description="Exclude from fast search"
-            />
+                <FormSwitch
+                  control={control}
+                  name="hide_product"
+                  label="Hide Product"
+                  description="Exclude from fast search"
+                />
 
-            <FormSwitch
-              control={control}
-              name="negative_stock"
-              label="Negative Stock"
-              description="Allow billing without stock"
-            />
+                <FormSwitch
+                  control={control}
+                  name="negative_stock"
+                  label="Negative Stock"
+                  description="Allow billing without stock"
+                />
 
-            <FormSwitch
-              control={control}
-              name="edit_rates"
-              label="Edit Rates"
-              description="Enable rate modification"
-            />
-          </div>
-        </div>
+                <FormSwitch
+                  control={control}
+                  name="edit_rates"
+                  label="Edit Rates"
+                  description="Enable rate modification"
+                />
+              </div>
+            </div>
+          </>
+        )}
       </form>
     </FormContainer>
   )
