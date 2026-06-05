@@ -72,6 +72,8 @@ export type InvoiceTemplatesResponse = {
   templates: string[]
   defaultTemplate: string
   invoice_template_name?: string
+  watermark?: boolean
+  watermark_opacity?: number
 }
 
 const BASE_URL = "/invoices"
@@ -226,9 +228,14 @@ const InvoiceApi = {
     let finalHtml = html
     if (autoPrint) {
       if (html.includes("</body>")) {
-        finalHtml = html.replace("</body>", "<script>window.onload = function() { window.print(); };</script></body>")
+        finalHtml = html.replace(
+          "</body>",
+          "<script>window.onload = function() { window.print(); };</script></body>"
+        )
       } else {
-        finalHtml = html + "<script>window.onload = function() { window.print(); };</script>"
+        finalHtml =
+          html +
+          "<script>window.onload = function() { window.print(); };</script>"
       }
     }
 

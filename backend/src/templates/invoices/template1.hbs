@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html>
   <head>
     <meta charset="UTF-8" />
@@ -11,7 +10,7 @@
         --slate-600: #475569;
         --slate-500: #64748b;
         --slate-100: #f1f5f9;
-        --border-color: #94a3b8;    /* Professional slate border */
+        --border-color: #94a3b8; /* Professional slate border */
         --border-thin: 1px solid var(--border-color);
         --muted-bg: #f8fafc;
       }
@@ -216,7 +215,7 @@
         width: 45%;
         color: #333;
       }
-      
+
       .invoice-info-table td.val-cell {
         font-weight: bold;
       }
@@ -598,12 +597,18 @@
   <body>
     <main class="page">
       <div class="bill-container">
+        {{{watermarkBlock}}}
         <!-- Header -->
         <table class="header-table">
           <tr>
             <!-- Left: Dynamic Brand Logo -->
             <td class="logo-col">
-              <img src="{{brandLogo}}" alt="{{brandName}} Logo" class="logo-img" onerror="this.src='https://img.icons8.com/color/96/000000/medical-cross.png';" />
+              <img
+                src="{{brandLogo}}"
+                alt="{{brandName}} Logo"
+                class="logo-img"
+                onerror="this.src='https://img.icons8.com/color/96/000000/medical-cross.png';"
+              />
             </td>
             <!-- Brand name & Address -->
             <td class="brand-title-col">
@@ -612,7 +617,8 @@
                 {{brandAddress}}
               </div>
               <div class="brand-contact">
-                Contact: {{companyContactBlock}}
+                Contact:
+                {{companyContactBlock}}
               </div>
             </td>
             <td class="promo-col">
@@ -624,7 +630,10 @@
         <!-- GSTIN Bar -->
         <table class="tax-invoice-bar">
           <tr>
-            <td id="gstinBarCell" style="width: 100%; font-size: 10.5px; font-weight: bold; padding: 4px 6px;">GSTIN: {{brandGstin}}</td>
+            <td
+              id="gstinBarCell"
+              style="width: 100%; font-size: 10.5px; font-weight: bold; padding: 4px 6px;"
+            >GSTIN: {{brandGstin}}</td>
           </tr>
         </table>
 
@@ -648,7 +657,10 @@
               </tr>
               <tr>
                 <td class="label-cell">Status:</td>
-                <td class="val-cell"><span class="status-badge" id="badgeEl">{{invoiceStatus}}</span></td>
+                <td class="val-cell"><span
+                    class="status-badge"
+                    id="badgeEl"
+                  >{{invoiceStatus}}</span></td>
               </tr>
             </table>
           </div>
@@ -746,7 +758,10 @@
                 </tr>
                 <tr>
                   <td class="label-col">Status:</td>
-                  <td class="val-col"><span class="status-badge" id="payBadgeEl">{{invoiceStatus}}</span></td>
+                  <td class="val-col"><span
+                      class="status-badge"
+                      id="payBadgeEl"
+                    >{{invoiceStatus}}</span></td>
                 </tr>
                 <tr>
                   <td class="label-col">Contact Email:</td>
@@ -761,7 +776,8 @@
 
           <!-- Right: Signature -->
           <div class="signature-panel">
-            <div class="sig-notice">Certified that the particulars given above are true and correct.</div>
+            <div class="sig-notice">Certified that the particulars given above
+              are true and correct.</div>
             <div class="sig-brand-line">For {{brandName}}</div>
             <div class="sig-image-placeholder">
               {{{directorSignatureBlock}}}
@@ -779,85 +795,42 @@
     </main>
 
     <script>
-      function adjustHeaderForBanner() {
-        const logoImg = document.querySelector(".logo-img");
-        if (logoImg && logoImg.naturalWidth > 0) {
-          const width = logoImg.naturalWidth;
-          const height = logoImg.naturalHeight;
-          const aspectRatio = width / height;
-          
-          // Aspect ratio greater than 1.8 indicates a horizontal header banner image
-          if (aspectRatio > 1.8) {
-            const logoCol = document.querySelector(".logo-col");
-            const brandCol = document.querySelector(".brand-title-col");
-            const promoCol = document.querySelector(".promo-col");
-            
-            if (logoCol && brandCol) {
-              // Hide redundant text columns
-              brandCol.style.display = "none";
-              if (promoCol) promoCol.style.display = "none";
-              
-              // Expand logo-col to span full width
-              logoCol.style.width = "100%";
-              logoCol.style.paddingRight = "0";
-              
-              // Style image to act as a full width header banner
-              logoImg.style.width = "100%";
-              logoImg.style.height = "auto";
-              logoImg.style.maxWidth = "100%";
-              logoImg.style.maxHeight = "none";
-              logoImg.style.display = "block";
-            }
-          }
-        }
-      }
-
-      document.addEventListener("DOMContentLoaded", () => {
-        const logoImg = document.querySelector(".logo-img");
-        if (logoImg) {
-          if (logoImg.complete) {
-            adjustHeaderForBanner();
-          } else {
-            logoImg.addEventListener("load", adjustHeaderForBanner);
-          }
-        }
-
-        // Adjust badge styles
-        const badges = [document.getElementById("badgeEl"), document.getElementById("payBadgeEl")];
-        badges.forEach(badge => {
-          if (badge) {
-            const statusText = badge.textContent.trim().toLowerCase();
-            if (statusText.includes("paid") && !statusText.includes("unpaid")) {
-              badge.className = "status-badge status-paid";
-            } else if (statusText.includes("unpaid") || statusText.includes("due") || statusText.includes("pending")) {
-              badge.className = "status-badge status-unpaid";
-            } else {
-              badge.className = "status-badge";
-              badge.style.backgroundColor = "#e0e0e0";
-              badge.style.color = "#333";
-            }
-          }
-        });
-
-        // Hide empty terms box if no terms are set
-        const termsBox = document.getElementById("termsBox");
-        if (termsBox) {
-          const text = termsBox.textContent.trim();
-          if (text === "Terms & Conditions" || !text) {
-            termsBox.style.display = "none";
-          }
-        }
-
-        // Hide GSTIN bar if empty
-        const gstinCell = document.getElementById("gstinBarCell");
-        if (gstinCell) {
-          const content = gstinCell.textContent.trim();
-          if (content === "GSTIN:" || content === "GSTIN: " || !content) {
-            const barTable = gstinCell.closest(".tax-invoice-bar");
-            if (barTable) barTable.style.display = "none";
-          }
-        }
-      });
+      function adjustHeaderForBanner() { const logoImg =
+      document.querySelector(".logo-img"); if (logoImg && logoImg.naturalWidth >
+      0) { const width = logoImg.naturalWidth; const height =
+      logoImg.naturalHeight; const aspectRatio = width / height; // Aspect ratio
+      greater than 1.8 indicates a horizontal header banner image if
+      (aspectRatio > 1.8) { const logoCol = document.querySelector(".logo-col");
+      const brandCol = document.querySelector(".brand-title-col"); const
+      promoCol = document.querySelector(".promo-col"); if (logoCol && brandCol)
+      { // Hide redundant text columns brandCol.style.display = "none"; if
+      (promoCol) promoCol.style.display = "none"; // Expand logo-col to span
+      full width logoCol.style.width = "100%"; logoCol.style.paddingRight = "0";
+      // Style image to act as a full width header banner logoImg.style.width =
+      "100%"; logoImg.style.height = "auto"; logoImg.style.maxWidth = "100%";
+      logoImg.style.maxHeight = "none"; logoImg.style.display = "block"; } } } }
+      document.addEventListener("DOMContentLoaded", () => { const logoImg =
+      document.querySelector(".logo-img"); if (logoImg) { if (logoImg.complete)
+      { adjustHeaderForBanner(); } else { logoImg.addEventListener("load",
+      adjustHeaderForBanner); } } // Adjust badge styles const badges =
+      [document.getElementById("badgeEl"),
+      document.getElementById("payBadgeEl")]; badges.forEach(badge => { if
+      (badge) { const statusText = badge.textContent.trim().toLowerCase(); if
+      (statusText.includes("paid") && !statusText.includes("unpaid")) {
+      badge.className = "status-badge status-paid"; } else if
+      (statusText.includes("unpaid") || statusText.includes("due") ||
+      statusText.includes("pending")) { badge.className = "status-badge
+      status-unpaid"; } else { badge.className = "status-badge";
+      badge.style.backgroundColor = "#e0e0e0"; badge.style.color = "#333"; } }
+      }); // Hide empty terms box if no terms are set const termsBox =
+      document.getElementById("termsBox"); if (termsBox) { const text =
+      termsBox.textContent.trim(); if (text === "Terms & Conditions" || !text) {
+      termsBox.style.display = "none"; } } // Hide GSTIN bar if empty const
+      gstinCell = document.getElementById("gstinBarCell"); if (gstinCell) {
+      const content = gstinCell.textContent.trim(); if (content === "GSTIN:" ||
+      content === "GSTIN: " || !content) { const barTable =
+      gstinCell.closest(".tax-invoice-bar"); if (barTable)
+      barTable.style.display = "none"; } } });
     </script>
   </body>
 </html>

@@ -283,6 +283,9 @@ function buildInvoiceData(
     settingsMap["store_logo"] ||
     settingsMap["invoice_company_logo"] ||
     "";
+
+  const storelogo = settingsMap["store_logo"];
+
   const brandFooterImage = settingsMap["invoice_footer_image"] || "";
   const brandDirectorSignature =
     settingsMap["invoice_director_signature"] || "";
@@ -302,6 +305,7 @@ function buildInvoiceData(
   const showPaymentQr = toBoolean(
     settingsMap["invoice_show_payment_qr"] ?? settingsMap["show_payment_qr"],
   );
+  const showWatermark = settingsMap["watermark"] === "true";
 
   const licenseParts: string[] = [];
   if (showGst && brandGstin) {
@@ -344,6 +348,16 @@ function buildInvoiceData(
        </div>`
     : "";
 
+  const watermarkContent = storelogo
+    ? `<img src="${escapeHtml(storelogo)}" alt="Watermark" style="transform:rotate(-35deg);max-width:350px;max-height:350px;opacity:0.06;user-select:none;-webkit-user-select:none;" />`
+    : `<div style="transform:rotate(-35deg);font-size:72px;font-weight:900;color:rgba(0,0,0,0.06);white-space:nowrap;text-transform:uppercase;letter-spacing:12px;user-select:none;-webkit-user-select:none;">${escapeHtml(brandName)}</div>`;
+
+  const watermarkBlock = storelogo
+    ? `<div class="watermark-overlay" style="position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:9999;overflow:hidden;">
+         ${watermarkContent}
+       </div>`
+    : "";
+
   return {
     safeTemplateName,
     brandName,
@@ -362,6 +376,7 @@ function buildInvoiceData(
     brandLicenseBlock,
     invoiceTermsBlock,
     invoiceFooterBlock,
+    watermarkBlock,
     invoiceId: invoice.invoiceId,
     invoiceStatus: toTitleCase(invoice.status),
     paymentMode: displayPaymentMode,

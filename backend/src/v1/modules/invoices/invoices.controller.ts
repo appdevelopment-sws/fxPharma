@@ -431,7 +431,9 @@ export class InvoicesController {
       value: item.availableStock ?? 0,
     }));
 
-    const totalSalesAllTime = Number(allTimeRevenueAggregate._sum.totalAmount || 0);
+    const totalSalesAllTime = Number(
+      allTimeRevenueAggregate._sum.totalAmount || 0,
+    );
 
     res.json({
       success: true,
@@ -809,7 +811,10 @@ export class InvoicesController {
         for (const retItem of ret.items) {
           if (retItem.invoiceItemId) {
             const current = returnedQtyMap.get(retItem.invoiceItemId) || 0;
-            returnedQtyMap.set(retItem.invoiceItemId, current + retItem.returnQty);
+            returnedQtyMap.set(
+              retItem.invoiceItemId,
+              current + retItem.returnQty,
+            );
           }
         }
       }
@@ -825,7 +830,10 @@ export class InvoicesController {
           });
 
           if (!inventoryItem) {
-            throw new ErrorHandler(`Inventory item ${item.inventoryName} not found.`, 404);
+            throw new ErrorHandler(
+              `Inventory item ${item.inventoryName} not found.`,
+              404,
+            );
           }
 
           const nextStock = (inventoryItem.availableStock ?? 0) + restockQty;
@@ -840,7 +848,10 @@ export class InvoicesController {
             });
 
             if (!batch) {
-              throw new ErrorHandler(`Batch not found for item ${item.inventoryName}.`, 404);
+              throw new ErrorHandler(
+                `Batch not found for item ${item.inventoryName}.`,
+                404,
+              );
             }
 
             const nextBatchQty = batch.availableQty + restockQty;
@@ -861,4 +872,3 @@ export class InvoicesController {
     res.json({ success: true, message: "Invoice deleted successfully." });
   });
 }
-
