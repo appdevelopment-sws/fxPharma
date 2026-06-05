@@ -415,8 +415,8 @@ export default function InvoiceSettings() {
               <FormSwitch
                 control={control}
                 name="invoice_half_print"
-                label="Half Page Print (A5)"
-                description="Format invoices for half page A5 landscape printing"
+                label="Half Page Print"
+                description="Format invoices for half page printing"
               />
               <FormSwitch
                 control={control}

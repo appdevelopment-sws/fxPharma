@@ -471,6 +471,28 @@ class InvoiceTemplateService {
 
     const data = buildInvoiceData(invoice, safeTemplateName, settingsMap);
 
+    // Inject half-print flag so the template can apply half-page CSS
+    (data as Record<string, string>)["isHalfPrint"] = halfPrint ? "true" : "";
+    (data as Record<string, string>)["halfPrintStyles"] = halfPrint
+      ? `<style>
+          .page {
+            justify-content: flex-start !important;
+          }
+          .bill-container {
+            height: auto !important;
+          }
+          .table-container {
+            height: 120px !important;
+          }
+          .bottom-blocks-grid {
+            display: none !important;
+          }
+          .terms-conditions-wrapper {
+            display: none !important;
+          }
+        </style>`
+      : "";
+
     return renderTemplate(template, data);
   }
 

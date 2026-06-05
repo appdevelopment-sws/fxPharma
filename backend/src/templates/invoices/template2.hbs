@@ -1,4 +1,3 @@
-<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -23,7 +22,11 @@
       body {
         margin: 0;
         background:
-          radial-gradient(circle at top left, rgba(180, 83, 9, 0.12), transparent 32%),
+          radial-gradient(
+            circle at top left,
+            rgba(180, 83, 9, 0.12),
+            transparent 32%
+          ),
           linear-gradient(180deg, #fbf8f1 0%, var(--bg) 100%);
         color: var(--ink);
         font-family: Georgia, "Times New Roman", serif;
@@ -74,7 +77,9 @@
         font-size: 11px;
         letter-spacing: 0.08em;
         text-transform: uppercase;
-      }
+      }.bill-container {
+  height: 100%;
+}
 
       .body {
         padding: 22px 24px 26px;
@@ -233,13 +238,22 @@
         margin: 0;
       }
     </style>
+    {{{halfPrintStyles}}}
   </head>
   <body>
-    <main class="page">
+    <main class="page bill-container">
       <section class="sheet" style="position:relative;">
         {{{watermarkBlock}}}
-        <img src="{{brandLogo}}" alt="Header Banner" style="width: 100%; height: auto; display: block;" onerror="this.style.display='none'" />
-        <header class="topbar" style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <img
+          src="{{brandLogo}}"
+          alt="Header Banner"
+          style="width: 100%; height: 200px; display: block;"
+          onerror="this.style.display='none'"
+        />
+        <header
+          class="topbar"
+          style="display: flex; justify-content: space-between; align-items: flex-start;"
+        >
           <div style="display: flex; align-items: flex-start; gap: 16px;">
             <div>
               <span class="badge" style="margin-bottom: 6px;">Invoice</span>
@@ -247,12 +261,15 @@
               <p style="margin: 2px 0;">{{brandTagline}}</p>
               <p style="margin: 2px 0;">{{brandAddress}}</p>
               <p style="margin: 2px 0;">{{companyContactBlock}}</p>
-              <p style="margin: 4px 0 0; font-size: 11px; opacity: 0.85;">{{brandLicenseBlock}}</p>
+              <p
+                style="margin: 4px 0 0; font-size: 11px; opacity: 0.85;"
+              >{{brandLicenseBlock}}</p>
             </div>
           </div>
           <div style="text-align: right;">
             <div class="badge">{{safeTemplateName}}</div>
-            <p style="margin-top: 12px; margin-bottom: 2px;">No. {{invoiceId}}</p>
+            <p style="margin-top: 12px; margin-bottom: 2px;">No.
+              {{invoiceId}}</p>
             <p style="margin: 2px 0;">Date: {{createdAt}}</p>
             <p style="margin: 2px 0;">Status: {{invoiceStatus}}</p>
           </div>
@@ -262,20 +279,32 @@
           <section class="grid">
             <div class="panel">
               <h2>Customer</h2>
-              <div class="line"><span class="label">Name</span><span class="value">{{customerName}}</span></div>
-              <div class="line"><span class="label">Phone</span><span class="value">{{customerPhone}}</span></div>
-              <div class="line"><span class="label">Payment</span><span class="value">{{paymentMode}}</span></div>
+              <div class="line"><span class="label">Name</span><span
+                  class="value"
+                >{{customerName}}</span></div>
+              <div class="line"><span class="label">Phone</span><span
+                  class="value"
+                >{{customerPhone}}</span></div>
+              <div class="line"><span class="label">Payment</span><span
+                  class="value"
+                >{{paymentMode}}</span></div>
             </div>
 
             <div class="panel">
               <h2>Quick Totals</h2>
-              <div class="line"><span class="label">Items</span><span class="value">{{itemCount}}</span></div>
-              <div class="line"><span class="label">Gross</span><span class="value">{{grossAmount}}</span></div>
-              <div class="line"><span class="label">Total</span><span class="value">{{totalAmount}}</span></div>
+              <div class="line"><span class="label">Items</span><span
+                  class="value"
+                >{{itemCount}}</span></div>
+              <div class="line"><span class="label">Gross</span><span
+                  class="value"
+                >{{grossAmount}}</span></div>
+              <div class="line"><span class="label">Total</span><span
+                  class="value"
+                >{{totalAmount}}</span></div>
             </div>
           </section>
 
-          <section class="panel">
+          <section class="panel table-container">
             <h2>Line Items</h2>
             <table>
               <thead>
@@ -294,7 +323,7 @@
             </table>
           </section>
 
-          <section class="footer-grid">
+          <section class="footer-grid bottom-blocks-grid">
             <div class="notes">
               <div class="notes-label">Notes</div>
               <div class="notes-value">{{notesValue}}</div>
@@ -311,12 +340,17 @@
           </section>
 
           <!-- Terms and Footer Message -->
-          <div style="margin: 16px 24px; border-top: 1px dashed var(--line); padding-top: 12px; font-size: 11px; color: var(--muted); font-family: sans-serif;">
-            {{{invoiceTermsBlock}}}
-            {{{invoiceFooterBlock}}}
-          </div>
+          <div
+  class="terms-conditions-wrapper"
+  style="margin: 16px 24px; border-top: 1px dashed var(--line); padding-top: 12px; font-size: 11px; color: var(--muted); font-family: sans-serif;"
+>
         </div>
-        <img src="{{brandFooterImage}}" alt="Footer Banner" style="width: 100%; height: auto; display: block;" onerror="this.style.display='none'" />
+        <img
+          src="{{brandFooterImage}}"
+          alt="Footer Banner"
+          style="width: 100%; height: 100px; display: block;"
+          onerror="this.style.display='none'"
+        />
       </section>
     </main>
   </body>
