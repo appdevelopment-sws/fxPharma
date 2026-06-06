@@ -183,7 +183,9 @@ const Orders = () => {
         key: "id",
         header: "Order ID",
         render: (row) => (
-          <span className="font-mono text-xs">{row.orderId || row.id}</span>
+          <span className="font-mono text-xs font-bold text-primary">
+            {row.orderId || row.id}
+          </span>
         ),
       },
       {

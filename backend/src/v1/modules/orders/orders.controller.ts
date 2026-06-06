@@ -17,25 +17,25 @@ const generateOrderId = async (
   tx: Prisma.TransactionClient,
   organizationId: string,
 ) => {
-  const lastOrder = await tx.order.findFirst({
+  const count = await tx.order.count({
     where: { organizationId },
-    orderBy: {
-      createdAt: "desc",
-    },
-    select: {
-      orderId: true,
-    },
   });
 
-  let nextNumber = 1;
+  const nextNumber = count + 1;
 
-  if (lastOrder?.orderId) {
-    const numberPart = Number(lastOrder.orderId.replace(/\D/g, ""));
+  const now = new Date();
 
-    nextNumber = numberPart + 1;
-  }
+  const timestamp =
+    now.getFullYear().toString().slice(-2) +
+    String(now.getMonth() + 1).padStart(2, "0") +
+    String(now.getDate()).padStart(2, "0") +
+    String(now.getHours()).padStart(2, "0") +
+    String(now.getMinutes()).padStart(2, "0") +
+    String(now.getSeconds()).padStart(2, "0");
 
-  return `PO${String(nextNumber).padStart(5, "0")}`;
+  const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+
+  return `Order${String(nextNumber).padStart(5, "0")}-${timestamp}-${random}`;
 };
 const toNumber = (value: unknown) => {
   const parsed = Number(value);
