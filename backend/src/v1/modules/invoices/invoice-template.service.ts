@@ -4,7 +4,7 @@ import { fileURLToPath } from "url";
 import puppeteer from "puppeteer";
 import ErrorHandler from "../../../utils/ErrorHandler.js";
 import { rootPrisma } from "@/lib/prisma.js";
-
+import Handlebars from "handlebars";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -153,19 +153,11 @@ async function resolveTemplatePath(templateName?: string | null) {
   }
 }
 
-function renderTemplate(template: string, data: Record<string, string>) {
-  let output = template;
+function renderTemplate(template: string, data: Record<string, any>) {
+  const compiled = Handlebars.compile(template);
 
-  for (const [key, value] of Object.entries(data)) {
-    const rawPattern = new RegExp(String.raw`{{{\s*${key}\s*}}}`, "g");
-    const escapedPattern = new RegExp(String.raw`{{\s*${key}\s*}}`, "g");
-    output = output.replace(rawPattern, value);
-    output = output.replace(escapedPattern, escapeHtml(value));
-  }
-
-  return output;
+  return compiled(data);
 }
-
 function buildItemRows(invoice: InvoiceLike) {
   return invoice.items
     .map((item, index) => {
@@ -517,7 +509,17 @@ class InvoiceTemplateService {
       const page = await browser.newPage();
       await page.setContent(html, { waitUntil: "load" });
       await page.emulateMediaType("screen");
-
+      const isThermal = templateName === "template5";
+      console.log("her=>", templateName, isThermal);
+      if (isThermal) {
+        console.log("her=>", templateName);
+        return await page.pdf({
+          width: "80mm",
+          height: "1000mm",
+          printBackground: true,
+          preferCSSPageSize: true,
+        });
+      }
       return await page.pdf({
         format: "A4",
         printBackground: true,

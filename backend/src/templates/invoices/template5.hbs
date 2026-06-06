@@ -1,0 +1,237 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: monospace;
+        font-size: 12px;
+        color: #000;
+        width: 80mm;
+        margin: 0 auto;
+      }
+
+      .receipt {
+        width: 80mm;
+        padding: 4mm;
+      }
+
+      .center {
+        text-align: center;
+      }
+
+      .bold {
+        font-weight: bold;
+      }
+
+      hr {
+        border: none;
+        border-top: 1px dashed #000;
+        margin: 6px 0;
+      }
+
+      .store-name {
+        font-size: 18px;
+        font-weight: bold;
+      }
+
+      .store-address {
+        font-size: 11px;
+        margin-top: 2px;
+      }
+
+      .invoice-meta {
+        margin-top: 6px;
+        font-size: 11px;
+      }
+
+      .invoice-meta div {
+        display: flex;
+        justify-content: space-between;
+      }
+
+      .items {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      .items th {
+        text-align: left;
+        border-bottom: 1px dashed #000;
+        padding-bottom: 3px;
+      }
+
+      .items td {
+        padding: 2px 0;
+        vertical-align: top;
+      }
+
+      .qty {
+        width: 30px;
+        text-align: center;
+      }
+
+      .rate {
+        width: 55px;
+        text-align: right;
+      }
+
+      .amount {
+        width: 65px;
+        text-align: right;
+      }
+
+      .summary {
+        margin-top: 5px;
+      }
+
+      .summary-row {
+        display: flex;
+        justify-content: space-between;
+        margin: 2px 0;
+      }
+
+      .total {
+        font-size: 15px;
+        font-weight: bold;
+        border-top: 1px dashed #000;
+        padding-top: 5px;
+      }
+
+      .footer {
+        text-align: center;
+        margin-top: 10px;
+        font-size: 11px;
+      }
+
+      .qr {
+        text-align: center;
+        margin-top: 8px;
+      }
+
+      .qr img {
+        width: 120px;
+        height: 120px;
+      }
+    </style>
+  </head>
+
+  <body>
+
+    <div class="receipt">
+
+      <div class="center">
+        {{#if brandLogo}}
+          <img src="{{brandLogo}}" style="max-width:150px;max-height:80px;" />
+        {{/if}}
+
+        <div class="store-name">{{brandName}}</div>
+
+        <div class="store-address">
+          {{brandAddress}}
+        </div>
+
+        <div>
+          {{companyContactBlock}}
+        </div>
+
+        {{#if brandGstin}}
+          <div>GSTIN: {{brandGstin}}</div>
+        {{/if}}
+      </div>
+
+      <hr />
+
+      <div class="invoice-meta">
+        <div>
+          <span>Bill No</span>
+          <span>{{invoiceId}}</span>
+        </div>
+
+        <div>
+          <span>Date</span>
+          <span>{{createdAt}}</span>
+        </div>
+
+        <div>
+          <span>Customer</span>
+          <span>{{customerName}}</span>
+        </div>
+
+        <div>
+          <span>Payment</span>
+          <span>{{paymentMode}}</span>
+        </div>
+      </div>
+
+      <hr />
+
+      <table class="items">
+
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th class="qty">Qty</th>
+            <th class="rate">Rate</th>
+            <th class="amount">Amt</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {{{itemsRowsThermal}}}
+        </tbody>
+
+      </table>
+
+      <hr />
+
+      <div class="summary">
+
+        <div class="summary-row">
+          <span>Subtotal</span>
+          <span>{{grossAmount}}</span>
+        </div>
+
+        <div class="summary-row">
+          <span>Discount</span>
+          <span>{{discountAmount}}</span>
+        </div>
+
+        <div class="summary-row">
+          <span>Tax</span>
+          <span>{{taxAmount}}</span>
+        </div>
+
+        <div class="summary-row total">
+          <span>TOTAL</span>
+          <span>{{totalAmount}}</span>
+        </div>
+
+      </div>
+
+      <hr />
+
+      <div class="center">
+        Tendered:
+        {{tenderedAmount}}<br />
+        Change:
+        {{changeAmount}}
+      </div>
+
+      {{{paymentQrBlock}}}
+
+      <div class="footer">
+        Thank You<br />
+        Visit Again
+      </div>
+
+    </div>
+
+  </body>
+</html>
