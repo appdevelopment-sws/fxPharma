@@ -106,7 +106,7 @@ const Orders = () => {
     )
 
     const lines = [
-      `Order ID: ${order.id}`,
+      `Order ID: ${order.orderId || order.id}`,
       `Date: ${new Date(order.createdAt).toLocaleDateString()}`,
       "",
       "Items:",
