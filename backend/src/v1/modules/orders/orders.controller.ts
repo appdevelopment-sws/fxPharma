@@ -356,8 +356,9 @@ export class OrdersController {
       branchId: orderData.branchId === "" ? null : orderData.branchId,
       receivedAt: parseOptionalDate(orderData.receivedAt),
     };
-    const generatedOrderId = await generateOrderId(tx, organizationId);
     const order = await rootPrisma.$transaction(async (tx) => {
+      const generatedOrderId = await generateOrderId(tx, organizationId);
+
       const created = await tx.order.create({
         data: {
           ...cleanedOrderData,
