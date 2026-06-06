@@ -16,6 +16,7 @@ const ORDER_STATUS_VALUES = [
 const generateOrderId = async (
   tx: Prisma.TransactionClient,
   organizationId: string,
+  branchId: string | null,
 ) => {
   const count = await tx.order.count({
     where: { organizationId },
@@ -34,8 +35,9 @@ const generateOrderId = async (
     String(now.getSeconds()).padStart(2, "0");
 
   const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+  const shortTime = Date.now().toString(36).toUpperCase();
 
-  return `Order${String(nextNumber).padStart(5, "0")}-${timestamp}-${random}`;
+  return `ORD${String(nextNumber).padStart(4, "0")}-${shortTime}`;
 };
 const toNumber = (value: unknown) => {
   const parsed = Number(value);
@@ -357,7 +359,11 @@ export class OrdersController {
       receivedAt: parseOptionalDate(orderData.receivedAt),
     };
     const order = await rootPrisma.$transaction(async (tx) => {
-      const generatedOrderId = await generateOrderId(tx, organizationId);
+      const generatedOrderId = await generateOrderId(
+        tx,
+        organizationId,
+        branchId,
+      );
 
       const created = await tx.order.create({
         data: {
