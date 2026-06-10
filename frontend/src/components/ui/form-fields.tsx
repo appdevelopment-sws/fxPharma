@@ -14,6 +14,7 @@ import {
   Upload,
   File as FileIcon,
   Plus,
+  X,
 } from "lucide-react"
 import { debounce } from "lodash"
 
@@ -722,6 +723,30 @@ export function FormFileUpload<T extends FieldValues>({
                 isUploading && "cursor-wait opacity-80"
               )}
             >
+              {" "}
+              {value && !disabled && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation()
+
+                    onChange(null)
+
+                    if (fileInputRef.current) {
+                      fileInputRef.current.value = ""
+                    }
+
+                    if (localPreviewUrl?.startsWith("blob:")) {
+                      URL.revokeObjectURL(localPreviewUrl)
+                    }
+
+                    setLocalPreviewUrl(null)
+                  }}
+                  className="absolute top-2 right-2 z-50 flex h-7 w-7 items-center justify-center rounded-full bg-black/70 text-white hover:bg-black"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
               {isUploading ? (
                 <div className="flex flex-col items-center justify-center gap-2 p-4 text-center">
                   <Upload className="size-6 animate-pulse text-primary" />
@@ -730,7 +755,6 @@ export function FormFileUpload<T extends FieldValues>({
                   </span>
                 </div>
               ) : null}
-
               {value ? (
                 isImage && previewUrl ? (
                   <>
@@ -850,18 +874,22 @@ export function FormCreatableSelect<T extends FieldValues>({
   const [open, setOpen] = React.useState(false)
   const [internalSearch, setInternalSearch] = React.useState("")
 
-  const isControlledSearch = searchValue !== undefined && onSearchChange !== undefined
+  const isControlledSearch =
+    searchValue !== undefined && onSearchChange !== undefined
   const currentSearch = isControlledSearch ? searchValue : internalSearch
-  const setCurrentSearch = isControlledSearch ? onSearchChange : setInternalSearch
+  const setCurrentSearch = isControlledSearch
+    ? onSearchChange
+    : setInternalSearch
 
   const filteredOptions = React.useMemo(() => {
     if (isControlledSearch) return options
 
     if (!currentSearch) return options
     const lowerVal = currentSearch.toLowerCase()
-    return options.filter((option) =>
-      option.label.toLowerCase().includes(lowerVal) ||
-      option.value.toLowerCase().includes(lowerVal)
+    return options.filter(
+      (option) =>
+        option.label.toLowerCase().includes(lowerVal) ||
+        option.value.toLowerCase().includes(lowerVal)
     )
   }, [options, currentSearch, isControlledSearch])
 
@@ -956,7 +984,7 @@ export function FormCreatableSelect<T extends FieldValues>({
                   )}
                   {showCreateOption && (
                     <div
-                      className="relative flex cursor-pointer items-center rounded-sm px-2 py-1.5 text-sm text-primary font-medium outline-none select-none hover:bg-accent hover:text-accent-foreground border-t mt-1"
+                      className="relative mt-1 flex cursor-pointer items-center rounded-sm border-t px-2 py-1.5 text-sm font-medium text-primary outline-none select-none hover:bg-accent hover:text-accent-foreground"
                       onClick={() => {
                         field.onChange(currentSearch)
                         setOpen(false)
@@ -976,4 +1004,3 @@ export function FormCreatableSelect<T extends FieldValues>({
     />
   )
 }
-
