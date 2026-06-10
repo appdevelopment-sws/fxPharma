@@ -18,6 +18,7 @@ interface InvoiceTemplatesFormValues {
   low_stock_threshold: string
   require_prescription: boolean
   invoice_template_name: string
+  inventory_additional_fields_enabled: boolean
 }
 
 const DEFAULT_PHARMACY_SETTINGS: InvoiceTemplatesFormValues = {
@@ -28,6 +29,7 @@ const DEFAULT_PHARMACY_SETTINGS: InvoiceTemplatesFormValues = {
   low_stock_threshold: "10",
   require_prescription: false,
   invoice_template_name: "template1",
+  inventory_additional_fields_enabled: false,
 }
 
 export default function InvoiceTemplates() {
@@ -80,6 +82,8 @@ export default function InvoiceTemplates() {
               res.data.invoice_template_name ||
               res.data.invoice_template ||
               DEFAULT_PHARMACY_SETTINGS.invoice_template_name,
+            inventory_additional_fields_enabled:
+              res.data.inventory_additional_fields_enabled === "true",
           })
         }
       })
@@ -107,6 +111,9 @@ export default function InvoiceTemplates() {
         low_stock_threshold: data.low_stock_threshold,
         require_prescription: String(data.require_prescription),
         invoice_template_name: data.invoice_template_name,
+        inventory_additional_fields_enabled: String(
+          data.inventory_additional_fields_enabled
+        ),
       }
 
       await SettingsApi.updateSettings(payload)
@@ -265,6 +272,12 @@ export default function InvoiceTemplates() {
                 name="require_prescription"
                 label="Require Prescription"
                 description="Prompt for prescription during checkout for Schedule H/H1/X drugs"
+              />{" "}
+              <FormSwitch
+                control={control}
+                name="inventory_additional_fields_enabled"
+                label="Show Inventory Additional Fields"
+                description="Enable inventory thresholds, discounts, and regulatory flags in product form"
               />
             </div>
           </div>

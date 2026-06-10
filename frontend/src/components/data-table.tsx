@@ -27,6 +27,7 @@ type DataTableProps<T> = {
   rowKey: keyof T | ((row: T, index: number) => React.Key)
   isLoading?: boolean
   emptyTitle?: string
+  rowClassName?: string | ((row: T, index: number) => string)
   emptyDescription?: string
   currentPage?: number
   lastPage?: number
@@ -80,6 +81,7 @@ function DataTable<T>({
   currentPage = 1,
   lastPage = 1,
   pageSize = 10,
+  rowClassName,
   totalRecords = data.length,
   onPageChange,
   onPageSizeChange,
@@ -112,7 +114,15 @@ function DataTable<T>({
               />
             ) : (
               data.map((row, index) => (
-                <TableRow key={resolveRowKey(rowKey, row, index)}>
+                <TableRow
+                  key={resolveRowKey(rowKey, row, index)}
+                  className={cn(
+                    typeof rowClassName === "function"
+                      ? rowClassName(row, index)
+                      : rowClassName
+                  )}
+                >
+                  {" "}
                   {columns.map((column) => (
                     <TableCell
                       key={column.key}

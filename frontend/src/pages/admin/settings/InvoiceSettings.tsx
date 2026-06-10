@@ -32,7 +32,7 @@ interface InvoiceSettingsFormValues {
   invoice_show_payment_qr: boolean
   invoice_half_print: boolean
   whatsapp_invoice_template: string
-  inventory_additional_fields_enabled: boolean
+  // inventory_additional_fields_enabled: boolean
   watermark: boolean
 }
 const DEFAULT_INVOICE_SETTINGS: InvoiceSettingsFormValues = {
@@ -55,7 +55,7 @@ const DEFAULT_INVOICE_SETTINGS: InvoiceSettingsFormValues = {
   invoice_half_print: false,
   whatsapp_invoice_template:
     "Hi *{{customerName}}*, your invoice *{{invoiceNumber}}* from *{{storeName}}* is ready. You can download it here: {{downloadLink}}",
-  inventory_additional_fields_enabled: false,
+  // inventory_additional_fields_enabled: false,
   watermark: false,
 }
 export default function InvoiceSettings() {
@@ -120,8 +120,8 @@ export default function InvoiceSettings() {
               res.data.whatsapp_invoice_template ??
               DEFAULT_INVOICE_SETTINGS.whatsapp_invoice_template,
             invoice_half_print: res.data.invoice_half_print === "true",
-            inventory_additional_fields_enabled:
-              res.data.inventory_additional_fields_enabled === "true",
+            // inventory_additional_fields_enabled:
+            //   res.data.inventory_additional_fields_enabled === "true",
             watermark: res.data.watermark === "true",
           })
         }
@@ -158,9 +158,9 @@ export default function InvoiceSettings() {
         invoice_show_payment_qr: String(data.invoice_show_payment_qr),
         invoice_half_print: String(data.invoice_half_print),
         whatsapp_invoice_template: data.whatsapp_invoice_template,
-        inventory_additional_fields_enabled: String(
-          data.inventory_additional_fields_enabled
-        ),
+        // inventory_additional_fields_enabled: String(
+        //   data.inventory_additional_fields_enabled
+        // ),
         watermark: String(data.watermark),
       }
 
@@ -418,12 +418,12 @@ export default function InvoiceSettings() {
                 label="Half Page Print"
                 description="Format invoices for half page printing"
               />
-              <FormSwitch
+              {/* <FormSwitch
                 control={control}
                 name="inventory_additional_fields_enabled"
                 label="Show Inventory Additional Fields"
                 description="Enable inventory thresholds, discounts, and regulatory flags in product form"
-              />
+              /> */}
               <FormSwitch
                 control={control}
                 name="watermark"

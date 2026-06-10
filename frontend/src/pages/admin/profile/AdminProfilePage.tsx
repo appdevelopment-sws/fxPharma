@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from "react"
-import { useQuery } from "@tanstack/react-query"
-import { Pencil, Plus } from "lucide-react"
+import { useMutation, useQuery } from "@tanstack/react-query"
+import { Pencil, Plus, Trash, Trash2 } from "lucide-react"
 
 import DataTable, { type DataTableColumn } from "@/components/data-table"
 import SectionCard from "@/components/SectionCard"
@@ -14,6 +14,8 @@ import useSearchFilter from "@/hooks/useSearchFilter"
 import { queryKeys } from "@/lib/queryKeys"
 import { UserApi } from "@/services/userApi"
 import { cn } from "@/lib/utils"
+import { ConfirmDialog } from "@/components/confirmDialog"
+import { queryClient } from "@/services/customQueryClient"
 
 const INITIAL_FILTERS = {
   search: "",
@@ -25,7 +27,14 @@ export default function AdminProfilePage() {
   const { user, activeOrganizationId } = useAuth()
   const userDialog = useDisclosure<any>()
   const { filter, handleFilter } = useSearchFilter(INITIAL_FILTERS)
-
+  const deleteConfirm = useDisclosure<any>()
+  const deleteUserMutation = useMutation({
+    mutationFn: (id: string) => UserApi.deleteUser(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.users.all })
+      deleteConfirm.onClose()
+    },
+  })
   const { data: usersResponse, isLoading } = useQuery({
     queryKey: queryKeys.users.list({
       organizationId: activeOrganizationId,
@@ -115,7 +124,11 @@ export default function AdminProfilePage() {
           return (
             <div className="flex flex-wrap gap-2">
               {branchNames.map((branchName: string) => (
-                <Badge key={branchName} variant="outline" className="rounded-full">
+                <Badge
+                  key={branchName}
+                  variant="outline"
+                  className="rounded-full"
+                >
                   {branchName}
                 </Badge>
               ))}
@@ -155,6 +168,14 @@ export default function AdminProfilePage() {
             >
               <Pencil className="size-4" />
             </Button>
+            <Button
+              size="icon-sm"
+              variant="ghost"
+              onClick={() => deleteConfirm.onOpen(row)}
+              className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+            >
+              <Trash2 className="size-4" />
+            </Button>
           </div>
         ),
       },
@@ -169,7 +190,20 @@ export default function AdminProfilePage() {
         onClose={userDialog.onClose}
         user={userDialog.data}
       />
-
+      <ConfirmDialog
+        open={deleteConfirm.isOpen}
+        onOpenChange={deleteConfirm.onClose}
+        title="Delete Invoice"
+        description={`Are you sure you want to delete invoice ${deleteConfirm.data?.invoice_id}? This will also delete any associated returns and revert stock changes.`}
+        confirmText="Delete"
+        variant="danger"
+        isLoading={deleteUserMutation.isPending}
+        onConfirm={() => {
+          if (deleteConfirm.data) {
+            deleteUserMutation.mutate(deleteConfirm.data.id)
+          }
+        }}
+      />
       <SectionCard
         title="Organization Users"
         description="Create, edit, and review every user in the active organization with their assigned branch access."

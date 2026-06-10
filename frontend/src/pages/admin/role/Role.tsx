@@ -15,10 +15,7 @@ import { queryKeys } from "@/lib/queryKeys"
 import { RoleApi } from "@/services/roleApi"
 import { Badge } from "@/components/ui/badge"
 
-import {
-  INITIAL_ROLE_FILTERS,
-  ROLE_COLUMNS,
-} from "@/constants/page/admin/role"
+import { INITIAL_ROLE_FILTERS, ROLE_COLUMNS } from "@/constants/page/admin/role"
 
 export default function AdminRolePage() {
   const queryClient = useQueryClient()
@@ -45,10 +42,7 @@ export default function AdminRolePage() {
     },
   })
 
-  const handleOpen = (
-    role: any = null,
-    mode: "create" | "edit" = "create"
-  ) => {
+  const handleOpen = (role: any = null, mode: "create" | "edit" = "create") => {
     dialogDisclosure.onOpen(role ? { ...role, id: role.id } : null)
   }
 
@@ -85,13 +79,15 @@ export default function AdminRolePage() {
       },
       {
         key: "name",
-        header: ROLE_COLUMNS.find((c) => c.key === "name")?.label || "Role Name",
+        header:
+          ROLE_COLUMNS.find((c) => c.key === "name")?.label || "Role Name",
         accessor: "name",
         render: (row) => <span className="font-medium">{row.name}</span>,
       },
       {
         key: "action",
-        header: ROLE_COLUMNS.find((c) => c.key === "action")?.label || "Actions",
+        header:
+          ROLE_COLUMNS.find((c) => c.key === "action")?.label || "Actions",
         render: (row) => (
           <div className="flex items-center gap-2">
             <Button
@@ -180,7 +176,6 @@ export default function AdminRolePage() {
             onPageSizeChange={handlePageSizeChange}
             emptyTitle="No Roles found"
             emptyDescription="Add a new Role or adjust the filters to see matching records."
-            emptyIcon={<Users className="size-10" />}
           />
         </div>
       </SectionCard>

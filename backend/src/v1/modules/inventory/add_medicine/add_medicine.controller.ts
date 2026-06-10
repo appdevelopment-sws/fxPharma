@@ -179,6 +179,7 @@ const buildExpiryReportRow = (batch: any) => {
 export class InventoryController {
   static getAll = catchAsync(async (req: Request, res: Response) => {
     const { organizationId, branchId } = getRequestScope(req);
+    const { status } = req.query;
 
     await paginate(res, req.query, async (skip, take, search) => {
       const filters: any = {
@@ -210,7 +211,9 @@ export class InventoryController {
           },
         ];
       }
-
+      if (status) {
+        filters.status = String(status);
+      }
       const [data, total] = await Promise.all([
         rootPrisma.inventory.findMany({
           where: filters,
@@ -397,25 +400,43 @@ export class InventoryController {
       },
     );
 
-    const filteredRows = rows.filter((row: ReturnType<typeof buildExpiryReportRow>) => {
-      if (statusFilter !== "all") {
-        if (statusFilter === "EXPIRED") {
-          if (row.remainingDays === null || row.remainingDays > 0) return false;
-        } else if (statusFilter === "EXPIRING_15") {
-          if (row.remainingDays === null || row.remainingDays <= 0 || row.remainingDays > 15) return false;
-        } else if (statusFilter === "EXPIRING_30") {
-          if (row.remainingDays === null || row.remainingDays <= 0 || row.remainingDays > 30) return false;
-        } else if (statusFilter === "EXPIRING_90") {
-          if (row.remainingDays === null || row.remainingDays <= 0 || row.remainingDays > 90) return false;
-        } else if (statusFilter === "ACTIVE") {
-          if (row.status !== "ACTIVE") return false;
-        } else if (row.status !== statusFilter) {
-          return false;
+    const filteredRows = rows.filter(
+      (row: ReturnType<typeof buildExpiryReportRow>) => {
+        if (statusFilter !== "all") {
+          if (statusFilter === "EXPIRED") {
+            if (row.remainingDays === null || row.remainingDays > 0)
+              return false;
+          } else if (statusFilter === "EXPIRING_15") {
+            if (
+              row.remainingDays === null ||
+              row.remainingDays <= 0 ||
+              row.remainingDays > 15
+            )
+              return false;
+          } else if (statusFilter === "EXPIRING_30") {
+            if (
+              row.remainingDays === null ||
+              row.remainingDays <= 0 ||
+              row.remainingDays > 30
+            )
+              return false;
+          } else if (statusFilter === "EXPIRING_90") {
+            if (
+              row.remainingDays === null ||
+              row.remainingDays <= 0 ||
+              row.remainingDays > 90
+            )
+              return false;
+          } else if (statusFilter === "ACTIVE") {
+            if (row.status !== "ACTIVE") return false;
+          } else if (row.status !== statusFilter) {
+            return false;
+          }
         }
-      }
 
-      return true;
-    });
+        return true;
+      },
+    );
 
     const total = filteredRows.length;
     const totalPages = Math.max(1, Math.ceil(total / limit));
@@ -492,10 +513,10 @@ export class InventoryController {
         brand: true,
         unit: true,
       },
-      orderBy: { availableStock: "asc" }
+      orderBy: { availableStock: "asc" },
     });
 
-    const allLowStockItems = items.filter(item => {
+    const allLowStockItems = items.filter((item) => {
       const threshold = item.minQty && item.minQty > 0 ? item.minQty : 10;
       return (item.availableStock ?? 0) <= threshold;
     });
@@ -503,15 +524,17 @@ export class InventoryController {
     // Calculate stats on all matching low stock items
     const stats = {
       totalLowStock: allLowStockItems.length,
-      outOfStock: allLowStockItems.filter(item => (item.availableStock ?? 0) === 0).length,
-      nearReorder: allLowStockItems.filter(item => {
+      outOfStock: allLowStockItems.filter(
+        (item) => (item.availableStock ?? 0) === 0,
+      ).length,
+      nearReorder: allLowStockItems.filter((item) => {
         const threshold = item.minQty && item.minQty > 0 ? item.minQty : 10;
         const stock = item.availableStock ?? 0;
         return stock > 0 && stock <= threshold / 2;
       }).length,
     };
 
-    const filteredLowStockItems = allLowStockItems.filter(item => {
+    const filteredLowStockItems = allLowStockItems.filter((item) => {
       if (statusFilter !== "all") {
         const threshold = item.minQty && item.minQty > 0 ? item.minQty : 10;
         if (statusFilter === "OUT_OF_STOCK") {
@@ -619,10 +642,11 @@ export class InventoryController {
   });
 
   static delete = catchAsync(async (req: Request, res: Response) => {
-    const { organizationId, branchId } = getRequestScope(req);
+    const { organizationId } = getRequestScope(req);
+    const inventoryId = req.params.id as string;
 
     const existing = await rootPrisma.inventory.findUnique({
-      where: { id: req.params.id as string },
+      where: { id: inventoryId },
     });
 
     if (!existing) {
@@ -633,10 +657,33 @@ export class InventoryController {
       throw new ErrorHandler("Inventory item not found", 404);
     }
 
-    await rootPrisma.inventory.delete({
-      where: { id: req.params.id as string },
-    });
+    try {
+      await rootPrisma.inventory.delete({
+        where: { id: inventoryId },
+      });
 
-    res.json({ success: true, message: "Inventory item deleted successfully" });
+      return res.json({
+        success: true,
+        message: "Inventory item deleted successfully",
+      });
+    } catch (error: any) {
+      // Prisma Foreign Key Constraint Error
+      if (error.code === "P2003") {
+        await rootPrisma.inventory.update({
+          where: { id: inventoryId },
+          data: {
+            status: "DISCONTINUE",
+          },
+        });
+
+        return res.json({
+          success: true,
+          message:
+            "Inventory item is linked with transactions, so it was marked as DISCONTINUE instead of being deleted",
+        });
+      }
+
+      throw error;
+    }
   });
 }

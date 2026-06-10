@@ -73,7 +73,6 @@ const ORDER_UNIT_OPTIONS = [
   { label: "Box", value: "box" },
 ]
 
-
 const buildItemFromInventory = (inventoryItem: any): OrderItemFormValue => ({
   tempId: createTempId(),
   inventoryId: inventoryItem.id,
@@ -81,7 +80,7 @@ const buildItemFromInventory = (inventoryItem: any): OrderItemFormValue => ({
   description:
     inventoryItem.saltComposition || inventoryItem.category?.name || "",
   qty: 1,
-  unit: "strip",
+  unit: "box",
   purchaseRate: inventoryItem.purchaseRate ?? undefined,
   inventory: inventoryItem,
 })
@@ -170,7 +169,7 @@ export default function OrderDialog({
 
   const { data: inventoryData, isLoading: isLoadingInventory } = useQuery({
     queryKey: queryKeys.inventory.list({ limit: 15 }),
-    queryFn: () => InventoryApi.getAll({ limit: 15 }),
+    queryFn: () => InventoryApi.getAll({ limit: 15, status: "CONTINUE" }),
     enabled: open,
   })
 

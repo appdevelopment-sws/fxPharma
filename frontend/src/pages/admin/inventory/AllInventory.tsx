@@ -156,17 +156,21 @@ export default function AllInventoryPage() {
               <Eye className="size-4" />
             </Button>
 
-            <Button
-              size="icon-sm"
-              variant="ghost"
-              onClick={() => handleOpen(row, "edit")}
-            >
-              <Pencil className="size-4" />
-            </Button>
+            {row.status !== "DISCONTINUE" && (
+              <Button
+                size="icon-sm"
+                variant="ghost"
+                onClick={() => handleOpen(row, "edit")}
+              >
+                <Pencil className="size-4" />
+              </Button>
+            )}
 
             <Button
+              disabled={row.status == "DISCONTINUE"}
               size="icon-sm"
               variant="ghost"
+              className="text-destructive hover:bg-destructive/10 hover:text-destructive"
               onClick={() => deleteDisclosure.onOpen(row)}
             >
               <Trash2 className="size-4" />
@@ -275,6 +279,11 @@ export default function AllInventoryPage() {
                 (inventoryData?.meta?.total || 0) / (filter.perPage || 10)
               ) ||
               1
+            }
+            rowClassName={(row) =>
+              row.status === "DISCONTINUE"
+                ? "line-through opacity-60 text-muted-foreground"
+                : ""
             }
             pageSize={filter.perPage || 10}
             totalRecords={inventoryData?.meta?.total || 0}
