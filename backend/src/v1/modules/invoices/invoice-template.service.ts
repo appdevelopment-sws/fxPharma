@@ -344,7 +344,7 @@ function buildInvoiceData(
     ? `<img src="${escapeHtml(storelogo)}" alt="Watermark" style="transform:rotate(-35deg);max-width:350px;max-height:350px;opacity:0.06;user-select:none;-webkit-user-select:none;" />`
     : `<div style="transform:rotate(-35deg);font-size:72px;font-weight:900;color:rgba(0,0,0,0.06);white-space:nowrap;text-transform:uppercase;letter-spacing:12px;user-select:none;-webkit-user-select:none;">${escapeHtml(brandName)}</div>`;
 
-  const watermarkBlock = storelogo
+  const watermarkBlock = showWatermark
     ? `<div class="watermark-overlay" style="position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:9999;overflow:hidden;">
          ${watermarkContent}
        </div>`
