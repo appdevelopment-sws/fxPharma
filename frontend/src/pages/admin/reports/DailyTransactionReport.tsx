@@ -96,6 +96,26 @@ export default function DailyTransactionReport() {
     [handleFilter]
   )
 
+  const handleViewInvoice = useCallback(async (invoice: Invoice) => {
+    try {
+      await InvoiceApi.openInvoiceHtml(invoice.id)
+      toast.success(`Opened ${invoice.invoice_id} preview`)
+    } catch {
+      toast.error("Could not open invoice preview.")
+    }
+  }, [])
+
+  const handlePrintInvoice = useCallback(async (invoice: Invoice) => {
+    try {
+      await InvoiceApi.openInvoiceHtml(invoice.id, undefined, true)
+    } catch {
+      toast.error("Could not print invoice.")
+    }
+  }, [])
+
+  const handlePrintReport = useCallback(() => {
+    window.print()
+  }, [])
 
   const columns: DataTableColumn<Invoice>[] = useMemo(() => {
     return [
@@ -194,6 +214,7 @@ export default function DailyTransactionReport() {
               size="icon-sm"
               variant="ghost"
               className="text-muted-foreground hover:text-foreground"
+              onClick={() => void handleViewInvoice(row)}
             >
               <Eye className="size-4" />
             </Button>
@@ -201,6 +222,7 @@ export default function DailyTransactionReport() {
               size="icon-sm"
               variant="ghost"
               className="text-muted-foreground hover:text-foreground"
+              onClick={() => void handlePrintInvoice(row)}
             >
               <Printer className="size-4" />
             </Button>
@@ -313,7 +335,7 @@ export default function DailyTransactionReport() {
             <FileDown className="mr-2 size-4 text-muted-foreground" />
             Export CSV
           </Button>
-          <Button >
+          <Button onClick={handlePrintReport}>
             <Printer className="mr-2 size-4" />
             Print Report
           </Button>
