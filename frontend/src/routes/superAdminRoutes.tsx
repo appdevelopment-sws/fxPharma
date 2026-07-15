@@ -59,7 +59,7 @@ export const SuperAdminRoutes = () => {
         >
           <Route path="tenants" element={<SuperAdminTenantsPage />} />
         </Route>
-        <Route path="credit-requests" element={<AdminCreditPage />} />
+        <Route path="credit" element={<AdminCreditPage />} />
         <Route
           element={
             <ProtectedRoute

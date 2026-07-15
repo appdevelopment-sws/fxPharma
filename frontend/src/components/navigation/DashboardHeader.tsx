@@ -10,6 +10,7 @@ import {
   UserCircle2,
   Maximize,
   Minimize,
+  Coins,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -29,6 +30,7 @@ interface DashboardHeaderProps {
   userRole: string
   userEmail?: string
   userAvatar?: string
+  userCredit?: number
   onOpenSidebar: () => void
   onOpenProfile?: () => void
   onOpenSettings?: () => void
@@ -43,6 +45,7 @@ export function DashboardHeader({
   userName,
   userRole,
   userAvatar,
+  userCredit,
   userEmail,
   onOpenSidebar,
   onOpenProfile,
@@ -137,6 +140,18 @@ export function DashboardHeader({
                 })}
               </span>
             </div>
+
+            {userCredit !== undefined && (
+              <div className="mr-2 hidden items-center gap-1.5 rounded-full border border-border bg-slate-50 px-3 py-1 sm:flex dark:bg-zinc-900">
+                <Coins className="size-4 text-amber-500" />
+                <span className="text-sm font-semibold text-foreground">
+                  {userCredit.toLocaleString("en-IN", {
+                    maximumFractionDigits: 2,
+                  })}{" "}
+                  credits
+                </span>
+              </div>
+            )}
 
             <Button
               variant="ghost"

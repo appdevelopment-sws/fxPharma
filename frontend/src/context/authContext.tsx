@@ -23,6 +23,7 @@ export type AuthUser = {
       name: string
       slug: string
       logo: string | null
+      creditBalance?: number
       branches?: Array<{
         id: string
         name: string

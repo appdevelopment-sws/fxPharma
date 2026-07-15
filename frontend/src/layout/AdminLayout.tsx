@@ -53,6 +53,7 @@ const AdminLayout = () => {
       userName={user?.name ?? "Workspace User"}
       userRole={user?.role ?? "Member"}
       userEmail={user?.email}
+      userCredit={user?.organizations?.[0]?.organization?.creditBalance}
       isLoggingOut={false}
       navigationGroups={navigationGroups}
       brandIcon={<PharmacyCrossIcon className="size-5" />}

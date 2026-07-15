@@ -19,6 +19,7 @@ type WorkspaceShellProps = {
   userName: string
   userRole: string
   userEmail?: string
+  userCredit?: number
   isLoggingOut: boolean
   navigationGroups: SidebarNavigationGroup[]
   brandIcon: ReactNode
@@ -35,6 +36,7 @@ export function WorkspaceShell({
   userName,
   userRole,
   userEmail,
+  userCredit,
   isLoggingOut,
   navigationGroups,
   brandIcon,
@@ -128,6 +130,7 @@ export function WorkspaceShell({
           userAvatar={workspaceSubtitle}
           userRole={userRole}
           userEmail={userEmail}
+          userCredit={userCredit}
           onOpenSidebar={() => setIsSidebarOpen(true)}
           onOpenProfile={onOpenProfile}
           onOpenSettings={onOpenSettings}
