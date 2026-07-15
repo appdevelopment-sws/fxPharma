@@ -1,13 +1,12 @@
-
 model Tax {
-  id        String   @id @default(cuid())
-  name      String
-  rate      Float
-  taxType   TaxType  @default(Exclusive) @map("tax_type")
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  isGlobal    Boolean  @default(false)
+  id          String       @id @default(cuid())
+  name        String
+  rate        Float
+  taxType     TaxType      @default(Exclusive) @map("tax_type")
+  isActive    Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  isGlobal    Boolean      @default(false)
   hsnMappings HsnMapping[]
 }
 
@@ -17,29 +16,29 @@ enum TaxType {
 }
 
 model Hsn {
-  id          String   @id @default(cuid())
-  hsncode     String
-  description String?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  isGlobal    Boolean  @default(false)
-  createdById String?   @map("created_by_id")
-  createdBy   User?     @relation(fields: [createdById], references: [id], onDelete: Cascade)
-  hsnMappings HsnMapping[]
+  id             String          @id @default(cuid())
+  hsncode        String
+  description    String?
+  isActive       Boolean         @default(true)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  isGlobal       Boolean         @default(false)
+  createdById    String?         @map("created_by_id")
+  createdBy      User?           @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  hsnMappings    HsnMapping[]
   masterProducts MasterProduct[]
 }
 
 model HsnMapping {
-  id        String   @id @default(cuid())
-  hsnid     String
-  taxid     String
+  id            String    @id @default(cuid())
+  hsnid         String
+  taxid         String
   effectiveFrom DateTime  @default(now()) @map("effective_from")
   effectiveTo   DateTime? @map("effective_to")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  isGlobal    Boolean  @default(false)
+  isGlobal  Boolean  @default(false)
 
   hsn Hsn @relation(fields: [hsnid], references: [id], onDelete: Cascade)
   tax Tax @relation(fields: [taxid], references: [id], onDelete: Cascade)

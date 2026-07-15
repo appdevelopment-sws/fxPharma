@@ -1,27 +1,26 @@
-
 //////////////////////////////////////////////////////
 // DIRECT MEMBER PERMISSIONS
 //////////////////////////////////////////////////////
 
 model MemberPermission {
-  id              String    @id @default(cuid())
+  id String @id @default(cuid())
 
-  memberId        String
+  memberId String
 
-  permissionId    String
+  permissionId String
 
   //////////////////////////////////////////////////////
   // true  => allow
   // false => deny
   //////////////////////////////////////////////////////
 
-  allowed         Boolean   @default(true)
+  allowed Boolean @default(true)
 
-  member          OrganizationMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  member OrganizationMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
 
-  permission      Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
 
-  createdAt       DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@unique([memberId, permissionId])
 }

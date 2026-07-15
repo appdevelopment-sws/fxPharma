@@ -137,6 +137,12 @@ export const adminNavigationGroups: SidebarNavigationGroup[] = [
         permissions: [PERMISSIONS.BRANCH_VIEW],
       },
       {
+        title: "Credit Management",
+        to: "/admin/credit",
+        description: "Request and manage store credit",
+        icon: Receipt,
+      },
+      {
         title: "Suppliers",
         to: "/admin/suppliers",
         description: "Supplier management",

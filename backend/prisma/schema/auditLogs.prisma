@@ -1,55 +1,52 @@
-
 //////////////////////////////////////////////////////
 // AUDIT LOG
 //////////////////////////////////////////////////////
 
 model AuditLog {
-  id              String    @id @default(cuid())
+  id String @id @default(cuid())
 
-  userId          String?
-  user            User? @relation(fields: [userId], references: [id])
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
 
-  organizationId  String?
-  organization    Organization? @relation(fields: [organizationId], references: [id])
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
 
-  branchId        String?
-  branch          Branch? @relation(fields: [branchId], references: [id])
+  branchId String?
+  branch   Branch? @relation(fields: [branchId], references: [id])
 
   //////////////////////////////////////////////////////
   // ACTION TYPE
   //////////////////////////////////////////////////////
 
-  action          AuditAction
+  action AuditAction
 
   //////////////////////////////////////////////////////
   // ENTITY DETAILS
   //////////////////////////////////////////////////////
 
-  entity          String
-  entityId        String
+  entity   String
+  entityId String
 
   //////////////////////////////////////////////////////
   // CHANGE SNAPSHOT
   //////////////////////////////////////////////////////
 
-  oldData         Json?
+  oldData Json?
 
-  newData         Json?
+  newData Json?
 
   //////////////////////////////////////////////////////
   // REQUEST INFO
   //////////////////////////////////////////////////////
 
-  ipAddress       String?
+  ipAddress String?
 
-  userAgent       String?
+  userAgent String?
 
-  createdAt       DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@index([organizationId])
-
   @@index([branchId])
-
   @@index([userId])
 }
 

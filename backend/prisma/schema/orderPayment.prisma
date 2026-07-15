@@ -1,21 +1,21 @@
 model OrderPayment {
-  id             String   @id @default(cuid())
+  id String @id @default(cuid())
 
-  orderId        String   @map("order_id")
-  order          Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId String @map("order_id")
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
-  organizationId String   @map("organization_id")
-  branchId       String?  @map("branch_id")
+  organizationId String  @map("organization_id")
+  branchId       String? @map("branch_id")
 
-  amount         Decimal  @map("amount")
-  paymentMode    String?  @map("payment_mode")
-  paymentDetails String?  @map("payment_details")
-  isUdhar        Boolean  @default(false) @map("is_udhar")
+  amount         Decimal @map("amount")
+  paymentMode    String? @map("payment_mode")
+  paymentDetails String? @map("payment_details")
+  isUdhar        Boolean @default(false) @map("is_udhar")
   notes          String?
 
-  paidAt         DateTime @default(now()) @map("paid_at")
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
+  paidAt    DateTime @default(now()) @map("paid_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@index([orderId])
   @@index([organizationId])

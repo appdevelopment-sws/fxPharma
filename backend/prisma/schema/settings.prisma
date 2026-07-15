@@ -1,18 +1,17 @@
 model Setting {
-  id             String   @id @default(cuid())
+  id String @id @default(cuid())
 
   organizationId String?
   branchId       String?
 
-  key            String
-  value          String
+  key   String
+  value String
 
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  isGlobal        Boolean  @default(false)
-  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  branch         Branch?       @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  isGlobal     Boolean       @default(false)
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  branch       Branch?       @relation(fields: [branchId], references: [id], onDelete: Cascade)
 
   @@unique([organizationId, branchId, key])
-
 }

@@ -19,6 +19,7 @@ import ManageSubscriptionPage from "@/pages/super-admin/subscription/Subscriptio
 
 import AttributesPage from "@/pages/shared/Attributes/AttributesPage"
 import FeatureManagementPage from "@/pages/super-admin/features/featureManagementPage"
+import AdminCreditPage from "@/pages/super-admin/credit/AdminCreditPage"
 
 export const SuperAdminRoutes = () => {
   return (
@@ -58,6 +59,7 @@ export const SuperAdminRoutes = () => {
         >
           <Route path="tenants" element={<SuperAdminTenantsPage />} />
         </Route>
+        <Route path="credit-requests" element={<AdminCreditPage />} />
         <Route
           element={
             <ProtectedRoute

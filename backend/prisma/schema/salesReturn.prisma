@@ -1,34 +1,34 @@
 model SalesReturn {
-  id              String            @id @default(cuid())
-  organizationId  String            @map("organization_id")
-  branchId        String?           @map("branch_id")
-  invoiceId       String            @map("invoice_id")
+  id             String  @id @default(cuid())
+  organizationId String  @map("organization_id")
+  branchId       String? @map("branch_id")
+  invoiceId      String  @map("invoice_id")
 
-  returnId        String            @unique @map("return_id")
-  originalInvoice String            @map("original_invoice")
+  returnId        String @unique @map("return_id")
+  originalInvoice String @map("original_invoice")
 
-  customerName    String?           @map("customer_name")
-  customerPhone   String?           @map("customer_phone")
+  customerName  String? @map("customer_name")
+  customerPhone String? @map("customer_phone")
 
-  returnValue     Decimal           @default(0.0) @map("return_value")
-  reason          String
-  status          SalesReturnStatus @default(REFUNDED)
-  itemsRestocked  Int               @default(0) @map("items_restocked")
+  returnValue    Decimal           @default(0.0) @map("return_value")
+  reason         String
+  status         SalesReturnStatus @default(REFUNDED)
+  itemsRestocked Int               @default(0) @map("items_restocked")
 
-  subtotal        Decimal           @default(0.0)
-  tax             Decimal           @default(0.0)
-  restockingFee   Decimal           @default(0.0) @map("restocking_fee")
-  refundMethod    String            @map("refund_method")
-  note            String?
+  subtotal      Decimal @default(0.0)
+  tax           Decimal @default(0.0)
+  restockingFee Decimal @default(0.0) @map("restocking_fee")
+  refundMethod  String  @map("refund_method")
+  note          String?
 
-  createdAt       DateTime          @default(now()) @map("created_at")
-  updatedAt       DateTime          @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  items           SalesReturnItem[]
+  items SalesReturnItem[]
 
-  invoice         Invoice           @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
-  organization    Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  branch          Branch?           @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  invoice      Invoice      @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  branch       Branch?      @relation(fields: [branchId], references: [id], onDelete: SetNull)
 
   @@index([organizationId])
   @@index([branchId])
@@ -39,25 +39,25 @@ model SalesReturn {
 }
 
 model SalesReturnItem {
-  id             String      @id @default(cuid())
-  salesReturnId  String      @map("sales_return_id")
+  id            String @id @default(cuid())
+  salesReturnId String @map("sales_return_id")
 
-  invoiceItemId  String?     @map("invoice_item_id")
-  inventoryId    String      @map("inventory_id")
-  batchId        String?     @map("batch_id")
+  invoiceItemId String? @map("invoice_item_id")
+  inventoryId   String  @map("inventory_id")
+  batchId       String? @map("batch_id")
 
-  name           String
-  batch          String?
-  expiry         String?
-  unitPrice      Decimal     @default(0.0) @map("unit_price")
-  purchasedQty   Int         @default(0) @map("purchased_qty")
-  returnQty      Int         @default(0) @map("return_qty")
-  reason         String
-  refundAmt      Decimal     @default(0.0) @map("refund_amt")
+  name         String
+  batch        String?
+  expiry       String?
+  unitPrice    Decimal @default(0.0) @map("unit_price")
+  purchasedQty Int     @default(0) @map("purchased_qty")
+  returnQty    Int     @default(0) @map("return_qty")
+  reason       String
+  refundAmt    Decimal @default(0.0) @map("refund_amt")
 
-  createdAt      DateTime    @default(now()) @map("created_at")
+  createdAt DateTime @default(now()) @map("created_at")
 
-  salesReturn    SalesReturn @relation(fields: [salesReturnId], references: [id], onDelete: Cascade)
+  salesReturn SalesReturn @relation(fields: [salesReturnId], references: [id], onDelete: Cascade)
 
   @@index([salesReturnId])
   @@index([invoiceItemId])

@@ -1,37 +1,36 @@
-
 model Invoice {
-  id             String        @id @default(cuid())
-  organizationId String        @map("organization_id")
-  branchId       String?       @map("branch_id")
+  id             String  @id @default(cuid())
+  organizationId String  @map("organization_id")
+  branchId       String? @map("branch_id")
 
-  invoiceId      String        @unique @map("invoice_id")
+  invoiceId String @unique @map("invoice_id")
 
-  customerName   String?       @map("customer_name")
-  customerPhone  String?       @map("customer_phone")
+  customerName  String? @map("customer_name")
+  customerPhone String? @map("customer_phone")
 
-  paymentMode    PaymentMode   @default(CASH) @map("payment_mode")
-  cashAmount     Decimal       @default(0.0) @map("cash_amount")
-  onlineAmount   Decimal       @default(0.0) @map("online_amount")
-  status         InvoiceStatus @default(PAID)
+  paymentMode  PaymentMode   @default(CASH) @map("payment_mode")
+  cashAmount   Decimal       @default(0.0) @map("cash_amount")
+  onlineAmount Decimal       @default(0.0) @map("online_amount")
+  status       InvoiceStatus @default(PAID)
 
-  grossAmount    Decimal       @default(0.0) @map("gross_amount")
-  discountAmount Decimal       @default(0.0) @map("discount_amount")
-  taxAmount      Decimal       @default(0.0) @map("tax_amount")
-  deliveryCost   Decimal       @default(0.0) @map("delivery_cost")
-  totalAmount    Decimal       @default(0.0) @map("total_amount")
-  tenderedAmount Decimal       @default(0.0) @map("tendered_amount")
-  changeAmount   Decimal       @default(0.0) @map("change_amount")
+  grossAmount    Decimal @default(0.0) @map("gross_amount")
+  discountAmount Decimal @default(0.0) @map("discount_amount")
+  taxAmount      Decimal @default(0.0) @map("tax_amount")
+  deliveryCost   Decimal @default(0.0) @map("delivery_cost")
+  totalAmount    Decimal @default(0.0) @map("total_amount")
+  tenderedAmount Decimal @default(0.0) @map("tendered_amount")
+  changeAmount   Decimal @default(0.0) @map("change_amount")
 
-  notes          String?
+  notes String?
 
-  createdAt      DateTime      @default(now()) @map("created_at")
-  updatedAt      DateTime      @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  items          InvoiceItem[]
-  returns        SalesReturn[]
+  items   InvoiceItem[]
+  returns SalesReturn[]
 
-  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  branch         Branch?       @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  branch       Branch?      @relation(fields: [branchId], references: [id], onDelete: SetNull)
 
   @@index([organizationId])
   @@index([branchId])
@@ -40,24 +39,24 @@ model Invoice {
 }
 
 model InvoiceItem {
-  id            String   @id @default(cuid())
-  invoiceId     String   @map("invoice_id")
+  id        String @id @default(cuid())
+  invoiceId String @map("invoice_id")
 
-  inventoryId   String   @map("inventory_id")
-  inventoryName String   @map("inventory_name")
-  batchId       String?  @map("batch_id")
-  batchNo       String?  @map("batch_no")
+  inventoryId   String  @map("inventory_id")
+  inventoryName String  @map("inventory_name")
+  batchId       String? @map("batch_id")
+  batchNo       String? @map("batch_no")
 
-  qty           Int      @default(1)
-  sellUnit      String   @default("strip") @map("sell_unit")
-  rateType      String   @default("mrp") @map("rate_type")
-  rateValue     Decimal  @default(0.0) @map("rate_value")
-  itemDiscount  Decimal  @default(0.0) @map("item_discount")
-  subTotal      Decimal  @default(0.0) @map("sub_total")
+  qty          Int     @default(1)
+  sellUnit     String  @default("strip") @map("sell_unit")
+  rateType     String  @default("mrp") @map("rate_type")
+  rateValue    Decimal @default(0.0) @map("rate_value")
+  itemDiscount Decimal @default(0.0) @map("item_discount")
+  subTotal     Decimal @default(0.0) @map("sub_total")
 
-  createdAt     DateTime @default(now()) @map("created_at")
+  createdAt DateTime @default(now()) @map("created_at")
 
-  invoice       Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
 
   @@index([invoiceId])
   @@index([inventoryId])

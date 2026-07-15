@@ -14,6 +14,7 @@ import {
   type LucideProps,
   Boxes,
   Tag,
+  Receipt,
 } from "lucide-react"
 import type { AuthUser } from "@/context/authContext"
 import {
@@ -48,6 +49,13 @@ export const superAdminNavigationGroups: SidebarNavigationGroup[] = [
         to: "/super-admin/tax-hsn",
         description: "Tax & HSN",
         icon: Percent,
+        roles: [ROLES.SUPER_ADMIN],
+      },
+      {
+        title: "Credit Requests",
+        to: "/super-admin/credit",
+        description: "Approve or reject credit requests",
+        icon: Receipt,
         roles: [ROLES.SUPER_ADMIN],
       },
     ],

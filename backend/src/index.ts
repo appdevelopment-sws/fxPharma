@@ -38,6 +38,7 @@ import CompoundRoutes from "./v1/modules/inventory/new_compound/new_compound.rou
 import InvoicesRoutes from "./v1/modules/invoices/invoices.routes.js";
 import ReturnsRoutes from "./v1/modules/returns/returns.routes.js";
 import settingsRoutes from "./v1/modules/settings/settings.route.js";
+import creditRoutes from "./v1/modules/credit/credit.routes.js";
 
 const app = express();
 
@@ -100,6 +101,7 @@ app.use("/api/v1/returns", generalLimiter, ReturnsRoutes);
 app.use("/api/v1/inventory/add-medicine", generalLimiter, MedicineRoutes);
 app.use("/api/v1/compound", generalLimiter, categoryRoutes);
 app.use("/api/v1/settings", generalLimiter, settingsRoutes);
+app.use("/api/v1/credit", generalLimiter, creditRoutes);
 app.get("/", (_req: Request, res: Response) => {
   res.json("hello from backend");
 });

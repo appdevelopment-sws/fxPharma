@@ -1,9 +1,9 @@
 model Role {
-  id              String    @id @default(cuid())
+  id String @id @default(cuid())
 
-  organizationId  String?
-  organization    Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   //////////////////////////////////////////////////////
   // Example:
   // SUPER_ADMIN
@@ -13,32 +13,31 @@ model Role {
   // CASHIER
   //////////////////////////////////////////////////////
 
-  name            String
+  name String
 
-  key             String
+  key String
 
-  description     String?
+  description String?
 
-  scope           RoleScope
+  scope RoleScope
 
-  isSystem        Boolean   @default(false)
+  isSystem Boolean @default(false)
 
-  createdAt       DateTime  @default(now())
+  createdAt DateTime @default(now())
 
   //////////////////////////////////////////////////////
   // RELATIONS
   //////////////////////////////////////////////////////
 
-  permissions     RolePermission[]
+  permissions RolePermission[]
 
-  members         OrganizationMember[]
+  members OrganizationMember[]
 
   //////////////////////////////////////////////////////
   // Unique inside organization
   //////////////////////////////////////////////////////
 
   @@unique([organizationId, key])
-
   @@index([organizationId])
 }
 

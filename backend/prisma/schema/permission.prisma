@@ -1,10 +1,9 @@
-
 //////////////////////////////////////////////////////
 // PERMISSION
 //////////////////////////////////////////////////////
 
 model Permission {
-  id            String    @id @default(cuid())
+  id String @id @default(cuid())
 
   //////////////////////////////////////////////////////
   // Examples:
@@ -15,20 +14,19 @@ model Permission {
   // medicine.create
   //////////////////////////////////////////////////////
 
-  key           String    @unique
+  key String @unique
 
-  name          String
+  name String
 
-  description   String?
+  description String?
 
-  createdAt     DateTime  @default(now())
+  createdAt DateTime @default(now())
 
   //////////////////////////////////////////////////////
   // RELATIONS
   //////////////////////////////////////////////////////
 
-  roles         RolePermission[]
+  roles RolePermission[]
 
-  users         MemberPermission[]
+  users MemberPermission[]
 }
-
