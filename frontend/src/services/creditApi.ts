@@ -10,6 +10,8 @@ export interface CreditRequest {
   paymentScreenshotUrl: string;
   status: CreditRequestStatus;
   adminToken?: string;
+  approvedAmount?: number;
+  remarks?: string;
   createdAt: string;
   updatedAt: string;
   organization?: any;
@@ -49,13 +51,13 @@ export const creditApi = {
     return res.data;
   },
 
-  approveRequest: async (id: string, adminToken: string) => {
-    const res = await api.post(`/credit/admin/requests/${id}/approve`, { adminToken });
+  approveRequest: async (id: string, adminToken: string, approvedAmount?: number, remarks?: string) => {
+    const res = await api.post(`/credit/admin/requests/${id}/approve`, { adminToken, approvedAmount, remarks });
     return res.data;
   },
 
-  rejectRequest: async (id: string) => {
-    const res = await api.post(`/credit/admin/requests/${id}/reject`);
+  rejectRequest: async (id: string, remarks?: string) => {
+    const res = await api.post(`/credit/admin/requests/${id}/reject`, { remarks });
     return res.data;
   },
 };

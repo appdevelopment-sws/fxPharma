@@ -82,7 +82,12 @@ export class CreditService {
     });
   }
 
-  async approveCreditRequest(requestId: string, adminToken: string) {
+  async approveCreditRequest(
+    requestId: string,
+    adminToken: string,
+    approvedAmount?: number,
+    remarks?: string
+  ) {
     return rootPrisma.$transaction(async (tx) => {
       const request = await tx.creditRequest.findUnique({
         where: { id: requestId },
@@ -96,18 +101,29 @@ export class CreditService {
         throw new Error("Request is not pending");
       }
 
+      const finalAmount = approvedAmount ?? request.requestedLimit;
+      
+      const setting = await tx.setting.findFirst({
+        where: { key: "credit_conversion_rate" },
+      });
+      const conversionRate = setting?.value ? parseFloat(setting.value) : 5; // Default 5 Rs = 1 credit
+      
+      const creditsToAdd = finalAmount / conversionRate;
+
       const updatedRequest = await tx.creditRequest.update({
         where: { id: requestId },
         data: {
           status: CreditRequestStatus.APPROVED,
           adminToken,
+          approvedAmount: finalAmount,
+          remarks,
         },
       });
 
       await this.addCredit(
         request.organizationId,
-        request.requestedLimit,
-        `Credit Request Approved: ${requestId}`,
+        creditsToAdd,
+        `Credit Request Approved (Amt: ${finalAmount}, Conv: ${conversionRate}): ${requestId}`,
         undefined,
         tx,
       );
@@ -116,11 +132,12 @@ export class CreditService {
     });
   }
 
-  async rejectCreditRequest(requestId: string) {
+  async rejectCreditRequest(requestId: string, remarks?: string) {
     return rootPrisma.creditRequest.update({
       where: { id: requestId },
       data: {
         status: CreditRequestStatus.REJECTED,
+        remarks,
       },
     });
   }

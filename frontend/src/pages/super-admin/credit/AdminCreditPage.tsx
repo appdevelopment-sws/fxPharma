@@ -10,14 +10,21 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useSettings } from "@/context/settingsContext";
 
 export default function AdminCreditPage() {
+  const { settings } = useSettings();
+  const conversionRate = Number(settings?.credit_conversion_rate || 5);
+
   const [requests, setRequests] = useState<CreditRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // States for modal
   const [selectedRequest, setSelectedRequest] = useState<CreditRequest | null>(null);
+  const [rejectRequestItem, setRejectRequestItem] = useState<CreditRequest | null>(null);
   const [adminToken, setAdminToken] = useState("");
+  const [remarks, setRemarks] = useState("");
+  const [approvedAmount, setApprovedAmount] = useState<number | "">("");
   const [isProcessing, setIsProcessing] = useState(false);
 
   const fetchRequests = async () => {
@@ -46,10 +53,12 @@ export default function AdminCreditPage() {
     }
     try {
       setIsProcessing(true);
-      await creditApi.approveRequest(selectedRequest.id, adminToken);
+      await creditApi.approveRequest(selectedRequest.id, adminToken, approvedAmount ? Number(approvedAmount) : undefined, remarks);
       toast.success("Request approved successfully");
       setSelectedRequest(null);
       setAdminToken("");
+      setRemarks("");
+      setApprovedAmount("");
       fetchRequests();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to approve request");
@@ -58,14 +67,19 @@ export default function AdminCreditPage() {
     }
   };
 
-  const handleReject = async (id: string) => {
-    if (!confirm("Are you sure you want to reject this request?")) return;
+  const handleReject = async () => {
+    if (!rejectRequestItem) return;
     try {
-      await creditApi.rejectRequest(id);
+      setIsProcessing(true);
+      await creditApi.rejectRequest(rejectRequestItem.id, remarks);
       toast.success("Request rejected");
+      setRejectRequestItem(null);
+      setRemarks("");
       fetchRequests();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to reject request");
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -98,6 +112,8 @@ export default function AdminCreditPage() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Date</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Organization</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Requested Limit</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Approved Amount</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Remarks</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
                 </tr>
@@ -107,7 +123,13 @@ export default function AdminCreditPage() {
                   <tr key={req.id}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{new Date(req.createdAt).toLocaleDateString()}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">{req.organization?.name || req.organizationId}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground font-medium">{req.requestedLimit}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground font-medium">₹{req.requestedLimit}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+                      {req.approvedAmount ? `₹${req.approvedAmount}` : "-"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground truncate max-w-[150px]" title={req.remarks || ""}>
+                      {req.remarks || "-"}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       <Badge 
                         variant={req.status === "APPROVED" ? "default" : req.status === "REJECTED" ? "destructive" : "secondary"}
@@ -130,14 +152,22 @@ export default function AdminCreditPage() {
                           <>
                             <span className="text-muted-foreground/30">|</span>
                             <button 
-                              onClick={() => setSelectedRequest(req)}
+                              onClick={() => {
+                                setSelectedRequest(req);
+                                setApprovedAmount(req.requestedLimit);
+                                setRemarks("");
+                                setAdminToken("");
+                              }}
                               className="text-green-600 hover:text-green-800 font-medium"
                             >
                               Approve
                             </button>
                             <span className="text-muted-foreground/30">|</span>
                             <button 
-                              onClick={() => handleReject(req.id)}
+                              onClick={() => {
+                                setRejectRequestItem(req);
+                                setRemarks("");
+                              }}
                               className="text-destructive hover:text-destructive/80 font-medium"
                             >
                               Reject
@@ -171,15 +201,42 @@ export default function AdminCreditPage() {
                 <p className="text-sm text-muted-foreground">Requested Limit: <span className="font-semibold text-foreground">{selectedRequest.requestedLimit}</span></p>
               </div>
               
-              <div className="mb-6 space-y-2">
-                <label className="block text-sm font-medium text-foreground">Approval Token / Remarks</label>
-                <input 
-                  type="text" 
-                  value={adminToken}
-                  onChange={(e) => setAdminToken(e.target.value)}
-                  className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-1 focus:ring-ring"
-                  placeholder="Enter token provided by payment gateway/system"
-                />
+              <div className="mb-4 space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-foreground">Approved Amount Override (₹)</label>
+                  <input 
+                    type="number" 
+                    value={approvedAmount}
+                    onChange={(e) => setApprovedAmount(e.target.value ? Number(e.target.value) : "")}
+                    className="w-full mt-1 border border-input rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-1 focus:ring-ring"
+                    placeholder="Leave empty to approve requested limit"
+                  />
+                  <p className="mt-1 text-xs font-semibold text-green-600 dark:text-green-400">
+                    Credits to be added: {((approvedAmount || selectedRequest.requestedLimit) / conversionRate).toLocaleString("en-IN", { maximumFractionDigits: 2 })}
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-foreground">Admin Token</label>
+                  <input 
+                    type="text" 
+                    value={adminToken}
+                    onChange={(e) => setAdminToken(e.target.value)}
+                    className="w-full mt-1 border border-input rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-1 focus:ring-ring"
+                    placeholder="Token provided by payment gateway/system"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-foreground">Remarks (Optional)</label>
+                  <textarea 
+                    value={remarks}
+                    onChange={(e) => setRemarks(e.target.value)}
+                    rows={2}
+                    className="w-full mt-1 border border-input rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-1 focus:ring-ring resize-none"
+                    placeholder="Any notes for the user..."
+                  />
+                </div>
               </div>
 
               <div className="flex justify-end gap-2">
@@ -195,6 +252,47 @@ export default function AdminCreditPage() {
                   className="bg-green-600 text-white hover:bg-green-700"
                 >
                   {isProcessing ? "Processing..." : "Confirm Approval"}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {rejectRequestItem && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-md shadow-lg border-0">
+            <CardHeader>
+              <CardTitle className="text-destructive">Reject Request</CardTitle>
+              <CardDescription>
+                Provide a reason for rejecting the credit request from <span className="font-semibold text-foreground">{rejectRequestItem.organization?.name}</span>.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="mb-6 space-y-2">
+                <label className="block text-sm font-medium text-foreground">Remarks (Required for rejection)</label>
+                <textarea 
+                  value={remarks}
+                  onChange={(e) => setRemarks(e.target.value)}
+                  rows={3}
+                  className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-1 focus:ring-ring resize-none"
+                  placeholder="Reason for rejection..."
+                />
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <Button 
+                  variant="outline"
+                  onClick={() => setRejectRequestItem(null)}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleReject}
+                  disabled={isProcessing || remarks.trim() === ""}
+                  variant="destructive"
+                >
+                  {isProcessing ? "Rejecting..." : "Confirm Rejection"}
                 </Button>
               </div>
             </CardContent>

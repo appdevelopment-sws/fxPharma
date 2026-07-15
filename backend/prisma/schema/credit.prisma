@@ -9,6 +9,8 @@ model CreditRequest {
 
   status     CreditRequestStatus @default(PENDING)
   adminToken String?
+  remarks    String?
+  approvedAmount Float?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

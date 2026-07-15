@@ -62,13 +62,18 @@ export class CreditController {
 
   approveRequest = catchAsync(async (req: Request, res: Response) => {
     const { id } = req.params;
-    const { adminToken } = req.body;
+    const { adminToken, approvedAmount, remarks } = req.body;
 
     if (!adminToken) {
       throw new ErrorHandler("Admin token is required", 400);
     }
 
-    const request = await creditService.approveCreditRequest(id as string, adminToken);
+    const request = await creditService.approveCreditRequest(
+      id as string, 
+      adminToken,
+      approvedAmount ? Number(approvedAmount) : undefined,
+      remarks
+    );
 
     res.status(200).json({
       success: true,
@@ -79,8 +84,9 @@ export class CreditController {
 
   rejectRequest = catchAsync(async (req: Request, res: Response) => {
     const { id } = req.params;
+    const { remarks } = req.body;
 
-    const request = await creditService.rejectCreditRequest(id as string);
+    const request = await creditService.rejectCreditRequest(id as string, remarks);
 
     res.status(200).json({
       success: true,

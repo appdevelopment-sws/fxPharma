@@ -14,8 +14,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { useSettings } from "@/context/settingsContext"
 
 export default function CreditPage() {
+  const { settings } = useSettings()
+  const conversionRate = Number(settings?.credit_conversion_rate || 5)
   const [activeTab, setActiveTab] = useState<"request" | "history">("request")
   const [requestedLimit, setRequestedLimit] = useState("")
   const [file, setFile] = useState<File | null>(null)
@@ -112,7 +115,7 @@ export default function CreditPage() {
             <form onSubmit={handleRequestSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-foreground">
-                  Requested Limit
+                  Payment Amount (₹)
                 </label>
                 <input
                   type="number"
@@ -143,6 +146,15 @@ export default function CreditPage() {
                 {isUploading ? "Submitting..." : "Submit Request"}
               </button>
             </form>
+            <p className="mt-4 text-xs text-muted-foreground text-center">
+              Note: The current conversion rate is 1 Credit = ₹{conversionRate}. The final approved credits will be calculated by the administrator based on your payment amount.
+              <br/>
+              {requestedLimit && (
+                <span className="font-semibold text-green-600 dark:text-green-400 mt-2 block">
+                  Estimated Credits: {(Number(requestedLimit) / conversionRate).toLocaleString("en-IN", { maximumFractionDigits: 2 })}
+                </span>
+              )}
+            </p>
           </CardContent>
           </Card>
         </div>
@@ -161,7 +173,9 @@ export default function CreditPage() {
                   <thead className="bg-muted/50">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Date</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Requested Limit</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Payment Amount</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Approved Amount</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Remarks</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
                     </tr>
                   </thead>
@@ -172,7 +186,13 @@ export default function CreditPage() {
                           {new Date(req.createdAt).toLocaleDateString()}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">
-                          {req.requestedLimit}
+                          ₹{req.requestedLimit}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+                          {req.approvedAmount ? `₹${req.approvedAmount}` : "-"}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground truncate max-w-[150px]" title={req.remarks || ""}>
+                          {req.remarks || "-"}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
                           <Badge 
@@ -186,7 +206,7 @@ export default function CreditPage() {
                     ))}
                     {requests.length === 0 && (
                       <tr>
-                        <td colSpan={3} className="px-6 py-8 text-center text-sm text-muted-foreground">
+                        <td colSpan={5} className="px-6 py-8 text-center text-sm text-muted-foreground">
                           No requests found.
                         </td>
                       </tr>
