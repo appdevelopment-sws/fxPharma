@@ -587,6 +587,48 @@ export class OrdersController {
     res.json({ success: true, message: "Order deleted successfully" });
   });
 
+  static parseInvoice = catchAsync(async (req: Request, res: Response) => {
+    if (!req.file) {
+      return res
+        .status(400)
+        .json({ success: false, message: "No invoice file uploaded" });
+    }
+
+    let parsedResult;
+    const mimeType = req.file.mimetype;
+
+    if (
+      mimeType === "application/pdf" ||
+      mimeType === "image/jpeg" ||
+      mimeType === "image/png" ||
+      mimeType === "image/tiff" ||
+      mimeType === "image/gif"
+    ) {
+      parsedResult = await InvoiceParserService.parseDocumentAI(req.file.buffer, mimeType);
+    } else if (
+      mimeType ===
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+      mimeType === "application/vnd.ms-excel" ||
+      mimeType === "text/csv" ||
+      req.file.originalname.endsWith(".xlsx") ||
+      req.file.originalname.endsWith(".xls") ||
+      req.file.originalname.endsWith(".csv")
+    ) {
+      parsedResult = InvoiceParserService.parseExcel(req.file.buffer);
+    } else {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Unsupported file format. Please upload a PDF, Image, or Excel/CSV file.",
+      });
+    }
+
+    res.json({
+      success: true,
+      data: parsedResult,
+    });
+  });
+
   static parseBill = catchAsync(async (req: Request, res: Response) => {
     const { organizationId, branchId } = getRequestScope(req);
     const orderId = req.params.id as string;
@@ -617,8 +659,14 @@ export class OrdersController {
     let parsedResult;
     const mimeType = req.file.mimetype;
 
-    if (mimeType === "application/pdf") {
-      parsedResult = await InvoiceParserService.parsePDF(req.file.buffer);
+    if (
+      mimeType === "application/pdf" ||
+      mimeType === "image/jpeg" ||
+      mimeType === "image/png" ||
+      mimeType === "image/tiff" ||
+      mimeType === "image/gif"
+    ) {
+      parsedResult = await InvoiceParserService.parseDocumentAI(req.file.buffer, mimeType);
     } else if (
       mimeType ===
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
@@ -633,7 +681,7 @@ export class OrdersController {
       return res.status(400).json({
         success: false,
         message:
-          "Unsupported file format. Please upload a PDF or Excel/CSV file.",
+          "Unsupported file format. Please upload a PDF, Image, or Excel/CSV file.",
       });
     }
 

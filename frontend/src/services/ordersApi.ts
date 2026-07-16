@@ -195,4 +195,13 @@ export const ordersApi = {
     })
     return res
   },
+
+  parseInvoice: async (file: File) => {
+    const formData = new FormData()
+    formData.append("bill", file)
+    const res = await api.post<any>(`${BASE_URL}/parse-invoice`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    })
+    return res
+  },
 }

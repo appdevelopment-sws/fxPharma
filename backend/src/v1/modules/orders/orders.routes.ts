@@ -97,6 +97,13 @@ router.put(
 router.delete("/:id", isAuthenticated, OrdersController.delete);
 
 router.post(
+  "/parse-invoice",
+  isAuthenticated,
+  upload.single("bill"),
+  OrdersController.parseInvoice
+);
+
+router.post(
   "/:id/parse-bill",
   isAuthenticated,
   upload.single("bill"),

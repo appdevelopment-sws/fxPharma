@@ -38,6 +38,7 @@ import InvoiceSettings from "@/pages/admin/settings/InvoiceSettings"
 import PharmacySettings from "@/pages/admin/settings/InvoiceTemplate"
 import InvoiceTemplates from "@/pages/admin/settings/InvoiceTemplate"
 import CreditPage from "@/pages/admin/credit/CreditPage"
+import AiBillingView from "@/pages/admin/orders/AiBillingView"
 
 export const AdminRoutes = () => {
   return (
@@ -94,6 +95,7 @@ export const AdminRoutes = () => {
             />
           </Route>
           <Route path="orders" element={<Orders />} />
+          <Route path="orders/ai-billing" element={<AiBillingView />} />
           <Route path="suppliers" element={<Suppliers />} />
           <Route path="returns" element={<ReturnsPage />} />
           <Route path="invoices" element={<RecentInvoicesPage />} />
@@ -130,10 +132,7 @@ export const AdminRoutes = () => {
             path="reports/daily-transaction-report"
             element={<DailyTransactionReport />}
           />
-          <Route
-            path="reports/low-stock"
-            element={<LowStock />}
-          />
+          <Route path="reports/low-stock" element={<LowStock />} />
           <Route
             element={
               <ProtectedRoute

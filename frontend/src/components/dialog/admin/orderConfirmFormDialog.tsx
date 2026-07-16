@@ -720,7 +720,7 @@ export default function OrderConfirmFormDialog({
               type="file"
               ref={fileInputRef}
               onChange={handleBillUpload}
-              accept=".pdf,.xlsx,.xls,.csv"
+              accept=".pdf,.xlsx,.xls,.csv,image/jpeg,image/png,image/tiff,image/gif"
               style={{ display: "none" }}
             />
             <Button
@@ -731,7 +731,7 @@ export default function OrderConfirmFormDialog({
               onClick={triggerFileSelect}
             >
               <Upload className="mr-1.5 size-4" />
-              {isParsingBill ? "Parsing..." : "Upload Bill (PDF/Excel)"}
+              {isParsingBill ? "Parsing..." : "Upload Bill (PDF/Image/Excel)"}
             </Button>
             <Button
               type="button"

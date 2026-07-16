@@ -9,6 +9,7 @@ import {
   Check,
   CheckLine,
   CheckCheck,
+  Sparkles,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -28,6 +29,7 @@ import OrderDialog from "@/components/dialog/admin/orderDialog"
 import { StatusBadge } from "@/components/ui/badge-status"
 import ShareDialog from "@/components/dialog/admin/shareDialog"
 import OrderConfirmFormDialog from "@/components/dialog/admin/orderConfirmFormDialog"
+import AiBillingDialog from "@/components/dialog/admin/aiBillingDialog"
 
 const Orders = () => {
   const queryClient = useQueryClient()
@@ -36,6 +38,7 @@ const Orders = () => {
   const deleteDisclosure = useDisclosure<any>()
   const shareDisclosure = useDisclosure<any>()
   const orderConfirmDisclosure = useDisclosure<any>()
+  const aiBillingDisclosure = useDisclosure<any>()
 
   const { filter, handleFilter } = useSearchFilter(INITIAL_ORDER_FILTERS)
 
@@ -281,6 +284,10 @@ const Orders = () => {
         onClose={orderConfirmDisclosure.onClose}
         order={orderConfirmDisclosure.data}
       />
+      <AiBillingDialog
+        open={aiBillingDisclosure.isOpen}
+        onClose={aiBillingDisclosure.onClose}
+      />
       <ShareDialog
         open={shareDisclosure.isOpen}
         onClose={shareDisclosure.onClose}
@@ -301,10 +308,16 @@ const Orders = () => {
         title="Orders"
         description="Manage received items"
         action={
-          <Button onClick={() => handleOpen()}>
-            <Plus className="mr-2 size-4" />
-            Add Order
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="secondary" onClick={() => aiBillingDisclosure.onOpen()}>
+              <Sparkles className="mr-2 size-4" />
+              AI Billing
+            </Button>
+            <Button onClick={() => handleOpen()}>
+              <Plus className="mr-2 size-4" />
+              Add Order
+            </Button>
+          </div>
         }
       >
         <div className="space-y-4">

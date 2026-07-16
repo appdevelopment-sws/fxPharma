@@ -1,4 +1,4 @@
-import { PDFParse } from "pdf-parse";
+import { DocumentProcessorServiceClient } from "@google-cloud/documentai";
 import * as xlsx from "xlsx";
 
 export interface ParsedInvoiceItem {
@@ -37,257 +37,89 @@ function formatExpiryDate(val: string): string {
 
 export class InvoiceParserService {
   /**
-   * Parse a digital PDF file buffer using pattern-based token matching.
+   * Parse a document using Google Cloud Document AI.
+   * Supports PDF, JPEG, PNG, TIFF, GIF.
    */
-  static async parsePDF(buffer: Buffer): Promise<ParsedInvoice> {
-    const parser = new PDFParse({ data: buffer });
-    const data = await parser.getText();
-    const text = data.text;
-    const lines = text.split("\n");
-    const items: ParsedInvoiceItem[] = [];
+  static async parseDocumentAI(buffer: Buffer, mimeType: string): Promise<ParsedInvoice> {
+    const projectId = process.env.DOCUMENT_AI_PROJECT_ID;
+    const location = process.env.DOCUMENT_AI_LOCATION || "us";
+    const processorId = process.env.DOCUMENT_AI_PROCESSOR_ID;
+
+    if (!projectId || !processorId) {
+      throw new Error("Google Document AI configuration is missing in environment variables (.env). Please provide DOCUMENT_AI_PROJECT_ID and DOCUMENT_AI_PROCESSOR_ID.");
+    }
+
+    const clientOptions: any = {};
+    if (location && location !== "us") {
+      clientOptions.apiEndpoint = `${location}-documentai.googleapis.com`;
+    }
+
+    const client = new DocumentProcessorServiceClient(clientOptions);
+    const name = `projects/${projectId}/locations/${location}/processors/${processorId}`;
+
+    const request = {
+      name,
+      rawDocument: {
+        content: buffer.toString("base64"),
+        mimeType: mimeType,
+      },
+    };
+
+    const [result] = await client.processDocument(request);
+    const { document } = result;
+
+    if (!document) {
+      throw new Error("Failed to extract document data via Document AI.");
+    }
+
+    const entities = document.entities || [];
     let invoiceNo = "";
     let invoiceDate = "";
+    const items: ParsedInvoiceItem[] = [];
 
-    // Extract invoice number and date from text headers if available
-    for (const line of lines) {
-      const cleanLine = line.trim();
-      
-      if (!invoiceNo) {
-        const invMatch = cleanLine.match(/(?:Invoice\s*No|Inv\s*No|Bill\s*No)[:.\s]+([A-Za-z0-9-/]+)/i);
-        if (invMatch) {
-          invoiceNo = invMatch[1];
-        }
-      }
-      
-      if (!invoiceDate) {
-        const dateMatch = cleanLine.match(/(?:Invoice\s*Date|Inv\s*Date|Bill\s*Date|Date)[:.\s]+(\d{2}[-/]\d{2}[-/]\d{2,4})/i);
-        if (dateMatch) {
-          invoiceDate = dateMatch[1];
-        }
-      }
-    }
-
-    for (const line of lines) {
-      const cleanLine = line.trim();
-      const tokens = cleanLine.split(/\s+/);
-      if (tokens.length < 8) continue; // Minimum length to contain all required items
-
-      // Locate the expiry date token (format: MM/YY or MM-YY or MM/YYYY)
-      let expiryIndex = -1;
-      for (let i = tokens.length - 3; i >= 2; i--) {
-        if (/^\d{1,2}[-/]\d{2,4}$/.test(tokens[i])) {
-          expiryIndex = i;
-          break;
-        }
-      }
-
-      if (expiryIndex === -1) continue;
-
-      // Extract numeric values to the right of Expiry (MRP, Rate, Net, Disc%, GST%, Amount)
-      const rightTokens = tokens.slice(expiryIndex + 1);
-      const numericRightTokens = rightTokens.map((t: string) => {
-        const cleaned = t.replace("%", "");
-        const parsed = parseFloat(cleaned);
-        return isNaN(parsed) ? 0 : parsed;
-      });
-
-      const mrp = numericRightTokens[0] || 0;
-      const rate = numericRightTokens[1] || 0;
-      
-      const length = numericRightTokens.length;
-      let discountPercent = 0;
-      let gstPercent = 0;
-
-      if (length === 6) {
-        // MRP, Rate, Net, Disc%, GST%, Amount
-        discountPercent = numericRightTokens[3];
-        gstPercent = numericRightTokens[4];
-      } else if (length === 5) {
-        // MRP, Rate, Disc%, GST%, Amount
-        discountPercent = numericRightTokens[2];
-        gstPercent = numericRightTokens[3];
-      } else if (length === 4) {
-        // MRP, Rate, GST%, Amount
-        discountPercent = 0;
-        gstPercent = numericRightTokens[2];
-      }
-
-      // Batch is the token right before Expiry
-      const batchNo = tokens[expiryIndex - 1];
-
-      // S.No is the first token
-      const sNo = parseInt(tokens[0]);
-      if (isNaN(sNo)) continue;
-
-      // Parse quantity: tokens[1] (Qty)
-      let qty = 0;
-      let freeQty = 0;
-      let productNameStartIndex = 1;
-
-      // Quantity parser for formats like "5 29+1" or "5+1" or "10"
-      if (/^\d+\+\d+$/.test(tokens[1])) {
-        const parts = tokens[1].split("+");
-        qty = parseInt(parts[0]) || 0;
-        freeQty = parseInt(parts[1]) || 0;
-        productNameStartIndex = 2;
-      } else if (/^\d+$/.test(tokens[1]) && /^\d+\+\d+$/.test(tokens[2])) {
-        const parts = tokens[2].split("+");
-        qty = parseInt(tokens[1]) + (parseInt(parts[0]) || 0);
-        freeQty = parseInt(parts[1]) || 0;
-        productNameStartIndex = 3;
-      } else if (/^\d+$/.test(tokens[1])) {
-        qty = parseInt(tokens[1]);
-        productNameStartIndex = 2;
-      }
-
-      // Determine product name bounds
-      let productNameEndIndex = expiryIndex - 1; // Default to right before Batch
-
-      // Skip MFG code and HSN code if they are present before Batch
-      if (expiryIndex - 2 >= productNameStartIndex) {
-        // HSN is usually 4-8 digits
-        if (/^\d{4,8}$/.test(tokens[expiryIndex - 3])) {
-          productNameEndIndex = expiryIndex - 3;
-        } else if (/^\d{4,8}$/.test(tokens[expiryIndex - 2])) {
-          productNameEndIndex = expiryIndex - 2;
-        } else {
-          // If the word before batch is MFG (short uppercase word, e.g. ALBO, MANKIND)
-          const possibleMfg = tokens[expiryIndex - 2];
-          if (/^[A-Z]{3,8}$/.test(possibleMfg)) {
-            productNameEndIndex = expiryIndex - 2;
-          }
-        }
-      }
-
-      const productName = tokens.slice(productNameStartIndex, productNameEndIndex).join(" ");
-      const cgst = gstPercent / 2;
-      const sgst = gstPercent / 2;
-
-      items.push({
-        name: productName,
-        qty,
-        freeQty,
-        batchNo,
-        expiry: formatExpiryDate(tokens[expiryIndex]),
-        mrp,
-        purchaseRate: rate,
-        discountPercent,
-        cgst,
-        sgst,
-      });
-    }
-
-    // Fallback: If no items were parsed using the standard layout, try generic layout parsing
-    if (items.length === 0) {
-      for (const line of lines) {
-        const cleanLine = line.trim();
-        if (!cleanLine) continue;
-
-        // Skip headers or common non-item lines
-        if (
-          cleanLine.toLowerCase().includes("invoice") ||
-          cleanLine.toLowerCase().includes("tax invoice") ||
-          cleanLine.toLowerCase().includes("grand total") ||
-          cleanLine.toLowerCase().includes("sub total") ||
-          cleanLine.toLowerCase().includes("gst") ||
-          cleanLine.toLowerCase().includes("note:")
-        ) {
-          continue;
-        }
-
-        const tokens = cleanLine.split(/\s+/);
-        if (tokens.length < 3) continue;
-
-        // Count numeric values at the end of tokens
-        let numericCount = 0;
-        const numValues: number[] = [];
-
-        for (let i = tokens.length - 1; i >= 0; i--) {
-          const token = tokens[i];
-          // Check if token is a pure number (no letters like ML, GM, KG, etc.)
-          if (/^[+-]?\d+(?:\.\d+)?%?$/.test(token) || /^[+-]?\d+(?:\.\d+)?$/.test(token)) {
-            const val = parseFloat(token.replace("%", ""));
-            numericCount++;
-            numValues.unshift(val);
-          } else {
-            break;
-          }
-        }
-
-        if (numericCount < 2) continue;
-
-        const productNameTokens = tokens.slice(0, tokens.length - numericCount);
-        // Remove leading serial number if present
-        if (productNameTokens.length > 1 && /^\d+$/.test(productNameTokens[0])) {
-          productNameTokens.shift();
-        }
-
-        const productName = productNameTokens.join(" ").trim();
-        if (
-          !productName ||
-          productName.toLowerCase() === "total" ||
-          productName.toLowerCase() === "subtotal" ||
-          productName.toLowerCase() === "product" ||
-          productName.toLowerCase() === "qty" ||
-          productName.toLowerCase() === "particulars"
-        ) {
-          continue;
-        }
-
-        let qty = 1;
-        let freeQty = 0;
-        let mrp = 0;
+    for (const entity of entities) {
+      if (entity.type === "invoice_id") {
+        invoiceNo = entity.mentionText || "";
+      } else if (entity.type === "invoice_date") {
+        invoiceDate = entity.mentionText || "";
+      } else if (entity.type === "line_item") {
+        let name = "";
+        let qty = 0;
         let purchaseRate = 0;
-        let discountPercent = 0;
-        let gstPercent = 0;
+        let amount = 0;
+        let productCode = "";
 
-        if (numericCount === 2) {
-          qty = numValues[0];
-          purchaseRate = qty > 0 ? numValues[1] / qty : numValues[1];
-        } else if (numericCount === 3) {
-          qty = numValues[0];
-          mrp = numValues[1];
-          purchaseRate = qty > 0 ? numValues[2] / qty : numValues[2];
-        } else if (numericCount === 4) {
-          qty = numValues[0];
-          mrp = numValues[1];
-          gstPercent = numValues[2];
-          purchaseRate = qty > 0 ? numValues[3] / qty : numValues[3];
-        } else if (numericCount === 5) {
-          qty = numValues[0];
-          mrp = numValues[1];
-          purchaseRate = numValues[2];
-          gstPercent = numValues[3];
-        } else if (numericCount === 6) {
-          qty = numValues[0];
-          mrp = numValues[1];
-          purchaseRate = numValues[2];
-          discountPercent = numValues[3];
-          gstPercent = numValues[4];
-        } else if (numericCount >= 7) {
-          qty = numValues[0];
-          freeQty = numValues[1];
-          mrp = numValues[2];
-          purchaseRate = numValues[3];
-          discountPercent = numValues[4];
-          gstPercent = numValues[5];
+        for (const prop of entity.properties || []) {
+          if (prop.type === "line_item/description") {
+            name = prop.mentionText || "";
+          } else if (prop.type === "line_item/quantity") {
+            const num = parseFloat(prop.normalizedValue?.text || prop.mentionText || "0");
+            if (!isNaN(num)) qty = num;
+          } else if (prop.type === "line_item/unit_price") {
+            const num = parseFloat(prop.normalizedValue?.text || prop.mentionText || "0");
+            if (!isNaN(num)) purchaseRate = num;
+          } else if (prop.type === "line_item/amount") {
+            const num = parseFloat(prop.normalizedValue?.text || prop.mentionText || "0");
+            if (!isNaN(num)) amount = num;
+          } else if (prop.type === "line_item/product_code") {
+            productCode = prop.mentionText || "";
+          }
         }
 
-        const cgst = gstPercent / 2;
-        const sgst = gstPercent / 2;
-
-        items.push({
-          name: productName,
-          qty,
-          freeQty,
-          batchNo: "",
-          expiry: "",
-          mrp,
-          purchaseRate: Math.round(purchaseRate * 100) / 100,
-          discountPercent,
-          cgst,
-          sgst,
-        });
+        if (name || productCode) {
+          items.push({
+            name: name || productCode,
+            qty: qty || 1,
+            freeQty: 0,
+            batchNo: "",
+            expiry: "",
+            mrp: 0,
+            purchaseRate: purchaseRate || (qty > 0 ? amount / qty : amount),
+            discountPercent: 0,
+            cgst: 0,
+            sgst: 0,
+          });
+        }
       }
     }
 
