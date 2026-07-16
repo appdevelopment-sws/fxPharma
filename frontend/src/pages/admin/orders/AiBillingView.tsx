@@ -1,16 +1,24 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { useLocation, useNavigate } from "react-router"
-import { useForm, useFieldArray } from "react-hook-form"
+import { useForm, useFieldArray, useWatch } from "react-hook-form"
 import { toast } from "sonner"
 import { ArrowLeft, Plus, Trash2, Save, FileText, Loader2 } from "lucide-react"
-import { useMutation } from "@tanstack/react-query"
+import { useQuery, useMutation } from "@tanstack/react-query"
 
 import { Button } from "@/components/ui/button"
-import { FormField } from "@/components/ui/form-fields"
-import SectionCard from "@/components/SectionCard"
+import { FormField, FormSelectField, FormSearchSelect } from "@/components/ui/form-fields"
 import { ordersApi } from "@/services/ordersApi"
+import SupplierApi from "@/services/supplierApi"
+import InventoryApi, { type InventoryItem } from "@/services/inventoryApi"
+import { queryKeys } from "@/lib/queryKeys"
+
+interface Supplier {
+  id: string
+  companyName: string
+}
 
 interface ParsedInvoiceItem {
+  inventoryId?: string
   name: string
   qty: number
   freeQty?: number
@@ -21,6 +29,7 @@ interface ParsedInvoiceItem {
   discountPercent?: number
   cgst?: number
   sgst?: number
+  hsn?: string
 }
 
 interface OrderFormValues {
@@ -31,13 +40,110 @@ interface OrderFormValues {
   items: ParsedInvoiceItem[]
 }
 
+function findBestInventoryMatch(invoiceName: string, inventory: InventoryItem[]): InventoryItem | null {
+  if (!invoiceName) return null
+
+  const normInvoice = invoiceName.toLowerCase().replace(/[^a-z0-9]/g, " ").trim()
+  const invoiceTokens = normInvoice.split(/\s+/).filter(Boolean)
+
+  if (invoiceTokens.length === 0) return null
+
+  let bestMatch: InventoryItem | null = null
+  let bestScore = 0
+
+  for (const inv of inventory) {
+    if (!inv.name) continue
+    const normInv = inv.name.toLowerCase().replace(/[^a-z0-9]/g, " ").trim()
+
+    // 1. Exact match (highest priority)
+    if (invoiceName.toLowerCase().trim() === inv.name.toLowerCase().trim()) {
+      return inv
+    }
+
+    const invTokens = normInv.split(/\s+/).filter(Boolean)
+    if (invTokens.length === 0) continue
+
+    // Calculate token overlap
+    const intersection = invoiceTokens.filter((t) => invTokens.includes(t))
+    const score = intersection.length / Math.max(invoiceTokens.length, invTokens.length)
+
+    // Check if one name is a substring of the other
+    let subScore = 0
+    if (normInv.includes(normInvoice) || normInvoice.includes(normInv)) {
+      subScore = 0.8 // High score for substring match
+    }
+
+    const finalScore = Math.max(score, subScore)
+
+    // Threshold for matching (e.g. 0.4 overlap or substring match)
+    if (finalScore > bestScore && finalScore >= 0.4) {
+      bestScore = finalScore
+      bestMatch = inv
+    }
+  }
+
+  return bestMatch
+}
+
 export default function AiBillingView() {
   const location = useLocation()
   const navigate = useNavigate()
   const file = location.state?.file as File | undefined
 
-  const [objectUrl, setObjectUrl] = useState<string>("")
+  const [objectUrl] = useState<string>(() => {
+    return file ? URL.createObjectURL(file) : ""
+  })
   const [isParsing, setIsParsing] = useState(true)
+  const [leftWidth, setLeftWidth] = useState(50) // percentage
+  const [isDragging, setIsDragging] = useState(false)
+  const [productSearch, setProductSearch] = useState("")
+
+  const { data: suppliersData, isLoading: isLoadingSuppliers } = useQuery({
+    queryKey: queryKeys.suppliers.all,
+    queryFn: () => SupplierApi.getSuppliers(),
+  })
+  const suppliers = suppliersData?.data || []
+
+  const { data: inventoryData } = useQuery({
+    queryKey: queryKeys.inventory.list({ limit: 15 }),
+    queryFn: () => InventoryApi.getAll({ limit: 15, status: "CONTINUE" }),
+  })
+
+  const { data: searchResultsData, isLoading: isSearchingInventory } = useQuery({
+    queryKey: queryKeys.inventory.list({ search: productSearch, limit: 20 }),
+    queryFn: () => InventoryApi.getAll({ search: productSearch, limit: 20 }),
+    enabled: productSearch.trim().length > 0,
+  })
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault()
+    setIsDragging(true)
+  }
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDragging) return
+      const container = document.getElementById("ai-billing-container")
+      if (!container) return
+      const rect = container.getBoundingClientRect()
+      const newWidth = ((e.clientX - rect.left) / rect.width) * 100
+      setLeftWidth(Math.max(25, Math.min(75, newWidth)))
+    }
+
+    const handleMouseUp = () => {
+      setIsDragging(false)
+    }
+
+    if (isDragging) {
+      window.addEventListener("mousemove", handleMouseMove)
+      window.addEventListener("mouseup", handleMouseUp)
+    }
+
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove)
+      window.removeEventListener("mouseup", handleMouseUp)
+    }
+  }, [isDragging])
 
   const { control, handleSubmit, reset } = useForm<OrderFormValues>({
     defaultValues: {
@@ -54,15 +160,54 @@ export default function AiBillingView() {
     name: "items",
   })
 
+  const items = useWatch({ control, name: "items" })
+
+  const inventoryOptions = useMemo(() => {
+    const list = productSearch.trim().length > 0
+      ? searchResultsData?.data || []
+      : inventoryData?.data || []
+    
+    const options = list.map((item: InventoryItem) => {
+      const categoryName = typeof item.category === "string"
+        ? item.category
+        : item.category?.name || ""
+      return {
+        label: `${item.name} (${item.saltComposition || categoryName || "No salt"})`,
+        value: item.id,
+      }
+    })
+
+    // Merge in selected products to ensure they appear in the select options
+    const itemsList = items || []
+    itemsList.forEach((item: ParsedInvoiceItem) => {
+      if (item.inventoryId && !options.some((opt) => opt.value === item.inventoryId)) {
+        options.push({
+          label: item.name || "Mapped Product",
+          value: item.inventoryId,
+        })
+      }
+    })
+
+    return options
+  }, [inventoryData, searchResultsData, productSearch, items])
+
   useEffect(() => {
     if (!file) {
       toast.error("No file provided. Redirecting...")
       navigate("/admin/orders")
-      return
     }
+  }, [file, navigate])
 
-    const url = URL.createObjectURL(file)
-    setObjectUrl(url)
+  useEffect(() => {
+    return () => {
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl)
+      }
+    }
+  }, [objectUrl])
+
+  useEffect(() => {
+    if (!file) return
 
     // Call API to parse
     const parseInvoice = async () => {
@@ -71,42 +216,56 @@ export default function AiBillingView() {
 
         if (resData.success && resData.data) {
           toast.success("Invoice parsed successfully")
+          
+          // Pre-fetch inventory to try auto-mapping
+          let allInventory: InventoryItem[] = []
+          try {
+            const allInventoryRes = await InventoryApi.getAll({ limit: 1000 })
+            allInventory = allInventoryRes?.data || []
+          } catch (err) {
+            console.error("Failed to load inventory for auto-mapping", err)
+          }
+
           reset({
             supplierId: "",
             status: "DRAFT",
             invoiceNo: resData.data.invoiceNo || "",
             invoiceDate: resData.data.invoiceDate || "",
-            items: resData.data.items || [],
+            items: (resData.data.items || []).map((item: ParsedInvoiceItem) => {
+              const match = findBestInventoryMatch(item.name || "", allInventory)
+              return {
+                inventoryId: match ? match.id : "",
+                name: item.name || "",
+                qty: item.qty || 1,
+                purchaseRate: item.purchaseRate || 0,
+                batchNo: item.batchNo || "",
+                expiry: item.expiry || "",
+                hsn: item.hsn || "",
+              }
+            }),
           })
         } else {
           throw new Error(resData.message || "Failed to parse invoice")
         }
-      } catch (error: any) {
-        toast.error(error.message || "An error occurred during parsing")
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : "An error occurred during parsing"
+        toast.error(message)
       } finally {
         setIsParsing(false)
       }
     }
 
     parseInvoice()
-
-    return () => {
-      URL.revokeObjectURL(url)
-    }
   }, [file, navigate, reset])
 
   const createMutation = useMutation({
     mutationFn: (data: OrderFormValues) => {
-      // Create a simplified payload. Ideally, items should be mapped to actual inventory IDs.
-      // For now, we will submit as is, but backend requires inventoryId if creating actual inventory batch.
-      // This might require further mapping by the user or backend.
       const payload = {
         ...data,
         supplierId: data.supplierId || null,
-        // Backend expects certain fields for items
         items: data.items.map((item) => ({
           ...item,
-          inventoryId: "temp-id-replace-me", // Need proper mapping in production
+          inventoryId: item.inventoryId,
         })),
       }
       return ordersApi.create(payload)
@@ -115,23 +274,27 @@ export default function AiBillingView() {
       toast.success("Order created successfully")
       navigate("/admin/orders")
     },
-    onError: (error: any) => {
-      toast.error(error?.response?.data?.message || "Failed to create order")
+    onError: (error: unknown) => {
+      const err = error as { response?: { data?: { message?: string } } }
+      toast.error(err?.response?.data?.message || "Failed to create order")
     },
   })
 
   const onSubmit = (data: OrderFormValues) => {
-    // Basic validation
     if (data.items.length === 0) {
       toast.error("Please add at least one item")
       return
     }
-    // We would normally validate inventoryIds here.
-    toast.info(
-      "Order saving process initiated. To fully create an order, products must be mapped to your inventory. Check your order list."
-    )
-    navigate("/admin/orders")
-    // createMutation.mutate(data)
+    if (!data.supplierId) {
+      toast.error("Please select a supplier")
+      return
+    }
+    const hasUnmapped = data.items.some((item) => !item.inventoryId)
+    if (hasUnmapped) {
+      toast.error("Please map all products to your inventory before saving")
+      return
+    }
+    createMutation.mutate(data)
   }
 
   if (!file) return null
@@ -159,9 +322,16 @@ export default function AiBillingView() {
         </Button>
       </div>
 
-      <div className="flex flex-1 gap-4 overflow-hidden">
+      <div
+        id="ai-billing-container"
+        className="flex flex-1 gap-0 overflow-hidden relative select-none"
+        style={{ cursor: isDragging ? "col-resize" : "default" }}
+      >
         {/* Left Side: Form */}
-        <div className="flex w-1/2 flex-col overflow-y-auto rounded-xl border border-border/40 bg-card p-4 shadow-sm">
+        <div
+          className="flex flex-col overflow-y-auto overscroll-contain rounded-xl border border-border/40 bg-card p-4 shadow-sm"
+          style={{ width: `${leftWidth}%` }}
+        >
           {isParsing ? (
             <div className="flex h-full flex-col items-center justify-center gap-4 text-muted-foreground">
               <Loader2 className="size-8 animate-spin text-primary" />
@@ -169,7 +339,7 @@ export default function AiBillingView() {
             </div>
           ) : (
             <form className="space-y-6">
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-4 sm:grid-cols-3">
                 <FormField
                   control={control}
                   name="invoiceNo"
@@ -182,6 +352,19 @@ export default function AiBillingView() {
                   label="INVOICE DATE"
                   placeholder="e.g. DD/MM/YYYY"
                 />
+                <FormSelectField
+                  control={control}
+                  name="supplierId"
+                  label="SUPPLIER"
+                  options={suppliers.map((supplier: Supplier) => ({
+                    label: supplier.companyName,
+                    value: supplier.id,
+                  }))}
+                  placeholder={
+                    isLoadingSuppliers ? "Loading suppliers..." : "Select supplier"
+                  }
+                  required
+                />
               </div>
 
               <div className="space-y-4">
@@ -193,7 +376,9 @@ export default function AiBillingView() {
                     size="sm"
                     onClick={() =>
                       append({
+                        inventoryId: "",
                         name: "",
+                        hsn: "",
                         qty: 1,
                         purchaseRate: 0,
                       })
@@ -206,52 +391,78 @@ export default function AiBillingView() {
 
                 <div className="space-y-3">
                   {fields.map((field, index) => (
-                    <div
-                      key={field.id}
-                      className="relative grid grid-cols-12 gap-2 rounded-lg border border-border/40 bg-muted/10 p-3"
-                    >
-                      <div className="col-span-12 sm:col-span-5">
-                        <FormField
-                          control={control}
-                          name={`items.${index}.name`}
-                          label={index === 0 ? "PRODUCT NAME" : undefined}
-                          placeholder="Product Name"
-                        />
+                    <div key={field.id} className="flex gap-2 items-start">
+                      <div
+                        className={`flex-none font-bold text-sm text-muted-foreground w-6 text-center ${
+                          index === 0 ? "mt-8" : "mt-3"
+                        }`}
+                      >
+                        {index + 1}
                       </div>
-                      <div className="col-span-6 sm:col-span-2">
-                        <FormField
-                          control={control}
-                          name={`items.${index}.qty`}
-                          label={index === 0 ? "QTY" : undefined}
-                          inputType="number"
-                        />
-                      </div>
-                      <div className="col-span-6 sm:col-span-2">
-                        <FormField
-                          control={control}
-                          name={`items.${index}.purchaseRate`}
-                          label={index === 0 ? "RATE" : undefined}
-                          inputType="number"
-                        />
-                      </div>
-                      <div className="col-span-10 sm:col-span-2">
-                        <FormField
-                          control={control}
-                          name={`items.${index}.batchNo`}
-                          label={index === 0 ? "BATCH" : undefined}
-                          placeholder="Batch"
-                        />
-                      </div>
-                      <div className="col-span-2 flex items-end justify-end pb-1 sm:col-span-1">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => remove(index)}
-                          className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                        >
-                          <Trash2 className="size-4" />
-                        </Button>
+                      <div className="flex-1 relative grid grid-cols-12 gap-2 rounded-lg border border-border/40 bg-muted/10 p-3">
+                        <div className="col-span-12 sm:col-span-3">
+                          <FormField
+                            control={control}
+                            name={`items.${index}.name`}
+                            label={index === 0 ? "EXTRACTED NAME" : undefined}
+                            placeholder="Product Name"
+                          />
+                        </div>
+                        <div className="col-span-12 sm:col-span-3">
+                          <FormSearchSelect
+                            control={control}
+                            name={`items.${index}.inventoryId`}
+                            label={index === 0 ? "MAPPED PRODUCT" : undefined}
+                            placeholder="Map to Inventory"
+                            options={inventoryOptions}
+                            onSearch={setProductSearch}
+                            loading={isSearchingInventory}
+                            required
+                          />
+                        </div>
+                        <div className="col-span-6 sm:col-span-1">
+                          <FormField
+                            control={control}
+                            name={`items.${index}.hsn`}
+                            label={index === 0 ? "HSN" : undefined}
+                            placeholder="HSN"
+                          />
+                        </div>
+                        <div className="col-span-6 sm:col-span-1">
+                          <FormField
+                            control={control}
+                            name={`items.${index}.qty`}
+                            label={index === 0 ? "QTY" : undefined}
+                            inputType="number"
+                          />
+                        </div>
+                        <div className="col-span-6 sm:col-span-2">
+                          <FormField
+                            control={control}
+                            name={`items.${index}.purchaseRate`}
+                            label={index === 0 ? "RATE" : undefined}
+                            inputType="number"
+                          />
+                        </div>
+                        <div className="col-span-6 sm:col-span-1">
+                          <FormField
+                            control={control}
+                            name={`items.${index}.batchNo`}
+                            label={index === 0 ? "BATCH" : undefined}
+                            placeholder="Batch"
+                          />
+                        </div>
+                        <div className="col-span-12 flex items-end justify-end pb-1 sm:col-span-1">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => remove(index)}
+                            className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                          >
+                            <Trash2 className="size-4" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -266,8 +477,19 @@ export default function AiBillingView() {
           )}
         </div>
 
+        {/* Resizable Divider */}
+        <div
+          className={`w-3 flex items-center justify-center cursor-col-resize hover:bg-primary/20 active:bg-primary/30 transition-colors group relative z-10`}
+          onMouseDown={handleMouseDown}
+        >
+          <div className="w-[2px] h-8 rounded bg-border group-hover:bg-primary group-active:bg-primary group-hover:h-12 transition-all" />
+        </div>
+
         {/* Right Side: Document Viewer */}
-        <div className="flex w-1/2 flex-col overflow-hidden rounded-xl border border-border/40 bg-muted/20">
+        <div
+          className="flex flex-col overflow-hidden rounded-xl border border-border/40 bg-muted/20"
+          style={{ width: `${100 - leftWidth}%` }}
+        >
           <div className="flex items-center gap-2 border-b border-border/40 bg-card p-3 shadow-sm">
             <FileText className="size-4 text-primary" />
             <span className="text-sm font-semibold">{file.name}</span>

@@ -9,7 +9,9 @@ RUN apk add --no-cache \
     freetype \
     harfbuzz \
     ca-certificates \
-    ttf-freefont
+    ttf-freefont \
+    ghostscript \
+    graphicsmagick
 
 COPY package*.json ./
 RUN npm install

@@ -4,6 +4,7 @@ import { catchAsync } from "../../../utils/catchAsync.js";
 import { paginate } from "../../../utils/pagination.js";
 import { rootPrisma } from "@/lib/prisma.js";
 import { getRequestScope } from "@/helpers/requestScope.js";
+import { LlmInvoiceParserService } from "./llmInvoiceParser.service.js";
 import { InvoiceParserService } from "./invoiceParser.service.js";
 
 const ORDER_STATUS_VALUES = [
@@ -588,6 +589,8 @@ export class OrdersController {
   });
 
   static parseInvoice = catchAsync(async (req: Request, res: Response) => {
+    const { organizationId, branchId } = getRequestScope(req);
+
     if (!req.file) {
       return res
         .status(400)
@@ -604,7 +607,12 @@ export class OrdersController {
       mimeType === "image/tiff" ||
       mimeType === "image/gif"
     ) {
-      parsedResult = await InvoiceParserService.parseDocumentAI(req.file.buffer, mimeType);
+      parsedResult = await LlmInvoiceParserService.parse(
+        req.file.buffer,
+        mimeType,
+        organizationId,
+        branchId,
+      );
     } else if (
       mimeType ===
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
@@ -666,7 +674,12 @@ export class OrdersController {
       mimeType === "image/tiff" ||
       mimeType === "image/gif"
     ) {
-      parsedResult = await InvoiceParserService.parseDocumentAI(req.file.buffer, mimeType);
+      parsedResult = await LlmInvoiceParserService.parse(
+        req.file.buffer,
+        mimeType,
+        organizationId,
+        branchId,
+      );
     } else if (
       mimeType ===
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||

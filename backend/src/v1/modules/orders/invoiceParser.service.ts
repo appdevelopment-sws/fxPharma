@@ -1,4 +1,3 @@
-import { DocumentProcessorServiceClient } from "@google-cloud/documentai";
 import * as xlsx from "xlsx";
 
 export interface ParsedInvoiceItem {
@@ -12,6 +11,7 @@ export interface ParsedInvoiceItem {
   discountPercent?: number;
   cgst?: number;
   sgst?: number;
+  hsn?: string;
 }
 
 export interface ParsedInvoice {
@@ -36,100 +36,6 @@ function formatExpiryDate(val: string): string {
 }
 
 export class InvoiceParserService {
-  /**
-   * Parse a document using Google Cloud Document AI.
-   * Supports PDF, JPEG, PNG, TIFF, GIF.
-   */
-  static async parseDocumentAI(buffer: Buffer, mimeType: string): Promise<ParsedInvoice> {
-    const projectId = process.env.DOCUMENT_AI_PROJECT_ID;
-    const location = process.env.DOCUMENT_AI_LOCATION || "us";
-    const processorId = process.env.DOCUMENT_AI_PROCESSOR_ID;
-
-    if (!projectId || !processorId) {
-      throw new Error("Google Document AI configuration is missing in environment variables (.env). Please provide DOCUMENT_AI_PROJECT_ID and DOCUMENT_AI_PROCESSOR_ID.");
-    }
-
-    const clientOptions: any = {};
-    if (location && location !== "us") {
-      clientOptions.apiEndpoint = `${location}-documentai.googleapis.com`;
-    }
-
-    const client = new DocumentProcessorServiceClient(clientOptions);
-    const name = `projects/${projectId}/locations/${location}/processors/${processorId}`;
-
-    const request = {
-      name,
-      rawDocument: {
-        content: buffer.toString("base64"),
-        mimeType: mimeType,
-      },
-    };
-
-    const [result] = await client.processDocument(request);
-    const { document } = result;
-
-    if (!document) {
-      throw new Error("Failed to extract document data via Document AI.");
-    }
-
-    const entities = document.entities || [];
-    let invoiceNo = "";
-    let invoiceDate = "";
-    const items: ParsedInvoiceItem[] = [];
-
-    for (const entity of entities) {
-      if (entity.type === "invoice_id") {
-        invoiceNo = entity.mentionText || "";
-      } else if (entity.type === "invoice_date") {
-        invoiceDate = entity.mentionText || "";
-      } else if (entity.type === "line_item") {
-        let name = "";
-        let qty = 0;
-        let purchaseRate = 0;
-        let amount = 0;
-        let productCode = "";
-
-        for (const prop of entity.properties || []) {
-          if (prop.type === "line_item/description") {
-            name = prop.mentionText || "";
-          } else if (prop.type === "line_item/quantity") {
-            const num = parseFloat(prop.normalizedValue?.text || prop.mentionText || "0");
-            if (!isNaN(num)) qty = num;
-          } else if (prop.type === "line_item/unit_price") {
-            const num = parseFloat(prop.normalizedValue?.text || prop.mentionText || "0");
-            if (!isNaN(num)) purchaseRate = num;
-          } else if (prop.type === "line_item/amount") {
-            const num = parseFloat(prop.normalizedValue?.text || prop.mentionText || "0");
-            if (!isNaN(num)) amount = num;
-          } else if (prop.type === "line_item/product_code") {
-            productCode = prop.mentionText || "";
-          }
-        }
-
-        if (name || productCode) {
-          items.push({
-            name: name || productCode,
-            qty: qty || 1,
-            freeQty: 0,
-            batchNo: "",
-            expiry: "",
-            mrp: 0,
-            purchaseRate: purchaseRate || (qty > 0 ? amount / qty : amount),
-            discountPercent: 0,
-            cgst: 0,
-            sgst: 0,
-          });
-        }
-      }
-    }
-
-    return {
-      invoiceNo,
-      invoiceDate,
-      items,
-    };
-  }
-
   /**
    * Parse a digital Excel / CSV sheet using column mappings.
    */
@@ -209,6 +115,8 @@ export class InvoiceParserService {
           colMap["discountPercent"] = index;
         } else if (h.includes("gst") || h.includes("tax") || h.includes("cgst")) {
           colMap["gstPercent"] = index;
+        } else if (h.includes("hsn") || h.includes("sac")) {
+          colMap["hsn"] = index;
         }
       });
 
@@ -231,6 +139,7 @@ export class InvoiceParserService {
         const purchaseRate = colMap["purchaseRate"] !== undefined ? parseFloat(row[colMap["purchaseRate"]]) || 0 : 0;
         const discountPercent = colMap["discountPercent"] !== undefined ? parseFloat(row[colMap["discountPercent"]]) || 0 : 0;
         const gstPercent = colMap["gstPercent"] !== undefined ? parseFloat(row[colMap["gstPercent"]]) || 0 : 0;
+        const hsn = colMap["hsn"] !== undefined ? String(row[colMap["hsn"]] || "").trim() : "";
 
         const cgst = gstPercent / 2;
         const sgst = gstPercent / 2;
@@ -246,6 +155,7 @@ export class InvoiceParserService {
           discountPercent,
           cgst,
           sgst,
+          hsn,
         });
       }
     }

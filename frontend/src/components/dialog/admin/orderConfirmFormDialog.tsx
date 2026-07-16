@@ -860,7 +860,7 @@ export default function OrderConfirmFormDialog({
                 <div className="text-right">Action</div>
               </div>
 
-              <div className="max-h-[220px] min-h-[90px] divide-y divide-border/40 overflow-y-auto bg-card/50">
+              <div className="max-h-[220px] min-h-[90px] divide-y divide-border/40 overflow-y-auto overscroll-contain bg-card/50">
                 {fields.map((field, index) => (
                   <div
                     key={field.id}

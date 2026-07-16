@@ -112,7 +112,7 @@ export function FormSearchSelect<T extends FieldValues>({
                     <Loader2 className="ml-2 size-4 animate-spin opacity-50" />
                   )}
                 </div>
-                <div className="max-h-[300px] overflow-y-auto p-1">
+                <div className="max-h-[300px] overflow-y-auto p-1 overscroll-contain">
                   {options.length === 0 ? (
                     <div className="py-6 text-center text-sm text-muted-foreground">
                       No results found.

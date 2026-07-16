@@ -14,7 +14,6 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.896.0",
     "@aws-sdk/s3-request-presigner": "^3.896.0",
-    "@google-cloud/documentai": "^9.6.2",
     "@prisma/adapter-pg": "^7.5.0",
     "@prisma/client": "^7.6.0",
     "bcryptjs": "^3.0.3",
@@ -32,7 +31,9 @@
     "multer": "^2.1.1",
     "nodemailer": "^8.0.4",
     "nodemon": "^3.1.14",
+    "openai": "^6.47.0",
     "pdf-parse": "^2.4.5",
+    "pdf2pic": "^3.2.0",
     "puppeteer": "^25.0.4",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
