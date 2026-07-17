@@ -817,8 +817,12 @@ const POS = () => {
       return
     }
     if (config.qty > maxStock) {
+      const label = config.sellUnit === "strip"
+        ? (configProduct.packing ? (configProduct.packing.charAt(0).toUpperCase() + configProduct.packing.slice(1)) : "Strip")
+        : (configProduct.unit1st ? (configProduct.unit1st.charAt(0).toUpperCase() + configProduct.unit1st.slice(1)) : "Piece")
+      const pluralLabel = label.toLowerCase().endsWith('x') || label.toLowerCase().endsWith('s') || label.toLowerCase().endsWith('ch') || label.toLowerCase().endsWith('sh') ? label + "es" : label + "s"
       toast.error(
-        `Insufficient stock! Max available is ${maxStock} ${config.sellUnit === "strip" ? "Strips" : "Pieces"}.`
+        `Insufficient stock! Max available is ${maxStock} ${pluralLabel}.`
       )
       return
     }

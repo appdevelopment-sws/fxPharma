@@ -73,6 +73,22 @@ const getQtyPerStrip = (product: PosProduct) => {
   return 10
 }
 
+const getUnitLabel = (product: PosProduct, isPlural = false) => {
+  const label = product.packing ? (product.packing.charAt(0).toUpperCase() + product.packing.slice(1)) : "Strip"
+  if (!isPlural) return label
+  const lower = label.toLowerCase()
+  if (lower.endsWith('x') || lower.endsWith('s') || lower.endsWith('ch') || lower.endsWith('sh')) return label + "es"
+  return label + "s"
+}
+
+const getSubUnitLabel = (product: PosProduct, isPlural = false) => {
+  const label = product.unit1st ? (product.unit1st.charAt(0).toUpperCase() + product.unit1st.slice(1)) : "Piece"
+  if (!isPlural) return label
+  const lower = label.toLowerCase()
+  if (lower.endsWith('x') || lower.endsWith('s') || lower.endsWith('ch') || lower.endsWith('sh')) return label + "es"
+  return label + "s"
+}
+
 const getRateValue = (
   batch: PosBatch,
   rateType: "mrp" | "rateA" | "rateB" | "rateC",
@@ -210,7 +226,7 @@ export default function ConfigureSaleItemDialog({
                   disabled={b.stock <= 0}
                   className="bg-background text-foreground disabled:text-muted-foreground"
                 >
-                  {b.number} (Exp: {b.expiry}) {b.stock <= 0 ? "[OUT OF STOCK]" : `— ${b.stock} Strips`}
+                  {b.number} (Exp: {b.expiry}) {b.stock <= 0 ? "[OUT OF STOCK]" : `— ${b.stock} ${getUnitLabel(product, true)}`}
                 </option>
               ))}
             </select>
@@ -239,7 +255,7 @@ export default function ConfigureSaleItemDialog({
               Expiry: <span className="text-slate-700 dark:text-slate-200 font-black">{activeBatch.expiry}</span>
             </span>
             <span>
-              Stock: <span className="text-slate-700 dark:text-slate-200 font-black">{activeBatch.stock} Strps ({activeBatch.stock * qtyPerStrip} Pcs)</span>
+              Stock: <span className="text-slate-700 dark:text-slate-200 font-black">{activeBatch.stock} {getUnitLabel(product, activeBatch.stock !== 1)} ({activeBatch.stock * qtyPerStrip} {getSubUnitLabel(product, true)})</span>
             </span>
           </div>
         </div>
@@ -278,7 +294,7 @@ export default function ConfigureSaleItemDialog({
                   </span>
                   {sellUnit === "piece" && (
                     <span className="text-[9px] font-bold text-blue-600 dark:text-blue-400 mt-0.5">
-                      ₹{unitPrice.toFixed(2)} / pc
+                      ₹{unitPrice.toFixed(2)} / {getSubUnitLabel(product).toLowerCase()}
                     </span>
                   )}
                 </button>
@@ -306,7 +322,7 @@ export default function ConfigureSaleItemDialog({
                   : "border-transparent text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
               )}
             >
-              Strips ({activeBatch.stock} Available)
+              {getUnitLabel(product, true)} ({activeBatch.stock} Available)
             </button>
             <button
               type="button"
@@ -319,7 +335,7 @@ export default function ConfigureSaleItemDialog({
                   : "border-transparent text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
               )}
             >
-              Pieces ({activeBatch.stock * qtyPerStrip} Available)
+              {getSubUnitLabel(product, true)} ({activeBatch.stock * qtyPerStrip} Available)
             </button>
           </div>
         </div>
