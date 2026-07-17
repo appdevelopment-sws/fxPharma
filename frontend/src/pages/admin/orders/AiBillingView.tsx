@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router"
 import { useForm, useFieldArray, useWatch } from "react-hook-form"
 import { toast } from "sonner"
 import { ArrowLeft, Plus, Trash2, Save, FileText, Loader2 } from "lucide-react"
-import { useQuery, useMutation } from "@tanstack/react-query"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 
 import { Button } from "@/components/ui/button"
 import { FormField, FormSelectField, FormSearchSelect } from "@/components/ui/form-fields"
@@ -88,6 +88,7 @@ function findBestInventoryMatch(invoiceName: string, inventory: InventoryItem[])
 export default function AiBillingView() {
   const location = useLocation()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const file = location.state?.file as File | undefined
 
   const [objectUrl] = useState<string>(() => {
@@ -271,6 +272,7 @@ export default function AiBillingView() {
       return ordersApi.create(payload)
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders.all })
       toast.success("Order created successfully")
       navigate("/admin/orders")
     },
