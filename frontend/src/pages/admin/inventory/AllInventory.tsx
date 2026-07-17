@@ -156,15 +156,15 @@ export default function AllInventoryPage() {
               <Eye className="size-4" />
             </Button>
 
-            {row.status !== "DISCONTINUE" && (
-              <Button
-                size="icon-sm"
-                variant="ghost"
-                onClick={() => handleOpen(row, "edit")}
-              >
-                <Pencil className="size-4" />
-              </Button>
-            )}
+            {/* {row.status !== "DISCONTINUE" && ( */}
+            <Button
+              size="icon-sm"
+              variant="ghost"
+              onClick={() => handleOpen(row, "edit")}
+            >
+              <Pencil className="size-4" />
+            </Button>
+            {/* )} */}
 
             <Button
               disabled={row.status == "DISCONTINUE"}
