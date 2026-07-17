@@ -56,6 +56,13 @@ interface ConfigureSaleItemDialogProps {
 }
 
 const getQtyPerStrip = (product: PosProduct) => {
+  const isStrip = !product.unit1st || product.unit1st.toLowerCase() === "strip"
+  if (!isStrip) {
+    if (product.packQty2 && product.packQty2 > 0) return product.packQty2
+    if (product.convStri && product.convStri > 0) return product.convStri
+    return 10
+  }
+
   if (product.convStri && product.convStri > 0) return product.convStri
   if (product.packQty3 && product.packQty3 > 0) return product.packQty3
 
@@ -77,7 +84,8 @@ const getRateValue = (
   batch: PosBatch,
   rateType: "mrp" | "rateA" | "rateB" | "rateC",
   sellUnit: "strip" | "piece",
-  qtyPerStrip: number
+  qtyPerStrip: number,
+  isStrip: boolean
 ) => {
   let baseRate = 0
   if (rateType === "mrp") baseRate = batch.mrp || batch.price || 0
@@ -85,10 +93,17 @@ const getRateValue = (
   else if (rateType === "rateB") baseRate = batch.rateB || batch.mrp || batch.price || 0
   else if (rateType === "rateC") baseRate = batch.rateC || batch.mrp || batch.price || 0
 
-  if (sellUnit === "piece" && qtyPerStrip > 0) {
-    return baseRate / qtyPerStrip
+  if (isStrip) {
+    if (sellUnit === "piece" && qtyPerStrip > 0) {
+      return baseRate / qtyPerStrip
+    }
+    return baseRate
+  } else {
+    if (sellUnit === "strip") {
+      return baseRate * qtyPerStrip
+    }
+    return baseRate
   }
-  return baseRate
 }
 
 const toNumber = (value: unknown) => {
@@ -122,8 +137,9 @@ export default function ConfigureSaleItemDialog({
 
   if (!product || !activeBatch) return null
 
+  const isStrip = !product.unit1st || product.unit1st.toLowerCase() === "strip"
   const qtyPerStrip = getQtyPerStrip(product)
-  const activeRatePrice = getRateValue(activeBatch, rateType, sellUnit, qtyPerStrip)
+  const activeRatePrice = getRateValue(activeBatch, rateType, sellUnit, qtyPerStrip, isStrip)
 
   const totalBeforeDiscount = activeRatePrice * qty
   const discountVal = (totalBeforeDiscount * itemDiscount) / 100
@@ -133,7 +149,31 @@ export default function ConfigureSaleItemDialog({
   const taxVal = (taxableVal * (cgstRate + sgstRate)) / 100
   const netVal = taxableVal + taxVal
 
-  const maxStock = sellUnit === "strip" ? activeBatch.stock : activeBatch.stock * qtyPerStrip
+  const maxStock = isStrip
+    ? (sellUnit === "strip" ? activeBatch.stock : activeBatch.stock * qtyPerStrip)
+    : (sellUnit === "strip" ? Math.floor(activeBatch.stock / qtyPerStrip) : activeBatch.stock)
+
+  // Outer unit labels
+  const outerUnitSingular = isStrip 
+    ? "Strip" 
+    : (product.packing ? product.packing.charAt(0).toUpperCase() + product.packing.slice(1).toLowerCase() : "Box")
+
+  const outerUnitPlural = isStrip 
+    ? "Strips" 
+    : (outerUnitSingular.toLowerCase() === "box" ? "Boxes" : outerUnitSingular + "s")
+
+  const outerUnitShort = isStrip ? "Strps" : outerUnitPlural
+
+  // Inner unit labels
+  const innerUnitSingular = isStrip 
+    ? "Piece" 
+    : (product.unit1st ? product.unit1st.charAt(0).toUpperCase() + product.unit1st.slice(1).toLowerCase() : "Piece")
+
+  const innerUnitPlural = isStrip 
+    ? "Pieces" 
+    : (innerUnitSingular.toLowerCase() === "piece" ? "Pieces" : innerUnitSingular + "s")
+
+  const innerUnitShort = isStrip ? "Pcs" : innerUnitPlural
 
   const handleAdd = () => {
     onAdd({
@@ -197,8 +237,10 @@ export default function ConfigureSaleItemDialog({
                 const nextBatch = product.batches.find((b) => b.id === e.target.value) || null
                 if (nextBatch) {
                   setActiveBatch(nextBatch)
-                  const maxStock = sellUnit === "strip" ? nextBatch.stock : nextBatch.stock * qtyPerStrip
-                  setQty((q) => Math.min(q, maxStock))
+                  const nextMaxStock = isStrip
+                    ? (sellUnit === "strip" ? nextBatch.stock : nextBatch.stock * qtyPerStrip)
+                    : (sellUnit === "strip" ? Math.floor(nextBatch.stock / qtyPerStrip) : nextBatch.stock)
+                  setQty((q) => Math.min(q, nextMaxStock))
                 }
               }}
               className="w-full appearance-none rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950 px-3.5 py-2.5 pr-10 text-xs font-semibold outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition-all text-slate-800 dark:text-slate-100 [color-scheme:light] dark:[color-scheme:dark]"
@@ -210,7 +252,7 @@ export default function ConfigureSaleItemDialog({
                   disabled={b.stock <= 0}
                   className="bg-background text-foreground disabled:text-muted-foreground"
                 >
-                  {b.number} (Exp: {b.expiry}) {b.stock <= 0 ? "[OUT OF STOCK]" : `— ${b.stock} Strips`}
+                  {b.number} (Exp: {b.expiry}) {b.stock <= 0 ? "[OUT OF STOCK]" : `— ${isStrip ? `${b.stock} Strips` : `${b.stock} Bottles`}`}
                 </option>
               ))}
             </select>
@@ -239,7 +281,13 @@ export default function ConfigureSaleItemDialog({
               Expiry: <span className="text-slate-700 dark:text-slate-200 font-black">{activeBatch.expiry}</span>
             </span>
             <span>
-              Stock: <span className="text-slate-700 dark:text-slate-200 font-black">{activeBatch.stock} Strps ({activeBatch.stock * qtyPerStrip} Pcs)</span>
+              Stock: <span className="text-slate-700 dark:text-slate-200 font-black">
+                {isStrip ? (
+                  `${activeBatch.stock} ${outerUnitShort} (${activeBatch.stock * qtyPerStrip} ${innerUnitShort})`
+                ) : (
+                  `${Math.floor(activeBatch.stock / qtyPerStrip)} ${outerUnitPlural} (${activeBatch.stock} ${innerUnitPlural})`
+                )}
+              </span>
             </span>
           </div>
         </div>
@@ -252,7 +300,14 @@ export default function ConfigureSaleItemDialog({
           <div className="grid grid-cols-2 gap-3">
             {rateOptions.map((rate) => {
               const isSelected = rateType === rate.type
-              const unitPrice = sellUnit === "piece" ? rate.val / qtyPerStrip : rate.val
+              const displayPrice = isStrip
+                ? rate.val
+                : (sellUnit === "strip" ? rate.val * qtyPerStrip : rate.val)
+              
+              const subLabel = isStrip
+                ? (sellUnit === "piece" ? `₹${(rate.val / qtyPerStrip).toFixed(2)} / ${innerUnitSingular.toLowerCase()}` : null)
+                : (sellUnit === "strip" ? `₹${rate.val.toFixed(2)} / ${innerUnitSingular.toLowerCase()}` : null)
+
               return (
                 <button
                   key={rate.type}
@@ -274,11 +329,11 @@ export default function ConfigureSaleItemDialog({
                     {rate.label}
                   </span>
                   <span className="font-mono font-black text-slate-800 dark:text-slate-100 text-sm mt-1">
-                    ₹{rate.val.toFixed(2)}
+                    ₹{displayPrice.toFixed(2)}
                   </span>
-                  {sellUnit === "piece" && (
+                  {subLabel && (
                     <span className="text-[9px] font-bold text-blue-600 dark:text-blue-400 mt-0.5">
-                      ₹{unitPrice.toFixed(2)} / pc
+                      {subLabel}
                     </span>
                   )}
                 </button>
@@ -297,7 +352,8 @@ export default function ConfigureSaleItemDialog({
               type="button"
               onClick={() => {
                 setSellUnit("strip")
-                setQty((q) => Math.min(q, activeBatch.stock))
+                const nextMaxStock = isStrip ? activeBatch.stock : Math.floor(activeBatch.stock / qtyPerStrip)
+                setQty((q) => Math.min(q, nextMaxStock))
               }}
               className={cn(
                 "flex-1 text-center py-2 text-xs font-black rounded-lg transition-all cursor-pointer border",
@@ -306,12 +362,16 @@ export default function ConfigureSaleItemDialog({
                   : "border-transparent text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
               )}
             >
-              Strips ({activeBatch.stock} Available)
+              {outerUnitPlural} ({isStrip ? activeBatch.stock : Math.floor(activeBatch.stock / qtyPerStrip)} Available)
             </button>
             <button
               type="button"
               disabled={qtyPerStrip <= 1}
-              onClick={() => setSellUnit("piece")}
+              onClick={() => {
+                setSellUnit("piece")
+                const nextMaxStock = isStrip ? activeBatch.stock * qtyPerStrip : activeBatch.stock
+                setQty((q) => Math.min(q, nextMaxStock))
+              }}
               className={cn(
                 "flex-1 text-center py-2 text-xs font-black rounded-lg transition-all disabled:opacity-40 cursor-pointer border",
                 sellUnit === "piece"
@@ -319,7 +379,7 @@ export default function ConfigureSaleItemDialog({
                   : "border-transparent text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
               )}
             >
-              Pieces ({activeBatch.stock * qtyPerStrip} Available)
+              {innerUnitPlural} ({isStrip ? activeBatch.stock * qtyPerStrip : activeBatch.stock} Available)
             </button>
           </div>
         </div>
