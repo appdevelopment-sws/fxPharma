@@ -242,6 +242,13 @@ const buildPosProduct = (inventoryItem: any): PosProduct => {
 }
 
 const getQtyPerStrip = (product: PosProduct) => {
+  const isStrip = !product.unit1st || product.unit1st.toLowerCase() === "strip"
+  if (!isStrip) {
+    if (product.packQty2 && product.packQty2 > 0) return product.packQty2
+    if (product.convStri && product.convStri > 0) return product.convStri
+    return 10
+  }
+
   if (product.convStri && product.convStri > 0) return product.convStri
   if (product.packQty3 && product.packQty3 > 0) return product.packQty3
   const packingStr = String(product.packing || "").toLowerCase()
@@ -269,7 +276,8 @@ const getRateValue = (
   batch: PosBatch,
   rateType: "mrp" | "rateA" | "rateB" | "rateC",
   sellUnit: "strip" | "piece",
-  qtyPerStrip: number
+  qtyPerStrip: number,
+  isStrip: boolean
 ) => {
   let baseRate = 0
   if (rateType === "mrp") baseRate = batch.mrp || batch.price || 0
@@ -279,8 +287,14 @@ const getRateValue = (
     baseRate = batch.rateB || batch.mrp || batch.price || 0
   else if (rateType === "rateC")
     baseRate = batch.rateC || batch.mrp || batch.price || 0
-  if (sellUnit === "piece" && qtyPerStrip > 0) return baseRate / qtyPerStrip
-  return baseRate
+
+  if (isStrip) {
+    if (sellUnit === "piece" && qtyPerStrip > 0) return baseRate / qtyPerStrip
+    return baseRate
+  } else {
+    if (sellUnit === "strip") return baseRate * qtyPerStrip
+    return baseRate
+  }
 }
 
 // ─── Product illustration helper ─────────────────────────────────────────────
@@ -808,21 +822,23 @@ const POS = () => {
   }) => {
     if (!configProduct) return
     const b = config.batch
+    const isStrip = !configProduct.unit1st || configProduct.unit1st.toLowerCase() === "strip"
     const qtyPerStrip = getQtyPerStrip(configProduct)
-    const maxStock =
-      config.sellUnit === "strip" ? b.stock : b.stock * qtyPerStrip
+    const maxStock = isStrip
+      ? (config.sellUnit === "strip" ? b.stock : b.stock * qtyPerStrip)
+      : (config.sellUnit === "strip" ? Math.floor(b.stock / qtyPerStrip) : b.stock)
 
     if (config.qty <= 0) {
       toast.error("Please enter a valid quantity.")
       return
     }
     if (config.qty > maxStock) {
-      const label = config.sellUnit === "strip"
-        ? (configProduct.packing ? (configProduct.packing.charAt(0).toUpperCase() + configProduct.packing.slice(1)) : "Strip")
-        : (configProduct.unit1st ? (configProduct.unit1st.charAt(0).toUpperCase() + configProduct.unit1st.slice(1)) : "Piece")
-      const pluralLabel = label.toLowerCase().endsWith('x') || label.toLowerCase().endsWith('s') || label.toLowerCase().endsWith('ch') || label.toLowerCase().endsWith('sh') ? label + "es" : label + "s"
+      const outerLabel = isStrip ? "Strips" : "Boxes"
+      const innerLabel = isStrip ? "Pieces" : (configProduct.unit1st ? configProduct.unit1st.charAt(0).toUpperCase() + configProduct.unit1st.slice(1).toLowerCase() + "s" : "Bottles")
       toast.error(
-        `Insufficient stock! Max available is ${maxStock} ${pluralLabel}.`
+        `Insufficient stock! Max available is ${maxStock} ${
+          config.sellUnit === "strip" ? outerLabel : innerLabel
+        }.`
       )
       return
     }
@@ -831,7 +847,8 @@ const POS = () => {
       b,
       config.rateType,
       config.sellUnit,
-      qtyPerStrip
+      qtyPerStrip,
+      isStrip
     )
     const cartItemId = `${b.id}-${config.sellUnit}-${config.rateType}`
 
@@ -871,11 +888,11 @@ const POS = () => {
     setCart((prev) =>
       prev.map((item) => {
         if (item.id !== cartItemId) return item
+        const isStrip = !item.product.unit1st || item.product.unit1st.toLowerCase() === "strip"
         const qtyPerStrip = getQtyPerStrip(item.product)
-        const maxStock =
-          item.sellUnit === "strip"
-            ? item.batch.stock
-            : item.batch.stock * qtyPerStrip
+        const maxStock = isStrip
+          ? (item.sellUnit === "strip" ? item.batch.stock : item.batch.stock * qtyPerStrip)
+          : (item.sellUnit === "strip" ? Math.floor(item.batch.stock / qtyPerStrip) : item.batch.stock)
         const newQty = Math.min(maxStock, Math.max(1, item.qty + delta))
         return { ...item, qty: newQty }
       })
@@ -1011,6 +1028,24 @@ const POS = () => {
       tenderedAmount: tenderedAmount || roundedNet,
       changeAmount: changeAmount,
       items: cart.map((item) => {
+        const isStrip = !item.product.unit1st || item.product.unit1st.toLowerCase() === "strip"
+        const qtyPerStrip = getQtyPerStrip(item.product)
+
+        // For bottle-based medicine sold in boxes (sellUnit === "strip")
+        const apiQty = (!isStrip && item.sellUnit === "strip") ? item.qty * qtyPerStrip : item.qty
+        const apiRateValue = (!isStrip && item.sellUnit === "strip")
+          ? Math.round((item.rateValue / qtyPerStrip) * 100) / 100
+          : item.rateValue
+        
+        // Dynamic labels for invoice storage/printing
+        const innerUnitSingular = isStrip 
+          ? "Piece" 
+          : (item.product.unit1st ? item.product.unit1st.charAt(0).toUpperCase() + item.product.unit1st.slice(1).toLowerCase() : "Bottle")
+        
+        const apiSellUnit = item.sellUnit === "strip"
+          ? (isStrip ? "Strip" : "Box")
+          : (isStrip ? "Piece" : innerUnitSingular)
+
         const subTotal =
           item.rateValue * item.qty -
           (item.rateValue * item.qty * item.itemDiscount) / 100
@@ -1019,10 +1054,10 @@ const POS = () => {
           inventoryName: item.product.name,
           batchId: item.batch.id.endsWith("-batch") ? null : item.batch.id,
           batchNo: item.batch.number === "N/A" ? null : item.batch.number,
-          qty: item.qty,
-          sellUnit: item.sellUnit,
+          qty: apiQty,
+          sellUnit: apiSellUnit,
           rateType: item.rateType,
-          rateValue: item.rateValue,
+          rateValue: apiRateValue,
           itemDiscount: item.itemDiscount,
           subTotal: subTotal,
         }
