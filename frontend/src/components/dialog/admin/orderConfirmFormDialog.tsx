@@ -162,7 +162,7 @@ const normUnit = (u?: string) => {
 const buildRowFromItem = (item: any): OrderConfirmItem => {
   let qty = toNumber(item.qty || item.ordQty || 1)
   let freeQty = toNumber(item.freeQty || item.free || 0)
-  let unit = normUnit(item.unit)
+  let unit = item.unit ? normUnit(item.unit) : normUnit(item.inventory?.unit1st ?? item.inventory?.unit_1st ?? "strip")
 
   if (unit === "box") {
     const packQty2 = Math.max(1, toNumber(item.inventory?.packQty2 ?? item.inventory?.pack_qty_2 ?? 1))
@@ -194,7 +194,7 @@ const buildRowFromItem = (item: any): OrderConfirmItem => {
     rate3: toNumber(item.inventory?.rateC),
     cgst: toNumber(item.inventory?.cgst),
     sgst: toNumber(item.inventory?.sgst),
-    freeUnit: normUnit(item.freeUnit === "box" ? (item.inventory?.unit1st ?? item.inventory?.unit_1st ?? "strip") : item.freeUnit),
+    freeUnit: item.freeUnit ? normUnit(item.freeUnit === "box" ? (item.inventory?.unit1st ?? item.inventory?.unit_1st ?? "strip") : item.freeUnit) : unit,
     discount: toNumber(item.discount || 0),
     discount_type: item.discount_type || item.discountType || "flat",
   }
@@ -639,6 +639,7 @@ export default function OrderConfirmFormDialog({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.orders.all })
+      queryClient.invalidateQueries({ queryKey: queryKeys.inventory.all })
       if (isAlreadyReceived) {
         toast.success("Order payment details updated")
       } else {
