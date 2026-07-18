@@ -309,7 +309,10 @@ const Orders = () => {
         description="Manage received items"
         action={
           <div className="flex items-center gap-2">
-            <Button variant="secondary" onClick={() => aiBillingDisclosure.onOpen()}>
+            <Button
+              variant="secondary"
+              onClick={() => aiBillingDisclosure.onOpen()}
+            >
               <Sparkles className="mr-2 size-4" />
               AI Billing
             </Button>

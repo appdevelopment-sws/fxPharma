@@ -16,6 +16,8 @@ export interface ParsedInvoiceItem {
   purchaseRate?: number;
   mrp?: number;
   discountPercent?: number;
+  discount?: number;
+  discountType?: string;
   cgst?: number;
   sgst?: number;
   hsn?: string;
@@ -169,6 +171,14 @@ export class LlmInvoiceParserService {
                       description: "Maximum Retail Price (MRP) per item (e.g., 15.00, 200.00).",
                     },
                     discountPercent: { type: "number" },
+                    discount: {
+                      type: "number",
+                      description: "The discount rate or amount extracted from the invoice (e.g. 10 for 10% or 50.00 for flat 50 Rs). Defaults to 0 if not present.",
+                    },
+                    discountType: {
+                      type: "string",
+                      description: "The type of the discount. Must be exactly 'percentage' or 'flat'. Defaults to 'flat' if no percentage sign is present.",
+                    },
                     cgst: {
                       type: "number",
                       description: "CGST tax percentage rate (e.g., 2.5, 6, 9, 14). Extract the rate percentage, not the absolute currency tax amount.",
@@ -191,6 +201,8 @@ export class LlmInvoiceParserService {
                     "purchaseRate",
                     "mrp",
                     "discountPercent",
+                    "discount",
+                    "discountType",
                     "cgst",
                     "sgst",
                     "hsn",

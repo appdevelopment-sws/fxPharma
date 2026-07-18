@@ -162,13 +162,20 @@ const normUnit = (u?: string) => {
 const buildRowFromItem = (item: any): OrderConfirmItem => {
   let qty = toNumber(item.qty || item.ordQty || 1)
   let freeQty = toNumber(item.freeQty || item.free || 0)
-  let unit = item.unit ? normUnit(item.unit) : normUnit(item.inventory?.unit1st ?? item.inventory?.unit_1st ?? "strip")
+  let unit = item.unit
+    ? normUnit(item.unit)
+    : normUnit(item.inventory?.unit1st ?? item.inventory?.unit_1st ?? "strip")
 
   if (unit === "box") {
-    const packQty2 = Math.max(1, toNumber(item.inventory?.packQty2 ?? item.inventory?.pack_qty_2 ?? 1))
+    const packQty2 = Math.max(
+      1,
+      toNumber(item.inventory?.packQty2 ?? item.inventory?.pack_qty_2 ?? 1)
+    )
     qty = qty * packQty2
     freeQty = freeQty * packQty2
-    unit = normUnit(item.inventory?.unit1st ?? item.inventory?.unit_1st ?? "strip")
+    unit = normUnit(
+      item.inventory?.unit1st ?? item.inventory?.unit_1st ?? "strip"
+    )
   }
 
   const dbPurchaseRate = toNumber(item.purchaseRate)
@@ -188,13 +195,21 @@ const buildRowFromItem = (item: any): OrderConfirmItem => {
     batchNo: item.batchNo || item.batch || "",
     expiry: toExpiryInputValue(item.expiry || item.inventory?.daysLimit),
     purchaseRate: Math.round(purchaseRate * 100) / 100,
-    mrp: toNumber(item.inventory?.mrp),
-    rate1: toNumber(item.inventory?.rateA),
-    rate2: toNumber(item.inventory?.rateB),
-    rate3: toNumber(item.inventory?.rateC),
+    mrp: item.mrp ? toNumber(item.mrp) : toNumber(item.inventory?.mrp),
+    rate1: item.rate1 ? toNumber(item.rate1) : toNumber(item.inventory?.rateA),
+    rate2: item.rate2 ? toNumber(item.rate2) : toNumber(item.inventory?.rateB),
+    rate3: item.rate3 ? toNumber(item.rate3) : toNumber(item.inventory?.rateC),
+    // cgst: (item.cgst !== undefined && item.cgst !== null) ? toNumber(item.cgst) : toNumber(item.inventory?.cgst),
+    // sgst: (item.sgst !== undefined && item.sgst !== null) ? toNumber(item.sgst) : toNumber(item.inventory?.sgst),
     cgst: toNumber(item.inventory?.cgst),
     sgst: toNumber(item.inventory?.sgst),
-    freeUnit: item.freeUnit ? normUnit(item.freeUnit === "box" ? (item.inventory?.unit1st ?? item.inventory?.unit_1st ?? "strip") : item.freeUnit) : unit,
+    freeUnit: item.freeUnit
+      ? normUnit(
+          item.freeUnit === "box"
+            ? (item.inventory?.unit1st ?? item.inventory?.unit_1st ?? "strip")
+            : item.freeUnit
+        )
+      : unit,
     discount: toNumber(item.discount || 0),
     discount_type: item.discount_type || item.discountType || "flat",
   }
@@ -292,7 +307,9 @@ export default function OrderConfirmFormDialog({
     fileInputRef.current?.click()
   }
 
-  const handleBillUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleBillUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = event.target.files?.[0]
     if (!file) return
 
@@ -303,44 +320,53 @@ export default function OrderConfirmFormDialog({
       const res = await ordersApi.parseBill(order.id, file)
       if (res.success && res.data) {
         const parsedData = res.data
-        
+
         if (parsedData.invoiceNo) {
           setValue("invoiceNo", parsedData.invoiceNo, { shouldDirty: true })
         }
-        
+
         const currentItems = getValues("items") || []
         const parsedItems = parsedData.items || []
-        
+
         let matchCount = 0
         const updatedItems = [...currentItems]
-        
+
         parsedItems.forEach((pItem: any) => {
-          const pNameNormalized = pItem.name.toLowerCase().trim().replace(/[^a-z0-9]/g, "")
-          
+          const pNameNormalized = pItem.name
+            .toLowerCase()
+            .trim()
+            .replace(/[^a-z0-9]/g, "")
+
           let bestMatchIndex = -1
           let bestMatchScore = 0
-          
+
           updatedItems.forEach((uItem: any, idx: number) => {
             if (!uItem.name) return
-            const uNameNormalized = uItem.name.toLowerCase().trim().replace(/[^a-z0-9]/g, "")
-            
+            const uNameNormalized = uItem.name
+              .toLowerCase()
+              .trim()
+              .replace(/[^a-z0-9]/g, "")
+
             if (pNameNormalized === uNameNormalized) {
               bestMatchIndex = idx
               bestMatchScore = 1
               return
             }
-            
-            if (pNameNormalized.includes(uNameNormalized) || uNameNormalized.includes(pNameNormalized)) {
+
+            if (
+              pNameNormalized.includes(uNameNormalized) ||
+              uNameNormalized.includes(pNameNormalized)
+            ) {
               if (bestMatchScore < 0.8) {
                 bestMatchIndex = idx
                 bestMatchScore = 0.8
               }
             }
-          });
-          
+          })
+
           if (bestMatchIndex !== -1) {
             const matchedItem = updatedItems[bestMatchIndex]
-            
+
             if (pItem.batchNo) matchedItem.batchNo = pItem.batchNo
             if (pItem.expiry) matchedItem.expiry = pItem.expiry
             if (pItem.mrp) matchedItem.mrp = pItem.mrp
@@ -360,19 +386,45 @@ export default function OrderConfirmFormDialog({
               matchedItem.freeQty = pItem.freeQty
               matchedItem.freeQtyInput = String(pItem.freeQty)
             }
-            
-            setValue(`items.${bestMatchIndex}.batchNo`, matchedItem.batchNo, { shouldDirty: true })
-            setValue(`items.${bestMatchIndex}.expiry`, matchedItem.expiry, { shouldDirty: true })
-            setValue(`items.${bestMatchIndex}.mrp`, matchedItem.mrp, { shouldDirty: true })
-            setValue(`items.${bestMatchIndex}.unitRate`, matchedItem.unitRate, { shouldDirty: true })
-            setValue(`items.${bestMatchIndex}.qty`, matchedItem.qty, { shouldDirty: true })
-            setValue(`items.${bestMatchIndex}.freeQty`, matchedItem.freeQty, { shouldDirty: true })
-            setValue(`items.${bestMatchIndex}.freeQtyInput`, matchedItem.freeQtyInput, { shouldDirty: true })
-            setValue(`items.${bestMatchIndex}.cgst`, matchedItem.cgst, { shouldDirty: true })
-            setValue(`items.${bestMatchIndex}.sgst`, matchedItem.sgst, { shouldDirty: true })
-            setValue(`items.${bestMatchIndex}.discount`, matchedItem.discount, { shouldDirty: true })
-            setValue(`items.${bestMatchIndex}.discount_type`, matchedItem.discount_type, { shouldDirty: true })
-            
+
+            setValue(`items.${bestMatchIndex}.batchNo`, matchedItem.batchNo, {
+              shouldDirty: true,
+            })
+            setValue(`items.${bestMatchIndex}.expiry`, matchedItem.expiry, {
+              shouldDirty: true,
+            })
+            setValue(`items.${bestMatchIndex}.mrp`, matchedItem.mrp, {
+              shouldDirty: true,
+            })
+            setValue(`items.${bestMatchIndex}.unitRate`, matchedItem.unitRate, {
+              shouldDirty: true,
+            })
+            setValue(`items.${bestMatchIndex}.qty`, matchedItem.qty, {
+              shouldDirty: true,
+            })
+            setValue(`items.${bestMatchIndex}.freeQty`, matchedItem.freeQty, {
+              shouldDirty: true,
+            })
+            setValue(
+              `items.${bestMatchIndex}.freeQtyInput`,
+              matchedItem.freeQtyInput,
+              { shouldDirty: true }
+            )
+            setValue(`items.${bestMatchIndex}.cgst`, matchedItem.cgst, {
+              shouldDirty: true,
+            })
+            setValue(`items.${bestMatchIndex}.sgst`, matchedItem.sgst, {
+              shouldDirty: true,
+            })
+            setValue(`items.${bestMatchIndex}.discount`, matchedItem.discount, {
+              shouldDirty: true,
+            })
+            setValue(
+              `items.${bestMatchIndex}.discount_type`,
+              matchedItem.discount_type,
+              { shouldDirty: true }
+            )
+
             handleRowCalculation(bestMatchIndex)
             matchCount++
           } else {
@@ -393,22 +445,29 @@ export default function OrderConfirmFormDialog({
             }
             if (pItem.cgst !== undefined) newRow.cgst = pItem.cgst
             if (pItem.sgst !== undefined) newRow.sgst = pItem.sgst
-            
+
             if (newRow.unitRate && newRow.qty) {
-              newRow.purchaseRate = Math.round((newRow.unitRate * newRow.qty) * 100) / 100
+              newRow.purchaseRate =
+                Math.round(newRow.unitRate * newRow.qty * 100) / 100
             }
-            
+
             append(newRow)
           }
         })
-        
-        toast.success(`Bill parsed successfully! Matched ${matchCount} items out of ${parsedItems.length}.`, { id: toastId })
+
+        toast.success(
+          `Bill parsed successfully! Matched ${matchCount} items out of ${parsedItems.length}.`,
+          { id: toastId }
+        )
       } else {
         toast.error("Failed to parse bill details.", { id: toastId })
       }
     } catch (err: any) {
       console.error(err)
-      toast.error(err.response?.data?.message || err.message || "Failed to parse bill.", { id: toastId })
+      toast.error(
+        err.response?.data?.message || err.message || "Failed to parse bill.",
+        { id: toastId }
+      )
     } finally {
       setIsParsingBill(false)
       if (fileInputRef.current) fileInputRef.current.value = ""
@@ -638,8 +697,7 @@ export default function OrderConfirmFormDialog({
       })
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.orders.all })
-      queryClient.invalidateQueries({ queryKey: queryKeys.inventory.all })
+      queryClient.clear()
       if (isAlreadyReceived) {
         toast.success("Order payment details updated")
       } else {

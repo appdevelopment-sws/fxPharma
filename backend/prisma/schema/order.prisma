@@ -53,6 +53,13 @@ model OrderItem {
   discount     Decimal @default(0)
   discountType String  @default("flat") @map("discount_type")
 
+  mrp          Decimal? @default(0.0)
+  cgst         Decimal? @default(0.0)
+  sgst         Decimal? @default(0.0)
+  rate1        Decimal? @default(0.0) @map("rate_1")
+  rate2        Decimal? @default(0.0) @map("rate_2")
+  rate3        Decimal? @default(0.0) @map("rate_3")
+
   createdAt        DateTime         @default(now()) @map("created_at")
   updatedAt        DateTime         @updatedAt @map("updated_at")
   inventoryBatches InventoryBatch[]

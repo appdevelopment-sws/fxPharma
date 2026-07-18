@@ -27,6 +27,8 @@ interface ParsedInvoiceItem {
   purchaseRate?: number
   mrp?: number
   discountPercent?: number
+  discount?: number
+  discount_type?: string
   cgst?: number
   sgst?: number
   hsn?: string
@@ -234,6 +236,17 @@ export default function AiBillingView() {
             invoiceDate: resData.data.invoiceDate || "",
             items: (resData.data.items || []).map((item: ParsedInvoiceItem) => {
               const match = findBestInventoryMatch(item.name || "", allInventory)
+              
+              let discount = 0
+              let discount_type = "flat"
+              if (item.discountPercent !== undefined && item.discountPercent > 0) {
+                discount = item.discountPercent
+                discount_type = "percentage"
+              } else if (item.discount !== undefined && item.discount > 0) {
+                discount = item.discount
+                discount_type = item.discount_type || "flat"
+              }
+
               return {
                 inventoryId: match ? match.id : "",
                 name: item.name || "",
@@ -242,6 +255,12 @@ export default function AiBillingView() {
                 batchNo: item.batchNo || "",
                 expiry: item.expiry || "",
                 hsn: item.hsn || "",
+                mrp: item.mrp || (match ? (match.mrp ? Number(match.mrp) : 0) : 0),
+                freeQty: item.freeQty || 0,
+                cgst: item.cgst || (match ? (match.cgst ? Number(match.cgst) : 0) : 0),
+                sgst: item.sgst || (match ? (match.sgst ? Number(match.sgst) : 0) : 0),
+                discount,
+                discount_type,
               }
             }),
           })

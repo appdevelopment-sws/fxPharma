@@ -115,6 +115,12 @@ const buildOrderItemData = (item: any) => ({
   receivedQty: Math.max(0, toNumber(item.qty) + toNumber(item.freeQty)),
   discount: toNumber(item.discount || 0),
   discountType: item.discount_type || item.discountType || "flat",
+  mrp: item.mrp === undefined || item.mrp === null ? null : toNumber(item.mrp),
+  rate1: item.rate1 === undefined || item.rate1 === null ? null : toNumber(item.rate1),
+  rate2: item.rate2 === undefined || item.rate2 === null ? null : toNumber(item.rate2),
+  rate3: item.rate3 === undefined || item.rate3 === null ? null : toNumber(item.rate3),
+  cgst: item.cgst === undefined || item.cgst === null ? null : toNumber(item.cgst),
+  sgst: item.sgst === undefined || item.sgst === null ? null : toNumber(item.sgst),
 });
 
 const buildInventoryUpdateData = (item: any) => {
