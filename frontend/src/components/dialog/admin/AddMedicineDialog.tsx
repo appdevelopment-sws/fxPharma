@@ -557,7 +557,7 @@ export default function MedicineStockDialog({
         toast.success("Custom HSN created successfully!", { id: toastId })
         // Invalidate HSN codes query to ensure the dropdown contains the new option
         queryClient.invalidateQueries({
-          queryKey: queryKeys.hsnCodes.list({ limit: 20, includeGlobal }),
+          queryKey: queryKeys.hsnCodes.all,
         })
       } catch (err: any) {
         console.error(err)
@@ -572,6 +572,16 @@ export default function MedicineStockDialog({
     }
 
     handleMutation.mutate(data)
+  }
+
+  const onFormError = (errors: any) => {
+    console.error("Form validation errors:", errors)
+    const firstError = Object.values(errors)[0] as any
+    if (firstError?.message) {
+      toast.error(`Validation Error: ${firstError.message}`)
+    } else {
+      toast.error("Please fill in all required fields.")
+    }
   }
 
   return (
@@ -617,7 +627,8 @@ export default function MedicineStockDialog({
     >
       <form
         id="medicine-stock-form"
-        onSubmit={handleSubmit(onSubmit)}
+        noValidate
+        onSubmit={handleSubmit(onSubmit, onFormError)}
         className="space-y-6"
       >
         {/* Product Identification */}
@@ -631,6 +642,11 @@ export default function MedicineStockDialog({
               label="Product Name"
               required
               readOnly={isViewMode}
+              rules={{
+                required: "Product Name is required",
+                validate: (v) =>
+                  !!String(v || "").trim() || "Product Name cannot be empty spaces",
+              }}
             />
             <FormSelectField
               control={control}
@@ -642,6 +658,7 @@ export default function MedicineStockDialog({
                 manufacturerOptions.length ? "Select manufacturer" : ""
               }
               readOnly={isViewMode}
+              rules={{ required: "Manufacturer is required" }}
             />{" "}
             <FormSelectField
               control={control}
@@ -651,6 +668,7 @@ export default function MedicineStockDialog({
               options={companyOptions}
               placeholder={companyOptions.length ? "Select company" : ""}
               readOnly={isViewMode}
+              rules={{ required: "Company is required" }}
             />
             <FormSelectField
               control={control}
@@ -665,6 +683,7 @@ export default function MedicineStockDialog({
               label="Salt Composition"
               required
               readOnly={isViewMode}
+              rules={{ required: "Salt Composition is required" }}
             />
             <FormSelectField
               control={control}
@@ -678,6 +697,7 @@ export default function MedicineStockDialog({
                   : "Loading categories..."
               }
               readOnly={isViewMode}
+              rules={{ required: "Category is required" }}
             />
             <FormFileUpload
               control={control}
@@ -730,18 +750,26 @@ export default function MedicineStockDialog({
                   control={control}
                   name="unit_1st"
                   label="Contains"
+                  required
                   options={PACKAGING_TYPE_OPTIONS}
                   placeholder="Select contains type"
                   readOnly={isViewMode}
+                  rules={{ required: "Contains packaging type is required" }}
                 />
                 <FormField
                   control={control}
                   name="pack_qty_2"
                   label="Contains Qty"
+                  required
                   inputType="number"
-                  min="0"
+                  min="1"
                   readOnly={isViewMode}
                   placeholder="10"
+                  rules={{
+                    required: "Contains Qty is required",
+                    validate: (v) =>
+                      Number(v) > 0 || "Contains Qty must be greater than 0",
+                  }}
                 />
               </div>
 
@@ -753,18 +781,36 @@ export default function MedicineStockDialog({
                       control={control}
                       name="unit_2nd"
                       label="Containing"
+                      required={selectedInnerPackType === "strip"}
                       options={STRIP_CONTENT_OPTIONS}
                       placeholder="Select tablets or capsules"
                       readOnly={isViewMode}
+                      rules={{
+                        required:
+                          selectedInnerPackType === "strip"
+                            ? "Containing (Tablets/Capsules) is required"
+                            : false,
+                      }}
                     />{" "}
                     <FormField
                       control={control}
                       name="pack_qty_3"
                       label="Content Qty"
+                      required={selectedInnerPackType === "strip"}
                       inputType="number"
-                      min="0"
+                      min="1"
                       readOnly={isViewMode}
                       placeholder="10"
+                      rules={{
+                        required:
+                          selectedInnerPackType === "strip"
+                            ? "Content Qty is required"
+                            : false,
+                        validate: (v) =>
+                          selectedInnerPackType !== "strip" ||
+                          Number(v) > 0 ||
+                          "Content Qty must be greater than 0",
+                      }}
                     />
                   </>
                 )}
@@ -783,6 +829,7 @@ export default function MedicineStockDialog({
               readOnly={isViewMode}
               searchValue={hsnSearch}
               onSearchChange={setHsnSearch}
+              rules={{ required: "HSN / SAC code is required" }}
             />
             <FormSelectField
               control={control}
@@ -830,6 +877,7 @@ export default function MedicineStockDialog({
               label="SGST %"
               inputType="number"
               step="0.01"
+              min="0"
             />
             <FormField
               control={control}
@@ -837,21 +885,38 @@ export default function MedicineStockDialog({
               label="CGST %"
               inputType="number"
               step="0.01"
+              min="0"
             />
             <FormField
               control={control}
               name="mrp"
-              label="M.R.P. "
+              label="M.R.P."
               required
               inputType="number"
               step="0.01"
+              min="0.01"
+              readOnly={isViewMode}
+              rules={{
+                required: "M.R.P. is required",
+                validate: (v) =>
+                  Number(v) > 0 || "M.R.P. must be greater than 0",
+              }}
             />
             <FormField
               control={control}
               name="purchase_rate"
-              label="Purchase Rate "
+              label="Purchase Rate"
+              required
               inputType="number"
               step="0.01"
+              min="0"
+              readOnly={isViewMode}
+              rules={{
+                required: "Purchase Rate is required",
+                validate: (v) =>
+                  (v !== "" && Number(v) >= 0) ||
+                  "Purchase Rate cannot be negative",
+              }}
             />
             {/* <FormField
               control={control}
@@ -866,27 +931,31 @@ export default function MedicineStockDialog({
               label="IGST %"
               inputType="number"
               step="0.01"
+              min="0"
             />
             <FormField
               control={control}
               name="rate_a"
-              label="Rate - A "
+              label="Rate - A"
               inputType="number"
               step="0.01"
+              min="0"
             />
             <FormField
               control={control}
               name="rate_b"
-              label="Rate - B "
+              label="Rate - B"
               inputType="number"
               step="0.01"
+              min="0"
             />
             <FormField
               control={control}
               name="rate_c"
-              label="Rate - C "
+              label="Rate - C"
               inputType="number"
               step="0.01"
+              min="0"
             />
             {/* <FormField
               control={control}

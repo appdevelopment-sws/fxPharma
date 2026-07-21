@@ -4,6 +4,7 @@ import {
   type Control,
   type FieldValues,
   type Path,
+  type RegisterOptions,
 } from "react-hook-form"
 import {
   CircleHelp,
@@ -56,6 +57,7 @@ interface FormFieldProps<T extends FieldValues> {
   min?: string
   step?: string
   error?: string
+  rules?: RegisterOptions<T, Path<T>>
 }
 
 /**
@@ -81,38 +83,47 @@ export function FormField<T extends FieldValues>({
   min,
   step,
   error,
+  rules,
 }: FormFieldProps<T>) {
+  const effectiveRules =
+    rules || (required ? { required: `${label} is required` } : undefined)
+
   return (
     <Controller
       control={control}
       name={name}
-      render={({ field }) => (
-        <div className="space-y-2">
-          <FieldLabel
-            htmlFor={String(name)}
-            label={label}
-            required={required}
-            tooltip={tooltip}
-          />
-          <Input
-            id={String(name)}
-            {...field}
-            type={inputType}
-            min={min}
-            step={step}
-            placeholder={placeholder}
-            readOnly={readOnly}
-            required={required}
-            disabled={readOnly}
-            className={cn(
-              readOnly && "bg-muted/30 opacity-90",
-              error && "border-destructive"
+      rules={effectiveRules}
+      render={({ field, fieldState }) => {
+        const errorMessage = error || fieldState.error?.message
+        return (
+          <div className="space-y-2">
+            <FieldLabel
+              htmlFor={String(name)}
+              label={label}
+              required={required}
+              tooltip={tooltip}
+            />
+            <Input
+              id={String(name)}
+              {...field}
+              type={inputType}
+              min={min}
+              step={step}
+              placeholder={placeholder}
+              readOnly={readOnly}
+              disabled={readOnly}
+              className={cn(
+                readOnly && "bg-muted/30 opacity-90",
+                errorMessage && "border-destructive focus-visible:ring-destructive"
+              )}
+              aria-invalid={!!errorMessage}
+            />
+            {errorMessage && (
+              <p className="text-xs font-medium text-destructive">{errorMessage}</p>
             )}
-            aria-invalid={!!error}
-          />
-          {error && <p className="text-xs text-destructive">{error}</p>}
-        </div>
-      )}
+          </div>
+        )
+      }}
     />
   )
 }
@@ -133,6 +144,7 @@ interface FormSelectFieldProps<T extends FieldValues> {
   placeholder?: string
   required?: boolean
   action?: React.ReactNode
+  rules?: RegisterOptions<T, Path<T>>
 }
 
 /**
@@ -160,43 +172,53 @@ export function FormSelectField<T extends FieldValues>({
   placeholder,
   required,
   action,
+  rules,
 }: FormSelectFieldProps<T>) {
+  const effectiveRules =
+    rules || (required ? { required: `${label} is required` } : undefined)
+
   return (
     <Controller
       control={control}
       name={name}
-      render={({ field }) => (
-        <div className="space-y-2">
-          <div className="flex items-center justify-between gap-3">
-            <FieldLabel
-              htmlFor={String(name)}
-              label={label}
-              required={required}
-              tooltip={tooltip}
-            />
-            {action}
-          </div>
-          <select
-            id={String(name)}
-            {...field}
-            disabled={disabled || readOnly}
-            className={cn(
-              "h-8 w-full rounded-lg border border-input bg-background px-2.5 text-sm text-foreground transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-100",
-              readOnly && "bg-muted/30 opacity-90",
-              error && "border-destructive"
+      rules={effectiveRules}
+      render={({ field, fieldState }) => {
+        const errorMessage = error || fieldState.error?.message
+        return (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between gap-3">
+              <FieldLabel
+                htmlFor={String(name)}
+                label={label}
+                required={required}
+                tooltip={tooltip}
+              />
+              {action}
+            </div>
+            <select
+              id={String(name)}
+              {...field}
+              disabled={disabled || readOnly}
+              className={cn(
+                "h-8 w-full rounded-lg border border-input bg-background px-2.5 text-sm text-foreground transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-100",
+                readOnly && "bg-muted/30 opacity-90",
+                errorMessage && "border-destructive focus-visible:ring-destructive"
+              )}
+              aria-invalid={!!errorMessage}
+            >
+              {placeholder && <option value="">{placeholder}</option>}
+              {options.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            {errorMessage && (
+              <p className="text-xs font-medium text-destructive">{errorMessage}</p>
             )}
-            aria-invalid={!!error}
-          >
-            {placeholder && <option value="">{placeholder}</option>}
-            {options.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-          {error && <p className="text-xs text-destructive">{error}</p>}
-        </div>
-      )}
+          </div>
+        )
+      }}
     />
   )
 }
@@ -215,6 +237,7 @@ interface FormTextareaProps<T extends FieldValues> {
   rows?: number
   error?: string
   required?: boolean
+  rules?: RegisterOptions<T, Path<T>>
 }
 
 /**
@@ -238,36 +261,46 @@ export function FormTextarea<T extends FieldValues>({
   rows,
   error,
   required,
+  rules,
 }: FormTextareaProps<T>) {
+  const effectiveRules =
+    rules || (required ? { required: `${label} is required` } : undefined)
+
   return (
     <Controller
       control={control}
       name={name}
-      render={({ field }) => (
-        <div className="space-y-2">
-          <FieldLabel
-            htmlFor={String(name)}
-            label={label}
-            required={required}
-            tooltip={tooltip}
-          />
-          <textarea
-            id={String(name)}
-            {...field}
-            placeholder={placeholder}
-            readOnly={readOnly}
-            rows={rows}
-            disabled={readOnly}
-            className={cn(
-              "w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm text-foreground transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
-              readOnly && "cursor-default bg-muted/30 opacity-90",
-              error && "border-destructive"
+      rules={effectiveRules}
+      render={({ field, fieldState }) => {
+        const errorMessage = error || fieldState.error?.message
+        return (
+          <div className="space-y-2">
+            <FieldLabel
+              htmlFor={String(name)}
+              label={label}
+              required={required}
+              tooltip={tooltip}
+            />
+            <textarea
+              id={String(name)}
+              {...field}
+              placeholder={placeholder}
+              readOnly={readOnly}
+              rows={rows}
+              disabled={readOnly}
+              className={cn(
+                "w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm text-foreground transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
+                readOnly && "cursor-default bg-muted/30 opacity-90",
+                errorMessage && "border-destructive focus-visible:ring-destructive"
+              )}
+              aria-invalid={!!errorMessage}
+            />
+            {errorMessage && (
+              <p className="text-xs font-medium text-destructive">{errorMessage}</p>
             )}
-            aria-invalid={!!error}
-          />
-          {error && <p className="text-xs text-destructive">{error}</p>}
-        </div>
-      )}
+          </div>
+        )
+      }}
     />
   )
 }
@@ -441,6 +474,7 @@ interface FormSearchSelectProps<T extends FieldValues> {
   error?: string
   tooltip?: string
   labelAction?: React.ReactNode
+  rules?: RegisterOptions<T, Path<T>>
 }
 
 /**
@@ -460,6 +494,7 @@ export function FormSearchSelect<T extends FieldValues>({
   error,
   tooltip,
   labelAction,
+  rules,
 }: FormSearchSelectProps<T>) {
   const [open, setOpen] = React.useState(false)
   const [searchValue, setSearchValue] = React.useState("")
@@ -475,98 +510,107 @@ export function FormSearchSelect<T extends FieldValues>({
     debouncedSearch(value)
   }
 
+  const effectiveRules =
+    rules || (required ? { required: `${label} is required` } : undefined)
+
   return (
     <Controller
       control={control}
       name={name}
-      render={({ field }) => (
-        <div className="space-y-2">
-          <FieldLabel
-            htmlFor={String(name)}
-            label={label}
-            required={required}
-            tooltip={tooltip}
-            action={labelAction}
-          />
+      rules={effectiveRules}
+      render={({ field, fieldState }) => {
+        const errorMessage = error || fieldState.error?.message
+        return (
+          <div className="space-y-2">
+            <FieldLabel
+              htmlFor={String(name)}
+              label={label}
+              required={required}
+              tooltip={tooltip}
+              action={labelAction}
+            />
 
-          <Popover open={open} onOpenChange={setOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                role="combobox"
-                aria-expanded={open}
-                disabled={disabled || readOnly}
-                className={cn(
-                  "h-8 w-full justify-between rounded-lg px-3 font-normal",
-                  !field.value && "text-muted-foreground",
-                  readOnly && "bg-muted/30 opacity-90",
-                  error && "border-destructive"
-                )}
+            <Popover open={open} onOpenChange={setOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={open}
+                  disabled={disabled || readOnly}
+                  className={cn(
+                    "h-8 w-full justify-between rounded-lg px-3 font-normal",
+                    !field.value && "text-muted-foreground",
+                    readOnly && "bg-muted/30 opacity-90",
+                    errorMessage && "border-destructive focus-visible:ring-destructive"
+                  )}
+                >
+                  <span className="truncate">
+                    {field.value
+                      ? options.find((option) => option.value === field.value)
+                          ?.label || field.value
+                      : placeholder}
+                  </span>
+                  <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent
+                className="w-[--radix-popover-trigger-width] p-0"
+                align="start"
               >
-                <span className="truncate">
-                  {field.value
-                    ? options.find((option) => option.value === field.value)
-                        ?.label || field.value
-                    : placeholder}
-                </span>
-                <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent
-              className="w-[--radix-popover-trigger-width] p-0"
-              align="start"
-            >
-              <div className="flex flex-col">
-                <div className="flex items-center border-b px-3 py-2">
-                  <Search className="mr-2 size-4 shrink-0 opacity-50" />
-                  <input
-                    className="flex h-8 w-full rounded-md bg-transparent text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
-                    placeholder="Type to search..."
-                    value={searchValue}
-                    onChange={handleSearchChange}
-                  />
-                  {loading && (
-                    <Loader2 className="ml-2 size-4 animate-spin opacity-50" />
-                  )}
-                </div>
-                <div className="max-h-[300px] overflow-y-auto p-1 overscroll-contain">
-                  {options.length === 0 ? (
-                    <div className="py-6 text-center text-sm text-muted-foreground">
-                      No results found.
-                    </div>
-                  ) : (
-                    options.map((option) => (
-                      <div
-                        key={option.value}
-                        className={cn(
-                          "relative flex cursor-pointer items-center rounded-sm px-2 py-1.5 text-sm outline-none select-none hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
-                          field.value === option.value &&
-                            "bg-accent text-accent-foreground"
-                        )}
-                        onClick={() => {
-                          field.onChange(option.value)
-                          setOpen(false)
-                        }}
-                      >
-                        <Check
-                          className={cn(
-                            "mr-2 h-4 w-4",
-                            field.value === option.value
-                              ? "opacity-100"
-                              : "opacity-0"
-                          )}
-                        />
-                        {option.label}
+                <div className="flex flex-col">
+                  <div className="flex items-center border-b px-3 py-2">
+                    <Search className="mr-2 size-4 shrink-0 opacity-50" />
+                    <input
+                      className="flex h-8 w-full rounded-md bg-transparent text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                      placeholder="Type to search..."
+                      value={searchValue}
+                      onChange={handleSearchChange}
+                    />
+                    {loading && (
+                      <Loader2 className="ml-2 size-4 animate-spin opacity-50" />
+                    )}
+                  </div>
+                  <div className="max-h-[300px] overflow-y-auto p-1 overscroll-contain">
+                    {options.length === 0 ? (
+                      <div className="py-6 text-center text-sm text-muted-foreground">
+                        No results found.
                       </div>
-                    ))
-                  )}
+                    ) : (
+                      options.map((option) => (
+                        <div
+                          key={option.value}
+                          className={cn(
+                            "relative flex cursor-pointer items-center rounded-sm px-2 py-1.5 text-sm outline-none select-none hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+                            field.value === option.value &&
+                              "bg-accent text-accent-foreground"
+                          )}
+                          onClick={() => {
+                            field.onChange(option.value)
+                            setOpen(false)
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              field.value === option.value
+                                ? "opacity-100"
+                                : "opacity-0"
+                            )}
+                          />
+                          {option.label}
+                        </div>
+                      ))
+                    )}
+                  </div>
                 </div>
-              </div>
-            </PopoverContent>
-          </Popover>
-          {error && <p className="text-xs text-destructive">{error}</p>}
-        </div>
-      )}
+              </PopoverContent>
+            </Popover>
+            {errorMessage && (
+              <p className="text-xs font-medium text-destructive">{errorMessage}</p>
+            )}
+          </div>
+        )
+      }}
     />
   )
 }
@@ -588,6 +632,7 @@ interface FormFileUploadProps<T extends FieldValues> {
   uploadFile?: (file: File) => Promise<string>
   onUploadingChange?: (uploading: boolean) => void
   onUploadError?: (error: unknown) => void
+  rules?: RegisterOptions<T, Path<T>>
 }
 
 /**
@@ -606,6 +651,7 @@ export function FormFileUpload<T extends FieldValues>({
   uploadFile,
   onUploadingChange,
   onUploadError,
+  rules,
 }: FormFileUploadProps<T>) {
   const fileInputRef = React.useRef<HTMLInputElement>(null)
   const [isUploading, setIsUploading] = React.useState(false)
@@ -622,11 +668,17 @@ export function FormFileUpload<T extends FieldValues>({
     }
   }, [localPreviewUrl])
 
+  const effectiveRules =
+    rules || (required ? { required: `${label || "File"} is required` } : undefined)
+
   return (
     <Controller
       control={control}
       name={name}
-      render={({ field: { onChange, value, ref, ...field } }) => {
+      rules={effectiveRules}
+      render={({ field: { onChange, value, ref, ...field }, fieldState }) => {
+        const errorMessage = error || fieldState.error?.message
+
         // Generate preview URL if it's a file and an image
         const previewUrl = React.useMemo(() => {
           if (localPreviewUrl) return localPreviewUrl
@@ -719,7 +771,7 @@ export function FormFileUpload<T extends FieldValues>({
                 !disabled
                   ? "cursor-pointer hover:border-primary/50 hover:bg-muted"
                   : "cursor-not-allowed opacity-50",
-                error && "border-destructive hover:border-destructive",
+                errorMessage && "border-destructive hover:border-destructive",
                 isUploading && "cursor-wait opacity-80"
               )}
             >
@@ -827,7 +879,9 @@ export function FormFileUpload<T extends FieldValues>({
                 </>
               )}
             </div>
-            {error && <p className="text-xs text-destructive">{error}</p>}
+            {errorMessage && (
+              <p className="text-xs font-medium text-destructive">{errorMessage}</p>
+            )}
           </div>
         )
       }}
@@ -852,6 +906,7 @@ interface FormCreatableSelectProps<T extends FieldValues> {
   tooltip?: string
   searchValue?: string
   onSearchChange?: (val: string) => void
+  rules?: RegisterOptions<T, Path<T>>
 }
 
 /**
@@ -870,6 +925,7 @@ export function FormCreatableSelect<T extends FieldValues>({
   tooltip,
   searchValue,
   onSearchChange,
+  rules,
 }: FormCreatableSelectProps<T>) {
   const [open, setOpen] = React.useState(false)
   const [internalSearch, setInternalSearch] = React.useState("")
@@ -901,106 +957,115 @@ export function FormCreatableSelect<T extends FieldValues>({
     return !exactMatch
   }, [options, currentSearch])
 
+  const effectiveRules =
+    rules || (required ? { required: `${label} is required` } : undefined)
+
   return (
     <Controller
       control={control}
       name={name}
-      render={({ field }) => (
-        <div className="space-y-2">
-          <FieldLabel
-            htmlFor={String(name)}
-            label={label}
-            required={required}
-            tooltip={tooltip}
-          />
+      rules={effectiveRules}
+      render={({ field, fieldState }) => {
+        const errorMessage = error || fieldState.error?.message
+        return (
+          <div className="space-y-2">
+            <FieldLabel
+              htmlFor={String(name)}
+              label={label}
+              required={required}
+              tooltip={tooltip}
+            />
 
-          <Popover open={open} onOpenChange={setOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                role="combobox"
-                aria-expanded={open}
-                disabled={disabled || readOnly}
-                className={cn(
-                  "h-8 w-full justify-between rounded-lg px-3 font-normal",
-                  !field.value && "text-muted-foreground",
-                  readOnly && "bg-muted/30 opacity-90",
-                  error && "border-destructive"
-                )}
+            <Popover open={open} onOpenChange={setOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={open}
+                  disabled={disabled || readOnly}
+                  className={cn(
+                    "h-8 w-full justify-between rounded-lg px-3 font-normal",
+                    !field.value && "text-muted-foreground",
+                    readOnly && "bg-muted/30 opacity-90",
+                    errorMessage && "border-destructive focus-visible:ring-destructive"
+                  )}
+                >
+                  <span className="truncate">
+                    {field.value
+                      ? options.find((option) => option.value === field.value)
+                          ?.label || field.value
+                      : placeholder}
+                  </span>
+                  <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent
+                className="w-[--radix-popover-trigger-width] p-0"
+                align="start"
               >
-                <span className="truncate">
-                  {field.value
-                    ? options.find((option) => option.value === field.value)
-                        ?.label || field.value
-                    : placeholder}
-                </span>
-                <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent
-              className="w-[--radix-popover-trigger-width] p-0"
-              align="start"
-            >
-              <div className="flex flex-col">
-                <div className="flex items-center border-b px-3 py-2">
-                  <Search className="mr-2 size-4 shrink-0 opacity-50" />
-                  <input
-                    className="flex h-8 w-full rounded-md bg-transparent text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
-                    placeholder="Search or type custom..."
-                    value={currentSearch}
-                    onChange={(e) => setCurrentSearch(e.target.value)}
-                  />
-                </div>
-                <div className="max-h-[300px] overflow-y-auto p-1">
-                  {filteredOptions.length === 0 && !showCreateOption ? (
-                    <div className="py-6 text-center text-sm text-muted-foreground">
-                      No results found.
-                    </div>
-                  ) : (
-                    filteredOptions.map((option) => (
+                <div className="flex flex-col">
+                  <div className="flex items-center border-b px-3 py-2">
+                    <Search className="mr-2 size-4 shrink-0 opacity-50" />
+                    <input
+                      className="flex h-8 w-full rounded-md bg-transparent text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                      placeholder="Search or type custom..."
+                      value={currentSearch}
+                      onChange={(e) => setCurrentSearch(e.target.value)}
+                    />
+                  </div>
+                  <div className="max-h-[300px] overflow-y-auto p-1">
+                    {filteredOptions.length === 0 && !showCreateOption ? (
+                      <div className="py-6 text-center text-sm text-muted-foreground">
+                        No results found.
+                      </div>
+                    ) : (
+                      filteredOptions.map((option) => (
+                        <div
+                          key={option.value}
+                          className={cn(
+                            "relative flex cursor-pointer items-center rounded-sm px-2 py-1.5 text-sm outline-none select-none hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+                            field.value === option.value &&
+                              "bg-accent text-accent-foreground"
+                          )}
+                          onClick={() => {
+                            field.onChange(option.value)
+                            setOpen(false)
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              field.value === option.value
+                                ? "opacity-100"
+                                : "opacity-0"
+                            )}
+                          />
+                          {option.label}
+                        </div>
+                      ))
+                    )}
+                    {showCreateOption && (
                       <div
-                        key={option.value}
-                        className={cn(
-                          "relative flex cursor-pointer items-center rounded-sm px-2 py-1.5 text-sm outline-none select-none hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
-                          field.value === option.value &&
-                            "bg-accent text-accent-foreground"
-                        )}
+                        className="relative mt-1 flex cursor-pointer items-center rounded-sm border-t px-2 py-1.5 text-sm font-medium text-primary outline-none select-none hover:bg-accent hover:text-accent-foreground"
                         onClick={() => {
-                          field.onChange(option.value)
+                          field.onChange(currentSearch)
                           setOpen(false)
                         }}
                       >
-                        <Check
-                          className={cn(
-                            "mr-2 h-4 w-4",
-                            field.value === option.value
-                              ? "opacity-100"
-                              : "opacity-0"
-                          )}
-                        />
-                        {option.label}
+                        <Plus className="mr-2 h-4 w-4" />
+                        Add custom HSN: "{currentSearch}"
                       </div>
-                    ))
-                  )}
-                  {showCreateOption && (
-                    <div
-                      className="relative mt-1 flex cursor-pointer items-center rounded-sm border-t px-2 py-1.5 text-sm font-medium text-primary outline-none select-none hover:bg-accent hover:text-accent-foreground"
-                      onClick={() => {
-                        field.onChange(currentSearch)
-                        setOpen(false)
-                      }}
-                    >
-                      <Plus className="mr-2 h-4 w-4" />
-                      Add custom HSN: "{currentSearch}"
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
-              </div>
-            </PopoverContent>
-          </Popover>
-          {error && <p className="text-xs text-destructive">{error}</p>}
-        </div>
-      )}
+              </PopoverContent>
+            </Popover>
+            {errorMessage && (
+              <p className="text-xs font-medium text-destructive">{errorMessage}</p>
+            )}
+          </div>
+        )
+      }}
     />
   )
 }
