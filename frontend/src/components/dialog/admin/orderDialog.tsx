@@ -168,8 +168,8 @@ export default function OrderDialog({
   })
 
   const { data: inventoryData, isLoading: isLoadingInventory } = useQuery({
-    queryKey: queryKeys.inventory.list({ limit: 15 }),
-    queryFn: () => InventoryApi.getAll({ limit: 15, status: "CONTINUE" }),
+    queryKey: queryKeys.inventory.lowStockReport({ limit: 15 }),
+    queryFn: () => InventoryApi.getLowStockReport({ limit: 15 }),
     enabled: open,
   })
 
@@ -618,9 +618,15 @@ export default function OrderDialog({
                           <p className="truncate text-xs font-semibold text-foreground">
                             {item.name}
                           </p>
-                          <p className="truncate text-[10px] text-muted-foreground">
-                            {item.manufacturer?.name || "Manufacturer"}
-                          </p>
+                          <div className="flex items-center gap-1.5 truncate text-[10px] text-muted-foreground">
+                            <span className="truncate">
+                              {item.manufacturer?.name || "Manufacturer"}
+                            </span>
+                            <span>•</span>
+                            <span className="shrink-0 font-medium text-amber-600 dark:text-amber-400">
+                              Stock: {item.availableStock ?? 0}
+                            </span>
+                          </div>
                         </div>
                         <Button
                           type="button"
