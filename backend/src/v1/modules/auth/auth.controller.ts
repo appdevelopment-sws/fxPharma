@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import { rootPrisma } from "@/lib/prisma.js";
 import { AuthRequest } from "@/middlewares/isAuthenticated.js";
 import { sendToken } from "@/helpers/jwtToken.js";
+import { recordAuditLog } from "@/utils/auditLogger.js";
 
 const JWT_SECRET = process.env.JWT_SECRET!;
 
@@ -152,6 +153,17 @@ export class AuthController {
         role: user.organizations[0]?.role?.key || "USER",
         res: res,
       });
+
+      recordAuditLog({
+        userId: user.id,
+        organizationId: user.organizations[0]?.organizationId || null,
+        action: "LOGIN",
+        entity: "USER",
+        entityId: user.id,
+        newData: { email: user.email },
+        req,
+      });
+
       return res.json({
         success: true,
         // token,

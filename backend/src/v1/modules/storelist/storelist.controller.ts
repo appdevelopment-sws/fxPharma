@@ -3,6 +3,7 @@ import { Request, Response } from "express";
 import { rootPrisma } from "@/lib/prisma.js";
 import { catchAsync } from "../../../utils/catchAsync.js";
 import { paginate } from "../../../utils/pagination.js";
+import { recordAuditLog } from "@/utils/auditLogger.js";
 
 type StoreStatus = "ACTIVE" | "INACTIVE";
 
@@ -487,6 +488,17 @@ export class StoreListController {
         include: getOrganizationInclude(),
       });
     });
+
+    if (created) {
+      recordAuditLog({
+        organizationId: created.id,
+        action: "CREATE",
+        entity: "ORGANIZATION",
+        entityId: created.id,
+        newData: { name: created.name, slug: created.slug, ownerEmail: created.ownerEmail },
+        req,
+      });
+    }
 
     return res.status(201).json({
       success: true,

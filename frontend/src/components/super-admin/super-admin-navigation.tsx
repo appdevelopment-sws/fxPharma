@@ -58,6 +58,13 @@ export const superAdminNavigationGroups: SidebarNavigationGroup[] = [
         icon: Receipt,
         roles: [ROLES.SUPER_ADMIN],
       },
+      {
+        title: "Audit & Activity Logs",
+        to: "/super-admin/audit-logs",
+        description: "System-wide activity logs and security traces",
+        icon: ShieldCheck,
+        roles: [ROLES.SUPER_ADMIN],
+      },
     ],
   },
   // {

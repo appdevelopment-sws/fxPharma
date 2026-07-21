@@ -20,6 +20,7 @@ import ManageSubscriptionPage from "@/pages/super-admin/subscription/Subscriptio
 import AttributesPage from "@/pages/shared/Attributes/AttributesPage"
 import FeatureManagementPage from "@/pages/super-admin/features/featureManagementPage"
 import AdminCreditPage from "@/pages/super-admin/credit/AdminCreditPage"
+import SuperAdminAuditLogsPage from "@/pages/super-admin/audit-logs/SuperAdminAuditLogsPage"
 
 export const SuperAdminRoutes = () => {
   return (
@@ -31,6 +32,7 @@ export const SuperAdminRoutes = () => {
           element={<Navigate to="/super-admin/dashboard" replace />}
         />
         <Route path="dashboard" element={<SuperAdminDashboard />} />
+        <Route path="audit-logs" element={<SuperAdminAuditLogsPage />} />
         <Route path="store-list" element={<StoreList />} />
         <Route path="tax-hsn" element={<TaxHsnPage />}>
           <Route index element={<Navigate to="tax" replace />} />

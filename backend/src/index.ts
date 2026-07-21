@@ -39,6 +39,7 @@ import InvoicesRoutes from "./v1/modules/invoices/invoices.routes.js";
 import ReturnsRoutes from "./v1/modules/returns/returns.routes.js";
 import settingsRoutes from "./v1/modules/settings/settings.route.js";
 import creditRoutes from "./v1/modules/credit/credit.routes.js";
+import superAdminRoutes from "./v1/modules/superadmin/superadmin.routes.js";
 
 const app = express();
 
@@ -102,6 +103,7 @@ app.use("/api/v1/inventory/add-medicine", generalLimiter, MedicineRoutes);
 app.use("/api/v1/compound", generalLimiter, categoryRoutes);
 app.use("/api/v1/settings", generalLimiter, settingsRoutes);
 app.use("/api/v1/credit", generalLimiter, creditRoutes);
+app.use("/api/v1/superadmin", generalLimiter, superAdminRoutes);
 app.get("/", (_req: Request, res: Response) => {
   res.json("hello from backend");
 });
