@@ -1,0 +1,485 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GST Invoice - {{invoiceId}}</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      @page {
+        size: A4 portrait;
+        margin: 0;
+      }
+
+      body {
+        font-family: "Courier New", Courier, monospace, monospace;
+        font-size: 12px;
+        line-height: 1.3;
+        color: #000;
+        background: #f0f0f0;
+        display: flex;
+        justify-content: center;
+        padding: 20px 0;
+      }
+
+      .page {
+        background: #fff;
+        width: 210mm;
+        min-height: 297mm;
+        padding: 10mm;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        position: relative;
+      }
+
+      .header-section {
+        width: 100%;
+        position: relative;
+        margin-bottom: 8px;
+      }
+
+      .header-top-grid {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 6px;
+      }
+
+      .header-logo-left {
+        width: 110px;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .header-logo-left img {
+        max-width: 100px;
+        max-height: 70px;
+      }
+
+      .header-logo-right {
+        width: 110px;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+      }
+
+      .header-logo-right img {
+        max-width: 100px;
+        max-height: 55px;
+      }
+
+      .original-badge {
+        font-weight: bold;
+        font-size: 13px;
+        margin-top: 4px;
+        letter-spacing: 0.5px;
+      }
+
+      .header-center-content {
+        flex: 1;
+        text-align: center;
+        padding: 0 8px;
+      }
+
+      .store-name-title {
+        font-size: 20px;
+        font-weight: 800;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+        letter-spacing: 0.5px;
+      }
+
+      .store-address-line {
+        font-size: 12px;
+        font-weight: bold;
+        margin-bottom: 3px;
+      }
+
+      .store-contact-line {
+        font-size: 11px;
+        margin-bottom: 6px;
+      }
+
+      .document-heading {
+        font-size: 16px;
+        font-weight: bold;
+        text-transform: uppercase;
+        margin-top: 4px;
+        margin-bottom: 6px;
+      }
+
+      /* Dashed Box for Patient / Invoice Meta */
+      .info-box {
+        border: 1px dashed #000;
+        padding: 6px 10px;
+        margin-bottom: 10px;
+        display: flex;
+        justify-content: space-between;
+        font-size: 13px;
+      }
+
+      .info-column {
+        width: 48%;
+      }
+
+      .info-row {
+        display: flex;
+        margin-bottom: 3px;
+      }
+
+      .info-label {
+        font-weight: bold;
+        width: 120px;
+        display: inline-block;
+      }
+
+      .info-value {
+        flex: 1;
+      }
+
+      /* Items Table */
+      .table-container {
+        width: 100%;
+        margin-bottom: 10px;
+        flex: 1;
+      }
+
+      .items-table {
+        width: 100%;
+        border-collapse: collapse;
+        border: 1px dashed #000;
+        font-size: 11px;
+      }
+
+      .items-table th {
+        border-bottom: 1px dashed #000;
+        border-right: 1px dashed #000;
+        padding: 4px 3px;
+        font-weight: bold;
+        text-align: center;
+        background: #fafafa;
+      }
+
+      .items-table th:last-child {
+        border-right: none;
+      }
+
+      .items-table td {
+        border-bottom: 1px dashed #000;
+        border-right: 1px dashed #000;
+        padding: 4px 3px;
+        vertical-align: top;
+      }
+
+      .items-table td:last-child {
+        border-right: none;
+      }
+
+      .cell-center {
+        text-align: center;
+      }
+
+      .cell-right {
+        text-align: right;
+      }
+
+      .product-cell {
+        word-break: break-word;
+      }
+
+      .product-title {
+        font-weight: bold;
+      }
+
+      .product-mnf {
+        font-size: 10px;
+        margin-top: 2px;
+      }
+
+      /* Summary / Totals Section */
+      .bottom-section {
+        border: 1px dashed #000;
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+      }
+
+      .remark-container {
+        width: 50%;
+        padding: 8px 10px;
+        border-right: 1px dashed #000;
+      }
+
+      .remark-title {
+        font-weight: bold;
+        margin-bottom: 4px;
+      }
+
+      .totals-container {
+        width: 50%;
+      }
+
+      .totals-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+      }
+
+      .totals-table td {
+        padding: 3px 8px;
+        border-bottom: 1px dashed #000;
+      }
+
+      .totals-table tr:last-child td {
+        border-bottom: none;
+      }
+
+      .totals-table .total-label {
+        font-weight: bold;
+        width: 60%;
+      }
+
+      .totals-table .total-val {
+        text-align: right;
+        font-weight: bold;
+        width: 40%;
+      }
+
+      /* Footer Section */
+      .footer-section {
+        border: 1px dashed #000;
+        padding: 8px 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        font-size: 11px;
+      }
+
+      .terms-area {
+        width: 55%;
+      }
+
+      .terms-title {
+        font-weight: bold;
+        margin-bottom: 4px;
+      }
+
+      .terms-text {
+        white-space: pre-line;
+        margin-bottom: 6px;
+      }
+
+      .well-soon {
+        font-weight: bold;
+        letter-spacing: 1px;
+        margin-top: 4px;
+      }
+
+      .sign-area {
+        width: 40%;
+        text-align: right;
+      }
+
+      .sign-for {
+        font-weight: bold;
+        margin-bottom: 35px;
+      }
+
+      .sign-label {
+        font-weight: bold;
+      }
+
+      @media print {
+        body {
+          background: #fff;
+          padding: 0;
+        }
+
+        .page {
+          box-shadow: none;
+          padding: 8mm;
+          width: 100%;
+          min-height: 100vh;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <div>
+        <!-- HEADER -->
+        <div class="header-section">
+          <div class="header-top-grid">
+            <div class="header-logo-left">
+              {{#if brandLogo}}
+                <img src="{{brandLogo}}" alt="Logo" />
+              {{/if}}
+
+              {{!-- {{else}}
+                <svg viewBox="0 0 100 100" width="70" height="70">
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="45"
+                    fill="#f8fafc"
+                    stroke="#000"
+                    stroke-dasharray="2 2"
+                  />
+                  <circle cx="50" cy="32" r="14" fill="#059669" />
+                  <path d="M 30 75 C 30 50, 70 50, 70 75 Z" fill="#2563eb" />
+                  <path d="M 45 42 L 55 42 L 55 58 L 45 58 Z" fill="#eab308" />
+                </svg>
+              {{/if}} --}}
+            </div>
+
+            <div class="header-center-content">
+              <div class="store-name-title">{{brandName}}</div>
+              <div class="store-address-line">{{brandAddress}}</div>
+              <div class="store-contact-line">
+                GST No. :
+                {{brandGstin}}{{#if brandLicenseBlock}},
+                  {{brandLicenseBlock}}{{/if}}
+                {{#if companyContactBlock}}<br />Contact No:
+                  {{brandPhone}}, Email ID:
+                  {{brandEmail}}{{/if}}
+              </div>
+              <div class="document-heading">GST Invoice</div>
+            </div>
+
+            {{! <div class="header-logo-right">
+              <svg viewBox="0 0 100 50" width="80" height="40">
+                <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-weight="900" font-size="22" fill="#1e40af">pmbi</text>
+              </svg>
+              <div class="original-badge">ORIGINAL</div>
+            </div> }}
+          </div>
+        </div>
+
+        <!-- PATIENT / INVOICE INFO BOX -->
+        <div class="info-box">
+          <div class="info-column">
+            <div class="info-row">
+              <span class="info-label">Patient Name</span>
+              <span class="info-value">: {{customerName}}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Patient Mob.</span>
+              <span class="info-value">: {{customerPhone}}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Doctor Name</span>
+              <span class="info-value">: {{doctorName}}</span>
+            </div>
+          </div>
+
+          <div class="info-column">
+            <div class="info-row">
+              <span class="info-label">Invoice No.</span>
+              <span class="info-value">: {{invoiceId}}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Date</span>
+              <span class="info-value">: {{createdAtDateOnly}}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">GST No</span>
+              <span class="info-value">: {{customerGstNo}}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ITEMS TABLE -->
+        <div class="table-container">
+          <table class="items-table">
+            <thead>
+              <tr>
+                <th style="width: 4%;">Sr.</th>
+                <th style="width: 32%;">Product</th>
+                <th style="width: 6%;">Pack Size</th>
+                <th style="width: 9%;">HSN Code</th>
+                <th style="width: 10%;">Batch</th>
+                <th style="width: 6%;">Exp</th>
+                <th style="width: 5%;">Qty</th>
+                <th style="width: 7%;">MRP</th>
+                <th style="width: 7%;">Dis. Amount</th>
+                <th style="width: 6%;">Tax</th>
+                <th style="width: 8%;">Amount (Rs.)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{{janAushadhiRows}}}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- REMARK & TOTALS -->
+        <div class="bottom-section">
+          <div class="remark-container">
+            <div class="remark-title">Remark :</div>
+            <div>{{notesValue}}</div>
+          </div>
+          <div class="totals-container">
+            <table class="totals-table">
+              <tr>
+                <td class="total-label">CGST</td>
+                <td class="total-val">{{cgstAmount}}</td>
+              </tr>
+              <tr>
+                <td class="total-label">SGST</td>
+                <td class="total-val">{{sgstAmount}}</td>
+              </tr>
+              <tr>
+                <td class="total-label">IGST</td>
+                <td class="total-val">{{igstAmount}}</td>
+              </tr>
+              <tr>
+                <td class="total-label">Gross Total</td>
+                <td class="total-val">{{grossAmountRaw}}</td>
+              </tr>
+              <tr>
+                <td class="total-label">Total Tax</td>
+                <td class="total-val">{{taxAmountRaw}}</td>
+              </tr>
+              <tr>
+                <td class="total-label">CESS</td>
+                <td class="total-val">{{cessAmount}}</td>
+              </tr>
+              <tr>
+                <td class="total-label">Round Off</td>
+                <td class="total-val">{{roundOffAmount}}</td>
+              </tr>
+              <tr>
+                <td class="total-label">Net Amount</td>
+                <td class="total-val">{{netAmount}}</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="footer-section">
+          <div class="terms-area">
+            <div class="terms-title">Terms & Conditions :</div>
+            <div class="terms-text">Subject to
+              {{jurisdiction}}
+              Jurisdiction.</div>
+            <div class="well-soon">****GET WELL SOON****</div>
+          </div>
+          <div class="sign-area">
+            <div class="sign-for">For,{{brandName}}</div>
+            <div class="sign-label">Pharmacist Sign</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

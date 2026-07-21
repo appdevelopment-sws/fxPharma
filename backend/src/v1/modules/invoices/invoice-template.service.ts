@@ -69,6 +69,15 @@ function formatDateTime(value: Date | string | number) {
   }).format(new Date(value));
 }
 
+function formatDateOnly(value: Date | string | number) {
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return String(value);
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const year = d.getFullYear();
+  return `${day}-${month}-${year}`;
+}
+
 function toTitleCase(value: string) {
   return value
     .split(/[\s_-]+/)
@@ -204,6 +213,70 @@ function buildSummaryRows(invoice: InvoiceLike) {
     .join("");
 }
 
+function buildJanAushadhiRows(invoice: InvoiceLike) {
+  if (!invoice.items || invoice.items.length === 0) {
+    return `<tr><td colspan="11" class="cell cell-center">No items</td></tr>`;
+  }
+
+  const gross = Number(invoice.grossAmount ?? 0);
+  const totalTax = Number(invoice.taxAmount ?? 0);
+
+  return invoice.items
+    .map((item, index) => {
+      const rate = Number(item.rateValue ?? 0);
+      const qty = Number(item.qty ?? 0);
+      const discount = Number(item.itemDiscount ?? 0);
+      const subTotal = Number(item.subTotal ?? 0);
+
+      let itemTaxVal = (item as any).taxAmount;
+      if (itemTaxVal === undefined || itemTaxVal === null) {
+        if (totalTax > 0 && gross > 0) {
+          itemTaxVal = ((subTotal / gross) * totalTax).toFixed(2);
+        } else {
+          itemTaxVal = "0.00";
+        }
+      } else {
+        itemTaxVal = Number(itemTaxVal).toFixed(2);
+      }
+
+      const hsn = (item as any).hsnCode || (item as any).hsn || (item as any).hsncode || "";
+      const exp =
+        (item as any).expDate ||
+        (item as any).exp ||
+        (item as any).expiry ||
+        (item as any).exp_date ||
+        "";
+      const pack =
+        (item as any).packSize || (item as any).pack || item.sellUnit || "";
+      const mnf =
+        (item as any).manufacturer ||
+        (item as any).mnfBy ||
+        (item as any).mnf ||
+        (item as any).manufacturerName ||
+        "";
+
+      return `
+        <tr>
+          <td class="cell cell-center">${index + 1}</td>
+          <td class="cell product-cell">
+            <div class="product-title">${escapeHtml(item.inventoryName)}</div>
+            <div class="product-mnf">Mnf By : ${escapeHtml(mnf)}</div>
+          </td>
+          <td class="cell cell-center">${escapeHtml(pack)}</td>
+          <td class="cell cell-center">${escapeHtml(hsn)}</td>
+          <td class="cell cell-center">${escapeHtml(item.batchNo || "-")}</td>
+          <td class="cell cell-center">${escapeHtml(exp)}</td>
+          <td class="cell cell-center">${qty}</td>
+          <td class="cell cell-right">${rate.toFixed(2)}</td>
+          <td class="cell cell-right">${discount.toFixed(2)}</td>
+          <td class="cell cell-right">${itemTaxVal}</td>
+          <td class="cell cell-right">${subTotal.toFixed(2)}</td>
+        </tr>
+      `;
+    })
+    .join("");
+}
+
 function buildInvoiceData(
   invoice: InvoiceLike,
   templateName?: string | null,
@@ -215,8 +288,24 @@ function buildInvoiceData(
   };
   const safeTemplateName = sanitizeTemplateName(templateName);
   const createdAt = formatDateTime(invoice.createdAt);
+  const createdAtDateOnly = formatDateOnly(invoice.createdAt);
   const customerName = invoice.customerName?.trim() || "Walk-in Customer";
   const customerPhone = invoice.customerPhone?.trim() || "-";
+  const doctorName =
+    (invoice as any).doctorName ||
+    (invoice as any).doctor_name ||
+    settingsMap["doctor_name"] ||
+    "";
+  const customerGstNo =
+    (invoice as any).customerGstNo ||
+    (invoice as any).customer_gst ||
+    settingsMap["customer_gst_no"] ||
+    "";
+  const jurisdiction =
+    settingsMap["jurisdiction"] ||
+    settingsMap["city"] ||
+    settingsMap["state"] ||
+    "";
   const notes = invoice.notes?.trim() || "";
   const items = invoice.items || [];
 
@@ -251,7 +340,7 @@ function buildInvoiceData(
       ? addressParts.join(", ")
       : settingsMap["invoice_company_address"] ||
         process.env.INVOICE_COMPANY_ADDRESS ||
-        "India";
+        "";
 
   const brandPhone =
     settingsMap["invoice_phone"] ||
@@ -259,17 +348,20 @@ function buildInvoiceData(
     settingsMap["invoice_company_phone"] ||
     process.env.INVOICE_COMPANY_PHONE ||
     "";
+
   const brandEmail =
     settingsMap["invoice_email"] ||
     settingsMap["email"] ||
     settingsMap["invoice_company_email"] ||
     process.env.INVOICE_COMPANY_EMAIL ||
     "";
+
   const brandGstin =
     settingsMap["gst_number"] ||
     settingsMap["invoice_company_gstin"] ||
     process.env.INVOICE_COMPANY_GSTIN ||
     "";
+
   const brandLogo =
     settingsMap["invoice_header_image"] ||
     settingsMap["store_logo"] ||
@@ -350,6 +442,14 @@ function buildInvoiceData(
        </div>`
     : "";
 
+  const grossVal = Number(invoice.grossAmount ?? 0);
+  const totalTaxVal = Number(invoice.taxAmount ?? 0);
+  const netVal = Number(invoice.totalAmount ?? 0);
+  const cgstVal = (totalTaxVal / 2).toFixed(2);
+  const sgstVal = (totalTaxVal / 2).toFixed(2);
+  const roundedNet = Math.round(netVal);
+  const roundOffVal = (roundedNet - netVal).toFixed(2);
+
   return {
     safeTemplateName,
     brandName,
@@ -373,6 +473,10 @@ function buildInvoiceData(
     invoiceStatus: toTitleCase(invoice.status),
     paymentMode: displayPaymentMode,
     createdAt,
+    createdAtDateOnly,
+    doctorName,
+    customerGstNo,
+    jurisdiction,
     customerName,
     customerPhone,
     itemCount: String(items.length),
@@ -383,7 +487,16 @@ function buildInvoiceData(
     totalAmount: formatCurrency(invoice.totalAmount),
     tenderedAmount: formatCurrency(invoice.tenderedAmount),
     changeAmount: formatCurrency(invoice.changeAmount),
+    cgstAmount: cgstVal,
+    sgstAmount: sgstVal,
+    igstAmount: "0.00",
+    cessAmount: "0.00",
+    grossAmountRaw: grossVal.toFixed(2),
+    taxAmountRaw: totalTaxVal.toFixed(2),
+    roundOffAmount: roundOffVal,
+    netAmount: roundedNet.toString(),
     itemsRows: buildItemRows(invoice),
+    janAushadhiRows: buildJanAushadhiRows(invoice),
     summaryRows: buildSummaryRows(invoice),
     notesBlock: notes
       ? `
