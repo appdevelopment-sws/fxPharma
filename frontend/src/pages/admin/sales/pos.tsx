@@ -925,9 +925,20 @@ const POS = () => {
     0
   )
 
+  const totalAfterItemDiscount = grossTotal - totalItemDiscountAmount
+  const discountAmount =
+    discountType === "flat"
+      ? Math.min(discountPercent, totalAfterItemDiscount)
+      : (totalAfterItemDiscount * discountPercent) / 100
+
+  const overallDiscountFactor =
+    totalAfterItemDiscount > 0
+      ? (totalAfterItemDiscount - discountAmount) / totalAfterItemDiscount
+      : 0
+
   const totalTaxAmount = cart.reduce((sum, item) => {
     const itemTaxable =
-      item.rateValue * item.qty * (1 - item.itemDiscount / 100)
+      item.rateValue * item.qty * (1 - item.itemDiscount / 100) * overallDiscountFactor
     return (
       sum +
       (itemTaxable * (toNumber(item.batch.cgst) + toNumber(item.batch.sgst))) /
@@ -935,11 +946,6 @@ const POS = () => {
     )
   }, 0)
 
-  const totalAfterItemDiscount = grossTotal - totalItemDiscountAmount
-  const discountAmount =
-    discountType === "flat"
-      ? Math.min(discountPercent, totalAfterItemDiscount)
-      : (totalAfterItemDiscount * discountPercent) / 100
   const taxableAmount = totalAfterItemDiscount - discountAmount
   const netPayable = taxableAmount + totalTaxAmount + deliveryCost - binValue
   const roundedNet = Math.max(0, Math.round(netPayable))
@@ -1461,13 +1467,30 @@ const POS = () => {
                 <label className="w-24 flex-shrink-0 text-xs font-semibold text-muted-foreground">
                   Cust. Phone
                 </label>
-                <input
-                  type="text"
-                  placeholder="Phone number"
-                  value={customerPhone}
-                  onChange={(e) => setCustomerPhone(e.target.value)}
-                  className="min-w-0 flex-1 rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs text-foreground transition-all outline-none placeholder:text-muted-foreground/40 focus:border-teal-500 focus:ring-1 focus:ring-teal-300/20"
-                />
+                <div className="relative min-w-0 flex-1">
+                  <input
+                    type="tel"
+                    inputMode="numeric"
+                    maxLength={10}
+                    placeholder="Enter 10-digit number"
+                    value={customerPhone}
+                    onChange={(e) =>
+                      setCustomerPhone(e.target.value.replace(/\D/g, "").slice(0, 10))
+                    }
+                    className="w-full rounded-lg border border-border bg-background px-2.5 py-1.5 pr-12 text-xs text-foreground transition-all outline-none placeholder:text-muted-foreground/40 focus:border-teal-500 focus:ring-1 focus:ring-teal-300/20"
+                  />
+                  {customerPhone.length > 0 && (
+                    <span
+                      className={`absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-medium ${
+                        customerPhone.length === 10
+                          ? "font-bold text-emerald-500"
+                          : "text-muted-foreground/60"
+                      }`}
+                    >
+                      {customerPhone.length}/10
+                    </span>
+                  )}
+                </div>
               </div>
 
               {/* Payment Type */}
@@ -1561,9 +1584,13 @@ const POS = () => {
                     <div className="relative">
                       <select
                         value={discountType}
-                        onChange={(e) =>
-                          setDiscountType(e.target.value as "flat" | "percent")
-                        }
+                        onChange={(e) => {
+                          const nextType = e.target.value as "flat" | "percent"
+                          setDiscountType(nextType)
+                          if (nextType === "percent" && discountPercent > 100) {
+                            setDiscountPercent(100)
+                          }
+                        }}
                         className="h-7 cursor-pointer appearance-none rounded-lg border border-border bg-background py-1 pr-6 pl-2 text-xs text-foreground outline-none focus:border-teal-500"
                       >
                         <option value="percent">Select</option>
@@ -1576,12 +1603,15 @@ const POS = () => {
                       type="number"
                       min="0"
                       value={discountPercent}
-                      onChange={(e) =>
+                      onChange={(e) => {
+                        const val = Number(e.target.value)
                         setDiscountPercent(
-                          Math.min(100, Math.max(0, Number(e.target.value)))
+                          discountType === "percent"
+                            ? Math.min(100, Math.max(0, val))
+                            : Math.max(0, val)
                         )
-                      }
-                      className="h-7 w-16 rounded-lg border border-border bg-background px-2 py-1 text-right text-xs text-foreground transition-all outline-none focus:border-teal-500"
+                      }}
+                      className="h-7 w-20 rounded-lg border border-border bg-background px-2 py-1 text-right text-xs text-foreground transition-all outline-none focus:border-teal-500"
                     />
                   </div>
                 </div>
