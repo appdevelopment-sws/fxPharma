@@ -1196,7 +1196,7 @@ const POS = () => {
   // ─────────────────────────────────────────────────────────────────────────
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-muted/40 font-sans text-foreground select-none">
+    <div className="flex h-full w-full overflow-hidden bg-muted/40 font-sans text-foreground select-none">
       {/* ══════════════════════════════════════════════
           LEFT PANEL — Product Catalog
       ══════════════════════════════════════════════ */}
@@ -1409,7 +1409,7 @@ const POS = () => {
       {/* ══════════════════════════════════════════════
           RIGHT PANEL — Invoice
       ══════════════════════════════════════════════ */}
-      <div className="flex w-[540px] flex-shrink-0 flex-col border-l border-border bg-card shadow-xl xl:w-[600px]">
+      <div className="flex h-full w-[540px] flex-shrink-0 flex-col overflow-hidden border-l border-border bg-card shadow-xl xl:w-[600px]">
         {/* ── Table header ── */}
         <div
           className="grid flex-shrink-0 items-center border-b border-border bg-muted/40 px-3 py-2.5 text-xs font-bold tracking-wider text-muted-foreground uppercase"
@@ -1425,7 +1425,7 @@ const POS = () => {
         </div>
 
         {/* ── Cart rows ── */}
-        <div className="custom-scrollbar flex-1 divide-y divide-border/40 overflow-y-auto">
+        <div className="custom-scrollbar min-h-0 flex-1 divide-y divide-border/40 overflow-y-auto">
           {cart.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center gap-2 p-6 text-center text-muted-foreground/30">
               <ShoppingCart className="h-10 w-10" />
@@ -1533,17 +1533,17 @@ const POS = () => {
         </div>
 
         {/* ── Payment fields ── */}
-        <div className="flex-shrink-0 border-t border-border bg-card px-4 pt-3.5 pb-2.5">
-          <div className="grid grid-cols-2 gap-x-6 gap-y-2.5">
+        <div className="custom-scrollbar flex-shrink-0 border-t border-border bg-card px-4 pt-3 pb-2.5">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-2">
             {/* ── Left column: Customer & Payment Details ── */}
-            <div className="space-y-3 rounded-xl border border-border bg-muted/20 p-3.5 shadow-sm">
+            <div className="space-y-2.5 rounded-xl border border-border bg-muted/20 p-3 shadow-xs">
               <div className="text-[10px] font-bold tracking-wider text-muted-foreground/80 uppercase">
                 Customer & Payment Info
               </div>
 
               {/* Customer Name */}
               <div className="flex items-center gap-2">
-                <label className="w-24 flex-shrink-0 text-xs font-semibold text-muted-foreground">
+                <label className="w-20 flex-shrink-0 text-xs font-semibold text-muted-foreground">
                   Cust. Name
                 </label>
                 <input
@@ -1557,7 +1557,7 @@ const POS = () => {
 
               {/* Customer Phone */}
               <div className="flex items-center gap-2">
-                <label className="w-24 flex-shrink-0 text-xs font-semibold text-muted-foreground">
+                <label className="w-20 flex-shrink-0 text-xs font-semibold text-muted-foreground">
                   Cust. Phone
                 </label>
                 <div className="relative min-w-0 flex-1">
@@ -1590,7 +1590,7 @@ const POS = () => {
 
               {/* Payment Type */}
               <div className="flex items-center gap-2">
-                <label className="w-24 flex-shrink-0 text-xs font-semibold text-muted-foreground">
+                <label className="w-20 flex-shrink-0 text-xs font-semibold text-muted-foreground">
                   Payment Type
                 </label>
                 <div className="relative min-w-0 flex-1">
@@ -1654,8 +1654,8 @@ const POS = () => {
             </div>
 
             {/* ── Right column: Totals & Payments Summary ── */}
-            <div className="flex flex-col justify-between space-y-3 rounded-xl border border-border bg-muted/20 p-3.5 shadow-sm">
-              <div className="space-y-2.5">
+            <div className="flex flex-col justify-between space-y-2.5 rounded-xl border border-border bg-muted/20 p-3 shadow-xs">
+              <div className="space-y-2">
                 <div className="pb-0.5 text-[10px] font-bold tracking-wider text-muted-foreground/80 uppercase">
                   Billing Summary
                 </div>
@@ -1740,12 +1740,13 @@ const POS = () => {
             </div>
           </div>
         </div>
+
         {/* ── Action buttons ── */}
-        <div className="grid flex-shrink-0 grid-cols-4 gap-2 border-t border-border bg-muted/30 px-4 py-3">
+        <div className="sticky bottom-0 z-20 grid flex-shrink-0 grid-cols-4 gap-2 border-t border-border bg-card/95 px-4 py-3 shadow-lg backdrop-blur-md">
           <button
             onClick={resetPos}
             disabled={createInvoiceMutation.isPending}
-            className="rounded-lg bg-amber-500 py-2.5 text-center text-xs font-bold text-white shadow-sm transition-colors hover:bg-amber-600 active:scale-95 disabled:opacity-40"
+            className="rounded-lg bg-amber-500 py-2.5 text-center text-xs font-bold text-white shadow-xs transition-colors hover:bg-amber-600 active:scale-95 disabled:opacity-40"
           >
             Reset
           </button>
@@ -1753,21 +1754,21 @@ const POS = () => {
             type="button"
             onClick={handleHoldBill}
             disabled={cart.length === 0 || createInvoiceMutation.isPending}
-            className="rounded-lg bg-blue-500 py-2.5 text-center text-xs font-bold text-white shadow-sm transition-colors hover:bg-blue-600 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-lg bg-blue-500 py-2.5 text-center text-xs font-bold text-white shadow-xs transition-colors hover:bg-blue-600 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
           >
             Hold
           </button>
           <button
             onClick={() => handleCompletePayment(false)}
             disabled={cart.length === 0 || createInvoiceMutation.isPending}
-            className="rounded-lg bg-teal-500 py-2.5 text-center text-xs font-bold text-white shadow-sm transition-colors hover:bg-teal-600 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-lg bg-teal-500 py-2.5 text-center text-xs font-bold text-white shadow-xs transition-colors hover:bg-teal-600 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {createInvoiceMutation.isPending ? "Saving..." : "Save"}
           </button>
           <button
             onClick={() => handleCompletePayment(true)}
             disabled={cart.length === 0 || createInvoiceMutation.isPending}
-            className="rounded-lg bg-teal-600 py-2.5 text-center text-xs font-bold text-white shadow-sm transition-colors hover:bg-teal-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-lg bg-teal-600 py-2.5 text-center text-xs font-bold text-white shadow-xs transition-colors hover:bg-teal-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {createInvoiceMutation.isPending ? "Saving..." : "Save & Print"}
           </button>

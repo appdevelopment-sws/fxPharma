@@ -67,7 +67,9 @@ const getQtyPerStrip = (product: PosProduct) => {
   if (product.packQty3 && product.packQty3 > 0) return product.packQty3
 
   const packingStr = String(product.packing || "").toLowerCase()
-  const matches = packingStr.match(/(\d+)\s*(tablet|capsule|piece|tab|cap|'s|s)/)
+  const matches = packingStr.match(
+    /(\d+)\s*(tablet|capsule|piece|tab|cap|'s|s)/
+  )
   if (matches && matches[1]) {
     const parsed = parseInt(matches[1], 10)
     if (parsed > 0) return parsed
@@ -89,9 +91,12 @@ const getRateValue = (
 ) => {
   let baseRate = 0
   if (rateType === "mrp") baseRate = batch.mrp || batch.price || 0
-  else if (rateType === "rateA") baseRate = batch.rateA || batch.mrp || batch.price || 0
-  else if (rateType === "rateB") baseRate = batch.rateB || batch.mrp || batch.price || 0
-  else if (rateType === "rateC") baseRate = batch.rateC || batch.mrp || batch.price || 0
+  else if (rateType === "rateA")
+    baseRate = batch.rateA || batch.mrp || batch.price || 0
+  else if (rateType === "rateB")
+    baseRate = batch.rateB || batch.mrp || batch.price || 0
+  else if (rateType === "rateC")
+    baseRate = batch.rateC || batch.mrp || batch.price || 0
 
   if (isStrip) {
     if (sellUnit === "piece" && qtyPerStrip > 0) {
@@ -119,7 +124,9 @@ export default function ConfigureSaleItemDialog({
   onAdd,
 }: ConfigureSaleItemDialogProps) {
   const [activeBatch, setActiveBatch] = useState<PosBatch | null>(null)
-  const [rateType, setRateType] = useState<"mrp" | "rateA" | "rateB" | "rateC">("mrp")
+  const [rateType, setRateType] = useState<"mrp" | "rateA" | "rateB" | "rateC">(
+    "mrp"
+  )
   const [sellUnit, setSellUnit] = useState<"strip" | "piece">("strip")
   const [itemDiscount, setItemDiscount] = useState<number>(0)
   const [qty, setQty] = useState<number>(1)
@@ -139,7 +146,13 @@ export default function ConfigureSaleItemDialog({
 
   const isStrip = !product.unit1st || product.unit1st.toLowerCase() === "strip"
   const qtyPerStrip = getQtyPerStrip(product)
-  const activeRatePrice = getRateValue(activeBatch, rateType, sellUnit, qtyPerStrip, isStrip)
+  const activeRatePrice = getRateValue(
+    activeBatch,
+    rateType,
+    sellUnit,
+    qtyPerStrip,
+    isStrip
+  )
 
   const totalBeforeDiscount = activeRatePrice * qty
   const discountVal = (totalBeforeDiscount * itemDiscount) / 100
@@ -150,28 +163,42 @@ export default function ConfigureSaleItemDialog({
   const netVal = taxableVal + taxVal
 
   const maxStock = isStrip
-    ? (sellUnit === "strip" ? activeBatch.stock : activeBatch.stock * qtyPerStrip)
-    : (sellUnit === "strip" ? Math.floor(activeBatch.stock / qtyPerStrip) : activeBatch.stock)
+    ? sellUnit === "strip"
+      ? activeBatch.stock
+      : activeBatch.stock * qtyPerStrip
+    : sellUnit === "strip"
+      ? Math.floor(activeBatch.stock / qtyPerStrip)
+      : activeBatch.stock
 
   // Outer unit labels
-  const outerUnitSingular = isStrip 
-    ? "Strip" 
-    : (product.packing ? product.packing.charAt(0).toUpperCase() + product.packing.slice(1).toLowerCase() : "Box")
+  const outerUnitSingular = isStrip
+    ? "Strip"
+    : product.packing
+      ? product.packing.charAt(0).toUpperCase() +
+        product.packing.slice(1).toLowerCase()
+      : "Box"
 
-  const outerUnitPlural = isStrip 
-    ? "Strips" 
-    : (outerUnitSingular.toLowerCase() === "box" ? "Boxes" : outerUnitSingular + "s")
+  const outerUnitPlural = isStrip
+    ? "Strips"
+    : outerUnitSingular.toLowerCase() === "box"
+      ? "Boxes"
+      : outerUnitSingular + "s"
 
   const outerUnitShort = isStrip ? "Strps" : outerUnitPlural
 
   // Inner unit labels
-  const innerUnitSingular = isStrip 
-    ? "Piece" 
-    : (product.unit1st ? product.unit1st.charAt(0).toUpperCase() + product.unit1st.slice(1).toLowerCase() : "Piece")
+  const innerUnitSingular = isStrip
+    ? "Piece"
+    : product.unit1st
+      ? product.unit1st.charAt(0).toUpperCase() +
+        product.unit1st.slice(1).toLowerCase()
+      : "Piece"
 
-  const innerUnitPlural = isStrip 
-    ? "Pieces" 
-    : (innerUnitSingular.toLowerCase() === "piece" ? "Pieces" : innerUnitSingular + "s")
+  const innerUnitPlural = isStrip
+    ? "Pieces"
+    : innerUnitSingular.toLowerCase() === "piece"
+      ? "Pieces"
+      : innerUnitSingular + "s"
 
   const innerUnitShort = isStrip ? "Pcs" : innerUnitPlural
 
@@ -187,10 +214,26 @@ export default function ConfigureSaleItemDialog({
   }
 
   const rateOptions = [
-    { type: "mrp" as const, label: "M.R.P.", val: activeBatch.mrp || activeBatch.price },
-    { type: "rateA" as const, label: "Rate A", val: activeBatch.rateA || activeBatch.mrp || activeBatch.price },
-    { type: "rateB" as const, label: "Rate B", val: activeBatch.rateB || activeBatch.mrp || activeBatch.price },
-    { type: "rateC" as const, label: "Rate C", val: activeBatch.rateC || activeBatch.mrp || activeBatch.price },
+    {
+      type: "mrp" as const,
+      label: "M.R.P.",
+      val: activeBatch.mrp || activeBatch.price,
+    },
+    {
+      type: "rateA" as const,
+      label: "Rate A",
+      val: activeBatch.rateA || activeBatch.mrp || activeBatch.price,
+    },
+    {
+      type: "rateB" as const,
+      label: "Rate B",
+      val: activeBatch.rateB || activeBatch.mrp || activeBatch.price,
+    },
+    {
+      type: "rateC" as const,
+      label: "Rate C",
+      val: activeBatch.rateC || activeBatch.mrp || activeBatch.price,
+    },
   ]
 
   const footer = (
@@ -206,7 +249,7 @@ export default function ConfigureSaleItemDialog({
       <Button
         type="button"
         onClick={handleAdd}
-        className="bg-blue-600 hover:bg-blue-700 text-white font-bold"
+        className="bg-blue-600 font-bold text-white hover:bg-blue-700"
       >
         Add to Invoice
       </Button>
@@ -216,7 +259,7 @@ export default function ConfigureSaleItemDialog({
   return (
     <FormContainer
       variant="modal"
-      size="md"
+      size="xl"
       open={open}
       onOpenChange={onClose}
       title="Configure Sale Options"
@@ -224,26 +267,31 @@ export default function ConfigureSaleItemDialog({
       footer={footer}
       scrollable={true}
     >
-      <div className="space-y-5 pb-2 text-xs">
+      <div className="space-y-3.5 pb-1 text-xs">
         {/* Batch and Expiry Dropdown Selector */}
-        <div className="space-y-2">
-          <span className="text-[9px] font-black text-slate-400 dark:text-slate-400 uppercase tracking-widest block">
+        <div className="space-y-1.5">
+          <span className="block text-[9px] font-black tracking-widest text-slate-400 uppercase dark:text-slate-400">
             Select Batch & Expiry Date
           </span>
           <div className="relative">
             <select
               value={activeBatch.id}
               onChange={(e) => {
-                const nextBatch = product.batches.find((b) => b.id === e.target.value) || null
+                const nextBatch =
+                  product.batches.find((b) => b.id === e.target.value) || null
                 if (nextBatch) {
                   setActiveBatch(nextBatch)
                   const nextMaxStock = isStrip
-                    ? (sellUnit === "strip" ? nextBatch.stock : nextBatch.stock * qtyPerStrip)
-                    : (sellUnit === "strip" ? Math.floor(nextBatch.stock / qtyPerStrip) : nextBatch.stock)
+                    ? sellUnit === "strip"
+                      ? nextBatch.stock
+                      : nextBatch.stock * qtyPerStrip
+                    : sellUnit === "strip"
+                      ? Math.floor(nextBatch.stock / qtyPerStrip)
+                      : nextBatch.stock
                   setQty((q) => Math.min(q, nextMaxStock))
                 }
               }}
-              className="w-full appearance-none rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950 px-3.5 py-2.5 pr-10 text-xs font-semibold outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition-all text-slate-800 dark:text-slate-100 [color-scheme:light] dark:[color-scheme:dark]"
+              className="w-full appearance-none rounded-xl border border-slate-200 bg-white px-3.5 py-2 pr-10 text-xs font-semibold text-slate-800 [color-scheme:light] transition-all outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 dark:[color-scheme:dark]"
             >
               {product.batches.map((b) => (
                 <option
@@ -252,61 +300,75 @@ export default function ConfigureSaleItemDialog({
                   disabled={b.stock <= 0}
                   className="bg-background text-foreground disabled:text-muted-foreground"
                 >
-                  {b.number} (Exp: {b.expiry}) {b.stock <= 0 ? "[OUT OF STOCK]" : `— ${isStrip ? `${b.stock} Strips` : `${b.stock} Bottles`}`}
+                  {b.number} (Exp: {b.expiry}){" "}
+                  {b.stock <= 0
+                    ? "[OUT OF STOCK]"
+                    : `— ${isStrip ? `${b.stock} Strips` : `${b.stock} Bottles`}`}
                 </option>
               ))}
             </select>
-            <ChevronDown className="pointer-events-none absolute top-3.5 right-3.5 h-3.5 w-3.5 text-slate-400" />
+            <ChevronDown className="pointer-events-none absolute top-3 right-3.5 h-3.5 w-3.5 text-slate-400" />
           </div>
         </div>
 
         {/* Target batch summary card */}
-        <div className="rounded-xl border border-slate-200/60 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 p-4">
+        <div className="rounded-xl border border-slate-200/60 bg-slate-50/50 p-3 dark:border-slate-800 dark:bg-slate-900/50">
           <div className="flex items-center justify-between">
-            <h4 className="font-heading font-black text-sm text-slate-800 dark:text-slate-200">
+            <h4 className="font-heading text-sm font-black text-slate-800 dark:text-slate-200">
               {product.name}
             </h4>
-            <span className="text-[10px] bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold px-2 py-0.5 rounded-full border border-blue-500/20 uppercase">
+            <span className="rounded-full border border-blue-500/20 bg-blue-500/10 px-2 py-0.5 text-[10px] font-bold text-blue-600 uppercase dark:text-blue-400">
               {product.formulation}
             </span>
           </div>
-          <p className="text-[10px] text-slate-400 font-bold mt-1 uppercase tracking-wider">
+          <p className="mt-0.5 text-[10px] font-bold tracking-wider text-slate-400 uppercase">
             {product.composition}
           </p>
-          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[10px] font-bold text-slate-400 border-t border-slate-100 dark:border-slate-800/80 pt-3">
+          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-slate-100 pt-2 text-[10px] font-bold text-slate-400 dark:border-slate-800/80">
             <span>
-              Batch: <span className="text-slate-700 dark:text-slate-200 font-black">{activeBatch.number}</span>
+              Batch:{" "}
+              <span className="font-black text-slate-700 dark:text-slate-200">
+                {activeBatch.number}
+              </span>
             </span>
             <span>
-              Expiry: <span className="text-slate-700 dark:text-slate-200 font-black">{activeBatch.expiry}</span>
+              Expiry:{" "}
+              <span className="font-black text-slate-700 dark:text-slate-200">
+                {activeBatch.expiry}
+              </span>
             </span>
             <span>
-              Stock: <span className="text-slate-700 dark:text-slate-200 font-black">
-                {isStrip ? (
-                  `${activeBatch.stock} ${outerUnitShort} (${activeBatch.stock * qtyPerStrip} ${innerUnitShort})`
-                ) : (
-                  `${Math.floor(activeBatch.stock / qtyPerStrip)} ${outerUnitPlural} (${activeBatch.stock} ${innerUnitPlural})`
-                )}
+              Stock:{" "}
+              <span className="font-black text-slate-700 dark:text-slate-200">
+                {isStrip
+                  ? `${activeBatch.stock} ${outerUnitShort} (${activeBatch.stock * qtyPerStrip} ${innerUnitShort})`
+                  : `${Math.floor(activeBatch.stock / qtyPerStrip)} ${outerUnitPlural} (${activeBatch.stock} ${innerUnitPlural})`}
               </span>
             </span>
           </div>
         </div>
 
         {/* Visual rate option cards */}
-        <div className="space-y-2">
-          <span className="text-[9px] font-black text-slate-400 dark:text-slate-400 uppercase tracking-widest block">
+        <div className="space-y-1.5">
+          <span className="block text-[9px] font-black tracking-widest text-slate-400 uppercase dark:text-slate-400">
             Select Rate Option
           </span>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-4 gap-2.5">
             {rateOptions.map((rate) => {
               const isSelected = rateType === rate.type
               const displayPrice = isStrip
                 ? rate.val
-                : (sellUnit === "strip" ? rate.val * qtyPerStrip : rate.val)
-              
+                : sellUnit === "strip"
+                  ? rate.val * qtyPerStrip
+                  : rate.val
+
               const subLabel = isStrip
-                ? (sellUnit === "piece" ? `₹${(rate.val / qtyPerStrip).toFixed(2)} / ${innerUnitSingular.toLowerCase()}` : null)
-                : (sellUnit === "strip" ? `₹${rate.val.toFixed(2)} / ${innerUnitSingular.toLowerCase()}` : null)
+                ? sellUnit === "piece"
+                  ? `₹${(rate.val / qtyPerStrip).toFixed(2)} / ${innerUnitSingular.toLowerCase()}`
+                  : null
+                : sellUnit === "strip"
+                  ? `₹${rate.val.toFixed(2)} / ${innerUnitSingular.toLowerCase()}`
+                  : null
 
               return (
                 <button
@@ -314,25 +376,25 @@ export default function ConfigureSaleItemDialog({
                   type="button"
                   onClick={() => setRateType(rate.type)}
                   className={cn(
-                    "relative flex flex-col items-start p-3 rounded-xl border transition-all text-left duration-150 cursor-pointer shadow-3xs",
+                    "shadow-3xs relative flex cursor-pointer flex-col items-start rounded-xl border p-2.5 text-left transition-all duration-150",
                     isSelected
-                      ? "border-blue-500 bg-blue-500/5 dark:border-blue-600 dark:bg-blue-950/20 ring-1 ring-blue-500/30"
-                      : "border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950 hover:bg-slate-50/50"
+                      ? "border-blue-500 bg-blue-500/5 ring-1 ring-blue-500/30 dark:border-blue-600 dark:bg-blue-950/20"
+                      : "border-slate-200 bg-white hover:bg-slate-50/50 dark:border-slate-800 dark:bg-slate-950"
                   )}
                 >
                   {isSelected && (
-                    <div className="absolute right-2.5 top-2.5 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-blue-600 text-white shadow-xs">
-                      <Check className="h-3 w-3" />
+                    <div className="absolute top-2 right-2 flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-white shadow-xs">
+                      <Check className="h-2.5 w-2.5" />
                     </div>
                   )}
-                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                  <span className="text-[9px] font-black tracking-widest text-slate-400 uppercase">
                     {rate.label}
                   </span>
-                  <span className="font-mono font-black text-slate-800 dark:text-slate-100 text-sm mt-1">
+                  <span className="mt-0.5 font-mono text-sm font-black text-slate-800 dark:text-slate-100">
                     ₹{displayPrice.toFixed(2)}
                   </span>
                   {subLabel && (
-                    <span className="text-[9px] font-bold text-blue-600 dark:text-blue-400 mt-0.5">
+                    <span className="mt-0.5 text-[9px] font-bold text-blue-600 dark:text-blue-400">
                       {subLabel}
                     </span>
                   )}
@@ -343,58 +405,69 @@ export default function ConfigureSaleItemDialog({
         </div>
 
         {/* Visual Sell Unit Selector (Segmented buttons) */}
-        <div className="space-y-2">
-          <span className="text-[9px] font-black text-slate-400 dark:text-slate-400 uppercase tracking-widest block">
+        <div className="space-y-1.5">
+          <span className="block text-[9px] font-black tracking-widest text-slate-400 uppercase dark:text-slate-400">
             Select Unit Type
           </span>
-          <div className="flex gap-2 p-1 bg-slate-100/50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">
+          <div className="flex gap-2 rounded-xl border border-slate-200 bg-slate-100/50 p-1 dark:border-slate-800 dark:bg-slate-900">
             <button
               type="button"
               onClick={() => {
                 setSellUnit("strip")
-                const nextMaxStock = isStrip ? activeBatch.stock : Math.floor(activeBatch.stock / qtyPerStrip)
+                const nextMaxStock = isStrip
+                  ? activeBatch.stock
+                  : Math.floor(activeBatch.stock / qtyPerStrip)
                 setQty((q) => Math.min(q, nextMaxStock))
               }}
               className={cn(
-                "flex-1 text-center py-2 text-xs font-black rounded-lg transition-all cursor-pointer border",
+                "flex-1 cursor-pointer rounded-lg border py-1.5 text-center text-xs font-black transition-all",
                 sellUnit === "strip"
-                  ? "bg-white text-slate-900 border-blue-500 dark:border-blue-600 shadow-2xs dark:bg-slate-900 dark:text-slate-100"
+                  ? "border-blue-500 bg-white text-slate-900 shadow-2xs dark:border-blue-600 dark:bg-slate-900 dark:text-slate-100"
                   : "border-transparent text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
               )}
             >
-              {outerUnitPlural} ({isStrip ? activeBatch.stock : Math.floor(activeBatch.stock / qtyPerStrip)} Available)
+              {outerUnitPlural} (
+              {isStrip
+                ? activeBatch.stock
+                : Math.floor(activeBatch.stock / qtyPerStrip)}{" "}
+              Available)
             </button>
             <button
               type="button"
               disabled={qtyPerStrip <= 1}
               onClick={() => {
                 setSellUnit("piece")
-                const nextMaxStock = isStrip ? activeBatch.stock * qtyPerStrip : activeBatch.stock
+                const nextMaxStock = isStrip
+                  ? activeBatch.stock * qtyPerStrip
+                  : activeBatch.stock
                 setQty((q) => Math.min(q, nextMaxStock))
               }}
               className={cn(
-                "flex-1 text-center py-2 text-xs font-black rounded-lg transition-all disabled:opacity-40 cursor-pointer border",
+                "flex-1 cursor-pointer rounded-lg border py-1.5 text-center text-xs font-black transition-all disabled:opacity-40",
                 sellUnit === "piece"
-                  ? "bg-white text-slate-900 border-blue-500 dark:border-blue-600 shadow-2xs dark:bg-slate-900 dark:text-slate-100"
+                  ? "border-blue-500 bg-white text-slate-900 shadow-2xs dark:border-blue-600 dark:bg-slate-900 dark:text-slate-100"
                   : "border-transparent text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
               )}
             >
-              {innerUnitPlural} ({isStrip ? activeBatch.stock * qtyPerStrip : activeBatch.stock} Available)
+              {innerUnitPlural} (
+              {isStrip ? activeBatch.stock * qtyPerStrip : activeBatch.stock}{" "}
+              Available)
             </button>
           </div>
         </div>
+
         {/* Quantity and Discount row */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-3">
           {/* Quantity selector */}
-          <div className="space-y-2">
-            <span className="text-[9px] font-black text-slate-400 dark:text-slate-400 uppercase tracking-widest block">
+          <div className="space-y-1.5">
+            <span className="block text-[9px] font-black tracking-widest text-slate-400 uppercase dark:text-slate-400">
               Sales Quantity
             </span>
-            <div className="flex items-center overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950 w-full h-[42px] focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/10 transition-all">
+            <div className="flex h-[38px] w-full items-center overflow-hidden rounded-xl border border-slate-200 bg-white transition-all focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/10 dark:border-slate-800 dark:bg-slate-950">
               <button
                 type="button"
                 onClick={() => setQty((q) => Math.max(1, q - 1))}
-                className="px-3.5 py-2 text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors"
+                className="px-3 py-1.5 text-slate-400 transition-colors hover:bg-slate-50 dark:hover:bg-slate-900"
               >
                 <Minus className="h-3.5 w-3.5" />
               </button>
@@ -406,34 +479,38 @@ export default function ConfigureSaleItemDialog({
                   const parsed = parseInt(e.target.value, 10) || 1
                   setQty(Math.min(maxStock, Math.max(1, parsed)))
                 }}
-                className="w-full bg-transparent text-center text-xs font-black text-slate-800 dark:text-slate-100 outline-none"
+                className="w-full bg-transparent text-center text-xs font-black text-slate-800 outline-none dark:text-slate-100"
               />
               <button
                 type="button"
                 onClick={() => setQty((q) => Math.min(maxStock, q + 1))}
-                className="px-3.5 py-2 text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors"
+                className="px-3 py-1.5 text-slate-400 transition-colors hover:bg-slate-50 dark:hover:bg-slate-900"
               >
                 <Plus className="h-3.5 w-3.5" />
               </button>
             </div>
           </div>
 
-          {/* Discount Percentage input */}
-          <div className="space-y-2">
-            <span className="text-[9px] font-black text-slate-400 dark:text-slate-400 uppercase tracking-widest block">
+        {/* Discount Percentage input */}
+          <div className="space-y-1.5">
+            <span className="block text-[9px] font-black tracking-widest text-slate-400 uppercase dark:text-slate-400">
               Item Discount
             </span>
-            <div className="flex items-center rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950 overflow-hidden w-full h-[42px] focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/10 transition-all">
+            <div className="flex h-[38px] w-full items-center overflow-hidden rounded-xl border border-slate-200 bg-white transition-all focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/10 dark:border-slate-800 dark:bg-slate-950">
               <input
                 type="number"
                 min="0"
                 max="100"
                 value={itemDiscount}
-                onChange={(e) => setItemDiscount(Math.min(100, Math.max(0, Number(e.target.value))))}
-                className="w-full bg-transparent px-4.5 text-right text-xs font-black text-slate-800 dark:text-slate-100 outline-none"
+                onChange={(e) =>
+                  setItemDiscount(
+                    Math.min(100, Math.max(0, Number(e.target.value)))
+                  )
+                }
+                className="w-full bg-transparent px-3 text-right text-xs font-black text-slate-800 outline-none dark:text-slate-100"
                 placeholder="0"
               />
-              <span className="border-l border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-4 h-full flex items-center text-[11px] font-bold text-slate-400">
+              <span className="flex h-full items-center border-l border-slate-200 bg-slate-50 px-3 text-[11px] font-bold text-slate-400 dark:border-slate-800 dark:bg-slate-900">
                 %
               </span>
             </div>
@@ -441,17 +518,19 @@ export default function ConfigureSaleItemDialog({
         </div>
 
         {/* Subtotal cost estimation panel */}
-        <div className="rounded-xl border border-slate-200/60 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 p-4 space-y-3">
+        <div className="space-y-2 rounded-xl border border-slate-200/60 bg-slate-50/50 p-3 dark:border-slate-800 dark:bg-slate-900/50">
           <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
             <Sparkles className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
-            <h5 className="text-[9px] font-bold uppercase tracking-widest">
+            <h5 className="text-[9px] font-bold tracking-widest uppercase">
               Cost Summary Preview
             </h5>
           </div>
-          <div className="space-y-1.5 text-xs font-semibold">
+          <div className="space-y-1 text-xs font-semibold">
             <div className="flex justify-between text-slate-600 dark:text-slate-300">
               <span>Base Value</span>
-              <span className="text-slate-900 dark:text-slate-100">₹{totalBeforeDiscount.toFixed(2)}</span>
+              <span className="text-slate-900 dark:text-slate-100">
+                ₹{totalBeforeDiscount.toFixed(2)}
+              </span>
             </div>
             {discountVal > 0 && (
               <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
@@ -461,11 +540,15 @@ export default function ConfigureSaleItemDialog({
             )}
             <div className="flex justify-between text-slate-500 dark:text-slate-400">
               <span>GST Tax ({cgstRate + sgstRate}%)</span>
-              <span className="text-slate-700 dark:text-slate-300">₹{taxVal.toFixed(2)}</span>
+              <span className="text-slate-700 dark:text-slate-300">
+                ₹{taxVal.toFixed(2)}
+              </span>
             </div>
-            <div className="flex justify-between items-center pt-2.5 border-t border-slate-200 dark:border-slate-800/80 text-slate-900 dark:text-slate-100 font-extrabold text-xs uppercase tracking-wider">
+            <div className="flex items-center justify-between border-t border-slate-200 pt-2 text-xs font-extrabold tracking-wider text-slate-900 uppercase dark:border-slate-800/80 dark:text-slate-100">
               <span>Total Net</span>
-              <span className="text-blue-600 dark:text-blue-400 font-mono text-base font-black">₹{netVal.toFixed(2)}</span>
+              <span className="font-mono text-base font-black text-blue-600 dark:text-blue-400">
+                ₹{netVal.toFixed(2)}
+              </span>
             </div>
           </div>
         </div>

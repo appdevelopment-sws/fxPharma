@@ -138,11 +138,22 @@ export function WorkspaceShell({
           isLoggingOut={isLoggingOut}
         />
 
-        <main className="flex-1 scrollbar-thin scrollbar-thumb-slate-200 overflow-y-auto bg-[#f0f4fa] dark:scrollbar-thumb-zinc-700 dark:bg-zinc-900">
+        <main
+          className={cn(
+            "flex-1 scrollbar-thin scrollbar-thumb-slate-200 bg-[#f0f4fa] dark:scrollbar-thumb-zinc-700 dark:bg-zinc-900",
+            location.pathname.includes("/pos")
+              ? "overflow-hidden"
+              : "overflow-y-auto"
+          )}
+        >
           <div
             className={cn(
-              "mx-auto h-full w-full p-4 sm:p-3 lg:p-4",
-              isCollapsed ? "lg:pl-8" : "lg:p-6"
+              "mx-auto h-full w-full",
+              location.pathname.includes("/pos")
+                ? "p-0"
+                : isCollapsed
+                  ? "p-4 sm:p-3 lg:p-4 lg:pl-8"
+                  : "p-4 sm:p-3 lg:p-6"
             )}
           >
             <Outlet />
