@@ -6,13 +6,13 @@
     <style>
       :root {
         color-scheme: light;
-        --bg: #f7f3ea;
-        --paper: #fffaf1;
-        --ink: #1f2937;
-        --muted: #6b7280;
-        --line: #e5d8bf;
-        --accent: #b45309;
-        --accent-soft: #fff4de;
+        --bg: #f8fafc;
+        --paper: #ffffff;
+        --ink: #0f172a;
+        --muted: #64748b;
+        --line: #e2e8f0;
+        --accent: #0f172a;
+        --accent-soft: #f1f5f9;
       }
 
       * {
@@ -21,90 +21,92 @@
 
       body {
         margin: 0;
-        background:
-          radial-gradient(
-            circle at top left,
-            rgba(180, 83, 9, 0.12),
-            transparent 32%
-          ),
-          linear-gradient(180deg, #fbf8f1 0%, var(--bg) 100%);
+        background: var(--bg);
         color: var(--ink);
-        font-family: Georgia, "Times New Roman", serif;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        line-height: 1.4;
       }
 
       .page {
         width: 210mm;
         min-height: 297mm;
         margin: 0 auto;
-        padding: 16mm;
+        padding: 12mm;
       }
 
       .sheet {
         background: var(--paper);
         border: 1px solid var(--line);
-        border-radius: 18px;
-        box-shadow: 0 18px 50px rgba(120, 53, 15, 0.12);
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
         overflow: hidden;
       }
 
       .topbar {
-        background: linear-gradient(135deg, #78350f 0%, #b45309 100%);
-        color: #fff7ed;
+        background: var(--accent);
+        color: #ffffff;
         padding: 20px 24px;
         display: flex;
         justify-content: space-between;
         gap: 24px;
-        align-items: start;
+        align-items: flex-start;
       }
 
       .topbar h1 {
-        margin: 0 0 6px;
-        font-size: 30px;
-        line-height: 1;
+        margin: 0 0 4px;
+        font-size: 24px;
+        font-weight: 700;
+        line-height: 1.2;
+        letter-spacing: -0.01em;
       }
 
       .topbar p {
-        margin: 4px 0;
-        opacity: 0.95;
+        margin: 2px 0;
+        opacity: 0.9;
         font-size: 12px;
       }
 
       .badge {
-        border: 1px solid rgba(255, 247, 237, 0.35);
-        border-radius: 999px;
-        padding: 6px 12px;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 6px;
+        padding: 4px 10px;
         display: inline-block;
         font-size: 11px;
-        letter-spacing: 0.08em;
+        font-weight: 600;
+        letter-spacing: 0.05em;
         text-transform: uppercase;
-      }.bill-container {
-  height: 100%;
-}
+      }
+
+      .bill-container {
+        height: 100%;
+      }
 
       .body {
-        padding: 22px 24px 26px;
+        padding: 24px;
       }
 
       .grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 14px;
-        margin-bottom: 18px;
+        gap: 16px;
+        margin-bottom: 20px;
       }
 
       .panel {
         border: 1px solid var(--line);
-        border-radius: 14px;
-        padding: 14px;
-        background: rgba(255, 255, 255, 0.45);
+        border-radius: 10px;
+        padding: 16px;
+        background: var(--bg);
       }
 
       .panel h2 {
-        margin: 0 0 12px;
-        font-size: 14px;
+        margin: 0 0 10px;
+        font-size: 11px;
+        font-weight: 700;
         letter-spacing: 0.08em;
         text-transform: uppercase;
-        color: var(--accent);
+        color: var(--muted);
       }
 
       .line {
@@ -112,7 +114,7 @@
         justify-content: space-between;
         gap: 12px;
         padding: 6px 0;
-        border-bottom: 1px dashed #e7dbc4;
+        border-bottom: 1px solid var(--line);
         font-size: 13px;
       }
 
@@ -125,7 +127,8 @@
       }
 
       .value {
-        font-weight: 700;
+        font-weight: 600;
+        color: var(--ink);
         text-align: right;
       }
 
@@ -136,20 +139,22 @@
 
       thead th {
         background: var(--accent-soft);
-        color: var(--accent);
+        color: var(--ink);
         text-transform: uppercase;
-        letter-spacing: 0.06em;
+        letter-spacing: 0.05em;
         font-size: 11px;
-        padding: 12px 10px;
+        font-weight: 700;
+        padding: 10px 12px;
         border-top: 1px solid var(--line);
-        border-bottom: 1px solid var(--line);
+        border-bottom: 2px solid var(--line);
       }
 
       tbody td {
-        padding: 12px 10px;
-        border-bottom: 1px solid #e9dfce;
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--line);
         vertical-align: top;
         font-size: 13px;
+        color: var(--ink);
       }
 
       .cell-center {
@@ -162,7 +167,7 @@
       }
 
       .item-title {
-        font-weight: 700;
+        font-weight: 600;
       }
 
       .item-meta {
@@ -175,62 +180,65 @@
         display: grid;
         grid-template-columns: 1fr 290px;
         gap: 16px;
-        margin-top: 16px;
+        margin-top: 20px;
       }
 
       .summary {
         border: 1px solid var(--line);
-        border-radius: 14px;
-        background: rgba(255, 255, 255, 0.55);
+        border-radius: 10px;
+        background: var(--bg);
+        overflow: hidden;
       }
 
       .summary table td {
-        padding: 10px 12px;
+        padding: 8px 12px;
         font-size: 13px;
-        border-bottom: 1px solid #eadfc7;
+        border-bottom: 1px solid var(--line);
       }
 
       .summary table tr:last-child td {
         border-bottom: 0;
-        background: #fff6e7;
-        font-weight: 800;
+        background: var(--accent);
+        color: #ffffff;
+        font-weight: 700;
       }
 
       .notes {
         border: 1px solid var(--line);
-        border-left: 5px solid var(--accent);
-        border-radius: 14px;
-        background: rgba(255, 255, 255, 0.58);
+        border-left: 4px solid var(--accent);
+        border-radius: 10px;
+        background: var(--bg);
         padding: 14px;
         min-height: 100%;
       }
 
       .notes-label {
-        margin-bottom: 8px;
-        font-size: 12px;
+        margin-bottom: 6px;
+        font-size: 11px;
         text-transform: uppercase;
         letter-spacing: 0.08em;
-        color: var(--accent);
+        color: var(--muted);
         font-weight: 700;
       }
 
       .notes-value {
         color: var(--ink);
         font-size: 13px;
-        line-height: 1.6;
+        line-height: 1.5;
       }
 
       .stamp {
-        margin-top: 14px;
+        margin-top: 12px;
         display: inline-block;
-        border: 1px solid rgba(180, 83, 9, 0.4);
-        color: var(--accent);
-        border-radius: 999px;
-        padding: 7px 12px;
+        border: 1px solid var(--line);
+        color: var(--muted);
+        border-radius: 6px;
+        padding: 4px 10px;
         font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.05em;
         text-transform: uppercase;
-        letter-spacing: 0.08em;
-        background: #fff7ed;
+        background: #ffffff;
       }
 
       @page {
@@ -244,73 +252,90 @@
     <main class="page bill-container">
       <section class="sheet" style="position:relative;">
         {{{watermarkBlock}}}
-        <img
-          src="{{brandLogo}}"
-          alt="Header Banner"
-          style="width: 100%; height: 200px; display: block;"
-          onerror="this.style.display='none'"
-        />
-        <header
-          class="topbar"
-          style="display: flex; justify-content: space-between; align-items: flex-start;"
-        >
-          <div style="display: flex; align-items: flex-start; gap: 16px;">
+        {{#if brandLogo}}
+          <div class="header-image-wrapper" style="background: #ffffff; text-align: center; border-bottom: 1px solid var(--line);">
+            <img
+              src="{{brandLogo}}"
+              alt="{{brandName}} Header"
+              style="width: 100%; max-height: 160px; object-fit: contain; display: block;"
+              onerror="this.parentElement.style.display='none';"
+            />
+          </div>
+
+          <header
+            class="topbar"
+            style="display: flex; justify-content: space-between; align-items: center; padding: 12px 24px;"
+          >
             <div>
-              <span class="badge" style="margin-bottom: 6px;">Invoice</span>
-              <h1 style="margin: 0 0 4px; font-size: 24px;">{{brandName}}</h1>
-              <p style="margin: 2px 0;">{{brandTagline}}</p>
-              <p style="margin: 2px 0;">{{brandAddress}}</p>
-              <p style="margin: 2px 0;">{{companyContactBlock}}</p>
-              <p
-                style="margin: 4px 0 0; font-size: 11px; opacity: 0.85;"
-              >{{brandLicenseBlock}}</p>
+              <span class="badge" style="margin-right: 8px;">Invoice No. {{invoiceId}}</span>
+              <span class="badge">Status: {{invoiceStatus}}</span>
             </div>
-          </div>
-          <div style="text-align: right;">
-            <div class="badge">{{safeTemplateName}}</div>
-            <p style="margin-top: 12px; margin-bottom: 2px;">No.
-              {{invoiceId}}</p>
-            <p style="margin: 2px 0;">Date: {{createdAt}}</p>
-            <p style="margin: 2px 0;">Status: {{invoiceStatus}}</p>
-          </div>
-        </header>
+            <div style="text-align: right; font-size: 13px;">
+              <p style="margin: 0; font-weight: 600;">Date: {{createdAt}}</p>
+            </div>
+          </header>
+        {{else}}
+          <header
+            class="topbar"
+            style="display: flex; justify-content: space-between; align-items: flex-start;"
+          >
+            <div style="display: flex; align-items: flex-start; gap: 16px;">
+              <div>
+                <span class="badge" style="margin-bottom: 6px;">Tax Invoice</span>
+                <h1 style="margin: 4px 0 4px; font-size: 24px;">{{brandName}}</h1>
+                {{#if brandTagline}}<p style="margin: 2px 0;">{{brandTagline}}</p>{{/if}}
+                {{#if brandAddress}}<p style="margin: 2px 0;">{{brandAddress}}</p>{{/if}}
+                {{#if companyContactBlock}}<p style="margin: 2px 0;">{{companyContactBlock}}</p>{{/if}}
+                {{#if brandLicenseBlock}}
+                  <p
+                    style="margin: 4px 0 0; font-size: 11px; opacity: 0.85;"
+                  >{{brandLicenseBlock}}</p>
+                {{/if}}
+              </div>
+            </div>
+            <div style="text-align: right;">
+              <div class="badge">Invoice No. {{invoiceId}}</div>
+              <p style="margin-top: 10px; margin-bottom: 2px;">Date: {{createdAt}}</p>
+              <p style="margin: 2px 0;">Status: {{invoiceStatus}}</p>
+            </div>
+          </header>
+        {{/if}}
 
         <div class="body">
           <section class="grid">
             <div class="panel">
-              <h2>Customer</h2>
+              <h2>Customer Information</h2>
               <div class="line"><span class="label">Name</span><span
                   class="value"
                 >{{customerName}}</span></div>
               <div class="line"><span class="label">Phone</span><span
                   class="value"
                 >{{customerPhone}}</span></div>
-              <div class="line"><span class="label">Payment</span><span
+              <div class="line"><span class="label">Payment Mode</span><span
                   class="value"
                 >{{paymentMode}}</span></div>
             </div>
 
             <div class="panel">
-              <h2>Quick Totals</h2>
-              <div class="line"><span class="label">Items</span><span
+              <h2>Invoice Summary</h2>
+              <div class="line"><span class="label">Total Items</span><span
                   class="value"
                 >{{itemCount}}</span></div>
-              <div class="line"><span class="label">Gross</span><span
+              <div class="line"><span class="label">Subtotal</span><span
                   class="value"
                 >{{grossAmount}}</span></div>
-              <div class="line"><span class="label">Total</span><span
+              <div class="line"><span class="label">Net Amount</span><span
                   class="value"
                 >{{totalAmount}}</span></div>
             </div>
           </section>
 
-          <section class="panel table-container">
-            <h2>Line Items</h2>
-            <table>
+          <section class="panel table-container" style="padding: 0; overflow: hidden;">
+            <table style="margin: 0;">
               <thead>
                 <tr>
                   <th style="width: 44px;">#</th>
-                  <th>Item</th>
+                  <th>Item Description</th>
                   <th style="width: 68px;" class="cell-center">Qty</th>
                   <th style="width: 105px;" class="cell-right">Rate</th>
                   <th style="width: 105px;" class="cell-right">Discount</th>
@@ -325,9 +350,9 @@
 
           <section class="footer-grid bottom-blocks-grid">
             <div class="notes">
-              <div class="notes-label">Notes</div>
+              <div class="notes-label">Notes & Remarks</div>
               <div class="notes-value">{{notesValue}}</div>
-              <div class="stamp">Template ready for Puppeteer PDF export</div>
+              <div class="stamp">Official Invoice Record</div>
             </div>
 
             <div class="summary">
@@ -339,18 +364,26 @@
             </div>
           </section>
 
-          <!-- Terms and Footer Message -->
-          <div
-  class="terms-conditions-wrapper"
-  style="margin: 16px 24px; border-top: 1px dashed var(--line); padding-top: 12px; font-size: 11px; color: var(--muted); font-family: sans-serif;"
->
+          {{#if invoiceTermsBlock}}
+            <div
+              class="terms-conditions-wrapper"
+              style="margin-top: 20px; border-top: 1px solid var(--line); padding-top: 12px; font-size: 11px; color: var(--muted);"
+            >
+              {{{invoiceTermsBlock}}}
+            </div>
+          {{/if}}
+
+          {{#if brandFooterImage}}
+            <div style="margin-top: 16px;">
+              <img
+                src="{{brandFooterImage}}"
+                alt="Footer Banner"
+                style="width: 100%; max-height: 80px; object-fit: contain; display: block;"
+                onerror="this.style.display='none'"
+              />
+            </div>
+          {{/if}}
         </div>
-        <img
-          src="{{brandFooterImage}}"
-          alt="Footer Banner"
-          style="width: 100%; height: 100px; display: block;"
-          onerror="this.style.display='none'"
-        />
       </section>
     </main>
   </body>
