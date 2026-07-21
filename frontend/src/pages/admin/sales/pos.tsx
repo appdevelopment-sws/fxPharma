@@ -822,11 +822,16 @@ const POS = () => {
   }) => {
     if (!configProduct) return
     const b = config.batch
-    const isStrip = !configProduct.unit1st || configProduct.unit1st.toLowerCase() === "strip"
+    const isStrip =
+      !configProduct.unit1st || configProduct.unit1st.toLowerCase() === "strip"
     const qtyPerStrip = getQtyPerStrip(configProduct)
     const maxStock = isStrip
-      ? (config.sellUnit === "strip" ? b.stock : b.stock * qtyPerStrip)
-      : (config.sellUnit === "strip" ? Math.floor(b.stock / qtyPerStrip) : b.stock)
+      ? config.sellUnit === "strip"
+        ? b.stock
+        : b.stock * qtyPerStrip
+      : config.sellUnit === "strip"
+        ? Math.floor(b.stock / qtyPerStrip)
+        : b.stock
 
     if (config.qty <= 0) {
       toast.error("Please enter a valid quantity.")
@@ -834,7 +839,13 @@ const POS = () => {
     }
     if (config.qty > maxStock) {
       const outerLabel = isStrip ? "Strips" : "Boxes"
-      const innerLabel = isStrip ? "Pieces" : (configProduct.unit1st ? configProduct.unit1st.charAt(0).toUpperCase() + configProduct.unit1st.slice(1).toLowerCase() + "s" : "Bottles")
+      const innerLabel = isStrip
+        ? "Pieces"
+        : configProduct.unit1st
+          ? configProduct.unit1st.charAt(0).toUpperCase() +
+            configProduct.unit1st.slice(1).toLowerCase() +
+            "s"
+          : "Bottles"
       toast.error(
         `Insufficient stock! Max available is ${maxStock} ${
           config.sellUnit === "strip" ? outerLabel : innerLabel
@@ -888,11 +899,17 @@ const POS = () => {
     setCart((prev) =>
       prev.map((item) => {
         if (item.id !== cartItemId) return item
-        const isStrip = !item.product.unit1st || item.product.unit1st.toLowerCase() === "strip"
+        const isStrip =
+          !item.product.unit1st ||
+          item.product.unit1st.toLowerCase() === "strip"
         const qtyPerStrip = getQtyPerStrip(item.product)
         const maxStock = isStrip
-          ? (item.sellUnit === "strip" ? item.batch.stock : item.batch.stock * qtyPerStrip)
-          : (item.sellUnit === "strip" ? Math.floor(item.batch.stock / qtyPerStrip) : item.batch.stock)
+          ? item.sellUnit === "strip"
+            ? item.batch.stock
+            : item.batch.stock * qtyPerStrip
+          : item.sellUnit === "strip"
+            ? Math.floor(item.batch.stock / qtyPerStrip)
+            : item.batch.stock
         const newQty = Math.min(maxStock, Math.max(1, item.qty + delta))
         return { ...item, qty: newQty }
       })
@@ -938,7 +955,10 @@ const POS = () => {
 
   const totalTaxAmount = cart.reduce((sum, item) => {
     const itemTaxable =
-      item.rateValue * item.qty * (1 - item.itemDiscount / 100) * overallDiscountFactor
+      item.rateValue *
+      item.qty *
+      (1 - item.itemDiscount / 100) *
+      overallDiscountFactor
     return (
       sum +
       (itemTaxable * (toNumber(item.batch.cgst) + toNumber(item.batch.sgst))) /
@@ -1034,23 +1054,37 @@ const POS = () => {
       tenderedAmount: tenderedAmount || roundedNet,
       changeAmount: changeAmount,
       items: cart.map((item) => {
-        const isStrip = !item.product.unit1st || item.product.unit1st.toLowerCase() === "strip"
+        const isStrip =
+          !item.product.unit1st ||
+          item.product.unit1st.toLowerCase() === "strip"
         const qtyPerStrip = getQtyPerStrip(item.product)
 
         // For bottle-based medicine sold in boxes (sellUnit === "strip")
-        const apiQty = (!isStrip && item.sellUnit === "strip") ? item.qty * qtyPerStrip : item.qty
-        const apiRateValue = (!isStrip && item.sellUnit === "strip")
-          ? Math.round((item.rateValue / qtyPerStrip) * 100) / 100
-          : item.rateValue
-        
+        const apiQty =
+          !isStrip && item.sellUnit === "strip"
+            ? item.qty * qtyPerStrip
+            : item.qty
+        const apiRateValue =
+          !isStrip && item.sellUnit === "strip"
+            ? Math.round((item.rateValue / qtyPerStrip) * 100) / 100
+            : item.rateValue
+
         // Dynamic labels for invoice storage/printing
-        const innerUnitSingular = isStrip 
-          ? "Piece" 
-          : (item.product.unit1st ? item.product.unit1st.charAt(0).toUpperCase() + item.product.unit1st.slice(1).toLowerCase() : "Bottle")
-        
-        const apiSellUnit = item.sellUnit === "strip"
-          ? (isStrip ? "Strip" : "Box")
-          : (isStrip ? "Piece" : innerUnitSingular)
+        const innerUnitSingular = isStrip
+          ? "Piece"
+          : item.product.unit1st
+            ? item.product.unit1st.charAt(0).toUpperCase() +
+              item.product.unit1st.slice(1).toLowerCase()
+            : "Bottle"
+
+        const apiSellUnit =
+          item.sellUnit === "strip"
+            ? isStrip
+              ? "Strip"
+              : "Box"
+            : isStrip
+              ? "Piece"
+              : innerUnitSingular
 
         const subTotal =
           item.rateValue * item.qty -
@@ -1230,7 +1264,7 @@ const POS = () => {
             <div
               className="grid gap-3"
               style={{
-                gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))",
+                gridTemplateColumns: "repeat(auto-fill, minmax(165px, 1fr))",
               }}
             >
               {filteredProducts.map((product) => {
@@ -1252,36 +1286,91 @@ const POS = () => {
                       setConfigModalOpen(true)
                     }}
                     className={cn(
-                      "relative flex cursor-pointer flex-col items-center rounded-lg border bg-card p-2.5 text-left transition-all duration-150 hover:shadow-md active:scale-[0.97]",
+                      "group relative flex cursor-pointer flex-col justify-between overflow-hidden rounded-xl border bg-card p-3 text-left transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md active:scale-[0.98]",
                       isSelected
-                        ? "border-teal-500 bg-teal-500/5 shadow-sm ring-1 ring-teal-400/40"
+                        ? "border-teal-500 bg-teal-500/5 shadow-md ring-2 ring-teal-500/20"
                         : isOutOfStock
-                          ? "cursor-not-allowed border-border opacity-50"
-                          : "border-border hover:border-teal-300"
+                          ? "border-border/60 bg-muted/20 opacity-70 hover:border-rose-300"
+                          : "border-border/70 hover:border-teal-500/50 hover:shadow-teal-500/5"
                     )}
                   >
-                    {/* Illustration */}
-                    <div className="mb-2.5 flex h-[100px] w-full items-center justify-center overflow-hidden rounded-md bg-muted/40">
-                      {getProductIllustration(product, "md")}
+                    <div>
+                      {/* Illustration Container */}
+                      <div className="relative mb-2.5 flex h-24 w-full items-center justify-center overflow-hidden rounded-lg bg-gradient-to-b from-muted/40 via-muted/20 to-transparent p-2 transition-colors group-hover:from-teal-500/10">
+                        {/* Top Left: Type Badge (Rx / OTC) */}
+                        {/* {product.type && (
+                          <span
+                            className={cn(
+                              "absolute top-1.5 left-1.5 rounded-md px-1.5 py-0.5 text-[9px] font-extrabold tracking-wider uppercase backdrop-blur-xs",
+                              product.type.toLowerCase().includes("rx")
+                                ? "bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/20"
+                                : "bg-sky-500/15 text-sky-600 dark:text-sky-400 border border-sky-500/20"
+                            )}
+                          >
+                            {product.type.toUpperCase()}
+                          </span>
+                        )} */}
+
+                        {/* Top Right: Stock Status Pill */}
+                        <span
+                          className={cn(
+                            "absolute top-1.5 right-1.5 rounded-md px-1.5 py-0.5 text-[9px] font-bold tracking-tight shadow-2xs backdrop-blur-xs",
+                            isOutOfStock
+                              ? "bg-rose-500 font-black text-white"
+                              : product.totalStock <= 10
+                                ? "border border-amber-500/30 bg-amber-500/20 text-amber-700 dark:text-amber-300"
+                                : "border border-emerald-500/20 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
+                          )}
+                        >
+                          {isOutOfStock ? "Out" : `${product.totalStock} left`}
+                        </span>
+
+                        {/* Product Image / SVG Illustration */}
+                        <div className="h-16 w-16 transition-transform duration-200 group-hover:scale-105">
+                          {getProductIllustration(product, "md")}
+                        </div>
+                      </div>
+
+                      {/* Product Name */}
+                      <h4 className="line-clamp-2 text-xs leading-snug font-bold text-foreground transition-colors group-hover:text-teal-600 dark:group-hover:text-teal-400">
+                        {product.name}
+                      </h4>
+
+                      {/* Secondary Info: MFG & Formulation */}
+                      <div className="mt-1 flex items-center justify-between gap-1 text-[10px] text-muted-foreground/80">
+                        <span className="truncate font-medium">
+                          {product.mfg || product.category || "General"}
+                        </span>
+                        {product.formulation && (
+                          <span className="py-0.2 shrink-0 rounded bg-muted/60 px-1 text-[9px] font-semibold text-muted-foreground">
+                            {product.formulation}
+                          </span>
+                        )}
+                      </div>
                     </div>
 
-                    {/* Name */}
-                    <p className="line-clamp-2 w-full text-center text-xs leading-tight font-semibold text-foreground">
-                      {product.name}
-                    </p>
+                    {/* Footer: Price & Add Action Button */}
+                    <div className="mt-3 flex items-center justify-between border-t border-border/40 pt-2">
+                      <div>
+                        <span className="block text-[9px] leading-none font-semibold text-muted-foreground uppercase">
+                          MRP
+                        </span>
+                        <span className="text-xs font-extrabold tracking-tight text-foreground">
+                          ₹{basePrice > 0 ? basePrice.toFixed(2) : "0.00"}
+                        </span>
+                      </div>
 
-                    {/* Price */}
-                    <p className="mt-1 text-xs font-bold text-muted-foreground">
-                      {basePrice > 0 ? `${basePrice.toFixed(2)}` : "0"}
-                      <span className="text-[10px] font-semibold text-muted-foreground/60"></span>
-                    </p>
-
-                    {/* Out of stock badge */}
-                    {isOutOfStock && (
-                      <span className="absolute top-1.5 right-1.5 rounded bg-red-500 px-1.5 py-0.5 text-[9px] font-bold text-white uppercase">
-                        Out
-                      </span>
-                    )}
+                      <div
+                        className={cn(
+                          "flex h-6 w-6 items-center justify-center rounded-full transition-all duration-200",
+                          isOutOfStock
+                            ? "bg-muted text-muted-foreground/40"
+                            : "bg-teal-500/10 text-teal-600 group-hover:bg-teal-500 group-hover:text-white group-hover:shadow-xs"
+                        )}
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                      </div>
+                    </div>
                   </button>
                 )
               })}
@@ -1297,15 +1386,19 @@ const POS = () => {
               }).map((_, i) => (
                 <div
                   key={`empty-${i}`}
-                  className="flex flex-col items-center rounded-lg border border-dashed border-border bg-card/60 p-2.5 opacity-40"
+                  className="pointer-events-none flex flex-col justify-between rounded-xl border border-dashed border-border/40 bg-card/40 p-3 opacity-30"
                 >
-                  <div className="mb-2.5 flex h-[100px] w-full items-center justify-center rounded-md bg-muted/40">
+                  <div className="flex h-24 w-full items-center justify-center rounded-lg bg-muted/30">
                     <ShoppingCart className="h-8 w-8 text-muted-foreground/30" />
                   </div>
-                  <p className="text-xs font-semibold text-muted-foreground/30">
-                    —
-                  </p>
-                  <p className="text-xs text-muted-foreground/20">---</p>
+                  <div className="mt-2 space-y-1">
+                    <div className="h-3 w-3/4 rounded bg-muted/40" />
+                    <div className="h-2 w-1/2 rounded bg-muted/30" />
+                  </div>
+                  <div className="mt-3 flex items-center justify-between border-t border-border/30 pt-2">
+                    <div className="h-3 w-10 rounded bg-muted/40" />
+                    <div className="h-5 w-5 rounded-full bg-muted/40" />
+                  </div>
                 </div>
               ))}
             </div>
@@ -1475,13 +1568,15 @@ const POS = () => {
                     placeholder="Enter 10-digit number"
                     value={customerPhone}
                     onChange={(e) =>
-                      setCustomerPhone(e.target.value.replace(/\D/g, "").slice(0, 10))
+                      setCustomerPhone(
+                        e.target.value.replace(/\D/g, "").slice(0, 10)
+                      )
                     }
                     className="w-full rounded-lg border border-border bg-background px-2.5 py-1.5 pr-12 text-xs text-foreground transition-all outline-none placeholder:text-muted-foreground/40 focus:border-teal-500 focus:ring-1 focus:ring-teal-300/20"
                   />
                   {customerPhone.length > 0 && (
                     <span
-                      className={`absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-medium ${
+                      className={`absolute top-1/2 right-2.5 -translate-y-1/2 text-[10px] font-medium ${
                         customerPhone.length === 10
                           ? "font-bold text-emerald-500"
                           : "text-muted-foreground/60"
