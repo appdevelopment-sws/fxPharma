@@ -29,6 +29,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import CompanyMedicinesDialog, {
   type CompanyExpiryGroup,
 } from "@/components/dialog/admin/CompanyMedicinesDialog"
+import AddMedicineDialog from "@/components/dialog/admin/AddMedicineDialog"
+import ReconcileExpiryDialog from "@/components/dialog/admin/ReconcileExpiryDialog"
 import { cn } from "@/lib/utils"
 import { queryKeys } from "@/lib/queryKeys"
 import InventoryApi, { type ExpiryReportItem } from "@/services/inventoryApi"
@@ -70,6 +72,9 @@ export default function ExpiryReports() {
   const [companyPageSize, setCompanyPageSize] = useState(10)
   const [selectedCompanyGroup, setSelectedCompanyGroup] =
     useState<CompanyExpiryGroup | null>(null)
+  const [viewingProduct, setViewingProduct] = useState<any | null>(null)
+  const [reconcilingItem, setReconcilingItem] =
+    useState<ExpiryReportItem | null>(null)
 
   const handleStatusCardClick = useCallback(
     (statusValue: string) => {
@@ -127,6 +132,37 @@ export default function ExpiryReports() {
     },
     [handleFilter]
   )
+
+  const handleViewProduct = useCallback(async (row: ExpiryReportItem) => {
+    try {
+      if (row.inventoryId) {
+        const res = await InventoryApi.getById(row.inventoryId)
+        setViewingProduct({ ...res.data, viewMode: true })
+      } else {
+        setViewingProduct({
+          id: row.id,
+          name: row.productName,
+          product_name: row.productName,
+          saltComposition: row.saltComposition,
+          manufacturer: row.manufacturer,
+          category: row.category,
+          availableStock: row.stockQty,
+          viewMode: true,
+        })
+      }
+    } catch (_err) {
+      setViewingProduct({
+        id: row.inventoryId || row.id,
+        name: row.productName,
+        product_name: row.productName,
+        saltComposition: row.saltComposition,
+        manufacturer: row.manufacturer,
+        category: row.category,
+        availableStock: row.stockQty,
+        viewMode: true,
+      })
+    }
+  }, [])
 
   const reportRows = reportData?.data ?? []
   const expiryStats = reportData?.stats ?? fallbackStats
@@ -322,20 +358,18 @@ export default function ExpiryReports() {
             <Button
               size="icon-sm"
               variant="ghost"
-              className="text-muted-foreground hover:text-foreground"
+              className="text-muted-foreground hover:text-foreground cursor-pointer"
               title={`View ${row.productName}`}
-              onClick={() => toast.info("Batch detail view is not wired yet")}
+              onClick={() => handleViewProduct(row)}
             >
               <Eye className="size-4" />
             </Button>
             <Button
               size="icon-sm"
               variant="ghost"
-              className="text-muted-foreground hover:text-foreground"
-              title="Reconcile"
-              onClick={() =>
-                toast.info("Expiry reconciliation is not wired yet")
-              }
+              className="text-muted-foreground hover:text-foreground cursor-pointer"
+              title="Reconcile Batch"
+              onClick={() => setReconcilingItem(row)}
             >
               <RotateCcw className="size-4" />
             </Button>
@@ -343,7 +377,7 @@ export default function ExpiryReports() {
         ),
       },
     ]
-  }, [filter.page, filter.perPage])
+  }, [filter.page, filter.perPage, handleViewProduct])
 
   // Columns for Company Summary view
   const companyColumns: DataTableColumn<CompanyExpiryGroup>[] = useMemo(
@@ -424,7 +458,7 @@ export default function ExpiryReports() {
           <Button
             size="sm"
             variant="outline"
-            className="gap-1.5 text-xs font-semibold hover:bg-primary hover:text-primary-foreground transition-colors"
+            className="gap-1.5 text-xs font-semibold hover:bg-primary hover:text-primary-foreground transition-colors cursor-pointer"
             onClick={() => setSelectedCompanyGroup(group)}
           >
             <Eye className="size-3.5" />
@@ -829,6 +863,21 @@ export default function ExpiryReports() {
         companyGroup={selectedCompanyGroup}
         columns={columns}
         onExportCSV={handleExportCompanyCSV}
+      />
+
+      {/* Medicine / Product Details Modal */}
+      <AddMedicineDialog
+        open={Boolean(viewingProduct)}
+        onClose={() => setViewingProduct(null)}
+        product={viewingProduct}
+        mode="view"
+      />
+
+      {/* Reconcile Expiry Batch Modal */}
+      <ReconcileExpiryDialog
+        open={Boolean(reconcilingItem)}
+        onClose={() => setReconcilingItem(null)}
+        item={reconcilingItem}
       />
     </div>
   )

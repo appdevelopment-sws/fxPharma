@@ -232,9 +232,20 @@ export class InventoryController {
         rootPrisma.inventory.count({ where: filters }),
       ]);
 
-      return { data, total };
-    });
-  });
+      const mappedData = data.map((inv: any) => {
+        if (inv.batches && inv.batches.length > 0) {
+          const computedStock = inv.batches.reduce(
+            (sum: number, b: any) => sum + (b.availableQty ?? 0),
+            0
+          )
+          return { ...inv, availableStock: computedStock }
+        }
+        return inv
+      })
+
+      return { data: mappedData, total }
+    })
+  })
 
   static getExpiryReport = catchAsync(async (req: Request, res: Response) => {
     const { organizationId, branchId } = getRequestScope(req);
@@ -591,7 +602,21 @@ export class InventoryController {
       throw new ErrorHandler("Inventory item not found", 404);
     }
 
-    res.json({ success: true, data: inventory });
+    let computedStock = inventory.availableStock ?? 0;
+    if ((inventory as any).batches && (inventory as any).batches.length > 0) {
+      computedStock = (inventory as any).batches.reduce(
+        (sum: number, b: any) => sum + (b.availableQty ?? 0),
+        0
+      );
+    }
+
+    res.json({
+      success: true,
+      data: {
+        ...inventory,
+        availableStock: computedStock,
+      },
+    });
   });
   static create = catchAsync(async (req: Request, res: Response) => {
     const { organizationId, branchId } = getRequestScope(req);
