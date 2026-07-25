@@ -197,6 +197,7 @@ export class InventoryController {
           {
             OR: [
               { name: { contains: search, mode: "insensitive" } },
+              { barcode: { contains: search, mode: "insensitive" } },
               {
                 manufacturer: {
                   is: {
@@ -620,11 +621,12 @@ export class InventoryController {
   });
   static create = catchAsync(async (req: Request, res: Response) => {
     const { organizationId, branchId } = getRequestScope(req);
-    const { imageUrl, ...body } = req.body;
+    const { imageUrl, barcode, ...body } = req.body;
 
     const inventory = await rootPrisma.inventory.create({
       data: {
         ...body,
+        barcode: barcode ? String(barcode).trim() : null,
         imageUrl: imageUrl ?? null,
         organizationId,
         branchId,
@@ -653,12 +655,13 @@ export class InventoryController {
       throw new ErrorHandler("Inventory item not found", 404);
     }
 
-    const { id, createdAt, updatedAt, imageUrl, ...data } = req.body;
+    const { id, createdAt, updatedAt, imageUrl, barcode, ...data } = req.body;
 
     const inventory = await rootPrisma.inventory.update({
       where: { id: req.params.id as string },
       data: {
         ...data,
+        barcode: barcode !== undefined ? (barcode ? String(barcode).trim() : null) : undefined,
         imageUrl: imageUrl ?? null,
         daysLimit: data.daysLimit ? data.daysLimit : null,
       },

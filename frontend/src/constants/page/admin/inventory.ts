@@ -29,6 +29,7 @@ export const MEDICINE_STOCK_FORM_INITIAL_DATA = {
 
   /* Product Identification */
   product_name: "",
+  barcode: "",
   status: "CONTINUE",
   company: "",
   salt_composition: "",

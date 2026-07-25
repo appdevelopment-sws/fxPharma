@@ -5,6 +5,7 @@ const InventoryStatusEnum = z.enum(["CONTINUE", "DISCONTINUE"]);
 export const createInventorySchema = z.object({
   // 01 Product Identification
   name: z.string().min(1, "Product name is required"),
+  barcode: z.string().optional().nullable(),
   status: InventoryStatusEnum.optional(),
   imageUrl: z.string().optional().nullable(),
   manufacturerId: z.string().nullable().optional(),

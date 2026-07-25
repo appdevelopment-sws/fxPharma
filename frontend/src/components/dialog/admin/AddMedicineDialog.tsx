@@ -97,6 +97,7 @@ const toFormValues = (
   // ...mapMasterProductToInventoryDraft(product),
   id: product?.id || "",
   product_name: product?.product_name || product?.name || "",
+  barcode: product?.barcode || "",
   status: product?.status || "CONTINUE",
   company: product?.brandId || product?.brand_id || product?.company?.id || "",
   manufacturer:
@@ -173,6 +174,7 @@ const toFormValues = (
 
 const toApiPayload = (data: any) => ({
   name: data.product_name?.trim(),
+  barcode: toNullableString(data.barcode),
   status: data.status || "CONTINUE",
   brandId: toNullableString(data.company),
   manufacturerId: toNullableString(data.manufacturer),
@@ -647,6 +649,13 @@ export default function MedicineStockDialog({
                 validate: (v) =>
                   !!String(v || "").trim() || "Product Name cannot be empty spaces",
               }}
+            />
+            <FormField
+              control={control}
+              name="barcode"
+              label="Barcode / EAN"
+              placeholder="e.g. 8901234567890"
+              readOnly={isViewMode}
             />
             <FormSelectField
               control={control}

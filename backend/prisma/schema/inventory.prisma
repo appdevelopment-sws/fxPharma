@@ -5,6 +5,7 @@ model Inventory {
 
   // 01 Product Identification
   name            String
+  barcode         String?         @map("barcode")
   status          InventoryStatus @default(CONTINUE)
   imageUrl        String?         @map("image_url")
   manufacturerId  String          @map("manufacturer_id")
@@ -79,6 +80,7 @@ model Inventory {
   @@index([organizationId])
   @@index([branchId])
   @@index([name])
+  @@index([barcode])
 }
 
 model InventoryBatch {
