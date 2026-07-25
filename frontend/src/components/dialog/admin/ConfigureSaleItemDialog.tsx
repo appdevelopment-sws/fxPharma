@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Plus, Minus, Check, Sparkles, ChevronDown } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -131,6 +131,9 @@ export default function ConfigureSaleItemDialog({
   const [itemDiscount, setItemDiscount] = useState<number>(0)
   const [qty, setQty] = useState<number>(1)
 
+  const qtyInputRef = useRef<HTMLInputElement>(null)
+  const discountInputRef = useRef<HTMLInputElement>(null)
+
   useEffect(() => {
     if (open && product) {
       const initialBatch = batch || product.batches[0] || null
@@ -139,8 +142,119 @@ export default function ConfigureSaleItemDialog({
       setSellUnit("strip")
       setItemDiscount(0)
       setQty(1)
+
+      // Auto focus & select Qty input for instant hands-free typing
+      setTimeout(() => {
+        qtyInputRef.current?.focus()
+        qtyInputRef.current?.select()
+      }, 60)
     }
   }, [open, product, batch])
+
+  useEffect(() => {
+    if (!open) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const key = e.key
+      const lowerKey = key.toLowerCase()
+
+      if (key === "Enter") {
+        e.preventDefault()
+        if (activeBatch) {
+          onAdd({
+            rateType,
+            sellUnit,
+            qty,
+            itemDiscount,
+            batch: activeBatch,
+          })
+          onClose(false)
+        }
+        return
+      }
+
+      if (key === "Escape") {
+        e.preventDefault()
+        onClose(false)
+        return
+      }
+
+      const activeEl = document.activeElement
+      const isTypingQty = activeEl === qtyInputRef.current
+      const isTypingDisc = activeEl === discountInputRef.current
+
+      // 1. 'U' key (or Alt+U): Always toggle Unit Type (Strips <-> Pieces) even when focused inside Qty input!
+      if (lowerKey === "u" || (e.altKey && lowerKey === "u")) {
+        e.preventDefault()
+        setSellUnit((prev) => (prev === "strip" ? "piece" : "strip"))
+        return
+      }
+
+      // 2. Rate switching: F1..F4, Alt+1..4, Ctrl+1..4 (or raw 1..4 when not typing inside input)
+      if (
+        key === "F1" ||
+        (e.altKey && key === "1") ||
+        (e.ctrlKey && key === "1") ||
+        (key === "1" && !isTypingQty && !isTypingDisc)
+      ) {
+        e.preventDefault()
+        setRateType("mrp")
+        return
+      }
+      if (
+        key === "F2" ||
+        (e.altKey && key === "2") ||
+        (e.ctrlKey && key === "2") ||
+        (key === "2" && !isTypingQty && !isTypingDisc)
+      ) {
+        e.preventDefault()
+        setRateType("rateA")
+        return
+      }
+      if (
+        key === "F3" ||
+        (e.altKey && key === "3") ||
+        (e.ctrlKey && key === "3") ||
+        (key === "3" && !isTypingQty && !isTypingDisc)
+      ) {
+        e.preventDefault()
+        setRateType("rateB")
+        return
+      }
+      if (
+        key === "F4" ||
+        (e.altKey && key === "4") ||
+        (e.ctrlKey && key === "4") ||
+        (key === "4" && !isTypingQty && !isTypingDisc)
+      ) {
+        e.preventDefault()
+        setRateType("rateC")
+        return
+      }
+
+      // 3. 'Alt+D' or 'D' (when not typing in discount input): Focus Discount
+      if (
+        (e.altKey && lowerKey === "d") ||
+        (lowerKey === "d" && !isTypingDisc)
+      ) {
+        e.preventDefault()
+        discountInputRef.current?.focus()
+        discountInputRef.current?.select()
+        return
+      }
+
+      // 4. 'Alt+Q' or 'Q' (when not typing in qty input): Focus Qty
+      if ((e.altKey && lowerKey === "q") || (lowerKey === "q" && !isTypingQty)) {
+        e.preventDefault()
+        qtyInputRef.current?.focus()
+        qtyInputRef.current?.select()
+        return
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [open, activeBatch, rateType, sellUnit, qty, itemDiscount, onAdd, onClose])
 
   if (!product || !activeBatch) return null
 
@@ -217,21 +331,25 @@ export default function ConfigureSaleItemDialog({
     {
       type: "mrp" as const,
       label: "M.R.P.",
+      keyNum: "F1 / 1",
       val: activeBatch.mrp || activeBatch.price,
     },
     {
       type: "rateA" as const,
       label: "Rate A",
+      keyNum: "F2 / 2",
       val: activeBatch.rateA || activeBatch.mrp || activeBatch.price,
     },
     {
       type: "rateB" as const,
       label: "Rate B",
+      keyNum: "F3 / 3",
       val: activeBatch.rateB || activeBatch.mrp || activeBatch.price,
     },
     {
       type: "rateC" as const,
       label: "Rate C",
+      keyNum: "F4 / 4",
       val: activeBatch.rateC || activeBatch.mrp || activeBatch.price,
     },
   ]
@@ -244,14 +362,14 @@ export default function ConfigureSaleItemDialog({
         onClick={() => onClose(false)}
         className="font-bold"
       >
-        Cancel
+        Cancel <span className="ml-1 font-mono text-[9px] text-muted-foreground">[Esc]</span>
       </Button>
       <Button
         type="button"
         onClick={handleAdd}
         className="bg-blue-600 font-bold text-white hover:bg-blue-700"
       >
-        Add to Invoice
+        Add to Invoice <span className="ml-1 rounded bg-blue-800 px-1 py-0.5 font-mono text-[9px] text-blue-100">[Enter]</span>
       </Button>
     </div>
   )
@@ -271,7 +389,7 @@ export default function ConfigureSaleItemDialog({
         {/* Batch and Expiry Dropdown Selector */}
         <div className="space-y-1.5">
           <span className="block text-[9px] font-black tracking-widest text-slate-400 uppercase dark:text-slate-400">
-            Select Batch & Expiry Date
+            Select Batch &amp; Expiry Date
           </span>
           <div className="relative">
             <select
@@ -350,9 +468,10 @@ export default function ConfigureSaleItemDialog({
 
         {/* Visual rate option cards */}
         <div className="space-y-1.5">
-          <span className="block text-[9px] font-black tracking-widest text-slate-400 uppercase dark:text-slate-400">
-            Select Rate Option
-          </span>
+          <div className="flex items-center justify-between text-[9px] font-black tracking-widest text-slate-400 uppercase dark:text-slate-400">
+            <span>Select Rate Option</span>
+            <span className="font-mono text-blue-600 dark:text-blue-400">[Press 1, 2, 3 or 4]</span>
+          </div>
           <div className="grid grid-cols-4 gap-2.5">
             {rateOptions.map((rate) => {
               const isSelected = rateType === rate.type
@@ -382,12 +501,10 @@ export default function ConfigureSaleItemDialog({
                       : "border-slate-200 bg-white hover:bg-slate-50/50 dark:border-slate-800 dark:bg-slate-950"
                   )}
                 >
-                  {isSelected && (
-                    <div className="absolute top-2 right-2 flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-white shadow-xs">
-                      <Check className="h-2.5 w-2.5" />
-                    </div>
-                  )}
-                  <span className="text-[9px] font-black tracking-widest text-slate-400 uppercase">
+                  <span className="absolute top-1.5 right-1.5 rounded bg-slate-100 px-1 py-0.2 font-mono text-[9px] font-bold text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                    [{rate.keyNum}]
+                  </span>
+                  <span className="text-[9px] font-black tracking-widest text-slate-400 uppercase pr-5">
                     {rate.label}
                   </span>
                   <span className="mt-0.5 font-mono text-sm font-black text-slate-800 dark:text-slate-100">
@@ -406,9 +523,10 @@ export default function ConfigureSaleItemDialog({
 
         {/* Visual Sell Unit Selector (Segmented buttons) */}
         <div className="space-y-1.5">
-          <span className="block text-[9px] font-black tracking-widest text-slate-400 uppercase dark:text-slate-400">
-            Select Unit Type
-          </span>
+          <div className="flex items-center justify-between text-[9px] font-black tracking-widest text-slate-400 uppercase dark:text-slate-400">
+            <span>Select Unit Type</span>
+            <span className="font-mono text-blue-600 dark:text-blue-400">[Press U to toggle]</span>
+          </div>
           <div className="flex gap-2 rounded-xl border border-slate-200 bg-slate-100/50 p-1 dark:border-slate-800 dark:bg-slate-900">
             <button
               type="button"
@@ -461,7 +579,7 @@ export default function ConfigureSaleItemDialog({
           {/* Quantity selector */}
           <div className="space-y-1.5">
             <span className="block text-[9px] font-black tracking-widest text-slate-400 uppercase dark:text-slate-400">
-              Sales Quantity
+              Sales Quantity <span className="font-mono text-blue-600 dark:text-blue-400">[Auto-focused]</span>
             </span>
             <div className="flex h-[38px] w-full items-center overflow-hidden rounded-xl border border-slate-200 bg-white transition-all focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/10 dark:border-slate-800 dark:bg-slate-950">
               <button
@@ -472,6 +590,7 @@ export default function ConfigureSaleItemDialog({
                 <Minus className="h-3.5 w-3.5" />
               </button>
               <input
+                ref={qtyInputRef}
                 type="number"
                 min="1"
                 value={qty}
@@ -491,13 +610,14 @@ export default function ConfigureSaleItemDialog({
             </div>
           </div>
 
-        {/* Discount Percentage input */}
+          {/* Discount Percentage input */}
           <div className="space-y-1.5">
             <span className="block text-[9px] font-black tracking-widest text-slate-400 uppercase dark:text-slate-400">
-              Item Discount
+              Item Discount <span className="font-mono text-blue-600 dark:text-blue-400">[Press D]</span>
             </span>
             <div className="flex h-[38px] w-full items-center overflow-hidden rounded-xl border border-slate-200 bg-white transition-all focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/10 dark:border-slate-800 dark:bg-slate-950">
               <input
+                ref={discountInputRef}
                 type="number"
                 min="0"
                 max="100"
