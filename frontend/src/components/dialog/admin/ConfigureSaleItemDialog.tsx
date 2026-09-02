@@ -128,8 +128,8 @@ export default function ConfigureSaleItemDialog({
     "mrp"
   )
   const [sellUnit, setSellUnit] = useState<"strip" | "piece">("strip")
-  const [itemDiscount, setItemDiscount] = useState<number>(0)
-  const [qty, setQty] = useState<number>(1)
+  const [itemDiscount, setItemDiscount] = useState<number | string>(0)
+  const [qty, setQty] = useState<number | string>(1)
 
   const qtyInputRef = useRef<HTMLInputElement>(null)
   const discountInputRef = useRef<HTMLInputElement>(null)
@@ -151,6 +151,18 @@ export default function ConfigureSaleItemDialog({
     }
   }, [open, product, batch])
 
+  const isStrip = !product?.unit1st || product.unit1st.toLowerCase() === "strip"
+  const qtyPerStrip = product ? getQtyPerStrip(product) : 10
+  const maxStock = !activeBatch
+    ? 0
+    : isStrip
+      ? sellUnit === "strip"
+        ? activeBatch.stock
+        : activeBatch.stock * qtyPerStrip
+      : sellUnit === "strip"
+        ? Math.floor(activeBatch.stock / qtyPerStrip)
+        : activeBatch.stock
+
   useEffect(() => {
     if (!open) return
 
@@ -161,11 +173,27 @@ export default function ConfigureSaleItemDialog({
       if (key === "Enter") {
         e.preventDefault()
         if (activeBatch) {
+          const finalQty = Math.min(
+            maxStock,
+            Math.max(
+              1,
+              typeof qty === "number" ? qty : parseInt(qty, 10) || 1
+            )
+          )
+          const finalDiscount = Math.min(
+            100,
+            Math.max(
+              0,
+              typeof itemDiscount === "number"
+                ? itemDiscount
+                : parseFloat(String(itemDiscount)) || 0
+            )
+          )
           onAdd({
             rateType,
             sellUnit,
-            qty,
-            itemDiscount,
+            qty: finalQty,
+            itemDiscount: finalDiscount,
             batch: activeBatch,
           })
           onClose(false)
@@ -186,7 +214,27 @@ export default function ConfigureSaleItemDialog({
       // 1. 'U' key (or Alt+U): Always toggle Unit Type (Strips <-> Pieces) even when focused inside Qty input!
       if (lowerKey === "u" || (e.altKey && lowerKey === "u")) {
         e.preventDefault()
-        setSellUnit((prev) => (prev === "strip" ? "piece" : "strip"))
+        setSellUnit((prev) => {
+          const nextUnit = prev === "strip" ? "piece" : "strip"
+          if (activeBatch) {
+            const nextMax = isStrip
+              ? nextUnit === "strip"
+                ? activeBatch.stock
+                : activeBatch.stock * qtyPerStrip
+              : nextUnit === "strip"
+                ? Math.floor(activeBatch.stock / qtyPerStrip)
+                : activeBatch.stock
+            setQty((currentQ) => {
+              if (currentQ === "") return currentQ
+              const num =
+                typeof currentQ === "number"
+                  ? currentQ
+                  : parseInt(currentQ, 10) || 1
+              return Math.min(num, nextMax)
+            })
+          }
+          return nextUnit
+        })
         return
       }
 
@@ -235,7 +283,7 @@ export default function ConfigureSaleItemDialog({
       // 3. 'Alt+D' or 'D' (when not typing in discount input): Focus Discount
       if (
         (e.altKey && lowerKey === "d") ||
-        (lowerKey === "d" && !isTypingDisc)
+        (lowerKey === "d" && !isTypingDisc && !isTypingQty)
       ) {
         e.preventDefault()
         discountInputRef.current?.focus()
@@ -244,7 +292,10 @@ export default function ConfigureSaleItemDialog({
       }
 
       // 4. 'Alt+Q' or 'Q' (when not typing in qty input): Focus Qty
-      if ((e.altKey && lowerKey === "q") || (lowerKey === "q" && !isTypingQty)) {
+      if (
+        (e.altKey && lowerKey === "q") ||
+        (lowerKey === "q" && !isTypingQty && !isTypingDisc)
+      ) {
         e.preventDefault()
         qtyInputRef.current?.focus()
         qtyInputRef.current?.select()
@@ -254,12 +305,22 @@ export default function ConfigureSaleItemDialog({
 
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [open, activeBatch, rateType, sellUnit, qty, itemDiscount, onAdd, onClose])
+  }, [
+    open,
+    activeBatch,
+    rateType,
+    sellUnit,
+    qty,
+    itemDiscount,
+    onAdd,
+    onClose,
+    maxStock,
+    isStrip,
+    qtyPerStrip,
+  ])
 
   if (!product || !activeBatch) return null
 
-  const isStrip = !product.unit1st || product.unit1st.toLowerCase() === "strip"
-  const qtyPerStrip = getQtyPerStrip(product)
   const activeRatePrice = getRateValue(
     activeBatch,
     rateType,
@@ -268,21 +329,20 @@ export default function ConfigureSaleItemDialog({
     isStrip
   )
 
-  const totalBeforeDiscount = activeRatePrice * qty
-  const discountVal = (totalBeforeDiscount * itemDiscount) / 100
+  const numericQty =
+    typeof qty === "number" ? qty : parseInt(qty, 10) || 0
+  const numericDiscount =
+    typeof itemDiscount === "number"
+      ? itemDiscount
+      : parseFloat(String(itemDiscount)) || 0
+
+  const totalBeforeDiscount = activeRatePrice * numericQty
+  const discountVal = (totalBeforeDiscount * numericDiscount) / 100
   const taxableVal = totalBeforeDiscount - discountVal
   const cgstRate = toNumber(activeBatch.cgst)
   const sgstRate = toNumber(activeBatch.sgst)
   const taxVal = (taxableVal * (cgstRate + sgstRate)) / 100
   const netVal = taxableVal + taxVal
-
-  const maxStock = isStrip
-    ? sellUnit === "strip"
-      ? activeBatch.stock
-      : activeBatch.stock * qtyPerStrip
-    : sellUnit === "strip"
-      ? Math.floor(activeBatch.stock / qtyPerStrip)
-      : activeBatch.stock
 
   // Outer unit labels
   const outerUnitSingular = isStrip
@@ -317,11 +377,27 @@ export default function ConfigureSaleItemDialog({
   const innerUnitShort = isStrip ? "Pcs" : innerUnitPlural
 
   const handleAdd = () => {
+    const finalQty = Math.min(
+      maxStock,
+      Math.max(
+        1,
+        typeof qty === "number" ? qty : parseInt(qty, 10) || 1
+      )
+    )
+    const finalDiscount = Math.min(
+      100,
+      Math.max(
+        0,
+        typeof itemDiscount === "number"
+          ? itemDiscount
+          : parseFloat(String(itemDiscount)) || 0
+      )
+    )
     onAdd({
       rateType,
       sellUnit,
-      qty,
-      itemDiscount,
+      qty: finalQty,
+      itemDiscount: finalDiscount,
       batch: activeBatch,
     })
     onClose(false)
@@ -406,7 +482,12 @@ export default function ConfigureSaleItemDialog({
                     : sellUnit === "strip"
                       ? Math.floor(nextBatch.stock / qtyPerStrip)
                       : nextBatch.stock
-                  setQty((q) => Math.min(q, nextMaxStock))
+                  setQty((q) => {
+                    if (q === "") return q
+                    const num =
+                      typeof q === "number" ? q : parseInt(q, 10) || 1
+                    return Math.min(num, nextMaxStock)
+                  })
                 }
               }}
               className="w-full appearance-none rounded-xl border border-slate-200 bg-white px-3.5 py-2 pr-10 text-xs font-semibold text-slate-800 [color-scheme:light] transition-all outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 dark:[color-scheme:dark]"
@@ -535,7 +616,12 @@ export default function ConfigureSaleItemDialog({
                 const nextMaxStock = isStrip
                   ? activeBatch.stock
                   : Math.floor(activeBatch.stock / qtyPerStrip)
-                setQty((q) => Math.min(q, nextMaxStock))
+                setQty((q) => {
+                  if (q === "") return q
+                  const num =
+                    typeof q === "number" ? q : parseInt(q, 10) || 1
+                  return Math.min(num, nextMaxStock)
+                })
               }}
               className={cn(
                 "flex-1 cursor-pointer rounded-lg border py-1.5 text-center text-xs font-black transition-all",
@@ -558,7 +644,12 @@ export default function ConfigureSaleItemDialog({
                 const nextMaxStock = isStrip
                   ? activeBatch.stock * qtyPerStrip
                   : activeBatch.stock
-                setQty((q) => Math.min(q, nextMaxStock))
+                setQty((q) => {
+                  if (q === "") return q
+                  const num =
+                    typeof q === "number" ? q : parseInt(q, 10) || 1
+                  return Math.min(num, nextMaxStock)
+                })
               }}
               className={cn(
                 "flex-1 cursor-pointer rounded-lg border py-1.5 text-center text-xs font-black transition-all disabled:opacity-40",
@@ -584,7 +675,15 @@ export default function ConfigureSaleItemDialog({
             <div className="flex h-[38px] w-full items-center overflow-hidden rounded-xl border border-slate-200 bg-white transition-all focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/10 dark:border-slate-800 dark:bg-slate-950">
               <button
                 type="button"
-                onClick={() => setQty((q) => Math.max(1, q - 1))}
+                onClick={() =>
+                  setQty((prev) => {
+                    const current =
+                      typeof prev === "number"
+                        ? prev
+                        : parseInt(prev, 10) || 1
+                    return Math.max(1, current - 1)
+                  })
+                }
                 className="px-3 py-1.5 text-slate-400 transition-colors hover:bg-slate-50 dark:hover:bg-slate-900"
               >
                 <Minus className="h-3.5 w-3.5" />
@@ -593,16 +692,48 @@ export default function ConfigureSaleItemDialog({
                 ref={qtyInputRef}
                 type="number"
                 min="1"
+                max={maxStock}
                 value={qty}
+                onFocus={(e) => e.target.select()}
                 onChange={(e) => {
-                  const parsed = parseInt(e.target.value, 10) || 1
-                  setQty(Math.min(maxStock, Math.max(1, parsed)))
+                  const val = e.target.value
+                  if (val === "") {
+                    setQty("")
+                    return
+                  }
+                  const parsed = parseInt(val, 10)
+                  if (isNaN(parsed)) {
+                    setQty("")
+                    return
+                  }
+                  if (parsed > maxStock) {
+                    setQty(maxStock)
+                  } else if (parsed <= 0) {
+                    setQty("")
+                  } else {
+                    setQty(parsed)
+                  }
+                }}
+                onBlur={() => {
+                  if (qty === "" || Number(qty) < 1) {
+                    setQty(1)
+                  } else if (Number(qty) > maxStock) {
+                    setQty(maxStock)
+                  }
                 }}
                 className="w-full bg-transparent text-center text-xs font-black text-slate-800 outline-none dark:text-slate-100"
               />
               <button
                 type="button"
-                onClick={() => setQty((q) => Math.min(maxStock, q + 1))}
+                onClick={() =>
+                  setQty((prev) => {
+                    const current =
+                      typeof prev === "number"
+                        ? prev
+                        : parseInt(prev, 10) || 0
+                    return Math.min(maxStock, current + 1)
+                  })
+                }
                 className="px-3 py-1.5 text-slate-400 transition-colors hover:bg-slate-50 dark:hover:bg-slate-900"
               >
                 <Plus className="h-3.5 w-3.5" />
@@ -622,11 +753,35 @@ export default function ConfigureSaleItemDialog({
                 min="0"
                 max="100"
                 value={itemDiscount}
-                onChange={(e) =>
-                  setItemDiscount(
-                    Math.min(100, Math.max(0, Number(e.target.value)))
-                  )
-                }
+                onFocus={(e) => e.target.select()}
+                onChange={(e) => {
+                  const val = e.target.value
+                  if (val === "") {
+                    setItemDiscount("")
+                    return
+                  }
+                  const parsed = parseFloat(val)
+                  if (isNaN(parsed)) {
+                    setItemDiscount("")
+                    return
+                  }
+                  if (parsed > 100) {
+                    setItemDiscount(100)
+                  } else if (parsed < 0) {
+                    setItemDiscount(0)
+                  } else {
+                    setItemDiscount(val)
+                  }
+                }}
+                onBlur={() => {
+                  if (itemDiscount === "" || Number(itemDiscount) < 0) {
+                    setItemDiscount(0)
+                  } else if (Number(itemDiscount) > 100) {
+                    setItemDiscount(100)
+                  } else {
+                    setItemDiscount(Number(itemDiscount))
+                  }
+                }}
                 className="w-full bg-transparent px-3 text-right text-xs font-black text-slate-800 outline-none dark:text-slate-100"
                 placeholder="0"
               />
@@ -654,7 +809,7 @@ export default function ConfigureSaleItemDialog({
             </div>
             {discountVal > 0 && (
               <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
-                <span>Discount ({itemDiscount}%)</span>
+                <span>Discount ({numericDiscount}%)</span>
                 <span className="font-bold">-₹{discountVal.toFixed(2)}</span>
               </div>
             )}
