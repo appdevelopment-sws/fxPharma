@@ -304,7 +304,7 @@ export default function InvoiceSettings() {
                   control={control}
                   name="invoice_email"
                   label="CONTACT EMAIL ON INVOICE"
-                  placeholder="e.g. billing@dawadukaan.com"
+                  placeholder="e.g. billing@fxPharmaSoft.in"
                 />
               </div>
             </div>

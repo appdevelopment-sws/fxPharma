@@ -349,7 +349,7 @@ export default function OrganizationSettings() {
                 control={control}
                 name="email"
                 label="OWNER EMAIL"
-                placeholder="e.g. owner@dawadukaan.com"
+                placeholder="e.g. owner@fxPharmaSoft.in"
                 required
               />
               <FormField
@@ -363,7 +363,7 @@ export default function OrganizationSettings() {
                 control={control}
                 name="login_email"
                 label="LOGIN EMAIL"
-                placeholder="e.g. admin@dawadukaan.com"
+                placeholder="e.g. admin@fxPharmaSoft.in"
                 required
               />
             </div>

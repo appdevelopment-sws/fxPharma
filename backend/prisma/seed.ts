@@ -235,11 +235,11 @@ async function main() {
 
   // 4. Create Superadmin User
   const superUser = await prisma.user.upsert({
-    where: { email: "superadmin@dawadukaan.com" },
+    where: { email: "superadmin@fxPharmaSoft.in" },
     update: {},
     create: {
       name: "Super Admin",
-      email: "superadmin@dawadukaan.com",
+      email: "superadmin@fxPharmaSoft.in",
       passwordHash,
       status: "ACTIVE",
       emailVerified: true,
@@ -469,7 +469,7 @@ async function main() {
   }
 
   console.log("Seed completed successfully!");
-  console.log("Superadmin: superadmin@dawadukaan.com / SuperAdmin@123");
+  console.log("Superadmin: superadmin@fxPharmaSoft.in / SuperAdmin@123");
   console.log("Org Admin: admin@demopharmacy.com / SuperAdmin@123");
   console.log("Branch Admin: branchadmin@demopharmacy.com / SuperAdmin@123");
 }

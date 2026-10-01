@@ -28,8 +28,8 @@ A full-stack Pharmacy Management SaaS application with Dockerized architecture.
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/appdevelopment-sws/dawadukaan.git
-cd dawadukaan
+git clone https://github.com/appdevelopment-sws/FXpharmaSoft.git
+cd FXpharmaSoft
 ```
 
 2. Add .env to the project (check .env.sample for reference).
