@@ -257,8 +257,8 @@ export default function LoginPage() {
           <div className="animate-slide-down relative z-10 flex items-center gap-5">
             <div className="flex items-center justify-center rounded-2xl border border-neutral-200 bg-white p-3 shadow-md">
               <img
-                src="/logo111.png"
-                alt="Ojas Pharmacy Logo"
+                src="/logo.png"
+                alt="fxPharmaSoft"
                 className="h-20 w-24 object-contain"
                 onError={(e) => {
                   console.error("Logo image failed to load")
@@ -266,7 +266,7 @@ export default function LoginPage() {
               />
             </div>
             <span className="text-3xl font-extrabold tracking-wider text-white">
-              OJAS <span className="text-[var(--login-primary)]">PHARMACY</span>
+              FX <span className="text-[var(--login-primary)]">PharmaSoft</span>
             </span>
           </div>
 
@@ -421,7 +421,7 @@ export default function LoginPage() {
                 <div className="flex h-24 w-24 items-center justify-center rounded-[24px] border border-neutral-200 bg-white p-3.5 shadow-md">
                   <img
                     src="/logo.png"
-                    alt="Ojas Pharmacy Logo"
+                    alt="fxPharmaSoft"
                     className="h-18 w-18 object-contain"
                   />
                 </div>

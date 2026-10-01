@@ -104,7 +104,7 @@ export default function Register() {
 
           <div className="relative z-10">
             <div className="flex items-center gap-3 text-white mb-20 animate-drop-in-center">
-              <img src="/logo.png" alt="Ojas Pharmacy Logo" className="h-10 w-2/6 object-contain rounded-lg bg-transparent" />
+              <img src="/logo.png" alt="fxPharmaSoft" className="h-10 w-2/6 object-contain rounded-lg bg-transparent" />
               <span className="text-2xl font-bold tracking-tight"></span>
             </div>
 
@@ -152,7 +152,7 @@ export default function Register() {
             
             <div className="space-y-3 text-center lg:text-left">
               <div className="lg:hidden flex justify-center mb-8 animate-drop-in-center">
-                <img src="/logo.png" alt="Ojas Pharmacy Logo" className="h-14 w-auto object-contain rounded-2xl border border-border bg-white p-2 shadow-sm" />
+                <img src="/logo.png" alt="fxPharmaSoft" className="h-14 w-auto object-contain rounded-2xl border border-border bg-white p-2 shadow-sm" />
               </div>
               <h2 className="text-3xl font-extrabold tracking-tight text-foreground animate-shatter-top-right delay-150">
                 Create your workspace
